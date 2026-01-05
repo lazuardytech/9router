@@ -1,7 +1,7 @@
 // Auto-initialize cloud sync when server starts
 import "@/lib/initCloudSync";
-import LandingPage from "./landing/page";
+import { redirect } from "next/navigation";
 
 export default function InitPage() {
-  return <LandingPage />;
+  redirect('/dashboard');
 }
