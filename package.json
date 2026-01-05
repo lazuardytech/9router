@@ -6,14 +6,12 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "build:standalone": "next build && node scripts/prepare-standalone.js",
-    "start": "next start",
-    "start:cli": "node bin/cli.js",
-    "lint": "eslint",
-    "prepublishOnly": "npm run build:standalone"
+    "start": "next start"
   },
   "dependencies": {
+    "express": "^5.2.1",
     "fs": "^0.0.1-security",
+    "http-proxy-middleware": "^3.0.5",
     "lowdb": "^7.0.1",
     "next": "^15.2.0",
     "node-machine-id": "^1.1.12",

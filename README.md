@@ -43,7 +43,6 @@ AI endpoint proxy with web dashboard - A JavaScript port of [CLIProxyAPI](https:
 ### CLI Integration
 - Works with: Cursor, Claude Code, OpenAI Codex, Cline, RooCode, AmpCode, and more
 - Seamless integration with popular AI coding assistants
-- WebSearch hook for enhanced Claude Code capabilities
 
 ## 📦 Install
 
@@ -129,7 +128,7 @@ npm run dev
 
 Special thanks to:
 
-- **[CLIProxyAPI](https://github.com/router-for-me/CLIProxyAPI)**: The original Go implementation that inspired this project. 9Router is a JavaScript port with enhanced features and web dashboard.
+- **[CLIProxyAPI](https://github.com/router-for-me/CLIProxyAPI)**: The original Go implementation that inspired this project. 9Router is a JavaScript port with some features and web dashboard.
 
 ## 📄 License
 

@@ -247,9 +247,6 @@ async function updateLocalTokens(cloudProviders) {
       };
 
       await updateProviderConnection(localProvider.id, updates);
-      console.log(`Updated ${localProvider.provider} (${localProvider.id}) from Cloud (newer: ${new Date(cloudUpdatedAt).toISOString()})`);
-    } else {
-      console.log(`Skipped ${localProvider.provider} (${localProvider.id}) - Local is newer or equal`);
     }
   }
 }
