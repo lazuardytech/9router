@@ -5,7 +5,7 @@
 
 AI endpoint proxy with web dashboard - A JavaScript port of [CLIProxyAPI](https://github.com/router-for-me/CLIProxyAPI).
 
-![9Router Dashboard](https://github.com/decolua/9router/raw/main/images/9router.png)
+![9Router Dashboard](./images/9router.png)
 
 ## 📖 Introduction
 
@@ -49,12 +49,12 @@ AI endpoint proxy with web dashboard - A JavaScript port of [CLIProxyAPI](https:
 ## 📦 Install
 
 ```bash
-# Run directly with npx (recommended)
-npx 9router
-
-# Or install globally
+# Install globally
 npm install -g 9router
 9router
+
+# Run directly with npx
+npx 9router
 ```
 
 ## 🚀 Quick Start
