@@ -126,8 +126,11 @@ export function createErrorResult(statusCode, message) {
  * @param {Error} error - Original error
  * @param {string} provider - Provider name
  * @param {string} model - Model name
+ * @param {number|string} statusCode - HTTP status code or error code
  * @returns {string} Formatted error message
  */
-export function formatProviderError(error, provider, model) {
-  return error.message || "Unknown error";
+export function formatProviderError(error, provider, model, statusCode) {
+  const code = statusCode || error.code || 'FETCH_FAILED';
+  const message = error.message || "Unknown error";
+  return `[${code}]: ${message}`;
 }

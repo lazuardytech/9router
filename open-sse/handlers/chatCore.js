@@ -115,7 +115,7 @@ export async function handleChatCore({ body, modelInfo, credentials, log, onCred
       streamController.handleError(error);
       return createErrorResult(499, "Request aborted");
     }
-    const errMsg = formatProviderError(error, provider, model);
+    const errMsg = formatProviderError(error, provider, model, 502);
     console.log(`${COLORS.red}[ERROR] ${errMsg}${COLORS.reset}`);
     return createErrorResult(502, errMsg);
   }
@@ -205,7 +205,7 @@ export async function handleChatCore({ body, modelInfo, credentials, log, onCred
   // Check provider response - return error info for fallback handling
   if (!providerResponse.ok) {
     const { statusCode, message } = await parseUpstreamError(providerResponse);
-    const errMsg = formatProviderError(new Error(message), provider, model);
+    const errMsg = formatProviderError(new Error(message), provider, model, statusCode);
     console.log(`${COLORS.red}[ERROR] ${errMsg}${COLORS.reset}`);
     
     // Log error with full request body for debugging
