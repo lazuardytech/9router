@@ -18,16 +18,12 @@
     "next": "^15.2.0",
     "node-machine-id": "^1.1.12",
     "open": "^10.1.0",
-    "open-sse": "^1.0.0",
     "ora": "^5.4.1",
     "react": "19.2.1",
     "react-dom": "19.2.1",
     "undici": "^7.16.0",
     "uuid": "^13.0.0",
     "zustand": "^5.0.9"
-  },
-  "overrides": {
-    "open-sse": "file:../open-sse"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4.1.18",
