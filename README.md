@@ -12,7 +12,7 @@ AI endpoint proxy with web dashboard - A JavaScript port of [CLIProxyAPI](https:
 **9Router** is a powerful AI API proxy server that provides unified access to multiple AI providers through a single endpoint. It features automatic format translation, intelligent fallback routing, OAuth authentication, and a modern web dashboard for easy management.
 
 **Key Highlights:**
-- **JavaScript Port**: Converted from [CLIProxyAPI](https://github.com/router-for-me/CLIProxyAPI) (Go) to JavaScript/Node.js for better accessibility and easier deployment
+- **JavaScript Port**: Converted from [CLIProxyAPI](https://github.com/router-for-me/CLIProxyAPI) (Go) to JavaScript/Node.js.
 - **Universal CLI Support**: Works seamlessly with Claude Code, OpenAI Codex, Cline, RooCode, AmpCode, and other CLI tools
 - **Cross-Platform**: Runs on Windows, Linux, and macOS
 - **Easy Deployment**: Simple installation via npx, or deploy to VPS
@@ -31,7 +31,6 @@ AI endpoint proxy with web dashboard - A JavaScript port of [CLIProxyAPI](https:
 - **♻️ Intelligent Fallback**: Automatic account rotation when rate limits or errors occur
 - **⚡ Response Caching**: Optimized caching for Claude Code (1-hour cache vs default 5 minutes)
 - **🔧 Model Aliases**: Create custom model aliases for easier management
-- **🔍 WebSearch Hook**: Model-based web search integration for Claude Code CLI
 - **☁️ Cloud Deployment**: Deploy to Cloud for Cursor IDE integration with global edge performance
 
 ### Format Support
@@ -42,7 +41,7 @@ AI endpoint proxy with web dashboard - A JavaScript port of [CLIProxyAPI](https:
 - **Ollama Format**: Compatible with Ollama-based tools
 
 ### CLI Integration
-- Works with: Claude Code, OpenAI Codex, Cline, RooCode, AmpCode, Cursor, and more
+- Works with: Cursor, Claude Code, OpenAI Codex, Cline, RooCode, AmpCode, and more
 - Seamless integration with popular AI coding assistants
 - WebSearch hook for enhanced Claude Code capabilities
 
@@ -93,9 +92,6 @@ npm run dev
 ### Project Structure
 ```
 9router/
-├── bin/                    # CLI entry point
-│   ├── cli.js             # Main CLI script
-│   └── hooks/             # CLI hooks (WebSearch)
 ├── src/
 │   ├── app/               # Next.js app (dashboard & API routes)
 │   ├── lib/               # Core libraries (DB, OAuth, etc.)
@@ -107,21 +103,6 @@ npm run dev
 │   ├── services/          # Core services
 │   └── config/            # Provider configurations
 └── public/                # Static assets
-```
-
-## 📤 Build & Publish
-
-```bash
-# Build standalone binary
-npm run build:standalone
-
-# Test locally
-npm link
-9router --help
-
-# Publish to npm
-npm login
-npm publish
 ```
 
 ## 🧰 Tech Stack
