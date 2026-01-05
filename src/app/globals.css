@@ -1,0 +1,169 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* Claude-inspired Color Palette */
+:root {
+  /* Primary - Warm Coral/Terracotta */
+  --color-primary: #D97757;
+  --color-primary-hover: #C56243;
+  
+  /* Light theme */
+  --color-bg: #FBF9F6;
+  --color-bg-alt: #F5F1ED;
+  --color-surface: #FFFFFF;
+  --color-sidebar: #F0EFEC;
+  --color-border: #E6E4DD;
+  --color-text-main: #383733;
+  --color-text-muted: #75736E;
+  
+  /* Shadows */
+  --shadow-soft: 0 2px 10px rgba(0, 0, 0, 0.03), 0 10px 25px rgba(0, 0, 0, 0.02);
+  --shadow-warm: 0 4px 20px -2px rgba(217, 119, 87, 0.15);
+  --shadow-elevated: 0 20px 40px -4px rgba(60, 50, 45, 0.08);
+}
+
+.dark {
+  /* Dark theme */
+  --color-bg: #191918;
+  --color-bg-alt: #1F1F1E;
+  --color-surface: #242423;
+  --color-sidebar: #1F1F1E;
+  --color-border: #333331;
+  --color-text-main: #ECEBE8;
+  --color-text-muted: #9E9D99;
+  
+  /* Dark shadows */
+  --shadow-soft: 0 2px 10px rgba(0, 0, 0, 0.2), 0 10px 25px rgba(0, 0, 0, 0.15);
+  --shadow-warm: 0 4px 20px -2px rgba(217, 119, 87, 0.2);
+  --shadow-elevated: 0 20px 40px -4px rgba(0, 0, 0, 0.4);
+}
+
+@theme inline {
+  /* Primary */
+  --color-primary: var(--color-primary);
+  --color-primary-hover: var(--color-primary-hover);
+  
+  /* Auto-switch colors (use CSS variables from :root/.dark) */
+  --color-bg: var(--color-bg);
+  --color-surface: var(--color-surface);
+  --color-sidebar: var(--color-sidebar);
+  --color-border: var(--color-border);
+  --color-text-main: var(--color-text-main);
+  --color-text-muted: var(--color-text-muted);
+  
+  /* Static colors (for explicit light/dark usage) */
+  --color-bg-light: #FBF9F6;
+  --color-bg-dark: #191918;
+  --color-surface-light: #FFFFFF;
+  --color-surface-dark: #242423;
+  --color-sidebar-light: #F0EFEC;
+  --color-sidebar-dark: #1F1F1E;
+  --color-border-light: #E6E4DD;
+  --color-border-dark: #333331;
+  --color-text-main-light: #383733;
+  --color-text-main-dark: #ECEBE8;
+  --color-text-muted-light: #75736E;
+  --color-text-muted-dark: #9E9D99;
+  
+  /* Shadows */
+  --shadow-soft: var(--shadow-soft);
+  --shadow-warm: var(--shadow-warm);
+  --shadow-elevated: var(--shadow-elevated);
+  
+  /* Font */
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+}
+
+/* Base styles */
+body {
+  background-color: var(--color-bg);
+  color: var(--color-text-main);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Selection */
+::selection {
+  background-color: rgba(217, 119, 87, 0.2);
+  color: var(--color-primary);
+}
+
+/* Custom scrollbar */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background-color: rgba(156, 163, 175, 0.3);
+  border-radius: 20px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(156, 163, 175, 0.5);
+}
+
+/* Hero gradient */
+.bg-hero-gradient {
+  background: linear-gradient(180deg, #F5F1ED 0%, #FEFCFB 100%);
+}
+
+.dark .bg-hero-gradient {
+  background: linear-gradient(180deg, #1F1F1E 0%, #191918 100%);
+}
+
+/* Material Symbols */
+.material-symbols-outlined {
+  font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+}
+
+.material-symbols-outlined.fill-1 {
+  font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+}
+
+/* Animations */
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-spin {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.animate-pulse {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes border-glow {
+  0%, 100% {
+    box-shadow: 0 0 5px rgba(217, 119, 87, 0.3), 0 0 10px rgba(217, 119, 87, 0.2);
+    border-color: rgba(217, 119, 87, 0.5);
+  }
+  50% {
+    box-shadow: 0 0 10px rgba(217, 119, 87, 0.5), 0 0 20px rgba(217, 119, 87, 0.3);
+    border-color: rgba(217, 119, 87, 0.8);
+  }
+}
+
+.animate-border-glow {
+  animation: border-glow 2s ease-in-out infinite;
+}

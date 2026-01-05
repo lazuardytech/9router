@@ -1,0 +1,496 @@
+import { Low } from "lowdb";
+import { JSONFile } from "lowdb/node";
+import { v4 as uuidv4 } from "uuid";
+import path from "path";
+import os from "os";
+import fs from "fs";
+import { fileURLToPath } from "url";
+
+// Get app name from root package.json config
+function getAppName() {
+  const __dirname = path.dirname(fileURLToPath(import.meta.url));
+  // Look for root package.json (monorepo root)
+  const rootPkgPath = path.resolve(__dirname, "../../../package.json");
+  try {
+    const pkg = JSON.parse(fs.readFileSync(rootPkgPath, "utf-8"));
+    return pkg.config?.appName || "9router";
+  } catch {
+    return "9router";
+  }
+}
+
+// Get user data directory based on platform
+function getUserDataDir() {
+  const platform = process.platform;
+  const homeDir = os.homedir();
+  const appName = getAppName();
+  
+  if (platform === "win32") {
+    return path.join(process.env.APPDATA || path.join(homeDir, "AppData", "Roaming"), appName);
+  } else {
+    // macOS & Linux: ~/.{appName}
+    return path.join(homeDir, `.${appName}`);
+  }
+}
+
+// Data file path - stored in user home directory
+const DATA_DIR = getUserDataDir();
+const DB_FILE = path.join(DATA_DIR, "db.json");
+
+// Ensure data directory exists
+if (!fs.existsSync(DATA_DIR)) {
+  fs.mkdirSync(DATA_DIR, { recursive: true });
+}
+
+// Default data structure
+const defaultData = {
+  providerConnections: [],
+  modelAliases: {},
+  combos: [],
+  apiKeys: [],
+  settings: {
+    cloudEnabled: false
+  }
+};
+
+// Singleton instance
+let dbInstance = null;
+
+/**
+ * Get database instance (singleton)
+ */
+export async function getDb() {
+  if (!dbInstance) {
+    const adapter = new JSONFile(DB_FILE);
+    dbInstance = new Low(adapter, defaultData);
+    
+    // Try to read DB with error recovery for corrupt JSON
+    try {
+      await dbInstance.read();
+    } catch (error) {
+      if (error instanceof SyntaxError) {
+        console.warn('[DB] Corrupt JSON detected, resetting to defaults...');
+        dbInstance.data = defaultData;
+        await dbInstance.write();
+      } else {
+        throw error;
+      }
+    }
+    
+    // Initialize with default data if empty
+    if (!dbInstance.data) {
+      dbInstance.data = defaultData;
+      await dbInstance.write();
+    }
+  }
+  return dbInstance;
+}
+
+// ============ Provider Connections ============
+
+/**
+ * Get all provider connections
+ */
+export async function getProviderConnections(filter = {}) {
+  const db = await getDb();
+  let connections = db.data.providerConnections || [];
+  
+  if (filter.provider) {
+    connections = connections.filter(c => c.provider === filter.provider);
+  }
+  if (filter.isActive !== undefined) {
+    connections = connections.filter(c => c.isActive === filter.isActive);
+  }
+  
+  // Sort by priority (lower = higher priority)
+  connections.sort((a, b) => (a.priority || 999) - (b.priority || 999));
+  
+  return connections;
+}
+
+/**
+ * Get provider connection by ID
+ */
+export async function getProviderConnectionById(id) {
+  const db = await getDb();
+  return db.data.providerConnections.find(c => c.id === id) || null;
+}
+
+/**
+ * Create or update provider connection (upsert by provider + email/name)
+ */
+export async function createProviderConnection(data) {
+  const db = await getDb();
+  const now = new Date().toISOString();
+  
+  // Check for existing connection with same provider and email (for OAuth)
+  // or same provider and name (for API key)
+  let existingIndex = -1;
+  if (data.authType === "oauth" && data.email) {
+    existingIndex = db.data.providerConnections.findIndex(
+      c => c.provider === data.provider && c.authType === "oauth" && c.email === data.email
+    );
+  } else if (data.authType === "apikey" && data.name) {
+    existingIndex = db.data.providerConnections.findIndex(
+      c => c.provider === data.provider && c.authType === "apikey" && c.name === data.name
+    );
+  }
+  
+  // If exists, update instead of create
+  if (existingIndex !== -1) {
+    db.data.providerConnections[existingIndex] = {
+      ...db.data.providerConnections[existingIndex],
+      ...data,
+      updatedAt: now,
+    };
+    await db.write();
+    return db.data.providerConnections[existingIndex];
+  }
+  
+  // Generate name for OAuth if not provided
+  let connectionName = data.name || null;
+  if (!connectionName && data.authType === "oauth") {
+    if (data.email) {
+      connectionName = data.email;
+    } else {
+      // Count existing connections for this provider to generate index
+      const existingCount = db.data.providerConnections.filter(
+        c => c.provider === data.provider
+      ).length;
+      connectionName = `Account ${existingCount + 1}`;
+    }
+  }
+
+  // Auto-increment priority if not provided
+  let connectionPriority = data.priority;
+  if (!connectionPriority) {
+    const providerConnections = db.data.providerConnections.filter(
+      c => c.provider === data.provider
+    );
+    const maxPriority = providerConnections.reduce((max, c) => Math.max(max, c.priority || 0), 0);
+    connectionPriority = maxPriority + 1;
+  }
+  
+  // Create new connection - only save fields with actual values
+  const connection = {
+    id: uuidv4(),
+    provider: data.provider,
+    authType: data.authType || "oauth",
+    name: connectionName,
+    priority: connectionPriority,
+    isActive: data.isActive !== undefined ? data.isActive : true,
+    createdAt: now,
+    updatedAt: now,
+  };
+
+  // Only add optional fields if they have values
+  const optionalFields = [
+    "displayName", "email", "globalPriority", "defaultModel",
+    "accessToken", "refreshToken", "expiresAt", "tokenType",
+    "scope", "idToken", "projectId", "apiKey", "testStatus",
+    "lastTested", "lastError", "lastErrorAt", "rateLimitedUntil", "expiresIn", "errorCode"
+  ];
+  
+  for (const field of optionalFields) {
+    if (data[field] !== undefined && data[field] !== null) {
+      connection[field] = data[field];
+    }
+  }
+
+  // Only add providerSpecificData if it has content
+  if (data.providerSpecificData && Object.keys(data.providerSpecificData).length > 0) {
+    connection.providerSpecificData = data.providerSpecificData;
+  }
+  
+  db.data.providerConnections.push(connection);
+  await db.write();
+  
+  return connection;
+}
+
+/**
+ * Update provider connection
+ */
+export async function updateProviderConnection(id, data) {
+  const db = await getDb();
+  const index = db.data.providerConnections.findIndex(c => c.id === id);
+  
+  if (index === -1) return null;
+  
+  db.data.providerConnections[index] = {
+    ...db.data.providerConnections[index],
+    ...data,
+    updatedAt: new Date().toISOString(),
+  };
+  
+  await db.write();
+  return db.data.providerConnections[index];
+}
+
+/**
+ * Delete provider connection
+ */
+export async function deleteProviderConnection(id) {
+  const db = await getDb();
+  const index = db.data.providerConnections.findIndex(c => c.id === id);
+  
+  if (index === -1) return false;
+  
+  db.data.providerConnections.splice(index, 1);
+  await db.write();
+  
+  return true;
+}
+
+// ============ Model Aliases ============
+
+/**
+ * Get all model aliases
+ */
+export async function getModelAliases() {
+  const db = await getDb();
+  return db.data.modelAliases || {};
+}
+
+/**
+ * Set model alias
+ */
+export async function setModelAlias(alias, model) {
+  const db = await getDb();
+  db.data.modelAliases[alias] = model;
+  await db.write();
+}
+
+/**
+ * Delete model alias
+ */
+export async function deleteModelAlias(alias) {
+  const db = await getDb();
+  delete db.data.modelAliases[alias];
+  await db.write();
+}
+
+// ============ Combos ============
+
+/**
+ * Get all combos
+ */
+export async function getCombos() {
+  const db = await getDb();
+  return db.data.combos || [];
+}
+
+/**
+ * Get combo by ID
+ */
+export async function getComboById(id) {
+  const db = await getDb();
+  return (db.data.combos || []).find(c => c.id === id) || null;
+}
+
+/**
+ * Get combo by name
+ */
+export async function getComboByName(name) {
+  const db = await getDb();
+  return (db.data.combos || []).find(c => c.name === name) || null;
+}
+
+/**
+ * Create combo
+ */
+export async function createCombo(data) {
+  const db = await getDb();
+  if (!db.data.combos) db.data.combos = [];
+  
+  const now = new Date().toISOString();
+  const combo = {
+    id: uuidv4(),
+    name: data.name,
+    models: data.models || [],
+    createdAt: now,
+    updatedAt: now,
+  };
+  
+  db.data.combos.push(combo);
+  await db.write();
+  return combo;
+}
+
+/**
+ * Update combo
+ */
+export async function updateCombo(id, data) {
+  const db = await getDb();
+  if (!db.data.combos) db.data.combos = [];
+  
+  const index = db.data.combos.findIndex(c => c.id === id);
+  if (index === -1) return null;
+  
+  db.data.combos[index] = {
+    ...db.data.combos[index],
+    ...data,
+    updatedAt: new Date().toISOString(),
+  };
+  
+  await db.write();
+  return db.data.combos[index];
+}
+
+/**
+ * Delete combo
+ */
+export async function deleteCombo(id) {
+  const db = await getDb();
+  if (!db.data.combos) return false;
+  
+  const index = db.data.combos.findIndex(c => c.id === id);
+  if (index === -1) return false;
+  
+  db.data.combos.splice(index, 1);
+  await db.write();
+  return true;
+}
+
+// ============ API Keys ============
+
+/**
+ * Get all API keys
+ */
+export async function getApiKeys() {
+  const db = await getDb();
+  return db.data.apiKeys || [];
+}
+
+/**
+ * Generate short random key (8 chars)
+ */
+function generateShortKey() {
+  const chars = "abcdefghijklmnopqrstuvwxyz0123456789";
+  let result = "";
+  for (let i = 0; i < 8; i++) {
+    result += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return result;
+}
+
+/**
+ * Create API key
+ * @param {string} name - Key name
+ * @param {string} machineId - MachineId (required)
+ */
+export async function createApiKey(name, machineId) {
+  if (!machineId) {
+    throw new Error("machineId is required");
+  }
+  
+  const db = await getDb();
+  const now = new Date().toISOString();
+  
+  // Always use new format: sk-{machineId}-{keyId}-{crc8}
+  const { generateApiKeyWithMachine } = await import("@/shared/utils/apiKey");
+  const result = generateApiKeyWithMachine(machineId);
+  
+  const apiKey = {
+    id: uuidv4(),
+    name: name,
+    key: result.key,
+    machineId: machineId,
+    createdAt: now,
+  };
+  
+  db.data.apiKeys.push(apiKey);
+  await db.write();
+  
+  return apiKey;
+}
+
+/**
+ * Delete API key
+ */
+export async function deleteApiKey(id) {
+  const db = await getDb();
+  const index = db.data.apiKeys.findIndex(k => k.id === id);
+  
+  if (index === -1) return false;
+  
+  db.data.apiKeys.splice(index, 1);
+  await db.write();
+  
+  return true;
+}
+
+/**
+ * Validate API key
+ */
+export async function validateApiKey(key) {
+  const db = await getDb();
+  return db.data.apiKeys.some(k => k.key === key);
+}
+
+// ============ Data Cleanup ============
+
+/**
+ * Remove null/empty fields from all provider connections to reduce db size
+ */
+export async function cleanupProviderConnections() {
+  const db = await getDb();
+  const fieldsToCheck = [
+    "displayName", "email", "globalPriority", "defaultModel",
+    "accessToken", "refreshToken", "expiresAt", "tokenType",
+    "scope", "idToken", "projectId", "apiKey", "testStatus",
+    "lastTested", "lastError", "lastErrorAt", "rateLimitedUntil", "expiresIn"
+  ];
+
+  let cleaned = 0;
+  for (const connection of db.data.providerConnections) {
+    for (const field of fieldsToCheck) {
+      if (connection[field] === null || connection[field] === undefined) {
+        delete connection[field];
+        cleaned++;
+      }
+    }
+    // Remove empty providerSpecificData
+    if (connection.providerSpecificData && Object.keys(connection.providerSpecificData).length === 0) {
+      delete connection.providerSpecificData;
+      cleaned++;
+    }
+  }
+
+  if (cleaned > 0) {
+    await db.write();
+  }
+  return cleaned;
+}
+
+// ============ Settings ============
+
+/**
+ * Get settings
+ */
+export async function getSettings() {
+  const db = await getDb();
+  return db.data.settings || { cloudEnabled: false };
+}
+
+/**
+ * Update settings
+ */
+export async function updateSettings(updates) {
+  const db = await getDb();
+  db.data.settings = {
+    ...db.data.settings,
+    ...updates
+  };
+  await db.write();
+  return db.data.settings;
+}
+
+/**
+ * Check if cloud is enabled
+ */
+export async function isCloudEnabled() {
+  const settings = await getSettings();
+  return settings.cloudEnabled === true;
+}
+

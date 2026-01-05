@@ -1,0 +1,38 @@
+{
+  "name": "9router-app",
+  "version": "0.2.13",
+  "description": "9Router web dashboard",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "build:standalone": "next build && node scripts/prepare-standalone.js",
+    "start": "next start",
+    "start:cli": "node bin/cli.js",
+    "lint": "eslint",
+    "prepublishOnly": "npm run build:standalone"
+  },
+  "dependencies": {
+    "fs": "^0.0.1-security",
+    "lowdb": "^7.0.1",
+    "next": "^15.2.0",
+    "node-machine-id": "^1.1.12",
+    "open": "^10.1.0",
+    "open-sse": "^1.0.0",
+    "ora": "^5.4.1",
+    "react": "19.2.1",
+    "react-dom": "19.2.1",
+    "undici": "^7.16.0",
+    "uuid": "^13.0.0",
+    "zustand": "^5.0.9"
+  },
+  "overrides": {
+    "open-sse": "file:../open-sse"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4.1.18",
+    "eslint": "^9",
+    "eslint-config-next": "16.0.10",
+    "tailwindcss": "^4"
+  }
+}
