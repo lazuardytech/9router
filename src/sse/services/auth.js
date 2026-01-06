@@ -1,16 +1,16 @@
-import { getProviderConnections, validateApiKey, updateProviderConnection } from "@/lib/localDb";
+import { getProviderConnections, validateApiKey, updateProviderConnection, getSettings } from "@/lib/localDb";
 import { isAccountUnavailable, getUnavailableUntil } from "open-sse/services/accountFallback.js";
 import * as log from "../utils/logger.js";
 
 /**
  * Get provider credentials from localDb
- * Filters out unavailable accounts and returns the highest priority available account
+ * Filters out unavailable accounts and returns the selected account based on strategy
  * @param {string} provider - Provider name
  * @param {string|null} excludeConnectionId - Connection ID to exclude (for retry with next account)
  */
 export async function getProviderCredentials(provider, excludeConnectionId = null) {
   const connections = await getProviderConnections({ provider, isActive: true });
-  
+
   if (connections.length === 0) {
     log.warn("AUTH", `No credentials for ${provider}`);
     return null;
@@ -28,7 +28,26 @@ export async function getProviderCredentials(provider, excludeConnectionId = nul
     return null;
   }
 
-  const connection = availableConnections[0];
+  const settings = await getSettings();
+  const strategy = settings.fallbackStrategy || "fill-first";
+
+  let connection;
+  if (strategy === "round-robin") {
+    // Sort by lastUsed (nulls first) to pick the least recently used
+    const sorted = [...availableConnections].sort((a, b) => {
+      if (!a.lastUsedAt && !b.lastUsedAt) return (a.priority || 999) - (b.priority || 999);
+      if (!a.lastUsedAt) return -1;
+      if (!b.lastUsedAt) return 1;
+      return new Date(a.lastUsedAt) - new Date(b.lastUsedAt);
+    });
+    connection = sorted[0];
+
+    // Update lastUsedAt asynchronously
+    updateProviderConnection(connection.id, { lastUsedAt: new Date().toISOString() }).catch(() => {});
+  } else {
+    // Default: fill-first (already sorted by priority in getProviderConnections)
+    connection = availableConnections[0];
+  }
 
   return {
     apiKey: connection.apiKey,
