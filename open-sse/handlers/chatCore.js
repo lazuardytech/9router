@@ -8,7 +8,7 @@ import { createRequestLogger } from "../utils/requestLogger.js";
 import { getModelTargetFormat, PROVIDER_ID_TO_ALIAS } from "../config/providerModels.js";
 import { createErrorResult, parseUpstreamError, formatProviderError } from "../utils/error.js";
 import { handleBypassRequest } from "../utils/bypassHandler.js";
-import { saveRequestUsage } from "@/lib/usageDb.js";
+import { saveRequestUsage, trackPendingRequest } from "@/lib/usageDb.js";
 
 /**
  * Extract usage from non-streaming response body
@@ -122,6 +122,9 @@ export async function handleChatCore({ body, modelInfo, credentials, log, onCred
   const providerUrl = buildProviderUrl(provider, model, stream);
   const providerHeaders = buildProviderHeaders(provider, credentials, stream, translatedBody);
 
+  // Track pending request
+  trackPendingRequest(model, provider, connectionId, true);
+
   // 2. Log converted request to provider
   reqLogger.logConvertedRequest(providerUrl, providerHeaders, translatedBody);
 
@@ -155,6 +158,7 @@ export async function handleChatCore({ body, modelInfo, credentials, log, onCred
       signal: streamController.signal
     });
   } catch (error) {
+    trackPendingRequest(model, provider, connectionId, false);
     if (error.name === "AbortError") {
       streamController.handleError(error);
       return createErrorResult(499, "Request aborted");
@@ -248,6 +252,7 @@ export async function handleChatCore({ body, modelInfo, credentials, log, onCred
 
   // Check provider response - return error info for fallback handling
   if (!providerResponse.ok) {
+    trackPendingRequest(model, provider, connectionId, false);
     const { statusCode, message } = await parseUpstreamError(providerResponse);
     const errMsg = formatProviderError(new Error(message), provider, model, statusCode);
     console.log(`${COLORS.red}[ERROR] ${errMsg}${COLORS.reset}`);
@@ -260,6 +265,7 @@ export async function handleChatCore({ body, modelInfo, credentials, log, onCred
 
   // Non-streaming response
   if (!stream) {
+    trackPendingRequest(model, provider, connectionId, false);
     const responseBody = await providerResponse.json();
 
     // Notify success - caller can clear error status if needed
