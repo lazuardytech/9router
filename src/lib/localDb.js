@@ -194,7 +194,10 @@ export async function createProviderConnection(data) {
   
   db.data.providerConnections.push(connection);
   await db.write();
-  
+
+  // Reorder to ensure consistency
+  await reorderProviderConnections(data.provider);
+
   return connection;
 }
 
@@ -204,16 +207,24 @@ export async function createProviderConnection(data) {
 export async function updateProviderConnection(id, data) {
   const db = await getDb();
   const index = db.data.providerConnections.findIndex(c => c.id === id);
-  
+
   if (index === -1) return null;
-  
+
+  const providerId = db.data.providerConnections[index].provider;
+
   db.data.providerConnections[index] = {
     ...db.data.providerConnections[index],
     ...data,
     updatedAt: new Date().toISOString(),
   };
-  
+
   await db.write();
+
+  // Reorder if priority was changed
+  if (data.priority !== undefined) {
+    await reorderProviderConnections(providerId);
+  }
+
   return db.data.providerConnections[index];
 }
 
@@ -223,13 +234,43 @@ export async function updateProviderConnection(id, data) {
 export async function deleteProviderConnection(id) {
   const db = await getDb();
   const index = db.data.providerConnections.findIndex(c => c.id === id);
-  
+
   if (index === -1) return false;
-  
+
+  const providerId = db.data.providerConnections[index].provider;
+
   db.data.providerConnections.splice(index, 1);
   await db.write();
-  
+
+  // Reorder to fill gaps
+  await reorderProviderConnections(providerId);
+
   return true;
+}
+
+/**
+ * Reorder provider connections to ensure unique, sequential priorities
+ */
+export async function reorderProviderConnections(providerId) {
+  const db = await getDb();
+  if (!db.data.providerConnections) return;
+
+  const providerConnections = db.data.providerConnections
+    .filter(c => c.provider === providerId)
+    .sort((a, b) => {
+      // Sort by priority first
+      const pDiff = (a.priority || 0) - (b.priority || 0);
+      if (pDiff !== 0) return pDiff;
+      // Use updatedAt as tie-breaker (newer first)
+      return new Date(b.updatedAt || 0) - new Date(a.updatedAt || 0);
+    });
+
+  // Re-assign sequential priorities
+  providerConnections.forEach((conn, index) => {
+    conn.priority = index + 1;
+  });
+
+  await db.write();
 }
 
 // ============ Model Aliases ============

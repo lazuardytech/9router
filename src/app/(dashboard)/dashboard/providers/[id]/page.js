@@ -158,17 +158,32 @@ export default function ProviderDetailPage() {
   const handleSwapPriority = async (conn1, conn2) => {
     if (!conn1 || !conn2) return;
     try {
-      // Swap priorities
+      // If they have the same priority, we need to ensure the one moving up
+      // gets a lower value than the one moving down.
+      // We use a small offset which the backend re-indexing will fix.
+      let p1 = conn2.priority;
+      let p2 = conn1.priority;
+
+      if (p1 === p2) {
+        // If moving conn1 "up" (index decreases)
+        const isConn1MovingUp = connections.indexOf(conn1) > connections.indexOf(conn2);
+        if (isConn1MovingUp) {
+          p1 = conn2.priority - 0.5;
+        } else {
+          p1 = conn2.priority + 0.5;
+        }
+      }
+
       await Promise.all([
         fetch(`/api/providers/${conn1.id}`, {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ priority: conn2.priority }),
+          body: JSON.stringify({ priority: p1 }),
         }),
         fetch(`/api/providers/${conn2.id}`, {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ priority: conn1.priority }),
+          body: JSON.stringify({ priority: p2 }),
         }),
       ]);
       await fetchConnections();
