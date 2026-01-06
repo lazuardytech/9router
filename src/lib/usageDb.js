@@ -230,6 +230,62 @@ export async function getRecentLogs(limit = 200) {
 }
 
 /**
+ * Calculate cost for a usage entry
+ * @param {string} provider - Provider ID
+ * @param {string} model - Model ID
+ * @param {object} tokens - Token counts
+ * @returns {number} Cost in dollars
+ */
+async function calculateCost(provider, model, tokens) {
+  if (!tokens || !provider || !model) return 0;
+
+  try {
+    const { getPricingForModel } = await import("@/lib/localDb.js");
+    const pricing = await getPricingForModel(provider, model);
+
+    if (!pricing) return 0;
+
+    let cost = 0;
+
+    // Input tokens (non-cached)
+    const inputTokens = tokens.prompt_tokens || tokens.input_tokens || 0;
+    const cachedTokens = tokens.cached_tokens || tokens.cache_read_input_tokens || 0;
+    const nonCachedInput = Math.max(0, inputTokens - cachedTokens);
+
+    cost += (nonCachedInput * (pricing.input / 1000000));
+
+    // Cached tokens
+    if (cachedTokens > 0) {
+      const cachedRate = pricing.cached || pricing.input; // Fallback to input rate
+      cost += (cachedTokens * (cachedRate / 1000000));
+    }
+
+    // Output tokens
+    const outputTokens = tokens.completion_tokens || tokens.output_tokens || 0;
+    cost += (outputTokens * (pricing.output / 1000000));
+
+    // Reasoning tokens
+    const reasoningTokens = tokens.reasoning_tokens || 0;
+    if (reasoningTokens > 0) {
+      const reasoningRate = pricing.reasoning || pricing.output; // Fallback to output rate
+      cost += (reasoningTokens * (reasoningRate / 1000000));
+    }
+
+    // Cache creation tokens
+    const cacheCreationTokens = tokens.cache_creation_input_tokens || 0;
+    if (cacheCreationTokens > 0) {
+      const cacheCreationRate = pricing.cache_creation || pricing.input; // Fallback to input rate
+      cost += (cacheCreationTokens * (cacheCreationRate / 1000000));
+    }
+
+    return cost;
+  } catch (error) {
+    console.error("Error calculating cost:", error);
+    return 0;
+  }
+}
+
+/**
  * Get aggregated usage stats
  */
 export async function getUsageStats() {
@@ -258,6 +314,7 @@ export async function getUsageStats() {
     totalRequests: history.length,
     totalPromptTokens: 0,
     totalCompletionTokens: 0,
+    totalCost: 0, // NEW
     byProvider: {},
     byModel: {},
     byAccount: {},
@@ -300,7 +357,8 @@ export async function getUsageStats() {
     bucketMap[bucketKey] = {
       requests: 0,
       promptTokens: 0,
-      completionTokens: 0
+      completionTokens: 0,
+      cost: 0
     };
     stats.last10Minutes.push(bucketMap[bucketKey]);
   }
@@ -310,8 +368,12 @@ export async function getUsageStats() {
     const completionTokens = entry.tokens?.completion_tokens || 0;
     const entryTime = new Date(entry.timestamp);
 
+    // Calculate cost for this entry
+    const entryCost = await calculateCost(entry.provider, entry.model, entry.tokens);
+
     stats.totalPromptTokens += promptTokens;
     stats.totalCompletionTokens += completionTokens;
+    stats.totalCost += entryCost;
 
     // Last 10 minutes aggregation - floor entry time to its minute
     if (entryTime >= tenMinutesAgo && entryTime <= now) {
@@ -320,6 +382,7 @@ export async function getUsageStats() {
         bucketMap[entryMinuteStart].requests++;
         bucketMap[entryMinuteStart].promptTokens += promptTokens;
         bucketMap[entryMinuteStart].completionTokens += completionTokens;
+        bucketMap[entryMinuteStart].cost += entryCost;
       }
     }
 
@@ -328,12 +391,14 @@ export async function getUsageStats() {
       stats.byProvider[entry.provider] = {
         requests: 0,
         promptTokens: 0,
-        completionTokens: 0
+        completionTokens: 0,
+        cost: 0
       };
     }
     stats.byProvider[entry.provider].requests++;
     stats.byProvider[entry.provider].promptTokens += promptTokens;
     stats.byProvider[entry.provider].completionTokens += completionTokens;
+    stats.byProvider[entry.provider].cost += entryCost;
 
     // By Model
     // Format: "modelName (provider)" if provider is known
@@ -344,6 +409,7 @@ export async function getUsageStats() {
         requests: 0,
         promptTokens: 0,
         completionTokens: 0,
+        cost: 0,
         rawModel: entry.model,
         provider: entry.provider,
         lastUsed: entry.timestamp
@@ -352,6 +418,7 @@ export async function getUsageStats() {
     stats.byModel[modelKey].requests++;
     stats.byModel[modelKey].promptTokens += promptTokens;
     stats.byModel[modelKey].completionTokens += completionTokens;
+    stats.byModel[modelKey].cost += entryCost;
     if (new Date(entry.timestamp) > new Date(stats.byModel[modelKey].lastUsed)) {
       stats.byModel[modelKey].lastUsed = entry.timestamp;
     }
@@ -367,6 +434,7 @@ export async function getUsageStats() {
           requests: 0,
           promptTokens: 0,
           completionTokens: 0,
+          cost: 0,
           rawModel: entry.model,
           provider: entry.provider,
           connectionId: entry.connectionId,
@@ -377,6 +445,7 @@ export async function getUsageStats() {
       stats.byAccount[accountKey].requests++;
       stats.byAccount[accountKey].promptTokens += promptTokens;
       stats.byAccount[accountKey].completionTokens += completionTokens;
+      stats.byAccount[accountKey].cost += entryCost;
       if (new Date(entry.timestamp) > new Date(stats.byAccount[accountKey].lastUsed)) {
         stats.byAccount[accountKey].lastUsed = entry.timestamp;
       }
