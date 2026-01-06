@@ -33,17 +33,44 @@ export async function getProviderCredentials(provider, excludeConnectionId = nul
 
   let connection;
   if (strategy === "round-robin") {
-    // Sort by lastUsed (nulls first) to pick the least recently used
-    const sorted = [...availableConnections].sort((a, b) => {
-      if (!a.lastUsedAt && !b.lastUsedAt) return (a.priority || 999) - (b.priority || 999);
-      if (!a.lastUsedAt) return -1;
-      if (!b.lastUsedAt) return 1;
-      return new Date(a.lastUsedAt) - new Date(b.lastUsedAt);
-    });
-    connection = sorted[0];
+    const stickyLimit = settings.stickyRoundRobinLimit || 3;
 
-    // Update lastUsedAt asynchronously
-    updateProviderConnection(connection.id, { lastUsedAt: new Date().toISOString() }).catch(() => {});
+    // Sort by lastUsed (most recent first) to find current candidate
+    const byRecency = [...availableConnections].sort((a, b) => {
+      if (!a.lastUsedAt && !b.lastUsedAt) return (a.priority || 999) - (b.priority || 999);
+      if (!a.lastUsedAt) return 1;
+      if (!b.lastUsedAt) return -1;
+      return new Date(b.lastUsedAt) - new Date(a.lastUsedAt);
+    });
+
+    const current = byRecency[0];
+    const currentCount = current?.consecutiveUseCount || 0;
+
+    if (current && current.lastUsedAt && currentCount < stickyLimit) {
+      // Stay with current account
+      connection = current;
+      // Update lastUsedAt and increment count
+      updateProviderConnection(connection.id, {
+        lastUsedAt: new Date().toISOString(),
+        consecutiveUseCount: (connection.consecutiveUseCount || 0) + 1
+      }).catch(() => {});
+    } else {
+      // Pick the least recently used (excluding current if possible)
+      const sortedByOldest = [...availableConnections].sort((a, b) => {
+        if (!a.lastUsedAt && !b.lastUsedAt) return (a.priority || 999) - (b.priority || 999);
+        if (!a.lastUsedAt) return -1;
+        if (!b.lastUsedAt) return 1;
+        return new Date(a.lastUsedAt) - new Date(b.lastUsedAt);
+      });
+
+      connection = sortedByOldest[0];
+
+      // Update lastUsedAt and reset count to 1
+      updateProviderConnection(connection.id, {
+        lastUsedAt: new Date().toISOString(),
+        consecutiveUseCount: 1
+      }).catch(() => {});
+    }
   } else {
     // Default: fill-first (already sorted by priority in getProviderConnections)
     connection = availableConnections[0];

@@ -76,6 +76,24 @@ export default function ProfilePage() {
     }
   };
 
+  const updateStickyLimit = async (limit) => {
+    const numLimit = parseInt(limit);
+    if (isNaN(numLimit) || numLimit < 1) return;
+
+    try {
+      const res = await fetch("/api/settings", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ stickyRoundRobinLimit: numLimit }),
+      });
+      if (res.ok) {
+        setSettings(prev => ({ ...prev, stickyRoundRobinLimit: numLimit }));
+      }
+    } catch (err) {
+      console.error("Failed to update sticky limit:", err);
+    }
+  };
+
   return (
     <div className="max-w-2xl mx-auto">
       <div className="flex flex-col gap-6">
@@ -165,9 +183,31 @@ export default function ProfilePage() {
                 disabled={loading}
               />
             </div>
+
+            {/* Sticky Round Robin Limit */}
+            {settings.fallbackStrategy === "round-robin" && (
+              <div className="flex items-center justify-between pt-2 border-t border-border/50">
+                <div>
+                  <p className="font-medium">Sticky Limit</p>
+                  <p className="text-sm text-text-muted">
+                    Calls per account before switching
+                  </p>
+                </div>
+                <Input
+                  type="number"
+                  min="1"
+                  max="10"
+                  value={settings.stickyRoundRobinLimit || 3}
+                  onChange={(e) => updateStickyLimit(e.target.value)}
+                  disabled={loading}
+                  className="w-20 text-center"
+                />
+              </div>
+            )}
+
             <p className="text-xs text-text-muted italic pt-2 border-t border-border/50">
               {settings.fallbackStrategy === "round-robin"
-                ? "Currently distributing requests across all available accounts."
+                ? `Currently distributing requests across all available accounts with ${settings.stickyRoundRobinLimit || 3} calls per account.`
                 : "Currently using accounts in priority order (Fill First)."}
             </p>
           </div>
