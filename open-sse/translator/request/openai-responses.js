@@ -10,7 +10,7 @@ import { FORMATS } from "../formats.js";
 /**
  * Convert OpenAI Responses API request to OpenAI Chat Completions format
  */
-function translateRequest(model, body, stream, credentials) {
+function openaiResponsesToOpenAIRequest(model, body, stream, credentials) {
   if (!body.input) return body;
 
   const result = { ...body };
@@ -81,7 +81,7 @@ function translateRequest(model, body, stream, credentials) {
         }
         pendingToolResults = [];
       }
-      // Add tool result immediately (not pending)
+      // Add tool result immediately
       result.messages.push({
         role: "tool",
         tool_call_id: item.call_id,
@@ -104,14 +104,10 @@ function translateRequest(model, body, stream, credentials) {
     }
   }
 
-  // Tools are already in OpenAI format, just keep them
-  // Responses API tools: { type: "function", name, description, parameters }
-  // OpenAI tools: { type: "function", function: { name, description, parameters } }
+  // Convert tools format
   if (body.tools && Array.isArray(body.tools)) {
     result.tools = body.tools.map(tool => {
-      // Already has function wrapper
       if (tool.function) return tool;
-      // Responses API format: flatten to OpenAI format
       return {
         type: "function",
         function: {
@@ -135,6 +131,6 @@ function translateRequest(model, body, stream, credentials) {
   return result;
 }
 
-// Register translator
-register(FORMATS.OPENAI_RESPONSES, FORMATS.OPENAI, translateRequest, null);
+// Register
+register(FORMATS.OPENAI_RESPONSES, FORMATS.OPENAI, openaiResponsesToOpenAIRequest, null);
 

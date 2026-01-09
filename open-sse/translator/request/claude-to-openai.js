@@ -3,7 +3,7 @@ import { FORMATS } from "../formats.js";
 import { adjustMaxTokens } from "../helpers/maxTokensHelper.js";
 
 // Convert Claude request to OpenAI format
-function claudeToOpenAI(model, body, stream) {
+function claudeToOpenAIRequest(model, body, stream) {
   const result = {
     model: model,
     messages: [],
@@ -81,7 +81,6 @@ function fixMissingToolResponses(messages) {
       const toolCallIds = msg.tool_calls.map(tc => tc.id);
       
       // Collect all tool response IDs that IMMEDIATELY follow this assistant message
-      // Stop at any non-tool message (user or assistant)
       const respondedIds = new Set();
       let insertPosition = i + 1;
       for (let j = i + 1; j < messages.length; j++) {
@@ -90,7 +89,6 @@ function fixMissingToolResponses(messages) {
           respondedIds.add(nextMsg.tool_call_id);
           insertPosition = j + 1;
         } else {
-          // Stop at any non-tool message (user or assistant)
           break;
         }
       }
@@ -104,9 +102,7 @@ function fixMissingToolResponses(messages) {
           tool_call_id: id,
           content: "[No response received]"
         }));
-        // Insert missing responses at the correct position
         messages.splice(insertPosition, 0, ...missingResponses);
-        // Adjust index to skip inserted messages
         i = insertPosition + missingResponses.length - 1;
       }
     }
@@ -157,12 +153,10 @@ function convertClaudeMessage(msg) {
           break;
 
         case "tool_result":
-          // Extract actual content from tool_result
           let resultContent = "";
           if (typeof block.content === "string") {
             resultContent = block.content;
           } else if (Array.isArray(block.content)) {
-            // Claude tool_result content can be array of text blocks
             resultContent = block.content
               .filter(c => c.type === "text")
               .map(c => c.text)
@@ -182,7 +176,6 @@ function convertClaudeMessage(msg) {
 
     // If has tool results, return array of tool messages
     if (toolResults.length > 0) {
-      // Also include text parts as user message if any
       if (parts.length > 0) {
         const textContent = parts.length === 1 && parts[0].type === "text" 
           ? parts[0].text 
@@ -212,7 +205,7 @@ function convertClaudeMessage(msg) {
       };
     }
     
-    // Empty content array - return empty string content to keep message in conversation
+    // Empty content array
     if (msg.content.length === 0) {
       return { role, content: "" };
     }
@@ -235,5 +228,5 @@ function convertToolChoice(choice) {
 }
 
 // Register
-register(FORMATS.CLAUDE, FORMATS.OPENAI, claudeToOpenAI, null);
+register(FORMATS.CLAUDE, FORMATS.OPENAI, claudeToOpenAIRequest, null);
 

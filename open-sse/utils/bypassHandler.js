@@ -33,12 +33,12 @@ export function handleBypassRequest(body, model) {
   if (firstText === "Warmup") shouldBypass = true;
 
   // Check count pattern: [{"role":"user","content":"count"}]
-  if (!shouldBypass && 
-      messages.length === 1 && 
-      messages[0]?.role === "user" && 
-      firstText === "count") {
-    shouldBypass = true;
-  }
+  // if (!shouldBypass && 
+  //     messages.length === 1 && 
+  //     messages[0]?.role === "user" && 
+  //     firstText === "count") {
+  //   shouldBypass = true;
+  // }
 
   // Check skip patterns
   if (!shouldBypass && SKIP_PATTERNS?.length) {
@@ -54,8 +54,10 @@ export function handleBypassRequest(body, model) {
 
   // Create bypass response using translator
   if (stream) {
+    console.log("createStreamingResponse", sourceFormat, model);
     return createStreamingResponse(sourceFormat, model);
   } else {
+    console.log("createNonStreamingResponse", sourceFormat, model);
     return createNonStreamingResponse(sourceFormat, model);
   }
 }

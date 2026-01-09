@@ -3,7 +3,7 @@ import { FORMATS } from "../formats.js";
 import { adjustMaxTokens } from "../helpers/maxTokensHelper.js";
 
 // Convert Gemini request to OpenAI format
-function geminiToOpenAI(model, body, stream) {
+function geminiToOpenAIRequest(model, body, stream) {
   const result = {
     model: model,
     messages: [],
@@ -14,7 +14,6 @@ function geminiToOpenAI(model, body, stream) {
   if (body.generationConfig) {
     const config = body.generationConfig;
     if (config.maxOutputTokens) {
-      // Create temporary body object for adjustMaxTokens
       const tempBody = { max_tokens: config.maxOutputTokens, tools: body.tools };
       result.max_tokens = adjustMaxTokens(tempBody);
     }
@@ -81,12 +80,10 @@ function convertGeminiContent(content) {
   const toolCalls = [];
 
   for (const part of content.parts) {
-    // Text
     if (part.text !== undefined) {
       parts.push({ type: "text", text: part.text });
     }
 
-    // Image
     if (part.inlineData) {
       parts.push({
         type: "image_url",
@@ -96,7 +93,6 @@ function convertGeminiContent(content) {
       });
     }
 
-    // Function call
     if (part.functionCall) {
       toolCalls.push({
         id: `call_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
@@ -108,7 +104,6 @@ function convertGeminiContent(content) {
       });
     }
 
-    // Function response - use id if available, fallback to name
     if (part.functionResponse) {
       return {
         role: "tool",
@@ -118,7 +113,6 @@ function convertGeminiContent(content) {
     }
   }
 
-  // Has tool calls
   if (toolCalls.length > 0) {
     const result = { role: "assistant" };
     if (parts.length > 0) {
@@ -128,7 +122,6 @@ function convertGeminiContent(content) {
     return result;
   }
 
-  // Regular message
   if (parts.length > 0) {
     return {
       role,
@@ -149,6 +142,6 @@ function extractGeminiText(content) {
 }
 
 // Register
-register(FORMATS.GEMINI, FORMATS.OPENAI, geminiToOpenAI, null);
-register(FORMATS.GEMINI_CLI, FORMATS.OPENAI, geminiToOpenAI, null);
+register(FORMATS.GEMINI, FORMATS.OPENAI, geminiToOpenAIRequest, null);
+register(FORMATS.GEMINI_CLI, FORMATS.OPENAI, geminiToOpenAIRequest, null);
 

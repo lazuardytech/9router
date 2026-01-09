@@ -4,19 +4,9 @@ import { v4 as uuidv4 } from "uuid";
 import path from "path";
 import os from "os";
 import fs from "fs";
-import { fileURLToPath } from "url";
-
-// Get app name from root package.json config
+// Get app name - fixed constant to avoid Windows path issues in standalone build
 function getAppName() {
-  const __dirname = path.dirname(fileURLToPath(import.meta.url));
-  // Look for root package.json (monorepo root)
-  const rootPkgPath = path.resolve(__dirname, "../../../package.json");
-  try {
-    const pkg = JSON.parse(fs.readFileSync(rootPkgPath, "utf-8"));
-    return pkg.config?.appName || "9router";
-  } catch {
-    return "9router";
-  }
+  return "9router";
 }
 
 // Get user data directory based on platform

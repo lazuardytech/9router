@@ -1,8 +1,8 @@
 // Stream handler with disconnect detection - shared for all providers
 
-// Get HH:MM timestamp
+// Get HH:MM:SS timestamp
 function getTimeString() {
-  return new Date().toLocaleTimeString("en-US", { hour12: false, hour: "2-digit", minute: "2-digit" });
+  return new Date().toLocaleTimeString("en-US", { hour12: false, hour: "2-digit", minute: "2-digit", second: "2-digit" });
 }
 
 /**

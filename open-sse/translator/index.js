@@ -51,7 +51,7 @@ export function translateRequest(sourceFormat, targetFormat, model, body, stream
     if (targetFormat !== FORMATS.OPENAI) {
       const fromOpenAI = requestRegistry.get(`${FORMATS.OPENAI}:${targetFormat}`);
       if (fromOpenAI) {
-        result = fromOpenAI(model, result, stream, credentials);
+        result = fromOpenAI(model, result, stream);
       }
     }
   }
@@ -157,11 +157,16 @@ export function initState(sourceFormat) {
 
 // Initialize all translators
 export async function initTranslators() {
-  await import("./to-openai/claude.js");
-  await import("./to-openai/gemini.js");
-  await import("./to-openai/openai.js");
-  await import("./to-openai/openai-responses.js");
-  await import("./from-openai/claude.js");
-  await import("./from-openai/gemini.js");
-  await import("./from-openai/openai-responses.js");
+  // Request translators
+  await import("./request/claude-to-openai.js");
+  await import("./request/openai-to-claude.js");
+  await import("./request/gemini-to-openai.js");
+  await import("./request/openai-to-gemini.js");
+  await import("./request/openai-responses.js");
+  
+  // Response translators
+  await import("./response/claude-to-openai.js");
+  await import("./response/openai-to-claude.js");
+  await import("./response/gemini-to-openai.js");
+  await import("./response/openai-responses.js");
 }

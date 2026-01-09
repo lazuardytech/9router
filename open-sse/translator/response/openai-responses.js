@@ -9,9 +9,8 @@ import { FORMATS } from "../formats.js";
  * Translate OpenAI chunk to Responses API events
  * @returns {Array} Array of events with { event, data } structure
  */
-function translateResponse(chunk, state) {
+function openaiToOpenAIResponsesResponse(chunk, state) {
   if (!chunk) {
-    // Flush remaining events
     return flushEvents(state);
   }
   
@@ -356,6 +355,6 @@ function flushEvents(state) {
   return events;
 }
 
-// Register translator
-register(FORMATS.OPENAI, FORMATS.OPENAI_RESPONSES, null, translateResponse);
+// Register
+register(FORMATS.OPENAI, FORMATS.OPENAI_RESPONSES, null, openaiToOpenAIResponsesResponse);
 

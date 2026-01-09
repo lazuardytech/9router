@@ -4,7 +4,9 @@ import { CLAUDE_SYSTEM_PROMPT } from "../../config/constants.js";
 import { adjustMaxTokens } from "../helpers/maxTokensHelper.js";
 
 // Convert OpenAI request to Claude format
-function openaiToClaude(model, body, stream) {
+function openaiToClaudeRequest(model, body, stream) {
+  // Tool name mapping for Claude OAuth (capitalizedName → originalName)
+  const toolNameMap = new Map();
   const result = {
     model: model,
     max_tokens: adjustMaxTokens(body),
@@ -27,10 +29,10 @@ function openaiToClaude(model, body, stream) {
         systemParts.push(typeof msg.content === "string" ? msg.content : extractTextContent(msg.content));
       }
     }
-    
+
     // Filter out system messages for separate processing
     const nonSystemMessages = body.messages.filter(m => m.role !== "system");
-    
+
     // Process messages with merging logic
     // CRITICAL: tool_result must be in separate message immediately after tool_use
     let currentRole = undefined;
@@ -54,15 +56,12 @@ function openaiToClaude(model, body, stream) {
         const toolResultBlocks = blocks.filter(b => b.type === "tool_result");
         const otherBlocks = blocks.filter(b => b.type !== "tool_result");
 
-        // Flush current message first
         flushCurrentMessage();
 
-        // Add tool_result as separate user message
         if (toolResultBlocks.length > 0) {
           result.messages.push({ role: "user", content: toolResultBlocks });
         }
 
-        // Add other blocks to current parts for next message
         if (otherBlocks.length > 0) {
           currentRole = newRole;
           currentParts.push(...otherBlocks);
@@ -83,8 +82,8 @@ function openaiToClaude(model, body, stream) {
     }
 
     flushCurrentMessage();
-    
-    // Add cache_control to last assistant message (like worker.old)
+
+    // Add cache_control to last assistant message
     for (let i = result.messages.length - 1; i >= 0; i--) {
       const message = result.messages[i];
       if (message.role === "assistant" && Array.isArray(message.content) && message.content.length > 0) {
@@ -99,7 +98,7 @@ function openaiToClaude(model, body, stream) {
 
   // System with Claude Code prompt and cache_control
   const claudeCodePrompt = { type: "text", text: CLAUDE_SYSTEM_PROMPT };
-  
+
   if (systemParts.length > 0) {
     const systemText = systemParts.join("\n");
     result.system = [
@@ -113,21 +112,27 @@ function openaiToClaude(model, body, stream) {
   // Tools - convert from OpenAI format to Claude format
   if (body.tools && Array.isArray(body.tools)) {
     result.tools = body.tools.map(tool => {
-      // Handle both OpenAI format {type: "function", function: {...}} and direct format
       const toolData = tool.type === "function" && tool.function ? tool.function : tool;
+      const originalName = toolData.name;
+      
+      // Claude requires capitalized tool names
+      const toolName = originalName.charAt(0).toUpperCase() + originalName.slice(1);
+      
+      // Store mapping for response translation
+      if (toolName !== originalName) {
+        toolNameMap.set(toolName, originalName);
+      }
+      
       return {
-        name: toolData.name,
+        name: toolName,
         description: toolData.description || "",
         input_schema: toolData.parameters || toolData.input_schema || { type: "object", properties: {}, required: [] }
       };
     });
-    
-    // Add cache control to last tool (like worker.old)
+
     if (result.tools.length > 0) {
       result.tools[result.tools.length - 1].cache_control = { type: "ephemeral", ttl: "1h" };
     }
-    
-    // console.log("[CLAUDE TOOLS DEBUG] Converted tools:", result.tools.map(t => t.name));
   }
 
   // Tool choice
@@ -135,71 +140,15 @@ function openaiToClaude(model, body, stream) {
     result.tool_choice = convertOpenAIToolChoice(body.tool_choice);
   }
 
-  return result;
-}
-
-// Convert OpenAI request to Gemini format
-function openaiToGemini(model, body, stream) {
-  const result = {
-    contents: [],
-    generationConfig: {}
-  };
-
-  // Generation config
-  if (body.max_tokens) {
-    result.generationConfig.maxOutputTokens = body.max_tokens;
-  }
-  if (body.temperature !== undefined) {
-    result.generationConfig.temperature = body.temperature;
-  }
-  if (body.top_p !== undefined) {
-    result.generationConfig.topP = body.top_p;
-  }
-
-  // Messages
-  if (body.messages && Array.isArray(body.messages)) {
-    for (const msg of body.messages) {
-      if (msg.role === "system") {
-        result.systemInstruction = {
-          parts: [{ text: typeof msg.content === "string" ? msg.content : extractTextContent(msg.content) }]
-        };
-      } else if (msg.role === "tool") {
-        result.contents.push({
-          role: "function",
-          parts: [{
-            functionResponse: {
-              name: msg.tool_call_id,
-              response: tryParseJSON(msg.content)
-            }
-          }]
-        });
-      } else {
-        const converted = convertOpenAIToGeminiContent(msg);
-        if (converted) {
-          result.contents.push(converted);
-        }
-      }
-    }
-  }
-
-  // Tools
-  if (body.tools && Array.isArray(body.tools)) {
-    const validTools = body.tools.filter(tool => tool && tool.function && tool.function.name);
-    if (validTools.length > 0) {
-      result.tools = [{
-        functionDeclarations: validTools.map(tool => ({
-          name: tool.function.name,
-          description: tool.function.description || "",
-          parameters: tool.function.parameters || { type: "object", properties: {} }
-        }))
-      }];
-    }
+  // Attach toolNameMap to result for response translation
+  if (toolNameMap.size > 0) {
+    result._toolNameMap = toolNameMap;
   }
 
   return result;
 }
 
-// Get content blocks from single message (like src.cc getContentBlocksFromMessage)
+// Get content blocks from single message
 function getContentBlocksFromMessage(msg) {
   const blocks = [];
 
@@ -240,7 +189,6 @@ function getContentBlocksFromMessage(msg) {
       }
     }
   } else if (msg.role === "assistant") {
-    // Handle Anthropic format: content is array with tool_use blocks
     if (Array.isArray(msg.content)) {
       for (const part of msg.content) {
         if (part.type === "text" && part.text) {
@@ -256,7 +204,6 @@ function getContentBlocksFromMessage(msg) {
       }
     }
 
-    // Handle OpenAI format: tool_calls array
     if (msg.tool_calls && Array.isArray(msg.tool_calls)) {
       for (const tc of msg.tool_calls) {
         if (tc.type === "function") {
@@ -274,68 +221,9 @@ function getContentBlocksFromMessage(msg) {
   return blocks;
 }
 
-// Convert single OpenAI message to Claude format (for backward compatibility)
-function convertOpenAIMessage(msg) {
-  const role = msg.role === "assistant" ? "assistant" : "user";
-  const content = convertOpenAIMessageContent(msg);
-  
-  if (content.length === 0) return null;
-
-  return { role, content };
-}
-
-// Convert OpenAI message to Gemini content
-function convertOpenAIToGeminiContent(msg) {
-  const role = msg.role === "assistant" ? "model" : "user";
-  const parts = [];
-
-  // Text content
-  if (typeof msg.content === "string") {
-    if (msg.content) {
-      parts.push({ text: msg.content });
-    }
-  } else if (Array.isArray(msg.content)) {
-    for (const part of msg.content) {
-      if (part.type === "text") {
-        parts.push({ text: part.text });
-      } else if (part.type === "image_url") {
-        const url = part.image_url.url;
-        if (url.startsWith("data:")) {
-          const match = url.match(/^data:([^;]+);base64,(.+)$/);
-          if (match) {
-            parts.push({
-              inlineData: {
-                mimeType: match[1],
-                data: match[2]
-              }
-            });
-          }
-        }
-      }
-    }
-  }
-
-  // Tool calls
-  if (msg.tool_calls && Array.isArray(msg.tool_calls)) {
-    for (const tc of msg.tool_calls) {
-      parts.push({
-        functionCall: {
-          name: tc.function.name,
-          args: tryParseJSON(tc.function.arguments)
-        }
-      });
-    }
-  }
-
-  if (parts.length === 0) return null;
-
-  return { role, parts };
-}
-
-// Convert tool choice
+// Convert OpenAI tool choice to Claude format
 function convertOpenAIToolChoice(choice) {
   if (!choice) return { type: "auto" };
-  // Passthrough if already Claude format
   if (typeof choice === "object" && choice.type) return choice;
   if (choice === "auto" || choice === "none") return { type: "auto" };
   if (choice === "required") return { type: "any" };
@@ -365,8 +253,5 @@ function tryParseJSON(str) {
 }
 
 // Register
-register(FORMATS.OPENAI, FORMATS.CLAUDE, openaiToClaude, null);
-register(FORMATS.OPENAI, FORMATS.GEMINI, openaiToGemini, null);
-register(FORMATS.OPENAI, FORMATS.GEMINI_CLI, openaiToGemini, null);
-
+register(FORMATS.OPENAI, FORMATS.CLAUDE, openaiToClaudeRequest, null);
 

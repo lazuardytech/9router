@@ -1,9 +1,9 @@
 import { translateResponse, initState } from "../translator/index.js";
 import { FORMATS } from "../translator/formats.js";
 
-// Get HH:MM timestamp
+// Get HH:MM:SS timestamp
 function getTimeString() {
-  return new Date().toLocaleTimeString("en-US", { hour12: false, hour: "2-digit", minute: "2-digit" });
+  return new Date().toLocaleTimeString("en-US", { hour12: false, hour: "2-digit", minute: "2-digit", second: "2-digit" });
 }
 
 // Extract usage from any format (Claude, OpenAI, Gemini)
@@ -128,7 +128,8 @@ export function createSSEStream(options = {}) {
     targetFormat, 
     sourceFormat, 
     provider = null, 
-    reqLogger = null 
+    reqLogger = null,
+    toolNameMap = null
   } = options;
 
   const decoder = new TextDecoder();
@@ -137,7 +138,7 @@ export function createSSEStream(options = {}) {
   let usage = null;
   
   // State for translate mode
-  const state = mode === STREAM_MODE.TRANSLATE ? { ...initState(sourceFormat), provider } : null;
+  const state = mode === STREAM_MODE.TRANSLATE ? { ...initState(sourceFormat), provider, toolNameMap } : null;
 
   return new TransformStream({
     transform(chunk, controller) {
@@ -258,13 +259,14 @@ export function createSSEStream(options = {}) {
 }
 
 // Convenience functions for backward compatibility
-export function createSSETransformStreamWithLogger(targetFormat, sourceFormat, provider = null, reqLogger = null) {
+export function createSSETransformStreamWithLogger(targetFormat, sourceFormat, provider = null, reqLogger = null, toolNameMap = null) {
   return createSSEStream({ 
     mode: STREAM_MODE.TRANSLATE, 
     targetFormat, 
     sourceFormat, 
     provider, 
-    reqLogger 
+    reqLogger,
+    toolNameMap
   });
 }
 

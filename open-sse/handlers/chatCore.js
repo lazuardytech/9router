@@ -70,6 +70,9 @@ export async function handleChatCore({ body, modelInfo, credentials, log, onCred
   let translatedBody = body;
   translatedBody = translateRequest(sourceFormat, targetFormat, model, body, stream, credentials, provider);
   
+  // Extract toolNameMap for response translation (Claude OAuth)
+  const toolNameMap = translatedBody._toolNameMap;
+  delete translatedBody._toolNameMap;
 
   // Update model in body
   translatedBody.model = model;
@@ -251,7 +254,7 @@ export async function handleChatCore({ body, modelInfo, credentials, log, onCred
   // Create transform stream with logger for streaming response
   let transformStream;
   if (needsTranslation(targetFormat, sourceFormat)) {
-    transformStream = createSSETransformStreamWithLogger(targetFormat, sourceFormat, provider, reqLogger);
+    transformStream = createSSETransformStreamWithLogger(targetFormat, sourceFormat, provider, reqLogger, toolNameMap);
   } else {
     transformStream = createPassthroughStreamWithLogger(provider, reqLogger);
   }

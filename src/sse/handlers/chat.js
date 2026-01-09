@@ -31,12 +31,24 @@ export async function handleChat(request, clientRawRequest = null) {
     };
   }
 
+  // Log request endpoint and model
+  const url = new URL(request.url);
+  const modelStr = body.model;
+  
   // Count messages (support both messages[] and input[] formats)
   const msgCount = body.messages?.length || body.input?.length || 0;
   const toolCount = body.tools?.length || 0;
-  log.request("POST", `${body.model} | ${msgCount} msgs${toolCount ? ` | ${toolCount} tools` : ""}`);
+  log.request("POST", `${url.pathname} | ${modelStr} | ${msgCount} msgs${toolCount ? ` | ${toolCount} tools` : ""}`);
 
-  const modelStr = body.model;
+  // Log API key (masked)
+  const apiKey = request.headers.get("Authorization");
+  if (apiKey) {
+    const masked = log.maskKey(apiKey.replace("Bearer ", ""));
+    log.debug("AUTH", `API Key: ${masked}`);
+  } else {
+    log.debug("AUTH", "No API key provided (local mode)");
+  }
+
   if (!modelStr) {
     log.warn("CHAT", "Missing model");
     return errorResponse(400, "Missing model");
@@ -70,6 +82,13 @@ async function handleSingleModelChat(body, modelStr, clientRawRequest = null) {
 
   const { provider, model } = modelInfo;
 
+  // Log model routing (alias → actual model)
+  if (modelStr !== `${provider}/${model}`) {
+    log.info("ROUTING", `${modelStr} → ${provider}/${model}`);
+  } else {
+    log.info("ROUTING", `Provider: ${provider}, Model: ${model}`);
+  }
+
   // Try with available accounts (fallback on errors)
   let excludeConnectionId = null;
   let lastError = null;
@@ -78,6 +97,7 @@ async function handleSingleModelChat(body, modelStr, clientRawRequest = null) {
     const credentials = await getProviderCredentials(provider, excludeConnectionId);
     if (!credentials) {
       if (!excludeConnectionId) {
+        log.error("AUTH", `No credentials for provider: ${provider}`);
         return errorResponse(400, `No credentials for provider: ${provider}`);
       }
       log.warn("CHAT", "No more accounts available", { provider });
@@ -87,7 +107,9 @@ async function handleSingleModelChat(body, modelStr, clientRawRequest = null) {
       );
     }
 
-    log.debug("CHAT", `Using account ${credentials.connectionId} for ${provider}`);
+    // Log account selection
+    const accountId = credentials.connectionId.slice(0, 8);
+    log.info("AUTH", `Using ${provider} account: ${accountId}...`);
 
     const refreshedCredentials = await checkAndRefreshToken(provider, credentials);
     
@@ -118,11 +140,8 @@ async function handleSingleModelChat(body, modelStr, clientRawRequest = null) {
     const { shouldFallback, cooldownMs } = checkFallbackError(result.status, result.error);
     
     if (shouldFallback) {
-      log.warn("CHAT", "Account unavailable, trying next", {
-        provider,
-        connectionId: credentials.connectionId,
-        status: result.status
-      });
+      const accountId = credentials.connectionId.slice(0, 8);
+      log.warn("AUTH", `Account ${accountId}... unavailable (status: ${result.status}), trying fallback`);
       await markAccountUnavailable(credentials.connectionId, cooldownMs, result.error?.slice(0, 100), result.status, provider);
       excludeConnectionId = credentials.connectionId;
       lastError = result.error;
