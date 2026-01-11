@@ -5,8 +5,12 @@ import os from "os";
 import fs from "fs";
 import { fileURLToPath } from "url";
 
+const isCloud = typeof caches !== 'undefined' || typeof caches === 'object';
+
 // Get app name from root package.json config
 function getAppName() {
+  if (isCloud) return "9router"; // Skip file system access in Workers
+
   const __dirname = path.dirname(fileURLToPath(import.meta.url));
   // Look for root package.json (monorepo root)
   const rootPkgPath = path.resolve(__dirname, "../../../package.json");
@@ -20,6 +24,8 @@ function getAppName() {
 
 // Get user data directory based on platform
 function getUserDataDir() {
+  if (isCloud) return "/tmp"; // Fallback for Workers
+
   const platform = process.platform;
   const homeDir = os.homedir();
   const appName = getAppName();
@@ -34,11 +40,11 @@ function getUserDataDir() {
 
 // Data file path - stored in user home directory
 const DATA_DIR = getUserDataDir();
-const DB_FILE = path.join(DATA_DIR, "usage.json");
-const LOG_FILE = path.join(DATA_DIR, "log.txt");
+const DB_FILE = isCloud ? null : path.join(DATA_DIR, "usage.json");
+const LOG_FILE = isCloud ? null : path.join(DATA_DIR, "log.txt");
 
 // Ensure data directory exists
-if (!fs.existsSync(DATA_DIR)) {
+if (!isCloud && !fs.existsSync(DATA_DIR)) {
   fs.mkdirSync(DATA_DIR, { recursive: true });
 }
 
@@ -83,6 +89,15 @@ export function trackPendingRequest(model, provider, connectionId, started) {
  * Get usage database instance (singleton)
  */
 export async function getUsageDb() {
+  if (isCloud) {
+    // Return in-memory DB for Workers
+    if (!dbInstance) {
+      dbInstance = new Low({ read: async () => {}, write: async () => {} }, defaultData);
+      dbInstance.data = defaultData;
+    }
+    return dbInstance;
+  }
+
   if (!dbInstance) {
     const adapter = new JSONFile(DB_FILE);
     dbInstance = new Low(adapter, defaultData);
@@ -114,6 +129,8 @@ export async function getUsageDb() {
  * @param {object} entry - Usage entry { provider, model, tokens: { prompt_tokens, completion_tokens, ... }, connectionId? }
  */
 export async function saveRequestUsage(entry) {
+  if (isCloud) return; // Skip saving in Workers
+
   try {
     const db = await getUsageDb();
 
@@ -187,6 +204,8 @@ function formatLogDate(date = new Date()) {
  * Format: datetime(dd-mm-yyyy h:m:s) | model | provider | account | tokens sent | tokens received | status
  */
 export async function appendRequestLog({ model, provider, connectionId, tokens, status }) {
+  if (isCloud) return; // Skip logging in Workers
+
   try {
     const timestamp = formatLogDate();
     const p = provider?.toUpperCase() || "-";
@@ -218,6 +237,7 @@ export async function appendRequestLog({ model, provider, connectionId, tokens, 
  * Get last N lines of log.txt
  */
 export async function getRecentLogs(limit = 200) {
+  if (isCloud) return []; // Skip in Workers
   if (!fs.existsSync(LOG_FILE)) return [];
   try {
     const content = fs.readFileSync(LOG_FILE, "utf-8");

@@ -79,8 +79,14 @@ export function getProviderConfig(provider) {
   return PROVIDERS[provider] || PROVIDERS.openai;
 }
 
+// Get number of fallback URLs for provider (for retry logic)
+export function getProviderFallbackCount(provider) {
+  const config = getProviderConfig(provider);
+  return config.baseUrls?.length || 1;
+}
+
 // Build provider URL
-export function buildProviderUrl(provider, model, stream = true) {
+export function buildProviderUrl(provider, model, stream = true, options = {}) {
   const config = getProviderConfig(provider);
 
   switch (provider) {
@@ -98,7 +104,9 @@ export function buildProviderUrl(provider, model, stream = true) {
     }
 
     case "antigravity": {
-      const baseUrl = config.baseUrls[0];
+      // Use baseUrlIndex from options or default to 0
+      const urlIndex = options?.baseUrlIndex || 0;
+      const baseUrl = config.baseUrls[urlIndex] || config.baseUrls[0];
       const path = stream ? "/v1internal:streamGenerateContent?alt=sse" : "/v1internal:generateContent";
       return `${baseUrl}${path}`;
     }

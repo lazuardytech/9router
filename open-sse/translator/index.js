@@ -51,7 +51,7 @@ export function translateRequest(sourceFormat, targetFormat, model, body, stream
     if (targetFormat !== FORMATS.OPENAI) {
       const fromOpenAI = requestRegistry.get(`${FORMATS.OPENAI}:${targetFormat}`);
       if (fromOpenAI) {
-        result = fromOpenAI(model, result, stream);
+        result = fromOpenAI(model, result, stream, credentials);
       }
     }
   }

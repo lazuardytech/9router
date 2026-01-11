@@ -106,16 +106,32 @@ function parseSSELine(line) {
  * @returns {string} SSE formatted string
  */
 export function formatSSE(data, sourceFormat) {
-  if (data.done) return "data: [DONE]\n\n";
+  // Handle null/undefined
+  if (data === null || data === undefined) {
+    return "data: null\n\n";
+  }
+  
+  if (data && data.done) return "data: [DONE]\n\n";
 
   // OpenAI Responses API format: has event field
-  if (data.event && data.data) {
+  if (data && data.event && data.data) {
     return `event: ${data.event}\ndata: ${JSON.stringify(data.data)}\n\n`;
   }
 
   // Claude format: include event prefix
-  if (sourceFormat === FORMATS.CLAUDE && data.type) {
+  if (sourceFormat === FORMATS.CLAUDE && data && data.type) {
+    // If perf_metrics is null, remove it to avoid serialization issues
+    if (data.usage && typeof data.usage === 'object' && data.usage.perf_metrics === null) {
+      const { perf_metrics, ...usageWithoutPerf } = data.usage;
+      data = { ...data, usage: usageWithoutPerf };
+    }
     return `event: ${data.type}\ndata: ${JSON.stringify(data)}\n\n`;
+  }
+
+  // If perf_metrics is null, remove it to avoid serialization issues
+  if (data?.usage && typeof data.usage === 'object' && data.usage.perf_metrics === null) {
+    const { perf_metrics, ...usageWithoutPerf } = data.usage;
+    data = { ...data, usage: usageWithoutPerf };
   }
 
   return `data: ${JSON.stringify(data)}\n\n`;
@@ -199,7 +215,7 @@ export function createSSEStream(options = {}) {
         const parsed = parseSSELine(trimmed);
         if (!parsed) continue;
 
-        if (parsed.done) {
+        if (parsed && parsed.done) {
           const output = "data: [DONE]\n\n";
           reqLogger?.appendConvertedChunk?.(output);
           controller.enqueue(encoder.encode(output));

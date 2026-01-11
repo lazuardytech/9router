@@ -245,34 +245,73 @@ const PROVIDERS = {
       return await response.json();
     },
     postExchange: async (tokens) => {
+      const headers = {
+        Authorization: `Bearer ${tokens.access_token}`,
+        "Content-Type": "application/json",
+        "User-Agent": ANTIGRAVITY_CONFIG.loadCodeAssistUserAgent,
+        "X-Goog-Api-Client": ANTIGRAVITY_CONFIG.loadCodeAssistApiClient,
+        "Client-Metadata": ANTIGRAVITY_CONFIG.loadCodeAssistClientMetadata,
+      };
+      const metadata = { ideType: "IDE_UNSPECIFIED", platform: "PLATFORM_UNSPECIFIED", pluginType: "GEMINI" };
+
       // Fetch user info
       const userInfoRes = await fetch(`${ANTIGRAVITY_CONFIG.userInfoUrl}?alt=json`, {
         headers: { Authorization: `Bearer ${tokens.access_token}` },
       });
       const userInfo = userInfoRes.ok ? await userInfoRes.json() : {};
 
-      // Fetch project ID from loadCodeAssist
+      // Load Code Assist to get project ID and tier
       let projectId = "";
+      let tierId = "legacy-tier";
       try {
-        const projectRes = await fetch(ANTIGRAVITY_CONFIG.loadCodeAssistEndpoint, {
+        const loadRes = await fetch(ANTIGRAVITY_CONFIG.loadCodeAssistEndpoint, {
           method: "POST",
-          headers: {
-            Authorization: `Bearer ${tokens.access_token}`,
-            "Content-Type": "application/json",
-            "User-Agent": ANTIGRAVITY_CONFIG.loadCodeAssistUserAgent,
-            "X-Goog-Api-Client": ANTIGRAVITY_CONFIG.loadCodeAssistApiClient,
-            "Client-Metadata": ANTIGRAVITY_CONFIG.loadCodeAssistClientMetadata,
-          },
-          body: JSON.stringify({
-            metadata: { ideType: "IDE_UNSPECIFIED", platform: "PLATFORM_UNSPECIFIED", pluginType: "GEMINI" },
-          }),
+          headers,
+          body: JSON.stringify({ metadata }),
         });
-        if (projectRes.ok) {
-          const data = await projectRes.json();
+        if (loadRes.ok) {
+          const data = await loadRes.json();
           projectId = data.cloudaicompanionProject?.id || data.cloudaicompanionProject || "";
+          // Extract tier ID
+          if (Array.isArray(data.allowedTiers)) {
+            for (const tier of data.allowedTiers) {
+              if (tier.isDefault && tier.id) {
+                tierId = tier.id.trim();
+                break;
+              }
+            }
+          }
         }
       } catch (e) {
-        console.log("Failed to fetch project ID:", e);
+        console.log("Failed to load code assist:", e);
+      }
+
+      // Onboard user to enable Gemini Code Assist
+      if (projectId) {
+        try {
+          for (let i = 0; i < 10; i++) {
+            const onboardRes = await fetch(ANTIGRAVITY_CONFIG.onboardUserEndpoint, {
+              method: "POST",
+              headers,
+              body: JSON.stringify({ tierId, metadata, cloudaicompanionProject: projectId }),
+            });
+            if (onboardRes.ok) {
+              const result = await onboardRes.json();
+              if (result.done === true) {
+                // Extract final project ID from response
+                if (result.response?.cloudaicompanionProject) {
+                  const respProject = result.response.cloudaicompanionProject;
+                  projectId = typeof respProject === 'string' ? respProject.trim() : (respProject.id || projectId);
+                }
+                break;
+              }
+            }
+            // Wait 5 seconds before retry
+            await new Promise(resolve => setTimeout(resolve, 5000));
+          }
+        } catch (e) {
+          console.log("Failed to onboard user:", e);
+        }
       }
 
       return { userInfo, projectId };

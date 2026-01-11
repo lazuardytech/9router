@@ -28,7 +28,6 @@ function claudeToOpenAIResponse(chunk, state) {
       state.messageId = chunk.message?.id || `msg_${Date.now()}`;
       state.model = chunk.message?.model;
       state.toolCallIndex = 0;
-      console.log("🔍 ----------- toolCallIndex", state.toolCallIndex);
       results.push(createChunk(state, { role: "assistant" }));
       break;
     }
@@ -114,6 +113,13 @@ function claudeToOpenAIResponse(chunk, state) {
     case "message_stop": {
       if (!state.finishReasonSent) {
         const finishReason = state.finishReason || (state.toolCalls?.size > 0 ? "tool_calls" : "stop");
+        const usageObj = state.usage ? {
+          usage: {
+            prompt_tokens: state.usage.input_tokens || 0,
+            completion_tokens: state.usage.output_tokens || 0,
+            total_tokens: (state.usage.input_tokens || 0) + (state.usage.output_tokens || 0)
+          }
+        } : {};
         results.push({
           id: `chatcmpl-${state.messageId}`,
           object: "chat.completion.chunk",
@@ -124,13 +130,7 @@ function claudeToOpenAIResponse(chunk, state) {
             delta: {},
             finish_reason: finishReason
           }],
-          ...(state.usage && {
-            usage: {
-              prompt_tokens: state.usage.input_tokens || 0,
-              completion_tokens: state.usage.output_tokens || 0,
-              total_tokens: (state.usage.input_tokens || 0) + (state.usage.output_tokens || 0)
-            }
-          })
+          ...usageObj
         });
         state.finishReasonSent = true;
       }

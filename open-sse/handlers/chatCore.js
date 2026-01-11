@@ -1,14 +1,15 @@
-import { detectFormat, getTargetFormat, buildProviderUrl, buildProviderHeaders } from "../services/provider.js";
+import { detectFormat, getTargetFormat } from "../services/provider.js";
 import { translateRequest, needsTranslation } from "../translator/index.js";
 import { FORMATS } from "../translator/formats.js";
 import { createSSETransformStreamWithLogger, createPassthroughStreamWithLogger, COLORS } from "../utils/stream.js";
 import { createStreamController, pipeWithDisconnect } from "../utils/streamHandler.js";
-import { refreshTokenByProvider, refreshWithRetry } from "../services/tokenRefresh.js";
+import { refreshWithRetry } from "../services/tokenRefresh.js";
 import { createRequestLogger } from "../utils/requestLogger.js";
 import { getModelTargetFormat, PROVIDER_ID_TO_ALIAS } from "../config/providerModels.js";
 import { createErrorResult, parseUpstreamError, formatProviderError } from "../utils/error.js";
 import { handleBypassRequest } from "../utils/bypassHandler.js";
 import { saveRequestUsage, trackPendingRequest, appendRequestLog } from "@/lib/usageDb.js";
+import { getExecutor } from "../executors/index.js";
 
 /**
  * Extract usage from non-streaming response body
@@ -118,9 +119,8 @@ export async function handleChatCore({ body, modelInfo, credentials, log, onCred
   // Update model in body
   translatedBody.model = model;
 
-  // Build provider URL and headers
-  const providerUrl = buildProviderUrl(provider, model, stream);
-  const providerHeaders = buildProviderHeaders(provider, credentials, stream, translatedBody);
+  // Get executor for this provider
+  const executor = getExecutor(provider);
 
   // Track pending request
   trackPendingRequest(model, provider, connectionId, true);
@@ -128,38 +128,39 @@ export async function handleChatCore({ body, modelInfo, credentials, log, onCred
   // Log start
   appendRequestLog({ model, provider, connectionId, status: "PENDING" }).catch(() => {});
 
-  // 2. Log converted request to provider
-  reqLogger.logConvertedRequest(providerUrl, providerHeaders, translatedBody);
-
   const msgCount = translatedBody.messages?.length 
     || translatedBody.contents?.length 
     || translatedBody.request?.contents?.length 
     || 0;
   log?.debug?.("REQUEST", `${provider.toUpperCase()} | ${model} | ${msgCount} msgs`);
-  
-  // Log headers (mask sensitive values)
-  const safeHeaders = {};
-  for (const [key, value] of Object.entries(providerHeaders)) {
-    if (key.toLowerCase().includes("auth") || key.toLowerCase().includes("key") || key.toLowerCase().includes("token")) {
-      safeHeaders[key] = value ? `${value.slice(0, 10)}...` : "";
-    } else {
-      safeHeaders[key] = value;
-    }
-  }
-  log?.debug?.("HEADERS", JSON.stringify(safeHeaders));
 
   // Create stream controller for disconnect detection
   const streamController = createStreamController({ onDisconnect, log, provider, model });
 
-  // Make request to provider with abort signal
+  // Execute request using executor (handles URL building, headers, fallback, transform)
   let providerResponse;
+  let providerUrl;
+  let providerHeaders;
+  let finalBody;
+
   try {
-    providerResponse = await fetch(providerUrl, {
-      method: "POST",
-      headers: providerHeaders,
-      body: JSON.stringify(translatedBody),
-      signal: streamController.signal
+    const result = await executor.execute({
+      model,
+      body: translatedBody,
+      stream,
+      credentials,
+      signal: streamController.signal,
+      log
     });
+    
+    providerResponse = result.response;
+    providerUrl = result.url;
+    providerHeaders = result.headers;
+    finalBody = result.transformedBody;
+    
+    // Log converted request
+    reqLogger.logConvertedRequest(providerUrl, providerHeaders, finalBody);
+    
   } catch (error) {
     trackPendingRequest(model, provider, connectionId, false);
     appendRequestLog({ model, provider, connectionId, status: `FAILED ${error.name === "AbortError" ? 499 : 502}` }).catch(() => {});
@@ -172,65 +173,30 @@ export async function handleChatCore({ body, modelInfo, credentials, log, onCred
     return createErrorResult(502, errMsg);
   }
 
-
-  // Handle 401/403 - try token refresh
-  if (providerResponse.status === 401 || providerResponse.status === 403) {
-    let newCredentials = null;
-    
-    // GitHub needs special handling - refresh copilotToken using accessToken
-    if (provider === "github") {
-      const { refreshCopilotToken, refreshGitHubToken } = await import("../services/tokenRefresh.js");
-      
-      // First try refreshing copilotToken using existing accessToken
-      let copilotResult = await refreshCopilotToken(credentials.accessToken, log);
-      
-      // If that fails, refresh GitHub accessToken first, then get new copilotToken
-      if (!copilotResult && credentials.refreshToken) {
-        const githubTokens = await refreshGitHubToken(credentials.refreshToken, log);
-        if (githubTokens?.accessToken) {
-          credentials.accessToken = githubTokens.accessToken;
-          if (githubTokens.refreshToken) {
-            credentials.refreshToken = githubTokens.refreshToken;
-          }
-          copilotResult = await refreshCopilotToken(githubTokens.accessToken, log);
-        }
-      }
-      
-      if (copilotResult?.token) {
-        credentials.copilotToken = copilotResult.token;
-        newCredentials = {
-          accessToken: credentials.accessToken,
-          refreshToken: credentials.refreshToken,
-          providerSpecificData: {
-            ...credentials.providerSpecificData,
-            copilotToken: copilotResult.token,
-            copilotTokenExpiresAt: copilotResult.expiresAt
-          }
-        };
-        log?.info?.("TOKEN", `${provider.toUpperCase()} | copilotToken refreshed`);
-      }
+  // Log headers (mask sensitive values)
+  const safeHeaders = {};
+  for (const [key, value] of Object.entries(providerHeaders || {})) {
+    if (key.toLowerCase().includes("auth") || key.toLowerCase().includes("key") || key.toLowerCase().includes("token")) {
+      safeHeaders[key] = value ? `${value.slice(0, 10)}...` : "";
     } else {
-      newCredentials = await refreshWithRetry(
-        () => refreshTokenByProvider(provider, credentials, log),
-        3,
-        log
-      );
+      safeHeaders[key] = value;
     }
+  }
+  log?.debug?.("HEADERS", JSON.stringify(safeHeaders));
 
-    if (newCredentials?.accessToken || (provider === "github" && credentials.copilotToken)) {
-      if (newCredentials?.accessToken) {
-        log?.info?.("TOKEN", `${provider.toUpperCase()} | refreshed`);
-        credentials.accessToken = newCredentials.accessToken;
-      }
-      if (newCredentials?.refreshToken) {
-        credentials.refreshToken = newCredentials.refreshToken;
-      }
-      if (newCredentials?.providerSpecificData) {
-        credentials.providerSpecificData = {
-          ...credentials.providerSpecificData,
-          ...newCredentials.providerSpecificData
-        };
-      }
+  // Handle 401/403 - try token refresh using executor
+  if (providerResponse.status === 401 || providerResponse.status === 403) {
+    const newCredentials = await refreshWithRetry(
+      () => executor.refreshCredentials(credentials, log),
+      3,
+      log
+    );
+
+    if (newCredentials?.accessToken || newCredentials?.copilotToken) {
+      log?.info?.("TOKEN", `${provider.toUpperCase()} | refreshed`);
+      
+      // Update credentials
+      Object.assign(credentials, newCredentials);
 
       // Notify caller about refreshed credentials
       if (onCredentialsRefreshed && newCredentials) {
@@ -238,16 +204,22 @@ export async function handleChatCore({ body, modelInfo, credentials, log, onCred
       }
 
       // Retry with new credentials
-      const newHeaders = buildProviderHeaders(provider, credentials, stream, translatedBody);
-      const retryResponse = await fetch(providerUrl, {
-        method: "POST",
-        headers: newHeaders,
-        body: JSON.stringify(translatedBody),
-        signal: streamController.signal
-      });
+      try {
+        const retryResult = await executor.execute({
+          model,
+          body: translatedBody,
+          stream,
+          credentials,
+          signal: streamController.signal,
+          log
+        });
 
-      if (retryResponse.ok) {
-        providerResponse = retryResponse;
+        if (retryResult.response.ok) {
+          providerResponse = retryResult.response;
+          providerUrl = retryResult.url;
+        }
+      } catch (retryError) {
+        log?.warn?.("TOKEN", `${provider.toUpperCase()} | retry after refresh failed`);
       }
     } else {
       log?.warn?.("TOKEN", `${provider.toUpperCase()} | refresh failed`);
@@ -263,7 +235,7 @@ export async function handleChatCore({ body, modelInfo, credentials, log, onCred
     console.log(`${COLORS.red}[ERROR] ${errMsg}${COLORS.reset}`);
     
     // Log error with full request body for debugging
-    reqLogger.logError(new Error(message), translatedBody);
+    reqLogger.logError(new Error(message), finalBody || translatedBody);
 
     return createErrorResult(statusCode, errMsg);
   }

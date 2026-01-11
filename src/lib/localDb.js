@@ -4,6 +4,9 @@ import { v4 as uuidv4 } from "uuid";
 import path from "path";
 import os from "os";
 import fs from "fs";
+
+const isCloud = typeof caches !== 'undefined' || typeof caches === 'object';
+
 // Get app name - fixed constant to avoid Windows path issues in standalone build
 function getAppName() {
   return "9router";
@@ -11,10 +14,12 @@ function getAppName() {
 
 // Get user data directory based on platform
 function getUserDataDir() {
+  if (isCloud) return "/tmp"; // Fallback for Workers
+
   const platform = process.platform;
   const homeDir = os.homedir();
   const appName = getAppName();
-  
+
   if (platform === "win32") {
     return path.join(process.env.APPDATA || path.join(homeDir, "AppData", "Roaming"), appName);
   } else {
@@ -25,10 +30,10 @@ function getUserDataDir() {
 
 // Data file path - stored in user home directory
 const DATA_DIR = getUserDataDir();
-const DB_FILE = path.join(DATA_DIR, "db.json");
+const DB_FILE = isCloud ? null : path.join(DATA_DIR, "db.json");
 
 // Ensure data directory exists
-if (!fs.existsSync(DATA_DIR)) {
+if (!isCloud && !fs.existsSync(DATA_DIR)) {
   fs.mkdirSync(DATA_DIR, { recursive: true });
 }
 
@@ -52,10 +57,19 @@ let dbInstance = null;
  * Get database instance (singleton)
  */
 export async function getDb() {
+  if (isCloud) {
+    // Return in-memory DB for Workers
+    if (!dbInstance) {
+      dbInstance = new Low({ read: async () => {}, write: async () => {} }, defaultData);
+      dbInstance.data = defaultData;
+    }
+    return dbInstance;
+  }
+
   if (!dbInstance) {
     const adapter = new JSONFile(DB_FILE);
     dbInstance = new Low(adapter, defaultData);
-    
+
     // Try to read DB with error recovery for corrupt JSON
     try {
       await dbInstance.read();
@@ -68,7 +82,7 @@ export async function getDb() {
         throw error;
       }
     }
-    
+
     // Initialize with default data if empty
     if (!dbInstance.data) {
       dbInstance.data = defaultData;

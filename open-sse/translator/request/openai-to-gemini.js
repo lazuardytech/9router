@@ -1,6 +1,10 @@
 import { register } from "../index.js";
 import { FORMATS } from "../formats.js";
 import { DEFAULT_THINKING_GEMINI_SIGNATURE } from "../../config/defaultThinkingSignature.js";
+
+function generateUUID() {
+  return crypto.randomUUID();
+}
 import {
   DEFAULT_SAFETY_SETTINGS,
   convertOpenAIContentToParts,
@@ -215,29 +219,45 @@ function openaiToGeminiCLIRequest(model, body, stream) {
 }
 
 // Wrap Gemini CLI format in Cloud Code wrapper
-function wrapInCloudCodeEnvelope(model, geminiCLI, credentials = null) {
+function wrapInCloudCodeEnvelope(model, geminiCLI, credentials = null, isAntigravity = false) {
   const projectId = credentials?.projectId || generateProjectId();
   
-  return {
+  const envelope = {
     project: projectId,
     model: model,
-    userAgent: "gemini-cli",
-    requestId: generateRequestId(),
+    userAgent: isAntigravity ? "antigravity" : "gemini-cli",
+    requestId: isAntigravity ? `agent-${generateUUID()}` : generateRequestId(),
     request: {
       sessionId: generateSessionId(),
       contents: geminiCLI.contents,
       systemInstruction: geminiCLI.systemInstruction,
       generationConfig: geminiCLI.generationConfig,
-      safetySettings: geminiCLI.safetySettings,
       tools: geminiCLI.tools,
     }
   };
+
+  // Antigravity specific fields
+  if (isAntigravity) {
+    envelope.requestType = "agent";
+    // Remove safetySettings for Antigravity
+    // Add toolConfig for Antigravity
+    if (geminiCLI.tools?.length > 0) {
+      envelope.request.toolConfig = {
+        functionCallingConfig: { mode: "VALIDATED" }
+      };
+    }
+  } else {
+    // Keep safetySettings for Gemini CLI
+    envelope.request.safetySettings = geminiCLI.safetySettings;
+  }
+
+  return envelope;
 }
 
 // OpenAI -> Antigravity (Sandbox Cloud Code with wrapper)
 function openaiToAntigravityRequest(model, body, stream, credentials = null) {
   const geminiCLI = openaiToGeminiCLIRequest(model, body, stream);
-  return wrapInCloudCodeEnvelope(model, geminiCLI, credentials);
+  return wrapInCloudCodeEnvelope(model, geminiCLI, credentials, true);
 }
 
 // Register

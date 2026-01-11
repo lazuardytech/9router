@@ -30,7 +30,9 @@ export function handleBypassRequest(body, model) {
 
   // Check warmup: first message "Warmup"
   const firstText = getText(messages[0]?.content);
-  if (firstText === "Warmup") shouldBypass = true;
+  if (firstText === "Warmup") {
+    shouldBypass = true;
+  }
 
   // Check count pattern: [{"role":"user","content":"count"}]
   // if (!shouldBypass && 
@@ -40,10 +42,15 @@ export function handleBypassRequest(body, model) {
   //   shouldBypass = true;
   // }
 
-  // Check skip patterns
+  // Check skip patterns - only check user messages, not system prompt
   if (!shouldBypass && SKIP_PATTERNS?.length) {
-    const allText = messages.map(m => getText(m.content)).join(" ");
-    shouldBypass = SKIP_PATTERNS.some(p => allText.includes(p));
+    // Only check user messages, skip system/assistant messages to avoid matching system prompts
+    const userMessages = messages.filter(m => m.role === "user");
+    const userText = userMessages.map(m => getText(m.content)).join(" ");
+    const matchedPattern = SKIP_PATTERNS.find(p => userText.includes(p));
+    if (matchedPattern) {
+      shouldBypass = true;
+    }
   }
 
   if (!shouldBypass) return null;
@@ -54,10 +61,8 @@ export function handleBypassRequest(body, model) {
 
   // Create bypass response using translator
   if (stream) {
-    console.log("createStreamingResponse", sourceFormat, model);
     return createStreamingResponse(sourceFormat, model);
   } else {
-    console.log("createNonStreamingResponse", sourceFormat, model);
     return createNonStreamingResponse(sourceFormat, model);
   }
 }

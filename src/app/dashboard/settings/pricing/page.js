@@ -102,7 +102,7 @@ export default function PricingSettingsPage() {
         <div className="space-y-3 text-sm text-text-muted">
           <p>
             <strong>Cost Calculation:</strong> Costs are calculated based on token usage and pricing rates.
-            Each request's cost is determined by: (input_tokens × input_rate) + (output_tokens × output_rate) + (cached_tokens × cached_rate)
+            Each request&apos;s cost is determined by: (input_tokens × input_rate) + (output_tokens × output_rate) + (cached_tokens × cached_rate)
           </p>
           <p>
             <strong>Pricing Format:</strong> All rates are in <strong>dollars per million tokens</strong> ($/1M tokens).
