@@ -17,7 +17,7 @@ A JavaScript port of CLIProxyAPI with web dashboard.
 **9Router** is a powerful AI API proxy server that provides unified access to multiple AI providers through a single endpoint. It features automatic format translation, intelligent fallback routing, OAuth authentication, and a modern web dashboard for easy management.
 
 **Key Highlights:**
-- **JavaScript Port**: Converted from [CLIProxyAPI](https://github.com/router-for-me/CLIProxyAPI) (Go) to JavaScript/Node.js.
+- **JavaScript Port**: Converted from CLIProxyAPI (Go) to JavaScript/Node.js.
 - **Universal CLI Support**: Works seamlessly with Claude Code, OpenAI Codex, Cline, RooCode, AmpCode, and other CLI tools
 - **Cross-Platform**: Runs on Windows, Linux, and macOS
 - **Easy Deployment**: Simple installation via npx, or deploy to VPS
@@ -133,7 +133,7 @@ npm run dev
 
 Special thanks to:
 
-- **[CLIProxyAPI](https://github.com/router-for-me/CLIProxyAPI)**: The original Go implementation that inspired this project. 9Router is a JavaScript port with some features and web dashboard.
+- **CLIProxyAPI**: The original Go implementation that inspired this project. 9Router is a JavaScript port with some features and web dashboard.
 
 ## 📄 License
 

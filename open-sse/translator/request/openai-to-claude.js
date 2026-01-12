@@ -270,8 +270,7 @@ function openaiToClaudeRequestForAntigravity(model, body, stream) {
   if (result.tools && Array.isArray(result.tools)) {
     result.tools = result.tools.map(tool => {
       if (tool.name) {
-        const originalName = tool.name.charAt(0).toLowerCase() + tool.name.slice(1);
-        return { ...tool, name: originalName };
+        return { ...tool, name: tool.name };
       }
       return tool;
     });
