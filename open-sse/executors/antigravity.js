@@ -91,7 +91,6 @@ export class AntigravityExecutor extends BaseExecutor {
   }
 
   parseRetryHeaders(headers) {
-    console.log("🚀 ~ AntigravityExecutor ~ parseRetryHeaders ~ headers:", headers)
     if (!headers?.get) return null;
 
     const retryAfter = headers.get('retry-after');
