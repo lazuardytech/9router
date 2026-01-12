@@ -3,6 +3,9 @@ import { FORMATS } from "../formats.js";
 import { CLAUDE_SYSTEM_PROMPT } from "../../config/constants.js";
 import { adjustMaxTokens } from "../helpers/maxTokensHelper.js";
 
+// Prefix for Claude OAuth tool names to avoid conflicts
+const CLAUDE_OAUTH_TOOL_PREFIX = "proxy_";
+
 // Convert OpenAI request to Claude format
 function openaiToClaudeRequest(model, body, stream) {
   // Tool name mapping for Claude OAuth (capitalizedName → originalName)
@@ -47,7 +50,7 @@ function openaiToClaudeRequest(model, body, stream) {
 
     for (const msg of nonSystemMessages) {
       const newRole = (msg.role === "user" || msg.role === "tool") ? "user" : "assistant";
-      const blocks = getContentBlocksFromMessage(msg);
+      const blocks = getContentBlocksFromMessage(msg, toolNameMap);
       const hasToolUse = blocks.some(b => b.type === "tool_use");
       const hasToolResult = blocks.some(b => b.type === "tool_result");
 
@@ -109,19 +112,17 @@ function openaiToClaudeRequest(model, body, stream) {
     result.system = [claudeCodePrompt];
   }
 
-  // Tools - convert from OpenAI format to Claude format
+  // Tools - convert from OpenAI format to Claude format with prefix for OAuth
   if (body.tools && Array.isArray(body.tools)) {
     result.tools = body.tools.map(tool => {
       const toolData = tool.type === "function" && tool.function ? tool.function : tool;
       const originalName = toolData.name;
       
-      // Claude requires capitalized tool names
-      const toolName = originalName.charAt(0).toUpperCase() + originalName.slice(1);
+      // Claude OAuth requires prefixed tool names to avoid conflicts
+      const toolName = CLAUDE_OAUTH_TOOL_PREFIX + originalName;
       
-      // Store mapping for response translation
-      if (toolName !== originalName) {
-        toolNameMap.set(toolName, originalName);
-      }
+      // Store mapping for response translation (prefixed → original)
+      toolNameMap.set(toolName, originalName);
       
       return {
         name: toolName,
@@ -149,7 +150,7 @@ function openaiToClaudeRequest(model, body, stream) {
 }
 
 // Get content blocks from single message
-function getContentBlocksFromMessage(msg) {
+function getContentBlocksFromMessage(msg, toolNameMap = new Map()) {
   const blocks = [];
 
   if (msg.role === "tool") {
@@ -194,6 +195,7 @@ function getContentBlocksFromMessage(msg) {
         if (part.type === "text" && part.text) {
           blocks.push({ type: "text", text: part.text });
         } else if (part.type === "tool_use") {
+          // Tool name already has prefix from tool declarations, keep as-is
           blocks.push({ type: "tool_use", id: part.id, name: part.name, input: part.input });
         }
       }
@@ -207,10 +209,12 @@ function getContentBlocksFromMessage(msg) {
     if (msg.tool_calls && Array.isArray(msg.tool_calls)) {
       for (const tc of msg.tool_calls) {
         if (tc.type === "function") {
+          // Apply prefix to tool name
+          const toolName = CLAUDE_OAUTH_TOOL_PREFIX + tc.function.name;
           blocks.push({
             type: "tool_use",
             id: tc.id,
-            name: tc.function.name,
+            name: toolName,
             input: tryParseJSON(tc.function.arguments)
           });
         }
@@ -266,13 +270,37 @@ function openaiToClaudeRequestForAntigravity(model, body, stream) {
     }
   }
   
-  // Un-capitalize tool names (Antigravity doesn't require capitalized names)
+  // Strip prefix from tool names for Antigravity (doesn't use Claude OAuth)
   if (result.tools && Array.isArray(result.tools)) {
     result.tools = result.tools.map(tool => {
-      if (tool.name) {
-        return { ...tool, name: tool.name };
+      if (tool.name && tool.name.startsWith(CLAUDE_OAUTH_TOOL_PREFIX)) {
+        return {
+          ...tool,
+          name: tool.name.slice(CLAUDE_OAUTH_TOOL_PREFIX.length)
+        };
       }
       return tool;
+    });
+  }
+  
+  // Strip prefix from tool_use in messages
+  if (result.messages && Array.isArray(result.messages)) {
+    result.messages = result.messages.map(msg => {
+      if (!msg.content || !Array.isArray(msg.content)) {
+        return msg;
+      }
+      
+      const updatedContent = msg.content.map(block => {
+        if (block.type === "tool_use" && block.name && block.name.startsWith(CLAUDE_OAUTH_TOOL_PREFIX)) {
+          return {
+            ...block,
+            name: block.name.slice(CLAUDE_OAUTH_TOOL_PREFIX.length)
+          };
+        }
+        return block;
+      });
+      
+      return { ...msg, content: updatedContent };
     });
   }
   

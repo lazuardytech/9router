@@ -1,6 +1,9 @@
 import { register } from "../index.js";
 import { FORMATS } from "../formats.js";
 
+// Prefix for Claude OAuth tool names (must match request translator)
+const CLAUDE_OAUTH_TOOL_PREFIX = "proxy_";
+
 // Helper: stop thinking block if started
 function stopThinkingBlock(state, results) {
   if (!state.thinkingBlockStarted) return;
@@ -111,13 +114,20 @@ function openaiToClaudeResponse(chunk, state) {
 
         const toolBlockIndex = state.nextBlockIndex++;
         state.toolCalls.set(idx, { id: tc.id, name: tc.function?.name || "", blockIndex: toolBlockIndex });
+        
+        // Strip prefix from tool name for response
+        let toolName = tc.function?.name || "";
+        if (toolName.startsWith(CLAUDE_OAUTH_TOOL_PREFIX)) {
+          toolName = toolName.slice(CLAUDE_OAUTH_TOOL_PREFIX.length);
+        }
+        
         results.push({
           type: "content_block_start",
           index: toolBlockIndex,
           content_block: {
             type: "tool_use",
             id: tc.id,
-            name: tc.function?.name || "",
+            name: toolName,
             input: {}
           }
         });
