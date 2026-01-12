@@ -2,12 +2,13 @@
 
 > Universal AI Proxy for Claude Code, Codex, Cursor | OpenAI, Claude, Gemini, Copilot
 
-[![Website](https://img.shields.io/badge/Website-9router.com-blue)](https://9router.com)
+🌐 **Website: [9router.com](https://9router.com)**
+
 [![npm version](https://img.shields.io/npm/v/9router.svg)](https://www.npmjs.com/package/9router)
 [![Downloads](https://img.shields.io/npm/dm/9router.svg)](https://www.npmjs.com/package/9router)
 [![License](https://img.shields.io/npm/l/9router.svg)](https://github.com/yourusername/9router/blob/main/LICENSE)
 
-A JavaScript port of [CLIProxyAPI](https://github.com/router-for-me/CLIProxyAPI) with web dashboard.
+A JavaScript port of CLIProxyAPI with web dashboard.
 
 ![9Router Dashboard](./images/9router.png)
 
