@@ -1,10 +1,12 @@
 import { register } from "../index.js";
 import { FORMATS } from "../formats.js";
 import { DEFAULT_THINKING_GEMINI_SIGNATURE } from "../../config/defaultThinkingSignature.js";
+import { ANTIGRAVITY_DEFAULT_SYSTEM } from "../../config/constants.js";
 
 function generateUUID() {
   return crypto.randomUUID();
 }
+
 import {
   DEFAULT_SAFETY_SETTINGS,
   convertOpenAIContentToParts,
@@ -239,7 +241,15 @@ function wrapInCloudCodeEnvelope(model, geminiCLI, credentials = null, isAntigra
   // Antigravity specific fields
   if (isAntigravity) {
     envelope.requestType = "agent";
-    // Remove safetySettings for Antigravity
+    
+    // Inject required default system prompt for Antigravity
+    const defaultPart = { text: ANTIGRAVITY_DEFAULT_SYSTEM };
+    if (envelope.request.systemInstruction?.parts) {
+      envelope.request.systemInstruction.parts.unshift(defaultPart);
+    } else {
+      envelope.request.systemInstruction = { role: "user", parts: [defaultPart] };
+    }
+    
     // Add toolConfig for Antigravity
     if (geminiCLI.tools?.length > 0) {
       envelope.request.toolConfig = {
