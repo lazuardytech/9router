@@ -56,6 +56,6 @@ cursor/*
 PUBLIC.md
 scripts/*
 Thanks.md
-package.json
 PUBLIC.en.md
 PR/*
+package-lock.json

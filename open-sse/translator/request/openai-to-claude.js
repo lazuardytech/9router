@@ -252,6 +252,37 @@ function tryParseJSON(str) {
   }
 }
 
+// OpenAI -> Claude format for Antigravity (without system prompt modifications)
+function openaiToClaudeRequestForAntigravity(model, body, stream) {
+  const result = openaiToClaudeRequest(model, body, stream);
+  
+  // Remove Claude Code system prompt, keep only user's system messages
+  if (result.system && Array.isArray(result.system)) {
+    result.system = result.system.filter(block => 
+      !block.text || !block.text.includes("You are Claude Code")
+    );
+    if (result.system.length === 0) {
+      delete result.system;
+    }
+  }
+  
+  // Un-capitalize tool names (Antigravity doesn't require capitalized names)
+  if (result.tools && Array.isArray(result.tools)) {
+    result.tools = result.tools.map(tool => {
+      if (tool.name) {
+        const originalName = tool.name.charAt(0).toLowerCase() + tool.name.slice(1);
+        return { ...tool, name: originalName };
+      }
+      return tool;
+    });
+  }
+  
+  return result;
+}
+
+// Export for use in other translators
+export { openaiToClaudeRequestForAntigravity };
+
 // Register
 register(FORMATS.OPENAI, FORMATS.CLAUDE, openaiToClaudeRequest, null);
 
