@@ -79,12 +79,50 @@ export async function writeStreamError(writer, statusCode, message) {
 }
 
 /**
+ * Parse Antigravity error message to extract retry time
+ * Example: "You have exhausted your capacity on this model. Your quota will reset after 2h7m23s."
+ * @param {string} message - Error message
+ * @returns {number|null} Retry time in milliseconds, or null if not found
+ */
+export function parseAntigravityRetryTime(message) {
+  if (typeof message !== "string") return null;
+  
+  // Match patterns like: 2h7m23s, 5m30s, 45s, 1h20m, etc.
+  const match = message.match(/reset after (\d+h)?(\d+m)?(\d+s)?/i);
+  if (!match) return null;
+  
+  let totalMs = 0;
+  
+  // Extract hours
+  if (match[1]) {
+    const hours = parseInt(match[1]);
+    totalMs += hours * 60 * 60 * 1000;
+  }
+  
+  // Extract minutes
+  if (match[2]) {
+    const minutes = parseInt(match[2]);
+    totalMs += minutes * 60 * 1000;
+  }
+  
+  // Extract seconds
+  if (match[3]) {
+    const seconds = parseInt(match[3]);
+    totalMs += seconds * 1000;
+  }
+  
+  return totalMs > 0 ? totalMs : null;
+}
+
+/**
  * Parse upstream provider error response
  * @param {Response} response - Fetch response from provider
- * @returns {Promise<{statusCode: number, message: string}>}
+ * @param {string} provider - Provider name (for Antigravity-specific parsing)
+ * @returns {Promise<{statusCode: number, message: string, retryAfterMs: number|null}>}
  */
-export async function parseUpstreamError(response) {
+export async function parseUpstreamError(response, provider = null) {
   let message = "";
+  let retryAfterMs = null;
   
   try {
     const text = await response.text();
@@ -100,9 +138,17 @@ export async function parseUpstreamError(response) {
     message = `Upstream error: ${response.status}`;
   }
 
+  const messageStr = typeof message === "string" ? message : JSON.stringify(message);
+  
+  // Parse Antigravity-specific retry time from error message
+  if (provider === "antigravity" && response.status === 429) {
+    retryAfterMs = parseAntigravityRetryTime(messageStr);
+  }
+
   return {
     statusCode: response.status,
-    message: typeof message === "string" ? message : JSON.stringify(message)
+    message: messageStr,
+    retryAfterMs
   };
 }
 
@@ -110,15 +156,23 @@ export async function parseUpstreamError(response) {
  * Create error result for chatCore handler
  * @param {number} statusCode - HTTP status code
  * @param {string} message - Error message
- * @returns {{ success: false, status: number, error: string, response: Response }}
+ * @param {number|null} retryAfterMs - Optional retry-after time in milliseconds
+ * @returns {{ success: false, status: number, error: string, response: Response, retryAfterMs?: number }}
  */
-export function createErrorResult(statusCode, message) {
-  return {
+export function createErrorResult(statusCode, message, retryAfterMs = null) {
+  const result = {
     success: false,
     status: statusCode,
     error: message,
     response: errorResponse(statusCode, message)
   };
+  
+  // Add retryAfterMs if available (for Antigravity quota errors)
+  if (retryAfterMs) {
+    result.retryAfterMs = retryAfterMs;
+  }
+  
+  return result;
 }
 
 /**

@@ -229,15 +229,21 @@ export async function handleChatCore({ body, modelInfo, credentials, log, onCred
   // Check provider response - return error info for fallback handling
   if (!providerResponse.ok) {
     trackPendingRequest(model, provider, connectionId, false);
-    const { statusCode, message } = await parseUpstreamError(providerResponse);
+    const { statusCode, message, retryAfterMs } = await parseUpstreamError(providerResponse, provider);
     appendRequestLog({ model, provider, connectionId, status: `FAILED ${statusCode}` }).catch(() => {});
     const errMsg = formatProviderError(new Error(message), provider, model, statusCode);
     console.log(`${COLORS.red}[ERROR] ${errMsg}${COLORS.reset}`);
     
+    // Log Antigravity retry time if available
+    if (retryAfterMs && provider === "antigravity") {
+      const retrySeconds = Math.ceil(retryAfterMs / 1000);
+      log?.debug?.("RETRY", `Antigravity quota reset in ${retrySeconds}s (${retryAfterMs}ms)`);
+    }
+    
     // Log error with full request body for debugging
     reqLogger.logError(new Error(message), finalBody || translatedBody);
 
-    return createErrorResult(statusCode, errMsg);
+    return createErrorResult(statusCode, errMsg, retryAfterMs);
   }
 
   // Non-streaming response

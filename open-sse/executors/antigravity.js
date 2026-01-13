@@ -126,12 +126,17 @@ export class AntigravityExecutor extends BaseExecutor {
     let lastError = null;
     let lastStatus = 0;
     const MAX_AUTO_RETRIES = 2;
+    const retryAttemptsByUrl = {}; // Track retry attempts per URL
 
     for (let urlIndex = 0; urlIndex < fallbackCount; urlIndex++) {
       const url = this.buildUrl(model, stream, urlIndex);
       const headers = this.buildHeaders(credentials, stream);
       const transformedBody = this.transformRequest(model, body, stream, credentials);
-      let retryAttempts = 0;
+      
+      // Initialize retry counter for this URL
+      if (!retryAttemptsByUrl[urlIndex]) {
+        retryAttemptsByUrl[urlIndex] = 0;
+      }
 
       try {
         const response = await fetch(url, {
@@ -152,10 +157,12 @@ export class AntigravityExecutor extends BaseExecutor {
           }
 
           // Auto retry only for 429 when retryMs is 0 or undefined
-          if (response.status === 429 && (!retryMs || retryMs === 0) && retryAttempts < MAX_AUTO_RETRIES) {
-            retryAttempts++;
-            log?.debug?.("RETRY", `429 auto retry ${retryAttempts}/${MAX_AUTO_RETRIES} after 1s`);
-            await new Promise(resolve => setTimeout(resolve, 1000));
+          if (response.status === 429 && (!retryMs || retryMs === 0) && retryAttemptsByUrl[urlIndex] < MAX_AUTO_RETRIES) {
+            retryAttemptsByUrl[urlIndex]++;
+            // Exponential backoff: 2s, 4s, 8s...
+            const backoffMs = Math.min(1000 * Math.pow(2, retryAttemptsByUrl[urlIndex]), MAX_RETRY_AFTER_MS);
+            log?.debug?.("RETRY", `429 auto retry ${retryAttemptsByUrl[urlIndex]}/${MAX_AUTO_RETRIES} after ${backoffMs/1000}s`);
+            await new Promise(resolve => setTimeout(resolve, backoffMs));
             urlIndex--;
             continue;
           }

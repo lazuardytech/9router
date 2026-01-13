@@ -1,11 +1,23 @@
 // Gemini helper functions for translator
 
 // Unsupported JSON Schema constraints that should be removed for Antigravity
+// Reference: CLIProxyAPI/internal/util/gemini_schema.go (removeUnsupportedKeywords)
 export const UNSUPPORTED_SCHEMA_CONSTRAINTS = [
+  // Basic constraints (not supported by Gemini API)
   "minLength", "maxLength", "exclusiveMinimum", "exclusiveMaximum",
   "pattern", "minItems", "maxItems", "format",
-  "default", "examples", "$schema", "const", "title",
-  "anyOf", "oneOf", "allOf", "not"
+  // Claude rejects these in VALIDATED mode
+  "default", "examples",
+  // JSON Schema meta keywords
+  "$schema", "$defs", "definitions", "const", "$ref",
+  // Object validation keywords (not supported)
+  "additionalProperties", "propertyNames", "patternProperties",
+  // Complex schema keywords (handled by flattenAnyOfOneOf/mergeAllOf)
+  "anyOf", "oneOf", "allOf", "not",
+  // Dependency keywords (not supported)
+  "dependencies", "dependentSchemas", "dependentRequired",
+  // Other unsupported keywords
+  "title", "if", "then", "else", "contentMediaType", "contentEncoding"
 ];
 
 // Default safety settings
