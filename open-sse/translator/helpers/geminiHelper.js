@@ -4,7 +4,8 @@
 export const UNSUPPORTED_SCHEMA_CONSTRAINTS = [
   "minLength", "maxLength", "exclusiveMinimum", "exclusiveMaximum",
   "pattern", "minItems", "maxItems", "format",
-  "default", "examples", "$schema", "const"
+  "default", "examples", "$schema", "const", "title",
+  "anyOf", "oneOf", "allOf", "not"
 ];
 
 // Default safety settings
@@ -86,6 +87,35 @@ export function generateProjectId() {
 // Clean JSON Schema for Antigravity API compatibility - removes unsupported keywords recursively
 export function cleanJSONSchemaForAntigravity(schema) {
   if (!schema || typeof schema !== "object") return schema;
+  
+  // Handle anyOf/oneOf - extract the first non-null schema
+  if (schema.anyOf && Array.isArray(schema.anyOf)) {
+    const nonNullSchema = schema.anyOf.find(s => s.type !== "null" && s.type !== null);
+    if (nonNullSchema) {
+      const baseSchema = { ...nonNullSchema };
+      // Copy other properties from parent schema (except unsupported ones)
+      for (const [key, value] of Object.entries(schema)) {
+        if (!UNSUPPORTED_SCHEMA_CONSTRAINTS.includes(key)) {
+          baseSchema[key] = value;
+        }
+      }
+      return cleanJSONSchemaForAntigravity(baseSchema);
+    }
+  }
+  
+  if (schema.oneOf && Array.isArray(schema.oneOf)) {
+    const nonNullSchema = schema.oneOf.find(s => s.type !== "null" && s.type !== null);
+    if (nonNullSchema) {
+      const baseSchema = { ...nonNullSchema };
+      // Copy other properties from parent schema (except unsupported ones)
+      for (const [key, value] of Object.entries(schema)) {
+        if (!UNSUPPORTED_SCHEMA_CONSTRAINTS.includes(key)) {
+          baseSchema[key] = value;
+        }
+      }
+      return cleanJSONSchemaForAntigravity(baseSchema);
+    }
+  }
   
   const cleaned = Array.isArray(schema) ? [] : {};
   
