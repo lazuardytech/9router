@@ -37,7 +37,7 @@ export const PROVIDERS = {
   },
   codex: {
     baseUrl: "https://chatgpt.com/backend-api/codex/responses",
-    format: "codex",
+    format: "openai-responses", // Use OpenAI Responses API format (reuse translator)
     headers: {
       "Version": "0.21.0",
       "Openai-Beta": "responses=experimental",
@@ -135,6 +135,20 @@ export const PROVIDERS = {
       "Accept": "application/json",
       "Content-Type": "application/json"
     }
+  },
+  kiro: {
+    baseUrl: "https://codewhisperer.us-east-1.amazonaws.com/generateAssistantResponse",
+    format: "kiro",
+    headers: {
+      "Content-Type": "application/json",
+      "Accept": "application/vnd.amazon.eventstream",
+      "X-Amz-Target": "AmazonCodeWhispererStreamingService.GenerateAssistantResponse",
+      "User-Agent": "AWS-SDK-JS/3.0.0 kiro-ide/1.0.0",
+      "X-Amz-User-Agent": "aws-sdk-js/3.0.0 kiro-ide/1.0.0"
+    },
+    // Kiro OAuth endpoints
+    tokenUrl: "https://prod.us-east-1.auth.desktop.kiro.dev/refreshToken",
+    authUrl: "https://prod.us-east-1.auth.desktop.kiro.dev"
   }
 };
 

@@ -96,15 +96,6 @@ export async function handleChatCore({ body, modelInfo, credentials, log, onCred
   
   // 1. Log raw request from client
   reqLogger.logRawRequest(body);
-  
-  // 1a. Log format detection info
-  reqLogger.logFormatInfo({
-    sourceFormat,
-    targetFormat,
-    provider,
-    model,
-    stream
-  });
 
   log?.debug?.("FORMAT", `${sourceFormat} → ${targetFormat} | stream=${stream}`);
 

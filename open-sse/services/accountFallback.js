@@ -21,7 +21,8 @@ export function getQuotaCooldown(backoffLevel = 0) {
 export function checkFallbackError(status, errorText, backoffLevel = 0) {
   // Check error message FIRST - specific patterns take priority over status codes
   if (errorText) {
-    const lowerError = errorText.toLowerCase();
+    const errorStr = typeof errorText === "string" ? errorText : JSON.stringify(errorText);
+    const lowerError = errorStr.toLowerCase();
 
     // "Request not allowed" - short cooldown (5s), takes priority over status code
     if (lowerError.includes("request not allowed")) {
