@@ -162,7 +162,6 @@ export class KiroExecutor extends BaseExecutor {
 
             // Handle toolUseEvent
             if (eventType === "toolUseEvent" && event.payload) {
-              console.log("[KIRO DEBUG] toolUseEvent payload:", JSON.stringify(event.payload, null, 2));
               
               state.hasToolCalls = true; // Track that we have tool calls
               const toolUse = event.payload;
