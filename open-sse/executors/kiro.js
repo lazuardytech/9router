@@ -1,6 +1,7 @@
 import { BaseExecutor } from "./base.js";
 import { PROVIDERS } from "../config/constants.js";
 import { v4 as uuidv4 } from "uuid";
+import { refreshKiroToken } from "../services/tokenRefresh.js";
 
 /**
  * KiroExecutor - Executor for Kiro AI (AWS CodeWhisperer)
@@ -319,31 +320,13 @@ export class KiroExecutor extends BaseExecutor {
     if (!credentials.refreshToken) return null;
 
     try {
-      const response = await fetch(this.config.tokenUrl, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "User-Agent": "kiro-cli/1.0.0"
-        },
-        body: JSON.stringify({
-          refreshToken: credentials.refreshToken
-        })
-      });
+      // Use centralized refreshKiroToken function (handles both AWS SSO OIDC and Social Auth)
+      const result = await refreshKiroToken(
+        credentials.refreshToken,
+        credentials.providerSpecificData,
+        log
+      );
 
-      if (!response.ok) {
-        log?.error?.("TOKEN", `Kiro refresh failed: ${response.status}`);
-        return null;
-      }
-
-      const data = await response.json();
-
-      const result = {
-        accessToken: data.accessToken,
-        refreshToken: data.refreshToken || credentials.refreshToken,
-        expiresIn: data.expiresIn || 3600
-      };
-
-      log?.info?.("TOKEN", "Kiro token refreshed");
       return result;
     } catch (error) {
       log?.error?.("TOKEN", `Kiro refresh error: ${error.message}`);
