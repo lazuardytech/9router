@@ -135,7 +135,7 @@ function convertMessages(messages, tools, model) {
         }
         
         if (toolResults.length > 0) {
-          assistantMsg._pendingToolResults = toolResults;
+          assistantMsg.toolResults = toolResults;
         }
       }
 
@@ -144,9 +144,9 @@ function convertMessages(messages, tools, model) {
   }
   
   for (let i = 0; i < history.length; i++) {
-    if (history[i].assistantResponseMessage?._pendingToolResults) {
-      const toolResults = history[i].assistantResponseMessage._pendingToolResults;
-      delete history[i].assistantResponseMessage._pendingToolResults;
+    if (history[i].assistantResponseMessage?._toolResults) {
+      const toolResults = history[i].assistantResponseMessage._toolResults;
+      delete history[i].assistantResponseMessage._toolResults;
       
       for (let j = i + 1; j < history.length; j++) {
         if (history[j].userInputMessage) {
@@ -160,9 +160,9 @@ function convertMessages(messages, tools, model) {
     }
   }
   
-  if (history.length > 0 && history[history.length - 1].assistantResponseMessage?._pendingToolResults) {
-    const toolResults = history[history.length - 1].assistantResponseMessage._pendingToolResults;
-    delete history[history.length - 1].assistantResponseMessage._pendingToolResults;
+  if (history.length > 0 && history[history.length - 1].assistantResponseMessage?._toolResults) {
+    const toolResults = history[history.length - 1].assistantResponseMessage._toolResults;
+    delete history[history.length - 1].assistantResponseMessage._toolResults;
     
     if (currentMessage?.userInputMessage) {
       if (!currentMessage.userInputMessage.userInputMessageContext) {
@@ -194,10 +194,6 @@ function convertMessages(messages, tools, model) {
     
     if (item.userInputMessage?.userInputMessageContext?.tools) {
       delete item.userInputMessage.userInputMessageContext.tools;
-    }
-    
-    if (item.userInputMessage?.userInputMessageContext?.toolResults) {
-      delete item.userInputMessage.userInputMessageContext.toolResults;
     }
     
     if (item.userInputMessage?.userInputMessageContext && 
@@ -235,7 +231,7 @@ function convertMessages(messages, tools, model) {
 function buildKiroPayload(model, body, stream, credentials) {
   const messages = body.messages || [];
   const tools = body.tools || [];
-  const maxTokens = body.max_tokens || 32000;
+  const maxTokens = 32000;
   const temperature = body.temperature;
   const topP = body.top_p;
 
