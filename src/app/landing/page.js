@@ -1,4 +1,5 @@
 "use client";
+import { useRouter } from "next/navigation";
 import Navigation from "./components/Navigation";
 import HeroSection from "./components/HeroSection";
 import FlowAnimation from "./components/FlowAnimation";
@@ -8,6 +9,7 @@ import GetStarted from "./components/GetStarted";
 import Footer from "./components/Footer";
 
 export default function LandingPage() {
+  const router = useRouter();
   return (
     <div className="relative text-white font-sans overflow-x-hidden antialiased selection:bg-[#f97815] selection:text-white">
       {/* Animated Background */}
@@ -55,7 +57,7 @@ export default function LandingPage() {
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
               <button 
-                onClick={() => window.location.href = "/dashboard"}
+                onClick={() => router.push("/dashboard")}
                 className="w-full sm:w-auto h-14 px-10 rounded-lg bg-[#f97815] hover:bg-[#e0650a] text-[#181411] text-lg font-bold transition-all shadow-[0_0_20px_rgba(249,120,21,0.5)]"
               >
                 Start Free

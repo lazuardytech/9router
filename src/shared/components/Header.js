@@ -1,11 +1,11 @@
 "use client";
 
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
-import { useRouter } from "next/navigation";
+import PropTypes from "prop-types";
 import { ThemeToggle } from "@/shared/components";
-import { APP_CONFIG, OAUTH_PROVIDERS, APIKEY_PROVIDERS } from "@/shared/constants/config";
+import { OAUTH_PROVIDERS, APIKEY_PROVIDERS } from "@/shared/constants/config";
 
 const getPageInfo = (pathname) => {
   if (!pathname) return { title: "", description: "", breadcrumbs: [] };
@@ -73,7 +73,7 @@ export default function Header({ onMenuClick, showMenuButton = true }) {
         {breadcrumbs.length > 0 ? (
           <div className="flex items-center gap-2">
             {breadcrumbs.map((crumb, index) => (
-              <div key={index} className="flex items-center gap-2">
+              <div key={`${crumb.label}-${crumb.href || "current"}`} className="flex items-center gap-2">
                 {index > 0 && (
                   <span className="material-symbols-outlined text-text-muted text-base">
                     chevron_right
@@ -95,6 +95,7 @@ export default function Header({ onMenuClick, showMenuButton = true }) {
                         width={28}
                         height={28}
                         className="object-contain rounded"
+                        style={{ width: "auto", height: "auto" }}
                         onError={(e) => { e.currentTarget.style.display = "none"; }}
                       />
                     )}
@@ -133,4 +134,9 @@ export default function Header({ onMenuClick, showMenuButton = true }) {
     </header>
   );
 }
+
+Header.propTypes = {
+  onMenuClick: PropTypes.func,
+  showMenuButton: PropTypes.bool,
+};
 

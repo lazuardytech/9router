@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getSettings, updateSettings } from "@/lib/localDb";
+import { getSettings } from "@/lib/localDb";
 import bcrypt from "bcryptjs";
 import { SignJWT } from "jose";
 import { cookies } from "next/headers";
@@ -17,12 +17,12 @@ export async function POST(request) {
     const storedHash = settings.password;
 
     let isValid = false;
-    if (!storedHash) {
+    if (storedHash) {
+      isValid = await bcrypt.compare(password, storedHash);
+    } else {
       // Use env var or default
       const initialPassword = process.env.INITIAL_PASSWORD || "123456";
       isValid = password === initialPassword;
-    } else {
-      isValid = await bcrypt.compare(password, storedHash);
     }
 
     if (isValid) {

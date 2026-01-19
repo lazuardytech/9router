@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
+import PropTypes from "prop-types";
 import { Modal, Button, Input } from "@/shared/components";
 import { useCopyToClipboard } from "@/shared/hooks/useCopyToClipboard";
 
@@ -151,12 +152,12 @@ export default function OAuthModal({ isOpen, provider, providerInfo, onSuccess, 
 
       setAuthData({ ...data, redirectUri });
 
-      // For Codex, always use manual input since it requires fixed port 1455
-      if (provider === "codex") {
+      // For Codex or non-localhost: use manual input mode
+      if (provider === "codex" || !isLocalhost) {
         setStep("input");
         window.open(data.authUrl, "_blank");
-      } else if (isLocalhost) {
-        // Other providers on localhost: Open popup and wait for message
+      } else {
+        // Localhost (non-Codex): Open popup and wait for message
         setStep("waiting");
         popupRef.current = window.open(data.authUrl, "oauth_popup", "width=600,height=700");
 
@@ -164,10 +165,6 @@ export default function OAuthModal({ isOpen, provider, providerInfo, onSuccess, 
         if (!popupRef.current) {
           setStep("input");
         }
-      } else {
-        // Remote: Show manual input
-        setStep("input");
-        window.open(data.authUrl, "_blank");
       }
     } catch (err) {
       setError(err.message);
@@ -256,7 +253,9 @@ export default function OAuthModal({ isOpen, provider, providerInfo, onSuccess, 
           localStorage.removeItem("oauth_callback");
         }
       }
-    } catch (e) {}
+    } catch {
+      // localStorage may be unavailable or data may be malformed - ignore silently
+    }
 
     return () => {
       window.removeEventListener("message", handleMessage);
@@ -430,3 +429,13 @@ export default function OAuthModal({ isOpen, provider, providerInfo, onSuccess, 
     </Modal>
   );
 }
+
+OAuthModal.propTypes = {
+  isOpen: PropTypes.bool.isRequired,
+  provider: PropTypes.string,
+  providerInfo: PropTypes.shape({
+    name: PropTypes.string,
+  }),
+  onSuccess: PropTypes.func,
+  onClose: PropTypes.func.isRequired,
+};

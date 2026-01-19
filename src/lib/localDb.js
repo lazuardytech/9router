@@ -1,9 +1,9 @@
 import { Low } from "lowdb";
 import { JSONFile } from "lowdb/node";
 import { v4 as uuidv4 } from "uuid";
-import path from "path";
-import os from "os";
-import fs from "fs";
+import path from "node:path";
+import os from "node:os";
+import fs from "node:fs";
 
 const isCloud = typeof caches !== 'undefined' || typeof caches === 'object';
 
@@ -601,7 +601,7 @@ export async function getPricingForModel(provider, model) {
   const pricing = await getPricing();
 
   // Try direct lookup
-  if (pricing[provider] && pricing[provider][model]) {
+  if (pricing[provider]?.[model]) {
     return pricing[provider][model];
   }
 
