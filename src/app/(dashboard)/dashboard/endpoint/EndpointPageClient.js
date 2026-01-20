@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import PropTypes from "prop-types";
 import { Card, Button, Input, Modal, CardSkeleton } from "@/shared/components";
 import { useCopyToClipboard } from "@/shared/hooks/useCopyToClipboard";
 
@@ -198,9 +199,15 @@ export default function APIPageClient({ machineId }) {
     }
   };
 
-  const baseUrl = typeof window !== "undefined" ? `${window.location.origin}/v1` : "/v1";
-  // New format: /v1 (machineId in key), Old format: /{machineId}/v1
+  const [baseUrl, setBaseUrl] = useState("/v1");
   const cloudEndpointNew = `${CLOUD_URL}/v1`;
+
+  // Hydration fix: Only access window on client side
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      setBaseUrl(`${window.location.origin}/v1`);
+    }
+  }, []);
 
   if (loading) {
     return (
@@ -601,5 +608,5 @@ export default function APIPageClient({ machineId }) {
 }
 
 APIPageClient.propTypes = {
-  machineId: import("prop-types").string.isRequired,
+  machineId: PropTypes.string.isRequired,
 };
