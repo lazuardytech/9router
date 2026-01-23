@@ -50,23 +50,26 @@ function convertMessages(messages, tools, model) {
 
     if (role === "user") {
       let finalContent = content;
+      let toolResults = [];
       
       // Check if this user message contains tool_result blocks
       if (Array.isArray(msg.content)) {
         const toolResultBlocks = msg.content.filter(c => c.type === "tool_result");
         if (toolResultBlocks.length > 0) {
-          const toolResults = toolResultBlocks.map(block => ({
-            content: [{ 
-              text: Array.isArray(block.content) 
-                ? block.content.map(c => c.text || "").join("\n")
-                : (typeof block.content === "string" ? block.content : "")
-            }],
-            status: "success",
-            toolUseId: block.tool_use_id
-          }));
+          toolResults = toolResultBlocks.map(block => {
+            const text = Array.isArray(block.content) 
+              ? block.content.map(c => c.text || "").join("\n")
+              : (typeof block.content === "string" ? block.content : "");
+            
+            return {
+              toolUseId: block.tool_use_id,
+              status: "success",
+              content: [{ text: text }]
+            };
+          });
           
-          // JSON stringify tool results and add to content
-          finalContent = JSON.stringify(toolResults);
+          // Set simple content when tool results exist
+          finalContent = content || "Continue";
         }
       }
       
@@ -74,10 +77,18 @@ function convertMessages(messages, tools, model) {
         userInputMessage: {
           content: finalContent,
           modelId: "",
-          origin: "AI_EDITOR"
         }
       };
 
+      // Add tool results to userInputMessageContext
+      if (toolResults.length > 0) {
+        if (!userMsg.userInputMessage.userInputMessageContext) {
+          userMsg.userInputMessage.userInputMessageContext = {};
+        }
+        userMsg.userInputMessage.userInputMessageContext.toolResults = toolResults;
+      }
+
+      // Add tools to first user message
       if (tools && tools.length > 0 && history.length === 0) {
         if (!userMsg.userInputMessage.userInputMessageContext) {
           userMsg.userInputMessage.userInputMessageContext = {};
@@ -107,18 +118,35 @@ function convertMessages(messages, tools, model) {
     }
 
     if (role === "assistant") {
+      // Extract text content and tool uses separately from content array
+      let textContent = "";
+      let toolUses = [];
+      
+      if (Array.isArray(msg.content)) {
+        const textBlocks = msg.content.filter(c => c.type === "text");
+        textContent = textBlocks.map(b => b.text).join("\n").trim();
+        
+        const toolUseBlocks = msg.content.filter(c => c.type === "tool_use");
+        toolUses = toolUseBlocks;
+      } else if (typeof msg.content === "string") {
+        textContent = msg.content.trim();
+      }
+      
+      // Fallback for OpenAI tool_calls format
+      if (msg.tool_calls && msg.tool_calls.length > 0) {
+        toolUses = msg.tool_calls;
+      }
+      
       const assistantMsg = {
         assistantResponseMessage: {
-          content: content
+          content: textContent || "Call tools"
         }
       };
-
-      const toolCallsOrUses = msg.tool_calls || 
-        (Array.isArray(msg.content) ? msg.content.filter(c => c.type === "tool_use") : []);
       
-      if (toolCallsOrUses.length > 0) {
-        assistantMsg.assistantResponseMessage.toolUses = toolCallsOrUses.map(tc => {
+      if (toolUses.length > 0) {
+        assistantMsg.assistantResponseMessage.toolUses = toolUses.map(tc => {
           if (tc.function) {
+            // OpenAI format
             return {
               toolUseId: tc.id || uuidv4(),
               name: tc.function.name,
@@ -127,6 +155,7 @@ function convertMessages(messages, tools, model) {
                 : (tc.function.arguments || {})
             };
           } else {
+            // Anthropic format
             return {
               toolUseId: tc.id || uuidv4(),
               name: tc.name,
@@ -157,10 +186,6 @@ function convertMessages(messages, tools, model) {
     
   // Clean up history for Kiro API compatibility
   history.forEach(item => {
-    if (item.assistantResponseMessage?.toolUses) {
-      delete item.assistantResponseMessage.toolUses;
-    }
-    
     if (item.userInputMessage?.userInputMessageContext?.tools) {
       delete item.userInputMessage.userInputMessageContext.tools;
     }
