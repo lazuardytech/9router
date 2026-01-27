@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import PropTypes from "prop-types";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -17,6 +17,11 @@ const navItems = [
   { href: "/dashboard/cli-tools", label: "CLI Tools", icon: "terminal" },
 ];
 
+// Debug items (only show when ENABLE_REQUEST_LOGS=true)
+const debugItems = [
+  { href: "/dashboard/translator", label: "Translator", icon: "translate" },
+];
+
 const systemItems = [
   { href: "/dashboard/profile", label: "Settings", icon: "settings" },
 ];
@@ -26,6 +31,15 @@ export default function Sidebar({ onClose }) {
   const [showShutdownModal, setShowShutdownModal] = useState(false);
   const [isShuttingDown, setIsShuttingDown] = useState(false);
   const [isDisconnected, setIsDisconnected] = useState(false);
+  const [showDebug, setShowDebug] = useState(false);
+
+  // Check if debug mode is enabled
+  useEffect(() => {
+    fetch("/api/settings")
+      .then(res => res.json())
+      .then(data => setShowDebug(data?.enableRequestLogs === true))
+      .catch(() => {});
+  }, []);
 
   const isActive = (href) => {
     if (href === "/dashboard/endpoint") {
@@ -86,6 +100,38 @@ export default function Sidebar({ onClose }) {
               <span className="text-sm font-medium">{item.label}</span>
             </Link>
           ))}
+
+          {/* Debug section (only show when ENABLE_REQUEST_LOGS=true) */}
+          {showDebug && (
+            <div className="pt-6 mt-2">
+              <p className="px-4 text-xs font-semibold text-text-muted/60 uppercase tracking-wider mb-3">
+                Debug
+              </p>
+              {debugItems.map((item) => (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  onClick={onClose}
+                  className={cn(
+                    "flex items-center gap-3 px-4 py-3 rounded-lg transition-all group",
+                    isActive(item.href)
+                      ? "bg-surface text-primary shadow-sm border border-border"
+                      : "text-text-muted hover:bg-surface/50 hover:text-text-main"
+                  )}
+                >
+                  <span
+                    className={cn(
+                      "material-symbols-outlined text-[20px]",
+                      isActive(item.href) ? "fill-1" : "group-hover:text-primary transition-colors"
+                    )}
+                  >
+                    {item.icon}
+                  </span>
+                  <span className="text-sm font-medium">{item.label}</span>
+                </Link>
+              ))}
+            </div>
+          )}
 
           {/* System section */}
           <div className="pt-6 mt-2">

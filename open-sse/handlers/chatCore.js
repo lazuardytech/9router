@@ -99,9 +99,9 @@ export async function handleChatCore({ body, modelInfo, credentials, log, onCred
 
   log?.debug?.("FORMAT", `${sourceFormat} → ${targetFormat} | stream=${stream}`);
 
-  // Translate request
+  // Translate request (pass reqLogger for intermediate logging)
   let translatedBody = body;
-  translatedBody = translateRequest(sourceFormat, targetFormat, model, body, stream, credentials, provider);
+  translatedBody = translateRequest(sourceFormat, targetFormat, model, body, stream, credentials, provider, reqLogger);
   
   // Extract toolNameMap for response translation (Claude OAuth)
   const toolNameMap = translatedBody._toolNameMap;
@@ -149,8 +149,8 @@ export async function handleChatCore({ body, modelInfo, credentials, log, onCred
     providerHeaders = result.headers;
     finalBody = result.transformedBody;
     
-    // Log converted request
-    reqLogger.logConvertedRequest(providerUrl, providerHeaders, finalBody);
+    // Log target request (final request to provider)
+    reqLogger.logTargetRequest(providerUrl, providerHeaders, finalBody);
     
   } catch (error) {
     trackPendingRequest(model, provider, connectionId, false);

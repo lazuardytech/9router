@@ -14,13 +14,21 @@ export default function LoginPage() {
   // Check if password is set on mount
   useEffect(() => {
     async function checkPassword() {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 5000);
+
       try {
-        const res = await fetch("/api/settings");
+        const baseUrl = typeof window !== "undefined" ? window.location.origin : "";
+        const res = await fetch(`${baseUrl}/api/settings`, {
+          signal: controller.signal,
+        });
+        clearTimeout(timeoutId);
+
         if (res.ok) {
           const data = await res.json();
           if (!data.password) {
             // No password set - auto login
-            const loginRes = await fetch("/api/auth/login", {
+            const loginRes = await fetch(`${baseUrl}/api/auth/login`, {
               method: "POST",
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify({ password: "123456" }),
@@ -34,8 +42,9 @@ export default function LoginPage() {
           setHasPassword(!!data.password);
         }
       } catch (err) {
-        console.error("Failed to check password status:", err);
-        setHasPassword(true); // Default to showing login form
+        clearTimeout(timeoutId);
+        // Silent fail - default to showing login form
+        setHasPassword(true);
       }
     }
     checkPassword();

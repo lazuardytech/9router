@@ -8,33 +8,86 @@ import { v4 as uuidv4 } from "uuid";
 
 /**
  * Convert OpenAI messages to Kiro format
- * Rules: system/tool/user -> user role, merge consecutive same roles
  */
 function convertMessages(messages, tools, model) {
   let history = [];
   let currentMessage = null;
-  
-  let pendingUserContent = [];
-  let pendingAssistantContent = [];
-  let pendingToolResults = [];
-  let currentRole = null;
+  let systemPrompt = "";
 
-  const flushPending = () => {
-    if (currentRole === "user") {
-      const content = pendingUserContent.join("\n\n").trim() || "continue";
-      const userMsg = {
-        userInputMessage: {
-          content: content,
-          modelId: ""
+  const toolResultsMap = new Map();
+  
+  for (const msg of messages) {
+    if (msg.role === "tool" && msg.tool_call_id) {
+      const content = typeof msg.content === "string" ? msg.content : 
+        (Array.isArray(msg.content) ? msg.content.map(c => c.text || "").join("\n") : "");
+      toolResultsMap.set(msg.tool_call_id, content);
+    }
+    
+    if (msg.role === "user" && Array.isArray(msg.content)) {
+      for (const block of msg.content) {
+        if (block.type === "tool_result" && block.tool_use_id) {
+          const content = Array.isArray(block.content) 
+            ? block.content.map(c => c.text || "").join("\n")
+            : (typeof block.content === "string" ? block.content : "");
+          toolResultsMap.set(block.tool_use_id, content);
         }
-      };
+      }
+    }
+  }
+
+  for (const msg of messages) {
+    const role = msg.role;
+    
+    if (role === "tool") continue;
+    
+    const content = typeof msg.content === "string" ? msg.content : 
+      (Array.isArray(msg.content) ? msg.content.map(c => c.text || "").join("\n") : "");
+
+    if (role === "system") {
+      systemPrompt += (systemPrompt ? "\n" : "") + content;
+      continue;
+    }
+
+    if (role === "user") {
+      let finalContent = content;
+      let toolResults = [];
       
-      if (pendingToolResults.length > 0) {
-        userMsg.userInputMessage.userInputMessageContext = {
-          toolResults: pendingToolResults
-        };
+      // Check if this user message contains tool_result blocks
+      if (Array.isArray(msg.content)) {
+        const toolResultBlocks = msg.content.filter(c => c.type === "tool_result");
+        if (toolResultBlocks.length > 0) {
+          toolResults = toolResultBlocks.map(block => {
+            const text = Array.isArray(block.content) 
+              ? block.content.map(c => c.text || "").join("\n")
+              : (typeof block.content === "string" ? block.content : "");
+            
+            return {
+              toolUseId: block.tool_use_id,
+              status: "success",
+              content: [{ text: text }]
+            };
+          });
+          
+          // Set simple content when tool results exist
+          finalContent = content || "Continue";
+        }
       }
       
+      const userMsg = {
+        userInputMessage: {
+          content: finalContent,
+          modelId: "",
+        }
+      };
+
+      // Add tool results to userInputMessageContext
+      if (toolResults.length > 0) {
+        if (!userMsg.userInputMessage.userInputMessageContext) {
+          userMsg.userInputMessage.userInputMessageContext = {};
+        }
+        userMsg.userInputMessage.userInputMessageContext.toolResults = toolResults;
+      }
+
       // Add tools to first user message
       if (tools && tools.length > 0 && history.length === 0) {
         if (!userMsg.userInputMessage.userInputMessageContext) {
@@ -59,79 +112,13 @@ function convertMessages(messages, tools, model) {
           };
         });
       }
-      
-      history.push(userMsg);
-      currentMessage = userMsg;
-      pendingUserContent = [];
-      pendingToolResults = [];
-    } else if (currentRole === "assistant") {
-      const content = pendingAssistantContent.join("\n\n").trim() || "...";
-      const assistantMsg = {
-        assistantResponseMessage: {
-          content: content
-        }
-      };
-      history.push(assistantMsg);
-      pendingAssistantContent = [];
-    }
-  };
 
-  for (let i = 0; i < messages.length; i++) {
-    const msg = messages[i];
-    let role = msg.role;
-    
-    // Normalize: system/tool -> user
-    if (role === "system" || role === "tool") {
-      role = "user";
+      currentMessage = userMsg;
+      history.push(userMsg);
     }
-    
-    // If role changes, flush pending
-    if (role !== currentRole && currentRole !== null) {
-      flushPending();
-    }
-    currentRole = role;
-    
-    if (role === "user") {
-      // Extract content
-      let content = "";
-      if (typeof msg.content === "string") {
-        content = msg.content;
-      } else if (Array.isArray(msg.content)) {
-        const textParts = msg.content
-          .filter(c => c.type === "text" || c.text)
-          .map(c => c.text || "");
-        content = textParts.join("\n");
-        
-        // Check for tool_result blocks
-        const toolResultBlocks = msg.content.filter(c => c.type === "tool_result");
-        if (toolResultBlocks.length > 0) {
-          toolResultBlocks.forEach(block => {
-            const text = Array.isArray(block.content) 
-              ? block.content.map(c => c.text || "").join("\n")
-              : (typeof block.content === "string" ? block.content : "");
-            
-            pendingToolResults.push({
-              toolUseId: block.tool_use_id,
-              status: "success",
-              content: [{ text: text }]
-            });
-          });
-        }
-      }
-      
-      // Handle tool role (from normalized)
-      if (msg.role === "tool") {
-        const toolContent = typeof msg.content === "string" ? msg.content : "";
-        pendingToolResults.push({
-          toolUseId: msg.tool_call_id,
-          status: "success",
-          content: [{ text: toolContent }]
-        });
-      } else if (content) {
-        pendingUserContent.push(content);
-      }
-    } else if (role === "assistant") {
-      // Extract text content and tool uses
+
+    if (role === "assistant") {
+      // Extract text content and tool uses separately from content array
       let textContent = "";
       let toolUses = [];
       
@@ -145,52 +132,41 @@ function convertMessages(messages, tools, model) {
         textContent = msg.content.trim();
       }
       
+      // Fallback for OpenAI tool_calls format
       if (msg.tool_calls && msg.tool_calls.length > 0) {
         toolUses = msg.tool_calls;
       }
       
-      if (textContent) {
-        pendingAssistantContent.push(textContent);
-      }
+      const assistantMsg = {
+        assistantResponseMessage: {
+          content: textContent || "Call tools"
+        }
+      };
       
-      // Store tool uses in last assistant message
       if (toolUses.length > 0) {
-        if (pendingAssistantContent.length === 0) {
-          // pendingAssistantContent.push("Call tools");
-        }
-        
-        // Flush to create assistant message with toolUses
-        flushPending();
-        
-        const lastMsg = history[history.length - 1];
-        if (lastMsg?.assistantResponseMessage) {
-          lastMsg.assistantResponseMessage.toolUses = toolUses.map(tc => {
-            if (tc.function) {
-              return {
-                toolUseId: tc.id || uuidv4(),
-                name: tc.function.name,
-                input: typeof tc.function.arguments === "string" 
-                  ? JSON.parse(tc.function.arguments) 
-                  : (tc.function.arguments || {})
-              };
-            } else {
-              return {
-                toolUseId: tc.id || uuidv4(),
-                name: tc.name,
-                input: tc.input || {}
-              };
-            }
-          });
-        }
-        
-        currentRole = null;
+        assistantMsg.assistantResponseMessage.toolUses = toolUses.map(tc => {
+          if (tc.function) {
+            // OpenAI format
+            return {
+              toolUseId: tc.id || uuidv4(),
+              name: tc.function.name,
+              input: typeof tc.function.arguments === "string" 
+                ? JSON.parse(tc.function.arguments) 
+                : (tc.function.arguments || {})
+            };
+          } else {
+            // Anthropic format
+            return {
+              toolUseId: tc.id || uuidv4(),
+              name: tc.name,
+              input: tc.input || {}
+            };
+          }
+        });
       }
+
+      history.push(assistantMsg);
     }
-  }
-  
-  // Flush remaining
-  if (currentRole !== null) {
-    flushPending();
   }
   
   // If last message in history is userInputMessage, use it as currentMessage
@@ -223,8 +199,24 @@ function convertMessages(messages, tools, model) {
       item.userInputMessage.modelId = model;
     }
   });
+  
+  // Merge consecutive user messages (Kiro requires alternating user/assistant)
+  const mergedHistory = [];
+  for (let i = 0; i < history.length; i++) {
+    const current = history[i];
+    
+    if (current.userInputMessage && 
+        mergedHistory.length > 0 && 
+        mergedHistory[mergedHistory.length - 1].userInputMessage) {
+      const prev = mergedHistory[mergedHistory.length - 1];
+      prev.userInputMessage.content += "\n\n" + current.userInputMessage.content;
+    } else {
+      mergedHistory.push(current);
+    }
+  }
+  history = mergedHistory;
 
-  return { history, currentMessage };
+  return { history, currentMessage, systemPrompt };
 }
 
 /**
@@ -237,11 +229,15 @@ function buildKiroPayload(model, body, stream, credentials) {
   const temperature = body.temperature;
   const topP = body.top_p;
 
-  const { history, currentMessage } = convertMessages(messages, tools, model);
+  const { history, currentMessage, systemPrompt } = convertMessages(messages, tools, model);
 
   const profileArn = credentials?.providerSpecificData?.profileArn || "";
 
   let finalContent = currentMessage?.userInputMessage?.content || "";
+  if (systemPrompt) {
+    finalContent = `[System: ${systemPrompt}]\n\n${finalContent}`;
+  }
+
   const timestamp = new Date().toISOString();
   finalContent = `[Context: Current time is ${timestamp}]\n\n${finalContent}`;
   

@@ -236,8 +236,17 @@ export function createSSEStream(options = {}) {
         const extracted = extractUsage(parsed);
         if (extracted) state.usage = extracted;
 
-        // Translate and emit
+        // Translate: targetFormat -> openai -> sourceFormat
         const translated = translateResponse(targetFormat, sourceFormat, parsed, state);
+        
+        // Log OpenAI intermediate chunks (if available)
+        if (translated?._openaiIntermediate) {
+          for (const item of translated._openaiIntermediate) {
+            const openaiOutput = formatSSE(item, FORMATS.OPENAI);
+            reqLogger?.appendOpenAIChunk?.(openaiOutput);
+          }
+        }
+        
         if (translated?.length > 0) {
           for (const item of translated) {
             const output = formatSSE(item, sourceFormat);
@@ -277,6 +286,15 @@ export function createSSEStream(options = {}) {
           const parsed = parseSSELine(buffer.trim());
           if (parsed && !parsed.done) {
             const translated = translateResponse(targetFormat, sourceFormat, parsed, state);
+            
+            // Log OpenAI intermediate chunks
+            if (translated?._openaiIntermediate) {
+              for (const item of translated._openaiIntermediate) {
+                const openaiOutput = formatSSE(item, FORMATS.OPENAI);
+                reqLogger?.appendOpenAIChunk?.(openaiOutput);
+              }
+            }
+            
             if (translated?.length > 0) {
               for (const item of translated) {
                 const output = formatSSE(item, sourceFormat);
@@ -289,6 +307,15 @@ export function createSSEStream(options = {}) {
 
         // Flush remaining events (only once at stream end)
         const flushed = translateResponse(targetFormat, sourceFormat, null, state);
+        
+        // Log OpenAI intermediate chunks for flushed events
+        if (flushed?._openaiIntermediate) {
+          for (const item of flushed._openaiIntermediate) {
+            const openaiOutput = formatSSE(item, FORMATS.OPENAI);
+            reqLogger?.appendOpenAIChunk?.(openaiOutput);
+          }
+        }
+        
         if (flushed?.length > 0) {
           for (const item of flushed) {
             const output = formatSSE(item, sourceFormat);

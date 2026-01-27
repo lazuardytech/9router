@@ -7,7 +7,11 @@ export async function GET() {
     const settings = await getSettings();
     // Don't return the password hash to the client
     const { password, ...safeSettings } = settings;
-    return NextResponse.json(safeSettings);
+    
+    // Add ENABLE_REQUEST_LOGS from env
+    const enableRequestLogs = process.env.ENABLE_REQUEST_LOGS === "true";
+    
+    return NextResponse.json({ ...safeSettings, enableRequestLogs });
   } catch (error) {
     console.log("Error getting settings:", error);
     return NextResponse.json({ error: error.message }, { status: 500 });

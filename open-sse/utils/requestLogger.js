@@ -95,11 +95,13 @@ function createNoOpLogger() {
     sessionPath: null,
     logClientRawRequest() {},
     logRawRequest() {},
-    logConvertedRequest() {},
-    logRawResponse() {},
+    logOpenAIRequest() {},
+    logTargetRequest() {},
+    logProviderResponse() {},
+    appendProviderChunk() {},
+    appendOpenAIChunk() {},
     logConvertedResponse() {},
-    logStreamChunk() {},
-    logStreamComplete() {},
+    appendConvertedChunk() {},
     logError() {}
   };
 }
@@ -125,7 +127,7 @@ export async function createRequestLogger(sourceFormat, targetFormat, model) {
     
     // 1. Log client raw request (before any conversion)
     logClientRawRequest(endpoint, body, headers = {}) {
-      writeJsonFile(sessionPath, "1_client_raw_request.json", {
+      writeJsonFile(sessionPath, "1_req_client.json", {
         timestamp: new Date().toISOString(),
         endpoint,
         headers: maskSensitiveHeaders(headers),
@@ -135,16 +137,24 @@ export async function createRequestLogger(sourceFormat, targetFormat, model) {
     
     // 2. Log raw request from client (after initial conversion like responsesApi)
     logRawRequest(body, headers = {}) {
-      writeJsonFile(sessionPath, "2_raw_request.json", {
+      writeJsonFile(sessionPath, "2_req_source.json", {
         timestamp: new Date().toISOString(),
         headers: maskSensitiveHeaders(headers),
         body
       });
     },
     
-    // 3. Log converted request to send to provider
-    logConvertedRequest(url, headers, body) {
-      writeJsonFile(sessionPath, "3_converted_request.json", {
+    // 3. Log OpenAI intermediate format (source → openai)
+    logOpenAIRequest(body) {
+      writeJsonFile(sessionPath, "3_req_openai.json", {
+        timestamp: new Date().toISOString(),
+        body
+      });
+    },
+    
+    // 4. Log target format request (openai → target)
+    logTargetRequest(url, headers, body) {
+      writeJsonFile(sessionPath, "4_req_target.json", {
         timestamp: new Date().toISOString(),
         url,
         headers: maskSensitiveHeaders(headers),
@@ -152,9 +162,9 @@ export async function createRequestLogger(sourceFormat, targetFormat, model) {
       });
     },
     
-    // 4. Log provider response (for non-streaming or error)
+    // 5. Log provider response (for non-streaming or error)
     logProviderResponse(status, statusText, headers, body) {
-      const filename = "4_provider_response.json";
+      const filename = "5_res_provider.json";
       writeJsonFile(sessionPath, filename, {
         timestamp: new Date().toISOString(),
         status,
@@ -164,30 +174,41 @@ export async function createRequestLogger(sourceFormat, targetFormat, model) {
       });
     },
     
-    // 4. Append streaming chunk to provider response
+    // 5. Append streaming chunk to provider response
     appendProviderChunk(chunk) {
       if (!fs || !sessionPath) return;
       try {
-        const filePath = path.join(sessionPath, "4_provider_response.txt");
+        const filePath = path.join(sessionPath, "5_res_provider.txt");
         fs.appendFileSync(filePath, chunk);
       } catch (err) {
         // Ignore append errors
       }
     },
     
-    // 5. Log converted response to client (for non-streaming)
+    // 6. Append OpenAI intermediate chunks (target → openai)
+    appendOpenAIChunk(chunk) {
+      if (!fs || !sessionPath) return;
+      try {
+        const filePath = path.join(sessionPath, "6_res_openai.txt");
+        fs.appendFileSync(filePath, chunk);
+      } catch (err) {
+        // Ignore append errors
+      }
+    },
+    
+    // 7. Log converted response to client (for non-streaming)
     logConvertedResponse(body) {
-      writeJsonFile(sessionPath, "5_converted_response.json", {
+      writeJsonFile(sessionPath, "7_res_client.json", {
         timestamp: new Date().toISOString(),
         body
       });
     },
     
-    // 5. Append streaming chunk to converted response
+    // 7. Append streaming chunk to converted response
     appendConvertedChunk(chunk) {
       if (!fs || !sessionPath) return;
       try {
-        const filePath = path.join(sessionPath, "5_converted_response.txt");
+        const filePath = path.join(sessionPath, "7_res_client.txt");
         fs.appendFileSync(filePath, chunk);
       } catch (err) {
         // Ignore append errors

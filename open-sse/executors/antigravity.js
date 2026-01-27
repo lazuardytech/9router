@@ -141,7 +141,7 @@ export class AntigravityExecutor extends BaseExecutor {
     const fallbackCount = this.getFallbackCount();
     let lastError = null;
     let lastStatus = 0;
-    const MAX_AUTO_RETRIES = 2;
+    const MAX_AUTO_RETRIES = 3;
     const retryAttemptsByUrl = {}; // Track retry attempts per URL
 
     for (let urlIndex = 0; urlIndex < fallbackCount; urlIndex++) {

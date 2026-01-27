@@ -44,7 +44,7 @@ function ensureInitialized() {
 }
 
 // Translate request: source -> openai -> target
-export function translateRequest(sourceFormat, targetFormat, model, body, stream = true, credentials = null, provider = null) {
+export function translateRequest(sourceFormat, targetFormat, model, body, stream = true, credentials = null, provider = null, reqLogger = null) {
   ensureInitialized();
   let result = body;
 
@@ -64,6 +64,8 @@ export function translateRequest(sourceFormat, targetFormat, model, body, stream
       const toOpenAI = requestRegistry.get(`${sourceFormat}:${FORMATS.OPENAI}`);
       if (toOpenAI) {
         result = toOpenAI(model, result, stream, credentials);
+        // Log OpenAI intermediate format
+        reqLogger?.logOpenAIRequest?.(result);
       }
     }
 
@@ -98,6 +100,7 @@ export function translateResponse(targetFormat, sourceFormat, chunk, state) {
   }
 
   let results = [chunk];
+  let openaiResults = null; // Store OpenAI intermediate results
 
   // Step 1: target -> openai (if target is not openai)
   if (targetFormat !== FORMATS.OPENAI) {
@@ -107,6 +110,7 @@ export function translateResponse(targetFormat, sourceFormat, chunk, state) {
       const converted = toOpenAI(chunk, state);
       if (converted) {
         results = Array.isArray(converted) ? converted : [converted];
+        openaiResults = results; // Store OpenAI intermediate
       }
     }
   }
@@ -124,6 +128,11 @@ export function translateResponse(targetFormat, sourceFormat, chunk, state) {
       }
       results = finalResults;
     }
+  }
+
+  // Attach OpenAI intermediate results for logging
+  if (openaiResults && sourceFormat !== FORMATS.OPENAI && targetFormat !== FORMATS.OPENAI) {
+    results._openaiIntermediate = openaiResults;
   }
 
   return results;
