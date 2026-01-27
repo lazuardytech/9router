@@ -48,7 +48,8 @@ export default function FlowAnimation() {
                 alt={tool.name}
                 width={48}
                 height={48}
-                className="object-contain rounded-xl"
+                className="object-contain rounded-xl max-w-[48px] max-h-[48px]"
+                sizes="48px"
               />
             </div>
           </div>

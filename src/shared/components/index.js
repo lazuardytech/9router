@@ -18,7 +18,11 @@ export { default as ModelSelectModal } from "./ModelSelectModal";
 export { default as ManualConfigModal } from "./ManualConfigModal";
 export { default as UsageStats } from "./UsageStats";
 export { default as RequestLogger } from "./RequestLogger";
+export { default as KiroAuthModal } from "./KiroAuthModal";
+export { default as KiroOAuthWrapper } from "./KiroOAuthWrapper";
+export { default as KiroSocialOAuthModal } from "./KiroSocialOAuthModal";
 
 // Layouts
 export * from "./layouts";
+
 

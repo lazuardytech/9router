@@ -235,8 +235,8 @@ export default function DefaultToolCard({ toolId, tool, isExpanded, onToggle, ba
           alt={tool.name}
           width={40}
           height={40}
-          className="size-12 object-contain rounded-xl bg-gray-500"
-          style={{ width: "auto", height: "auto" }}
+          className="size-12 object-contain rounded-xl bg-gray-500 max-w-[48px] max-h-[48px]"
+          sizes="48px"
           onError={(e) => { e.target.style.display = "none"; }}
         />
       );
@@ -250,8 +250,8 @@ export default function DefaultToolCard({ toolId, tool, isExpanded, onToggle, ba
         alt={tool.name}
         width={40}
         height={40}
-        className="size-10 object-contain rounded-xl"
-        style={{ width: "auto", height: "auto" }}
+        className="size-10 object-contain rounded-xl max-w-[40px] max-h-[40px]"
+        sizes="40px"
         onError={(e) => { e.target.style.display = "none"; }}
       />
     );

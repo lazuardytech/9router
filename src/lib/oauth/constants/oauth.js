@@ -113,22 +113,33 @@ export const GITHUB_CONFIG = {
   editorPluginVersion: "copilot-chat/0.26.7",
 };
 
-// Kiro OAuth Configuration (AWS SSO OIDC Device Code Flow)
+// Kiro OAuth Configuration
+// Supports multiple auth methods:
+// 1. AWS Builder ID (Device Code Flow)
+// 2. AWS IAM Identity Center/IDC (Device Code Flow with custom startUrl/region)
+// 3. Google/GitHub Social Login (Authorization Code Flow - manual callback)
+// 4. Import Token (paste refresh token from Kiro IDE)
 export const KIRO_CONFIG = {
-  // AWS SSO OIDC endpoints for Builder ID
+  // AWS SSO OIDC endpoints for Builder ID/IDC (Device Code Flow)
   ssoOidcEndpoint: "https://oidc.us-east-1.amazonaws.com",
   registerClientUrl: "https://oidc.us-east-1.amazonaws.com/client/register",
   deviceAuthUrl: "https://oidc.us-east-1.amazonaws.com/device_authorization",
   tokenUrl: "https://oidc.us-east-1.amazonaws.com/token",
-  refreshTokenUrl: "https://prod.us-east-1.auth.desktop.kiro.dev/refreshToken",
-  // AWS Builder ID start URL
+  // AWS Builder ID default start URL
   startUrl: "https://view.awsapps.com/start",
   // Client registration params
-  clientName: "kiro-cli",
+  clientName: "kiro-oauth-client",
   clientType: "public",
   scopes: ["codewhisperer:completions", "codewhisperer:analysis", "codewhisperer:conversations"],
   grantTypes: ["urn:ietf:params:oauth:grant-type:device_code", "refresh_token"],
   issuerUrl: "https://identitycenter.amazonaws.com/ssoins-722374e8c3c8e6c6",
+  // Social auth endpoints (Google/GitHub via AWS Cognito)
+  socialAuthEndpoint: "https://prod.us-east-1.auth.desktop.kiro.dev",
+  socialLoginUrl: "https://prod.us-east-1.auth.desktop.kiro.dev/login",
+  socialTokenUrl: "https://prod.us-east-1.auth.desktop.kiro.dev/oauth/token",
+  socialRefreshUrl: "https://prod.us-east-1.auth.desktop.kiro.dev/refreshToken",
+  // Auth methods
+  authMethods: ["builder-id", "idc", "google", "github", "import"],
 };
 
 // OAuth timeout (5 minutes)

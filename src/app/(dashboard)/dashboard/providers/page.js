@@ -155,8 +155,8 @@ function ProviderCard({ providerId, provider, stats }) {
                   alt={provider.name}
                   width={40}
                   height={40}
-                  className="object-contain rounded-lg"
-                  style={{ width: "auto", height: "auto" }}
+                  className="object-contain rounded-lg max-w-[40px] max-h-[40px]"
+                  sizes="40px"
                   onError={() => setImgError(true)}
                 />
               )}

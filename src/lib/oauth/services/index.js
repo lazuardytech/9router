@@ -11,4 +11,5 @@ export { IFlowService } from "./iflow.js";
 export { AntigravityService } from "./antigravity.js";
 export { OpenAIService } from "./openai.js";
 export { GitHubService } from "./github.js";
+export { KiroService } from "./kiro.js";
 

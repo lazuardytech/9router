@@ -94,8 +94,8 @@ export default function Header({ onMenuClick, showMenuButton = true }) {
                         alt={crumb.label}
                         width={28}
                         height={28}
-                        className="object-contain rounded"
-                        style={{ width: "auto", height: "auto" }}
+                        className="object-contain rounded max-w-[28px] max-h-[28px]"
+                        sizes="28px"
                         onError={(e) => { e.currentTarget.style.display = "none"; }}
                       />
                     )}

@@ -5,7 +5,7 @@ import PropTypes from "prop-types";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
-import { Card, Button, Badge, Input, Modal, CardSkeleton, OAuthModal, Toggle } from "@/shared/components";
+import { Card, Button, Badge, Input, Modal, CardSkeleton, OAuthModal, KiroOAuthWrapper, Toggle } from "@/shared/components";
 import { OAUTH_PROVIDERS, APIKEY_PROVIDERS, getProviderAlias } from "@/shared/constants/providers";
 import { getModelsByProviderId } from "@/shared/constants/models";
 import { useCopyToClipboard } from "@/shared/hooks/useCopyToClipboard";
@@ -275,8 +275,8 @@ export default function ProviderDetailPage() {
               alt={providerInfo.name}
               width={48}
               height={48}
-              className="object-contain rounded-lg"
-              style={{ width: "auto", height: "auto" }}
+              className="object-contain rounded-lg max-w-[48px] max-h-[48px]"
+              sizes="48px"
               onError={(e) => { e.currentTarget.style.display = "none"; }}
             />
           </div>
@@ -344,13 +344,22 @@ export default function ProviderDetailPage() {
       </Card>
 
       {/* Modals */}
-      <OAuthModal
-        isOpen={showOAuthModal}
-        provider={providerId}
-        providerInfo={providerInfo}
-        onSuccess={handleOAuthSuccess}
-        onClose={() => setShowOAuthModal(false)}
-      />
+      {providerId === "kiro" ? (
+        <KiroOAuthWrapper
+          isOpen={showOAuthModal}
+          providerInfo={providerInfo}
+          onSuccess={handleOAuthSuccess}
+          onClose={() => setShowOAuthModal(false)}
+        />
+      ) : (
+        <OAuthModal
+          isOpen={showOAuthModal}
+          provider={providerId}
+          providerInfo={providerInfo}
+          onSuccess={handleOAuthSuccess}
+          onClose={() => setShowOAuthModal(false)}
+        />
+      )}
       <AddApiKeyModal
         isOpen={showAddApiKeyModal}
         provider={providerId}
