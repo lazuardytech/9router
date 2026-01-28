@@ -17,7 +17,10 @@ export const UNSUPPORTED_SCHEMA_CONSTRAINTS = [
   // Dependency keywords (not supported)
   "dependencies", "dependentSchemas", "dependentRequired",
   // Other unsupported keywords
-  "title", "if", "then", "else", "contentMediaType", "contentEncoding"
+  "title", "if", "then", "else", "contentMediaType", "contentEncoding",
+  // UI/Styling properties (from Cursor tools - NOT JSON Schema standard)
+  "cornerRadius", "fillColor", "fontFamily", "fontSize", "fontWeight",
+  "gap", "padding", "strokeColor", "strokeThickness", "textColor"
 ];
 
 // Default safety settings
