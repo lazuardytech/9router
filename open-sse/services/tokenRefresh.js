@@ -493,6 +493,13 @@ export async function getAccessToken(provider, credentials, log) {
     case "github":
       return await refreshGitHubToken(credentials.refreshToken, log);
     
+    case "kiro":
+      return await refreshKiroToken(
+        credentials.refreshToken,
+        credentials.providerSpecificData,
+        log
+      );
+    
     default:
       log?.warn?.("TOKEN_REFRESH", `Unsupported provider for token refresh: ${provider}`);
       return null;
@@ -524,6 +531,12 @@ export async function refreshTokenByProvider(provider, credentials, log) {
       return refreshIflowToken(credentials.refreshToken, log);
     case "github":
       return refreshGitHubToken(credentials.refreshToken, log);
+    case "kiro":
+      return refreshKiroToken(
+        credentials.refreshToken,
+        credentials.providerSpecificData,
+        log
+      );
     default:
       return refreshAccessToken(provider, credentials.refreshToken, credentials, log);
   }
