@@ -230,7 +230,7 @@ function convertMessages(messages, tools, model) {
 /**
  * Build Kiro payload from OpenAI format
  */
-function buildKiroPayload(model, body, stream, credentials) {
+export function buildKiroPayload(model, body, stream, credentials) {
   const messages = body.messages || [];
   const tools = body.tools || [];
   const maxTokens = 32000;
@@ -278,5 +278,3 @@ function buildKiroPayload(model, body, stream, credentials) {
 }
 
 register(FORMATS.OPENAI, FORMATS.KIRO, buildKiroPayload, null);
-
-export { buildKiroPayload };

@@ -2,7 +2,7 @@ import { register } from "../index.js";
 import { FORMATS } from "../formats.js";
 
 // Convert Gemini response chunk to OpenAI format
-function geminiToOpenAIResponse(chunk, state) {
+export function geminiToOpenAIResponse(chunk, state) {
   if (!chunk) return null;
   
   // Handle Antigravity wrapper

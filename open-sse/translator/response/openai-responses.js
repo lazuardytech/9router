@@ -9,7 +9,7 @@ import { FORMATS } from "../formats.js";
  * Translate OpenAI chunk to Responses API events
  * @returns {Array} Array of events with { event, data } structure
  */
-function openaiToOpenAIResponsesResponse(chunk, state) {
+export function openaiToOpenAIResponsesResponse(chunk, state) {
   if (!chunk) {
     return flushEvents(state);
   }
@@ -359,7 +359,7 @@ function flushEvents(state) {
  * Translate OpenAI Responses API chunk to OpenAI Chat Completions format
  * This is for when Codex returns data and we need to send it to an OpenAI-compatible client
  */
-function openaiResponsesToOpenAIResponse(chunk, state) {
+export function openaiResponsesToOpenAIResponse(chunk, state) {
   if (!chunk) {
     // Flush: send final chunk with finish_reason
     if (!state.finishReasonSent && state.started) {

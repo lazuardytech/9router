@@ -17,7 +17,7 @@ function createChunk(state, delta, finishReason = null) {
 }
 
 // Convert Claude stream chunk to OpenAI format
-function claudeToOpenAIResponse(chunk, state) {
+export function claudeToOpenAIResponse(chunk, state) {
   if (!chunk) return null;
 
   const results = [];

@@ -9,7 +9,7 @@ import { FORMATS } from "../formats.js";
  * Parse Kiro SSE event and convert to OpenAI format
  * Kiro events: assistantResponseEvent, codeEvent, supplementaryWebLinksEvent, etc.
  */
-function convertKiroToOpenAI(chunk, state) {
+export function convertKiroToOpenAI(chunk, state) {
   
   if (!chunk) return null;
 
@@ -181,5 +181,3 @@ function convertKiroToOpenAI(chunk, state) {
 
 // Register translator
 register(FORMATS.KIRO, FORMATS.OPENAI, null, convertKiroToOpenAI);
-
-export { convertKiroToOpenAI };

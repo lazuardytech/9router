@@ -2,6 +2,10 @@ import { translateResponse, initState } from "../translator/index.js";
 import { FORMATS } from "../translator/formats.js";
 import { saveRequestUsage, trackPendingRequest, appendRequestLog } from "@/lib/usageDb.js";
 
+// Singleton TextEncoder/Decoder for performance (reuse across all streams)
+const sharedDecoder = new TextDecoder();
+const sharedEncoder = new TextEncoder();
+
 // Get HH:MM:SS timestamp
 function getTimeString() {
   return new Date().toLocaleTimeString("en-US", { hour12: false, hour: "2-digit", minute: "2-digit", second: "2-digit" });
@@ -91,9 +95,9 @@ function logUsage(provider, usage, model = null, connectionId = null) {
   });
 }
 
-// Parse SSE data line
+// Parse SSE data line (optimized - reduce string operations)
 function parseSSELine(line) {
-  if (!line || !line.startsWith("data:")) return null;
+  if (!line || line.charCodeAt(0) !== 100) return null; // 'd' = 100
 
   const data = line.slice(5).trim();
   if (data === "[DONE]") return { done: true };
@@ -178,8 +182,6 @@ export function createSSEStream(options = {}) {
     connectionId = null
   } = options;
 
-  const decoder = new TextDecoder();
-  const encoder = new TextEncoder();
   let buffer = "";
   let usage = null;
 
@@ -188,7 +190,7 @@ export function createSSEStream(options = {}) {
 
   return new TransformStream({
     transform(chunk, controller) {
-      const text = decoder.decode(chunk, { stream: true });
+      const text = sharedDecoder.decode(chunk, { stream: true });
       buffer += text;
       reqLogger?.appendProviderChunk?.(text);
 
@@ -215,7 +217,7 @@ export function createSSEStream(options = {}) {
             output = line + "\n";
           }
           reqLogger?.appendConvertedChunk?.(output);
-          controller.enqueue(encoder.encode(output));
+          controller.enqueue(sharedEncoder.encode(output));
           continue;
         }
 
@@ -228,7 +230,7 @@ export function createSSEStream(options = {}) {
         if (parsed && parsed.done) {
           const output = "data: [DONE]\n\n";
           reqLogger?.appendConvertedChunk?.(output);
-          controller.enqueue(encoder.encode(output));
+          controller.enqueue(sharedEncoder.encode(output));
           continue;
         }
 
@@ -251,7 +253,7 @@ export function createSSEStream(options = {}) {
           for (const item of translated) {
             const output = formatSSE(item, sourceFormat);
             reqLogger?.appendConvertedChunk?.(output);
-            controller.enqueue(encoder.encode(output));
+            controller.enqueue(sharedEncoder.encode(output));
           }
         }
       }
@@ -260,7 +262,7 @@ export function createSSEStream(options = {}) {
     flush(controller) {
       trackPendingRequest(model, provider, connectionId, false);
       try {
-        const remaining = decoder.decode();
+        const remaining = sharedDecoder.decode();
         if (remaining) buffer += remaining;
 
         if (mode === STREAM_MODE.PASSTHROUGH) {
@@ -270,7 +272,7 @@ export function createSSEStream(options = {}) {
               output = "data: " + buffer.slice(5);
             }
             reqLogger?.appendConvertedChunk?.(output);
-            controller.enqueue(encoder.encode(output));
+            controller.enqueue(sharedEncoder.encode(output));
           }
           if (usage) {
             logUsage(provider, usage, model, connectionId);
@@ -299,7 +301,7 @@ export function createSSEStream(options = {}) {
               for (const item of translated) {
                 const output = formatSSE(item, sourceFormat);
                 reqLogger?.appendConvertedChunk?.(output);
-                controller.enqueue(encoder.encode(output));
+                controller.enqueue(sharedEncoder.encode(output));
               }
             }
           }
@@ -320,14 +322,14 @@ export function createSSEStream(options = {}) {
           for (const item of flushed) {
             const output = formatSSE(item, sourceFormat);
             reqLogger?.appendConvertedChunk?.(output);
-            controller.enqueue(encoder.encode(output));
+            controller.enqueue(sharedEncoder.encode(output));
           }
         }
 
         // Send [DONE] and log usage
         const doneOutput = "data: [DONE]\n\n";
         reqLogger?.appendConvertedChunk?.(doneOutput);
-        controller.enqueue(encoder.encode(doneOutput));
+        controller.enqueue(sharedEncoder.encode(doneOutput));
 
         if (state?.usage) {
           logUsage(state.provider || targetFormat, state.usage, model, connectionId);
