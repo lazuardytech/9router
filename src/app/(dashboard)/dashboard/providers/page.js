@@ -135,16 +135,16 @@ function ProviderCard({ providerId, provider, stats }) {
 
   return (
     <Link href={`/dashboard/providers/${providerId}`}>
-      <Card className="h-full hover:border-primary/50 transition-colors cursor-pointer">
+      <Card padding="sm" className="h-full hover:border-primary/50 transition-colors cursor-pointer">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div
-              className="size-10 rounded-lg flex items-center justify-center"
+              className="size-8 rounded-lg flex items-center justify-center"
               style={{ backgroundColor: `${provider.color}15` }}
             >
               {imgError ? (
                 <span
-                  className="text-sm font-bold"
+                  className="text-xs font-bold"
                   style={{ color: provider.color }}
                 >
                   {provider.textIcon || provider.id.slice(0, 2).toUpperCase()}
@@ -153,10 +153,10 @@ function ProviderCard({ providerId, provider, stats }) {
                 <Image
                   src={`/providers/${provider.id}.png`}
                   alt={provider.name}
-                  width={40}
-                  height={40}
-                  className="object-contain rounded-lg max-w-[40px] max-h-[40px]"
-                  sizes="40px"
+                  width={32}
+                  height={32}
+                  className="object-contain rounded-lg max-w-[32px] max-h-[32px]"
+                  sizes="32px"
                   onError={() => setImgError(true)}
                 />
               )}
@@ -200,15 +200,15 @@ function ApiKeyProviderCard({ providerId, provider, stats }) {
 
   return (
     <Link href={`/dashboard/providers/${providerId}`}>
-      <Card className="h-full hover:border-primary/50 transition-colors cursor-pointer">
+      <Card padding="sm" className="h-full hover:border-primary/50 transition-colors cursor-pointer">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div
-              className="size-10 rounded-lg flex items-center justify-center"
+              className="size-8 rounded-lg flex items-center justify-center"
               style={{ backgroundColor: `${provider.color}15` }}
             >
               <span
-                className="text-sm font-bold"
+                className="text-xs font-bold"
                 style={{ color: provider.color }}
               >
                 {provider.textIcon || provider.id.slice(0, 2).toUpperCase()}

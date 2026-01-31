@@ -99,68 +99,28 @@ export function generateProjectId() {
   return `${adj}-${noun}-${crypto.randomUUID().slice(0, 5)}`;
 }
 
-// Helper: Walk recursively through object/array and collect all paths for a given key
-function walkAndCollectPaths(obj, currentPath, targetKey, paths) {
+// Helper: Remove unsupported keywords recursively from object/array
+function removeUnsupportedKeywords(obj, keywords) {
   if (!obj || typeof obj !== "object") return;
   
   if (Array.isArray(obj)) {
-    obj.forEach((item, index) => {
-      const newPath = currentPath ? `${currentPath}[${index}]` : `[${index}]`;
-      walkAndCollectPaths(item, newPath, targetKey, paths);
-    });
+    for (const item of obj) {
+      removeUnsupportedKeywords(item, keywords);
+    }
   } else {
-    for (const [key, value] of Object.entries(obj)) {
-      const newPath = currentPath ? `${currentPath}.${key}` : key;
-      
-      if (key === targetKey) {
-        paths.push(newPath);
+    // Delete unsupported keys at current level
+    for (const keyword of keywords) {
+      if (keyword in obj) {
+        delete obj[keyword];
       }
-      
+    }
+    // Recurse into remaining values
+    for (const value of Object.values(obj)) {
       if (value && typeof value === "object") {
-        walkAndCollectPaths(value, newPath, targetKey, paths);
+        removeUnsupportedKeywords(value, keywords);
       }
     }
   }
-}
-
-// Helper: Get value at path
-function getAtPath(obj, path) {
-  const parts = path.split(".");
-  let current = obj;
-  for (const part of parts) {
-    if (!current || typeof current !== "object") return undefined;
-    current = current[part];
-  }
-  return current;
-}
-
-// Helper: Set value at path
-function setAtPath(obj, path, value) {
-  const parts = path.split(".");
-  let current = obj;
-  
-  for (let i = 0; i < parts.length - 1; i++) {
-    const part = parts[i];
-    if (!current[part]) current[part] = {};
-    current = current[part];
-  }
-  
-  current[parts[parts.length - 1]] = value;
-}
-
-// Helper: Delete a key at a specific path in nested object
-function deleteAtPath(obj, path) {
-  const parts = path.split(".");
-  let current = obj;
-  
-  for (let i = 0; i < parts.length - 1; i++) {
-    const part = parts[i];
-    if (!current[part]) return;
-    current = current[part];
-  }
-  
-  const lastKey = parts[parts.length - 1];
-  delete current[lastKey];
 }
 
 // Convert const to enum
@@ -307,8 +267,8 @@ function flattenTypeArrays(obj) {
 export function cleanJSONSchemaForAntigravity(schema) {
   if (!schema || typeof schema !== "object") return schema;
   
-  // Deep clone to avoid mutating original
-  let cleaned = JSON.parse(JSON.stringify(schema));
+  // Mutate directly (schema is only used once per request)
+  let cleaned = schema;
   
   // Phase 1: Convert and prepare
   convertConstToEnum(cleaned);
@@ -319,18 +279,8 @@ export function cleanJSONSchemaForAntigravity(schema) {
   flattenAnyOfOneOf(cleaned);
   flattenTypeArrays(cleaned);
   
-  // Phase 3: Remove all unsupported keywords at ALL levels
-  for (const keyword of UNSUPPORTED_SCHEMA_CONSTRAINTS) {
-    const paths = [];
-    walkAndCollectPaths(cleaned, "", keyword, paths);
-    
-    // Sort by depth (deepest first) to avoid path invalidation
-    paths.sort((a, b) => b.split(".").length - a.split(".").length);
-    
-    for (const path of paths) {
-      deleteAtPath(cleaned, path);
-    }
-  }
+  // Phase 3: Remove all unsupported keywords at ALL levels (including inside arrays)
+  removeUnsupportedKeywords(cleaned, UNSUPPORTED_SCHEMA_CONSTRAINTS);
   
   // Phase 4: Cleanup required fields recursively
   function cleanupRequired(obj) {
