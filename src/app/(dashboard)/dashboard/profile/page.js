@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { Card, Button, Badge, Toggle, Input } from "@/shared/components";
 import { useTheme } from "@/shared/hooks/useTheme";
+import { cn } from "@/shared/utils/cn";
 import { APP_CONFIG } from "@/shared/constants/config";
 
 export default function ProfilePage() {
@@ -117,7 +118,12 @@ export default function ProfilePage() {
 
         {/* Routing Preferences */}
         <Card>
-          <h3 className="text-lg font-semibold mb-4">Security</h3>
+          <div className="flex items-center gap-3 mb-4">
+            <div className="p-2 rounded-lg bg-primary/10 text-primary">
+              <span className="material-symbols-outlined text-[20px]">shield</span>
+            </div>
+            <h3 className="text-lg font-semibold">Security</h3>
+          </div>
           <form onSubmit={handlePasswordChange} className="flex flex-col gap-4">
             <div className="flex flex-col gap-2">
               <label className="text-sm font-medium">Current Password</label>
@@ -168,7 +174,12 @@ export default function ProfilePage() {
 
         {/* Routing Preferences */}
         <Card>
-          <h3 className="text-lg font-semibold mb-4">Routing Strategy</h3>
+          <div className="flex items-center gap-3 mb-4">
+            <div className="p-2 rounded-lg bg-blue-500/10 text-blue-500">
+              <span className="material-symbols-outlined text-[20px]">route</span>
+            </div>
+            <h3 className="text-lg font-semibold">Routing Strategy</h3>
+          </div>
           <div className="flex flex-col gap-4">
             <div className="flex items-center justify-between">
               <div>
@@ -215,7 +226,12 @@ export default function ProfilePage() {
 
         {/* Theme Preferences */}
         <Card>
-          <h3 className="text-lg font-semibold mb-4">Appearance</h3>
+          <div className="flex items-center gap-3 mb-4">
+            <div className="p-2 rounded-lg bg-purple-500/10 text-purple-500">
+              <span className="material-symbols-outlined text-[20px]">palette</span>
+            </div>
+            <h3 className="text-lg font-semibold">Appearance</h3>
+          </div>
           <div className="flex flex-col gap-4">
             <div className="flex items-center justify-between">
               <div>
@@ -231,34 +247,38 @@ export default function ProfilePage() {
             </div>
 
             {/* Theme Options */}
-            <div className="flex gap-3 pt-4 border-t border-border">
-              {["light", "dark", "system"].map((option) => (
-                <button
-                  key={option}
-                  onClick={() => setTheme(option)}
-                  className={`flex-1 flex flex-col items-center gap-2 p-4 rounded-lg border transition-all ${
-                    theme === option
-                      ? "border-primary bg-primary/5"
-                      : "border-border hover:border-primary/50"
-                  }`}
-                >
-                  <span className="material-symbols-outlined text-2xl">
-                    {option === "light"
-                      ? "light_mode"
-                      : option === "dark"
-                      ? "dark_mode"
-                      : "contrast"}
-                  </span>
-                  <span className="text-sm font-medium capitalize">{option}</span>
-                </button>
-              ))}
+            <div className="pt-4 border-t border-border">
+              <div className="inline-flex p-1 rounded-lg bg-black/5 dark:bg-white/5">
+                {["light", "dark", "system"].map((option) => (
+                  <button
+                    key={option}
+                    onClick={() => setTheme(option)}
+                    className={cn(
+                      "flex items-center gap-2 px-4 py-2 rounded-md font-medium transition-all",
+                      theme === option
+                        ? "bg-white dark:bg-white/10 text-text-main shadow-sm"
+                        : "text-text-muted hover:text-text-main"
+                    )}
+                  >
+                    <span className="material-symbols-outlined text-[20px]">
+                      {option === "light" ? "light_mode" : option === "dark" ? "dark_mode" : "contrast"}
+                    </span>
+                    <span className="capitalize">{option}</span>
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
         </Card>
 
         {/* Data Management */}
         <Card>
-          <h3 className="text-lg font-semibold mb-4">Data</h3>
+          <div className="flex items-center gap-3 mb-4">
+            <div className="p-2 rounded-lg bg-green-500/10 text-green-500">
+              <span className="material-symbols-outlined text-[20px]">database</span>
+            </div>
+            <h3 className="text-lg font-semibold">Data</h3>
+          </div>
           <div className="flex flex-col gap-3">
             <div className="flex items-center justify-between p-4 rounded-lg bg-bg border border-border">
               <div>

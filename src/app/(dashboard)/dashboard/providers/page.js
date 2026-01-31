@@ -134,8 +134,8 @@ function ProviderCard({ providerId, provider, stats }) {
   const [imgError, setImgError] = useState(false);
 
   return (
-    <Link href={`/dashboard/providers/${providerId}`}>
-      <Card padding="sm" className="h-full hover:border-primary/50 transition-colors cursor-pointer">
+    <Link href={`/dashboard/providers/${providerId}`} className="group">
+      <Card padding="sm" className="h-full hover:bg-black/[0.01] dark:hover:bg-white/[0.01] transition-colors cursor-pointer">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div
@@ -169,7 +169,7 @@ function ProviderCard({ providerId, provider, stats }) {
               </div>
             </div>
           </div>
-          <span className="material-symbols-outlined text-text-muted">
+          <span className="material-symbols-outlined text-text-muted opacity-0 group-hover:opacity-100 transition-opacity">
             chevron_right
           </span>
         </div>
@@ -199,8 +199,8 @@ function ApiKeyProviderCard({ providerId, provider, stats }) {
   const { connected, error, errorCode, errorTime } = stats;
 
   return (
-    <Link href={`/dashboard/providers/${providerId}`}>
-      <Card padding="sm" className="h-full hover:border-primary/50 transition-colors cursor-pointer">
+    <Link href={`/dashboard/providers/${providerId}`} className="group">
+      <Card padding="sm" className="h-full hover:bg-black/[0.01] dark:hover:bg-white/[0.01] transition-colors cursor-pointer">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div
@@ -222,7 +222,7 @@ function ApiKeyProviderCard({ providerId, provider, stats }) {
               </div>
             </div>
           </div>
-          <span className="material-symbols-outlined text-text-muted">
+          <span className="material-symbols-outlined text-text-muted opacity-0 group-hover:opacity-100 transition-opacity">
             chevron_right
           </span>
         </div>

@@ -52,11 +52,10 @@ export default function Toggle({
         className={cn(
           "relative inline-flex shrink-0 cursor-pointer rounded-full",
           "transition-colors duration-200 ease-in-out",
-          "focus:outline-none focus:ring-2 focus:ring-primary/20 focus:ring-offset-2",
-          "dark:focus:ring-offset-surface-dark",
+          "focus:outline-none focus:ring-1 focus:ring-primary/30",
           checked
             ? "bg-primary"
-            : "bg-border",
+            : "bg-black/10 dark:bg-white/20",
           sizes[size].track,
           disabled && "cursor-not-allowed"
         )}

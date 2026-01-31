@@ -21,6 +21,7 @@ export { default as RequestLogger } from "./RequestLogger";
 export { default as KiroAuthModal } from "./KiroAuthModal";
 export { default as KiroOAuthWrapper } from "./KiroOAuthWrapper";
 export { default as KiroSocialOAuthModal } from "./KiroSocialOAuthModal";
+export { default as SegmentedControl } from "./SegmentedControl";
 
 // Layouts
 export * from "./layouts";

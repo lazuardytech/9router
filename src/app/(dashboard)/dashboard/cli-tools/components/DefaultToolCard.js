@@ -233,43 +233,43 @@ export default function DefaultToolCard({ toolId, tool, isExpanded, onToggle, ba
         <Image
           src={tool.image}
           alt={tool.name}
-          width={40}
-          height={40}
-          className="size-12 object-contain rounded-xl bg-gray-500 max-w-[48px] max-h-[48px]"
-          sizes="48px"
+          width={32}
+          height={32}
+          className="size-8 object-contain rounded-lg"
+          sizes="32px"
           onError={(e) => { e.target.style.display = "none"; }}
         />
       );
     }
     if (tool.icon) {
-      return <span className="material-symbols-outlined text-3xl" style={{ color: tool.color }}>{tool.icon}</span>;
+      return <span className="material-symbols-outlined text-xl" style={{ color: tool.color }}>{tool.icon}</span>;
     }
     return (
       <Image
         src={`/providers/${toolId}.png`}
         alt={tool.name}
-        width={40}
-        height={40}
-        className="size-10 object-contain rounded-xl max-w-[40px] max-h-[40px]"
-        sizes="40px"
+        width={32}
+        height={32}
+        className="size-8 object-contain rounded-lg"
+        sizes="32px"
         onError={(e) => { e.target.style.display = "none"; }}
       />
     );
   };
 
   return (
-    <Card className="overflow-hidden">
+    <Card padding="sm" className="overflow-hidden">
       <div className="flex items-center justify-between hover:cursor-pointer" onClick={onToggle}>
-        <div className="flex items-center gap-4">
-          <div className="size-12 rounded-xl flex items-center justify-center">
+        <div className="flex items-center gap-3">
+          <div className="size-8 rounded-lg flex items-center justify-center shrink-0">
             {renderIcon()}
           </div>
-          <div>
-            <h3 className="font-semibold text-lg">{tool.name}</h3>
-            <p className="text-sm text-text-muted">{tool.description}</p>
+          <div className="min-w-0">
+            <h3 className="font-medium text-sm">{tool.name}</h3>
+            <p className="text-xs text-text-muted truncate">{tool.description}</p>
           </div>
         </div>
-        <span className={`material-symbols-outlined text-text-muted transition-transform ${isExpanded ? "rotate-180" : ""}`}>expand_more</span>
+        <span className={`material-symbols-outlined text-text-muted text-[20px] transition-transform ${isExpanded ? "rotate-180" : ""}`}>expand_more</span>
       </div>
 
       {isExpanded && (

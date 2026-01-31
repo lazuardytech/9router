@@ -293,58 +293,48 @@ export default function APIPageClient({ machineId }) {
         </div>
 
         {keys.length === 0 ? (
-          <div className="text-center py-8">
-            <span className="material-symbols-outlined text-4xl text-text-muted mb-2">
-              vpn_key
-            </span>
-            <p className="text-sm text-text-muted">No API keys yet</p>
+          <div className="text-center py-12">
+            <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-primary/10 text-primary mb-4">
+              <span className="material-symbols-outlined text-[32px]">vpn_key</span>
+            </div>
+            <p className="text-text-main font-medium mb-1">No API keys yet</p>
+            <p className="text-sm text-text-muted mb-4">Create your first API key to get started</p>
+            <Button icon="add" onClick={() => setShowAddModal(true)}>
+              Create Key
+            </Button>
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr className="border-b border-border">
-                  <th className="text-left p-3 font-medium">Name</th>
-                  <th className="text-left p-3 font-medium">Key</th>
-                  <th className="text-left p-3 font-medium">Created</th>
-                  <th className="text-left p-3 font-medium">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {keys.map((key) => (
-                  <tr key={key.id} className="border-b border-border hover:bg-sidebar/30">
-                    <td className="p-3 text-sm">{key.name}</td>
-                    <td className="p-3">
-                      <div className="flex items-center gap-2">
-                        <span className="font-mono text-xs text-text-muted">
-                          {key.key}
-                        </span>
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          icon={copied === key.id ? "check" : "content_copy"}
-                          onClick={() => copy(key.key, key.id)}
-                        />
-                      </div>
-                    </td>
-                    <td className="p-3 text-sm text-text-muted">
-                      {new Date(key.createdAt).toLocaleDateString()}
-                    </td>
-                    <td className="p-3">
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        icon="delete"
-                        className="text-red-500"
-                        onClick={() => handleDeleteKey(key.id)}
-                      >
-                        Delete
-                      </Button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+          <div className="flex flex-col">
+            {keys.map((key) => (
+              <div
+                key={key.id}
+                className="group flex items-center justify-between py-3 border-b border-black/[0.03] dark:border-white/[0.03] last:border-b-0"
+              >
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium">{key.name}</p>
+                  <div className="flex items-center gap-2 mt-1">
+                    <code className="text-xs text-text-muted font-mono">{key.key}</code>
+                    <button
+                      onClick={() => copy(key.key, key.id)}
+                      className="p-1 hover:bg-black/5 dark:hover:bg-white/5 rounded text-text-muted hover:text-primary opacity-0 group-hover:opacity-100 transition-all"
+                    >
+                      <span className="material-symbols-outlined text-[14px]">
+                        {copied === key.id ? "check" : "content_copy"}
+                      </span>
+                    </button>
+                  </div>
+                  <p className="text-xs text-text-muted mt-1">
+                    Created {new Date(key.createdAt).toLocaleDateString()}
+                  </p>
+                </div>
+                <button
+                  onClick={() => handleDeleteKey(key.id)}
+                  className="p-2 hover:bg-red-500/10 rounded text-red-500 opacity-0 group-hover:opacity-100 transition-all"
+                >
+                  <span className="material-symbols-outlined text-[18px]">delete</span>
+                </button>
+              </div>
+            ))}
           </div>
         )}
       </Card>

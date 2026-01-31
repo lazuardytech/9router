@@ -303,14 +303,18 @@ export default function ProviderDetailPage() {
         </div>
 
         {connections.length === 0 ? (
-          <div className="text-center py-8">
-            <span className="material-symbols-outlined text-4xl text-text-muted mb-2">
-              {isOAuth ? "lock" : "key"}
-            </span>
-            <p className="text-sm text-text-muted">No connections yet</p>
+          <div className="text-center py-12">
+            <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-primary/10 text-primary mb-4">
+              <span className="material-symbols-outlined text-[32px]">{isOAuth ? "lock" : "key"}</span>
+            </div>
+            <p className="text-text-main font-medium mb-1">No connections yet</p>
+            <p className="text-sm text-text-muted mb-4">Add your first connection to get started</p>
+            <Button icon="add" onClick={() => isOAuth ? setShowOAuthModal(true) : setShowAddApiKeyModal(true)}>
+              Add Connection
+            </Button>
           </div>
         ) : (
-          <div className="flex flex-col gap-2">
+          <div className="flex flex-col divide-y divide-black/[0.03] dark:divide-white/[0.03]">
             {connections
               .sort((a, b) => (a.priority || 0) - (b.priority || 0))
               .map((conn, index) => (
@@ -618,7 +622,7 @@ function ConnectionRow({ connection, isOAuth, isFirst, isLast, onMoveUp, onMoveD
   };
 
   return (
-    <div className={`flex items-center justify-between p-3 rounded-lg border border-border hover:bg-sidebar/50 ${connection.isActive === false ? 'opacity-60' : ''}`}>
+    <div className={`group flex items-center justify-between p-3 rounded-lg hover:bg-black/[0.02] dark:hover:bg-white/[0.02] transition-colors ${connection.isActive === false ? "opacity-60" : ""}`}>
       <div className="flex items-center gap-3 flex-1 min-w-0">
         {/* Priority arrows */}
         <div className="flex flex-col">
@@ -666,12 +670,12 @@ function ConnectionRow({ connection, isOAuth, isFirst, isLast, onMoveUp, onMoveD
           onChange={onToggleActive}
           title={(connection.isActive ?? true) ? "Disable connection" : "Enable connection"}
         />
-        <div className="flex gap-1 ml-1">
-          <button onClick={onEdit} className="p-2 hover:bg-sidebar rounded">
-            <span className="material-symbols-outlined text-base">edit</span>
+        <div className="flex gap-1 ml-1 opacity-0 group-hover:opacity-100 transition-opacity">
+          <button onClick={onEdit} className="p-2 hover:bg-black/5 dark:hover:bg-white/5 rounded text-text-muted hover:text-primary">
+            <span className="material-symbols-outlined text-[18px]">edit</span>
           </button>
-          <button onClick={onDelete} className="p-2 hover:bg-red-50 rounded text-red-500">
-            <span className="material-symbols-outlined text-base">delete</span>
+          <button onClick={onDelete} className="p-2 hover:bg-red-500/10 rounded text-red-500">
+            <span className="material-symbols-outlined text-[18px]">delete</span>
           </button>
         </div>
       </div>
