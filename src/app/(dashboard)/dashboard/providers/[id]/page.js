@@ -823,11 +823,6 @@ function EditConnectionModal({ isOpen, connection, onSave, onClose }) {
       const res = await fetch(`/api/providers/${connection.id}/test`, { method: "POST" });
       const data = await res.json();
       setTestResult(data.valid ? "success" : "failed");
-      if (data.valid) {
-        onSave({ testStatus: "active", lastError: null, lastErrorAt: null });
-      } else {
-        onSave({ testStatus: "error", lastError: data.error, lastErrorAt: new Date().toISOString() });
-      }
     } catch {
       setTestResult("failed");
     } finally {
