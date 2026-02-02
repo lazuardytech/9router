@@ -194,7 +194,7 @@ function ComboCard({ combo, copied, onCopy, onEdit, onDelete }) {
               ) : (
                 combo.models.slice(0, 3).map((model, index) => (
                   <code key={index} className="text-[10px] font-mono bg-black/5 dark:bg-white/5 px-1.5 py-0.5 rounded text-text-muted">
-                    {model.split("/").pop()}
+                    {model}
                   </code>
                 ))
               )}
