@@ -1,7 +1,7 @@
 <div align="center">
   <img src="./images/9router.png" alt="9Router Dashboard" width="800"/>
   
-  # 9Router - FREE AI Coding + Cheap Backups
+  # 9Router - FREE AI Coding
   
   **Use Claude, Codex, Gemini for FREE • Ultra-cheap alternatives from $0.20/1M tokens**
   
@@ -32,6 +32,26 @@ Stop wasting your AI subscriptions and paying full price:
 
 ---
 
+## 🔧 How It Works
+
+```
+1. Install & Start
+   npm install -g 9router → Dashboard opens
+
+2. Connect Providers  
+   Dashboard → OAuth login (Claude, Gemini...)
+            OR → For free providers (iFlow, Qwen, Kiro...)
+            OR → Add API keys (GLM, iFlow...)
+
+3. Point Your CLI (Cursor/Cline/Any tool..)
+   Cursor/Cline → http://localhost:20128/v1
+   
+   Your Tool  →  9Router  →  Providers
+                 (Auto route + fallback)
+```
+
+---
+
 ## ⚡ Quick Start
 
 **Install globally:**
@@ -41,9 +61,9 @@ npm install -g 9router
 9router
 ```
 
-🎉 Dashboard opens → Connect Claude Code → Start coding!
+🎉 Dashboard opens → Connect Free Providers  → Start coding!
 
-**Use in Cursor/Cline:**
+**Use in Claude Code/Codex/Cursor/Cline/.....:**
 
 ```
 Endpoint: http://localhost:20128/v1
@@ -83,7 +103,6 @@ When subscription quota runs out, pay pennies:
 
 ### 🆓 FREE FOREVER (Fallback)
 
-No API key needed, unlimited:
 
 | Provider | Top Models | Notes |
 |----------|-----------|-------|
@@ -125,6 +144,19 @@ Tier 3 (FREE): iFlow → Qwen → Kiro
 ### 🌐 Deploy Options
 
 💻 **Localhost** • ☁️ **VPS/Cloud** • 🐳 **Docker** • 🚀 **Cloudflare Workers**
+
+---
+
+## ☁️ Cloud Deployment
+
+### Why Cloud?
+
+Use `https://9router.com` when localhost doesn't work:
+
+- ✅ **Cursor IDE** - doesn't support localhost
+- ✅ **Mobile coding** - iPad, phone access
+- ✅ **No install needed** - use from anywhere
+- ✅ **Global fast** - Cloudflare edge network (300+ locations)
 
 ---
 
@@ -472,17 +504,6 @@ Daily routine:
 → Code 24/7 with minimal extra cost!
 ```
 
-### Model Selection Guide
-
-| Task | Best Model | Cost | Why |
-|------|-----------|------|-----|
-| Complex reasoning | `cc/claude-opus-4-5` | Subscription | Best quality |
-| Fast coding | `cx/gpt-5.2-codex` | Subscription | Fastest Codex |
-| Budget coding | `glm/glm-4.7` | $0.6/1M | Daily quota |
-| Long context | `minimax/MiniMax-M2.1` | $0.20/1M | 1M context cheap |
-| Emergency backup | `if/kimi-k2-thinking` | FREE | Unlimited |
-
----
 
 ## 📊 Available Models
 
