@@ -164,14 +164,16 @@ export function convertKiroToOpenAI(chunk, state) {
     return openaiChunk;
   }
 
-  // Handle usage events
+// Handle usage events
   if (eventType === "usageEvent" || data.usageEvent) {
     const usage = data.usageEvent || data;
-    state.usage = {
-      prompt_tokens: usage.inputTokens || 0,
-      completion_tokens: usage.outputTokens || 0,
-      total_tokens: (usage.inputTokens || 0) + (usage.outputTokens || 0)
-    };
+    if (usage && typeof usage === 'object') {
+      state.usage = {
+        prompt_tokens: usage.inputTokens || 0,
+        completion_tokens: usage.outputTokens || 0,
+        total_tokens: (usage.inputTokens || 0) + (usage.outputTokens || 0)
+      };
+    }
     return null;
   }
 

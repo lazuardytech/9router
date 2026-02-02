@@ -1,5 +1,5 @@
 // Re-export from open-sse with localDb integration
-import { getModelAliases, getComboByName } from "@/lib/localDb";
+import { getModelAliases, getComboByName, getProviderNodes } from "@/lib/localDb";
 import { parseModel, resolveModelAliasFromMap, getModelInfoCore } from "open-sse/services/model.js";
 
 export { parseModel };
@@ -16,6 +16,22 @@ export async function resolveModelAlias(alias) {
  * Get full model info (parse or resolve)
  */
 export async function getModelInfo(modelStr) {
+  const parsed = parseModel(modelStr);
+
+  if (!parsed.isAlias) {
+    if (parsed.provider === parsed.providerAlias) {
+      const providerNodes = await getProviderNodes({ type: "openai-compatible" });
+      const matchedNode = providerNodes.find((node) => node.prefix === parsed.providerAlias);
+      if (matchedNode) {
+        return { provider: matchedNode.id, model: parsed.model };
+      }
+    }
+    return {
+      provider: parsed.provider,
+      model: parsed.model
+    };
+  }
+
   return getModelInfoCore(modelStr, getModelAliases);
 }
 

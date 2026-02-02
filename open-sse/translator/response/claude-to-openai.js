@@ -110,10 +110,10 @@ export function claudeToOpenAIResponse(chunk, state) {
       break;
     }
 
-    case "message_stop": {
+case "message_stop": {
       if (!state.finishReasonSent) {
         const finishReason = state.finishReason || (state.toolCalls?.size > 0 ? "tool_calls" : "stop");
-        const usageObj = state.usage ? {
+        const usageObj = (state.usage && typeof state.usage === 'object') ? {
           usage: {
             prompt_tokens: state.usage.input_tokens || 0,
             completion_tokens: state.usage.output_tokens || 0,

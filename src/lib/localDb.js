@@ -42,6 +42,7 @@ if (!isCloud && !fs.existsSync(DATA_DIR)) {
 // Default data structure
 const defaultData = {
   providerConnections: [],
+  providerNodes: [],
   modelAliases: {},
   combos: [],
   apiKeys: [],
@@ -114,6 +115,103 @@ export async function getProviderConnections(filter = {}) {
   connections.sort((a, b) => (a.priority || 999) - (b.priority || 999));
   
   return connections;
+}
+
+// ============ Provider Nodes ============
+
+/**
+ * Get provider nodes
+ */
+export async function getProviderNodes(filter = {}) {
+  const db = await getDb();
+  let nodes = db.data.providerNodes || [];
+
+  if (filter.type) {
+    nodes = nodes.filter((node) => node.type === filter.type);
+  }
+
+  return nodes;
+}
+
+/**
+ * Get provider node by ID
+ */
+export async function getProviderNodeById(id) {
+  const db = await getDb();
+  return db.data.providerNodes.find((node) => node.id === id) || null;
+}
+
+/**
+ * Create provider node
+ */
+export async function createProviderNode(data) {
+  const db = await getDb();
+  const now = new Date().toISOString();
+
+  const node = {
+    id: data.id || uuidv4(),
+    type: data.type,
+    name: data.name,
+    prefix: data.prefix,
+    apiType: data.apiType,
+    baseUrl: data.baseUrl,
+    createdAt: now,
+    updatedAt: now,
+  };
+
+  db.data.providerNodes.push(node);
+  await db.write();
+
+  return node;
+}
+
+/**
+ * Update provider node
+ */
+export async function updateProviderNode(id, data) {
+  const db = await getDb();
+  const index = db.data.providerNodes.findIndex((node) => node.id === id);
+
+  if (index === -1) return null;
+
+  db.data.providerNodes[index] = {
+    ...db.data.providerNodes[index],
+    ...data,
+    updatedAt: new Date().toISOString(),
+  };
+
+  await db.write();
+
+  return db.data.providerNodes[index];
+}
+
+/**
+ * Delete provider node
+ */
+export async function deleteProviderNode(id) {
+  const db = await getDb();
+  const index = db.data.providerNodes.findIndex((node) => node.id === id);
+
+  if (index === -1) return null;
+
+  const [removed] = db.data.providerNodes.splice(index, 1);
+  await db.write();
+
+  return removed;
+}
+
+/**
+ * Delete all provider connections by provider ID
+ */
+export async function deleteProviderConnectionsByProvider(providerId) {
+  const db = await getDb();
+  const beforeCount = db.data.providerConnections.length;
+  db.data.providerConnections = db.data.providerConnections.filter(
+    (connection) => connection.provider !== providerId
+  );
+  const deletedCount = beforeCount - db.data.providerConnections.length;
+  await db.write();
+  return deletedCount;
 }
 
 /**
@@ -699,4 +797,3 @@ export async function resetAllPricing() {
   await db.write();
   return db.data.pricing;
 }
-

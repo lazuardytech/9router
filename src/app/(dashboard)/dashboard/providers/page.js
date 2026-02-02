@@ -3,8 +3,9 @@
 import { useState, useEffect } from "react";
 import Image from "next/image";
 import PropTypes from "prop-types";
-import { Card, CardSkeleton, Badge } from "@/shared/components";
+import { Card, CardSkeleton, Badge, Button, Input, Modal, Select } from "@/shared/components";
 import { OAUTH_PROVIDERS, APIKEY_PROVIDERS } from "@/shared/constants/config";
+import { OPENAI_COMPATIBLE_PREFIX } from "@/shared/constants/providers";
 import Link from "next/link";
 import { getErrorCode, getRelativeTime } from "@/shared/utils";
 
@@ -34,14 +35,21 @@ function getStatusDisplay(connected, error, errorCode) {
 
 export default function ProvidersPage() {
   const [connections, setConnections] = useState([]);
+  const [providerNodes, setProviderNodes] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [showAddCompatibleModal, setShowAddCompatibleModal] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const res = await fetch("/api/providers");
-        const data = await res.json();
-        if (res.ok) setConnections(data.connections || []);
+        const [connectionsRes, nodesRes] = await Promise.all([
+          fetch("/api/providers"),
+          fetch("/api/provider-nodes"),
+        ]);
+        const connectionsData = await connectionsRes.json();
+        const nodesData = await nodesRes.json();
+        if (connectionsRes.ok) setConnections(connectionsData.connections || []);
+        if (nodesRes.ok) setProviderNodes(nodesData.nodes || []);
       } catch (error) {
         console.log("Error fetching data:", error);
       } finally {
@@ -85,6 +93,24 @@ export default function ProvidersPage() {
     return { connected, error, total, errorCode, errorTime };
   };
 
+  const compatibleProviders = providerNodes
+    .filter((node) => node.type === "openai-compatible")
+    .map((node) => ({
+      id: node.id,
+      name: node.name || "OpenAI Compatible",
+      color: "#10A37F",
+      textIcon: "OC",
+      apiType: node.apiType,
+    }));
+
+  const apiKeyProviders = {
+    ...APIKEY_PROVIDERS,
+    ...compatibleProviders.reduce((acc, provider) => {
+      acc[provider.id] = provider;
+      return acc;
+    }, {}),
+  };
+
   if (loading) {
     return (
       <div className="flex flex-col gap-8">
@@ -113,9 +139,14 @@ export default function ProvidersPage() {
 
       {/* API Key Providers */}
       <div className="flex flex-col gap-4">
-        <h2 className="text-xl font-semibold">API Key Providers</h2>
+        <div className="flex items-center justify-between">
+          <h2 className="text-xl font-semibold">API Key Providers</h2>
+          <Button size="sm" icon="add" onClick={() => setShowAddCompatibleModal(true)}>
+            Add OpenAI Compatible
+          </Button>
+        </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-          {Object.entries(APIKEY_PROVIDERS).map(([key, info]) => (
+          {Object.entries(apiKeyProviders).map(([key, info]) => (
             <ApiKeyProviderCard
               key={key}
               providerId={key}
@@ -125,6 +156,14 @@ export default function ProvidersPage() {
           ))}
         </div>
       </div>
+      <AddOpenAICompatibleModal
+        isOpen={showAddCompatibleModal}
+        onClose={() => setShowAddCompatibleModal(false)}
+        onCreated={(node) => {
+          setProviderNodes((prev) => [...prev, node]);
+          setShowAddCompatibleModal(false);
+        }}
+      />
     </div>
   );
 }
@@ -197,6 +236,7 @@ ProviderCard.propTypes = {
 // API Key providers - only use textIcon, no image
 function ApiKeyProviderCard({ providerId, provider, stats }) {
   const { connected, error, errorCode, errorTime } = stats;
+  const isCompatible = providerId.startsWith(OPENAI_COMPATIBLE_PREFIX);
 
   return (
     <Link href={`/dashboard/providers/${providerId}`} className="group">
@@ -218,6 +258,11 @@ function ApiKeyProviderCard({ providerId, provider, stats }) {
               <h3 className="font-semibold">{provider.name}</h3>
               <div className="flex items-center gap-2 text-xs flex-wrap">
                 {getStatusDisplay(connected, error, errorCode)}
+                {isCompatible && (
+                  <Badge variant="default" size="sm">
+                    {provider.apiType === "responses" ? "Responses" : "Chat"}
+                  </Badge>
+                )}
                 {errorTime && <span className="text-text-muted">• {errorTime}</span>}
               </div>
             </div>
@@ -238,6 +283,7 @@ ApiKeyProviderCard.propTypes = {
     name: PropTypes.string.isRequired,
     color: PropTypes.string,
     textIcon: PropTypes.string,
+    apiType: PropTypes.string,
   }).isRequired,
   stats: PropTypes.shape({
     connected: PropTypes.number,
@@ -245,4 +291,147 @@ ApiKeyProviderCard.propTypes = {
     errorCode: PropTypes.string,
     errorTime: PropTypes.string,
   }).isRequired,
+};
+
+function AddOpenAICompatibleModal({ isOpen, onClose, onCreated }) {
+  const [formData, setFormData] = useState({
+    name: "",
+    prefix: "",
+    apiType: "chat",
+    baseUrl: "https://api.openai.com/v1",
+  });
+  const [submitting, setSubmitting] = useState(false);
+  const [checkKey, setCheckKey] = useState("");
+  const [validating, setValidating] = useState(false);
+  const [validationResult, setValidationResult] = useState(null);
+
+  const apiTypeOptions = [
+    { value: "chat", label: "Chat Completions" },
+    { value: "responses", label: "Responses API" },
+  ];
+
+  useEffect(() => {
+    const defaultBaseUrl = "https://api.openai.com/v1";
+    setFormData((prev) => ({
+      ...prev,
+      baseUrl: defaultBaseUrl,
+    }));
+  }, [formData.apiType]);
+
+  const handleSubmit = async () => {
+    if (!formData.name.trim() || !formData.prefix.trim() || !formData.baseUrl.trim()) return;
+    setSubmitting(true);
+    try {
+      const res = await fetch("/api/provider-nodes", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: formData.name,
+          prefix: formData.prefix,
+          apiType: formData.apiType,
+          baseUrl: formData.baseUrl,
+        }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        onCreated(data.node);
+        setFormData({
+          name: "",
+          prefix: "",
+          apiType: "chat",
+          baseUrl: "https://api.openai.com/v1",
+        });
+        setCheckKey("");
+        setValidationResult(null);
+      }
+    } catch (error) {
+      console.log("Error creating OpenAI Compatible node:", error);
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleValidate = async () => {
+    setValidating(true);
+    try {
+      const res = await fetch("/api/provider-nodes/validate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ baseUrl: formData.baseUrl, apiKey: checkKey }),
+      });
+      const data = await res.json();
+      setValidationResult(data.valid ? "success" : "failed");
+    } catch {
+      setValidationResult("failed");
+    } finally {
+      setValidating(false);
+    }
+  };
+
+  return (
+    <Modal isOpen={isOpen} title="Add OpenAI Compatible" onClose={onClose}>
+      <div className="flex flex-col gap-4">
+        <Input
+          label="Name"
+          value={formData.name}
+          onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+          placeholder="OpenAI Compatible (Prod)"
+          hint="Required. A friendly label for this node."
+        />
+        <Input
+          label="Prefix"
+          value={formData.prefix}
+          onChange={(e) => setFormData({ ...formData, prefix: e.target.value })}
+          placeholder="oc-prod"
+          hint="Required. Used as the provider prefix for model IDs."
+        />
+        <Select
+          label="API Type"
+          options={apiTypeOptions}
+          value={formData.apiType}
+          onChange={(e) => setFormData({ ...formData, apiType: e.target.value })}
+        />
+        <Input
+          label="Base URL"
+          value={formData.baseUrl}
+          onChange={(e) => setFormData({ ...formData, baseUrl: e.target.value })}
+          placeholder="https://api.openai.com/v1"
+          hint="Use the base URL (ending in /v1) for your OpenAI-compatible API."
+        />
+        <div className="flex gap-2">
+          <Input
+            label="API Key (for Check)"
+            type="password"
+            value={checkKey}
+            onChange={(e) => setCheckKey(e.target.value)}
+            className="flex-1"
+          />
+          <div className="pt-6">
+            <Button onClick={handleValidate} disabled={!checkKey || validating || !formData.baseUrl.trim()} variant="secondary">
+              {validating ? "Checking..." : "Check"}
+            </Button>
+          </div>
+        </div>
+        {validationResult && (
+          <Badge variant={validationResult === "success" ? "success" : "error"}>
+            {validationResult === "success" ? "Valid" : "Invalid"}
+          </Badge>
+        )}
+        <div className="flex gap-2">
+          <Button onClick={handleSubmit} fullWidth disabled={!formData.name.trim() || !formData.prefix.trim() || !formData.baseUrl.trim() || submitting}>
+            {submitting ? "Creating..." : "Create"}
+          </Button>
+          <Button onClick={onClose} variant="ghost" fullWidth>
+            Cancel
+          </Button>
+        </div>
+      </div>
+    </Modal>
+  );
+}
+
+AddOpenAICompatibleModal.propTypes = {
+  isOpen: PropTypes.bool.isRequired,
+  onClose: PropTypes.func.isRequired,
+  onCreated: PropTypes.func.isRequired,
 };

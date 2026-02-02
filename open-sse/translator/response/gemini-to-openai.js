@@ -181,9 +181,9 @@ export function geminiToOpenAIResponse(chunk, state) {
     state.finishReason = finishReason;
   }
 
-  // Usage metadata
+// Usage metadata
   const usage = response.usageMetadata || chunk.usageMetadata;
-  if (usage) {
+  if (usage && typeof usage === 'object') {
     const promptTokens = (usage.promptTokenCount || 0) + (usage.thoughtsTokenCount || 0);
     state.usage = {
       prompt_tokens: promptTokens,

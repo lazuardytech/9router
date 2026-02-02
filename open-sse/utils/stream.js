@@ -13,43 +13,66 @@ function getTimeString() {
 
 // Extract usage from any format (Claude, OpenAI, Gemini, Responses API)
 function extractUsage(chunk) {
+  if (!chunk || typeof chunk !== "object") return null;
+
   // Claude format (message_delta event)
-  if (chunk.type === "message_delta" && chunk.usage) {
-    return {
+  if (chunk.type === "message_delta" && chunk.usage && typeof chunk.usage === 'object') {
+    return normalizeUsage({
       prompt_tokens: chunk.usage.input_tokens || 0,
       completion_tokens: chunk.usage.output_tokens || 0,
       cache_read_input_tokens: chunk.usage.cache_read_input_tokens,
       cache_creation_input_tokens: chunk.usage.cache_creation_input_tokens
-    };
+    });
   }
   // OpenAI Responses API format (response.completed or response.done)
-  if ((chunk.type === "response.completed" || chunk.type === "response.done") && chunk.response?.usage) {
+  if ((chunk.type === "response.completed" || chunk.type === "response.done") && chunk.response?.usage && typeof chunk.response.usage === 'object') {
     const usage = chunk.response.usage;
-    return {
+    return normalizeUsage({
       prompt_tokens: usage.input_tokens || usage.prompt_tokens || 0,
       completion_tokens: usage.output_tokens || usage.completion_tokens || 0,
       cached_tokens: usage.input_tokens_details?.cached_tokens,
       reasoning_tokens: usage.output_tokens_details?.reasoning_tokens
-    };
+    });
   }
   // OpenAI format
-  if (chunk.usage?.prompt_tokens !== undefined) {
-    return {
+  if (chunk.usage && typeof chunk.usage === 'object' && chunk.usage.prompt_tokens !== undefined) {
+    return normalizeUsage({
       prompt_tokens: chunk.usage.prompt_tokens,
       completion_tokens: chunk.usage.completion_tokens || 0,
       cached_tokens: chunk.usage.prompt_tokens_details?.cached_tokens,
       reasoning_tokens: chunk.usage.completion_tokens_details?.reasoning_tokens
-    };
+    });
   }
   // Gemini format
-  if (chunk.usageMetadata) {
-    return {
+  if (chunk.usageMetadata && typeof chunk.usageMetadata === 'object') {
+    return normalizeUsage({
       prompt_tokens: chunk.usageMetadata.promptTokenCount || 0,
       completion_tokens: chunk.usageMetadata.candidatesTokenCount || 0,
       reasoning_tokens: chunk.usageMetadata.thoughtsTokenCount
-    };
+    });
   }
   return null;
+}
+
+function normalizeUsage(usage) {
+  if (!usage || typeof usage !== "object" || Array.isArray(usage)) return null;
+
+  const normalized = {};
+  const assignNumber = (key, value) => {
+    if (value === undefined || value === null) return;
+    const numeric = Number(value);
+    if (Number.isFinite(numeric)) normalized[key] = numeric;
+  };
+
+  assignNumber("prompt_tokens", usage?.prompt_tokens);
+  assignNumber("completion_tokens", usage?.completion_tokens);
+  assignNumber("cache_read_input_tokens", usage?.cache_read_input_tokens);
+  assignNumber("cache_creation_input_tokens", usage?.cache_creation_input_tokens);
+  assignNumber("cached_tokens", usage?.cached_tokens);
+  assignNumber("reasoning_tokens", usage?.reasoning_tokens);
+
+  if (Object.keys(normalized).length === 0) return null;
+  return normalized;
 }
 
 // ANSI color codes
@@ -64,11 +87,11 @@ export const COLORS = {
 
 // Log usage with cache info (green color)
 function logUsage(provider, usage, model = null, connectionId = null) {
-  if (!usage) return;
+  if (!usage || typeof usage !== 'object') return;
 
   const p = provider?.toUpperCase() || "UNKNOWN";
-  const inTokens = usage.prompt_tokens || 0;
-  const outTokens = usage.completion_tokens || 0;
+  const inTokens = usage?.prompt_tokens || 0;
+  const outTokens = usage?.completion_tokens || 0;
 
   let msg = `[${getTimeString()}] 📊 [USAGE] ${p} | in=${inTokens} | out=${outTokens}`;
   if (connectionId) msg += ` | account=${connectionId.slice(0, 8)}...`;
@@ -274,7 +297,7 @@ export function createSSEStream(options = {}) {
             reqLogger?.appendConvertedChunk?.(output);
             controller.enqueue(sharedEncoder.encode(output));
           }
-          if (usage) {
+if (usage && typeof usage === 'object') {
             logUsage(provider, usage, model, connectionId);
           } else {
             // No usage data available - still mark request as completed
@@ -331,7 +354,7 @@ export function createSSEStream(options = {}) {
         reqLogger?.appendConvertedChunk?.(doneOutput);
         controller.enqueue(sharedEncoder.encode(doneOutput));
 
-        if (state?.usage) {
+if (state?.usage && typeof state.usage === 'object') {
           logUsage(state.provider || targetFormat, state.usage, model, connectionId);
         } else {
           // No usage data available - still mark request as completed

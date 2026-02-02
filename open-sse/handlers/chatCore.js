@@ -189,10 +189,10 @@ function translateNonStreamingResponse(responseBody, targetFormat, sourceFormat)
  * Handles different provider response formats
  */
 function extractUsageFromResponse(responseBody, provider) {
-  if (!responseBody) return null;
+  if (!responseBody || typeof responseBody !== 'object') return null;
 
   // OpenAI format
-  if (responseBody.usage) {
+  if (responseBody.usage && typeof responseBody.usage === 'object') {
     return {
       prompt_tokens: responseBody.usage.prompt_tokens || 0,
       completion_tokens: responseBody.usage.completion_tokens || 0,
@@ -202,7 +202,7 @@ function extractUsageFromResponse(responseBody, provider) {
   }
 
   // Claude format
-  if (responseBody.usage?.input_tokens !== undefined || responseBody.usage?.output_tokens !== undefined) {
+  if (responseBody.usage && typeof responseBody.usage === 'object' && (responseBody.usage.input_tokens !== undefined || responseBody.usage.output_tokens !== undefined)) {
     return {
       prompt_tokens: responseBody.usage.input_tokens || 0,
       completion_tokens: responseBody.usage.output_tokens || 0,
@@ -212,7 +212,7 @@ function extractUsageFromResponse(responseBody, provider) {
   }
 
   // Gemini format
-  if (responseBody.usageMetadata) {
+  if (responseBody.usageMetadata && typeof responseBody.usageMetadata === 'object') {
     return {
       prompt_tokens: responseBody.usageMetadata.promptTokenCount || 0,
       completion_tokens: responseBody.usageMetadata.candidatesTokenCount || 0,
@@ -411,11 +411,11 @@ export async function handleChatCore({ body, modelInfo, credentials, log, onCred
       await onRequestSuccess();
     }
 
-    // Log usage for non-streaming responses
+// Log usage for non-streaming responses
     const usage = extractUsageFromResponse(responseBody, provider);
     appendRequestLog({ model, provider, connectionId, tokens: usage, status: "200 OK" }).catch(() => { });
-    if (usage) {
-      const msg = `[${new Date().toLocaleTimeString("en-US", { hour12: false, hour: "2-digit", minute: "2-digit" })}] 📊 [USAGE] ${provider.toUpperCase()} | in=${usage.prompt_tokens || 0} | out=${usage.completion_tokens || 0}${connectionId ? ` | account=${connectionId.slice(0, 8)}...` : ""}`;
+    if (usage && typeof usage === 'object') {
+      const msg = `[${new Date().toLocaleTimeString("en-US", { hour12: false, hour: "2-digit", minute: "2-digit" })}] 📊 [USAGE] ${provider.toUpperCase()} | in=${usage?.prompt_tokens || 0} | out=${usage?.completion_tokens || 0}${connectionId ? ` | account=${connectionId.slice(0, 8)}...` : ""}`;
       console.log(`${COLORS.green}${msg}${COLORS.reset}`);
 
       saveRequestUsage({

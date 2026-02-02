@@ -6,7 +6,13 @@ export class DefaultExecutor extends BaseExecutor {
     super(provider, PROVIDERS[provider] || PROVIDERS.openai);
   }
 
-  buildUrl(model, stream, urlIndex = 0) {
+  buildUrl(model, stream, urlIndex = 0, credentials = null) {
+    if (this.provider?.startsWith?.("openai-compatible-")) {
+      const baseUrl = credentials?.providerSpecificData?.baseUrl || "https://api.openai.com/v1";
+      const normalized = baseUrl.replace(/\/$/, "");
+      const path = this.provider.includes("responses") ? "/responses" : "/chat/completions";
+      return `${normalized}${path}`;
+    }
     switch (this.provider) {
       case "claude":
       case "glm":

@@ -22,6 +22,12 @@ export const APIKEY_PROVIDERS = {
   gemini: { id: "gemini", alias: "gemini", name: "Gemini", icon: "diamond", color: "#4285F4", textIcon: "GE" },
 };
 
+export const OPENAI_COMPATIBLE_PREFIX = "openai-compatible-";
+
+export function isOpenAICompatibleProvider(providerId) {
+  return typeof providerId === "string" && providerId.startsWith(OPENAI_COMPATIBLE_PREFIX);
+}
+
 // All providers (combined)
 export const AI_PROVIDERS = { ...OAUTH_PROVIDERS, ...APIKEY_PROVIDERS };
 

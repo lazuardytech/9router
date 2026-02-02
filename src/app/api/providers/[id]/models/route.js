@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getProviderConnectionById } from "@/models";
+import { isOpenAICompatibleProvider } from "@/shared/constants/providers";
 
 // Provider models endpoints configuration
 const PROVIDER_MODELS_CONFIG = {
@@ -85,6 +86,39 @@ export async function GET(request, { params }) {
       return NextResponse.json({ error: "Connection not found" }, { status: 404 });
     }
 
+    if (isOpenAICompatibleProvider(connection.provider)) {
+      const baseUrl = connection.providerSpecificData?.baseUrl;
+      if (!baseUrl) {
+        return NextResponse.json({ error: "No base URL configured for OpenAI compatible provider" }, { status: 400 });
+      }
+      const url = `${baseUrl.replace(/\/$/, "")}/models`;
+      const response = await fetch(url, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${connection.apiKey}`,
+        },
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.log(`Error fetching models from ${connection.provider}:`, errorText);
+        return NextResponse.json(
+          { error: `Failed to fetch models: ${response.status}` },
+          { status: response.status }
+        );
+      }
+
+      const data = await response.json();
+      const models = data.data || data.models || [];
+
+      return NextResponse.json({
+        provider: connection.provider,
+        connectionId: connection.id,
+        models
+      });
+    }
+
     const config = PROVIDER_MODELS_CONFIG[connection.provider];
     if (!config) {
       return NextResponse.json(
@@ -145,4 +179,3 @@ export async function GET(request, { params }) {
     return NextResponse.json({ error: "Failed to fetch models" }, { status: 500 });
   }
 }
-

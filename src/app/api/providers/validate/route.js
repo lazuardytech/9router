@@ -1,4 +1,6 @@
 import { NextResponse } from "next/server";
+import { getProviderNodeById } from "@/models";
+import { isOpenAICompatibleProvider } from "@/shared/constants/providers";
 
 // POST /api/providers/validate - Validate API key with provider
 export async function POST(request) {
@@ -15,6 +17,22 @@ export async function POST(request) {
 
     // Validate with each provider
     try {
+      if (isOpenAICompatibleProvider(provider)) {
+        const node = await getProviderNodeById(provider);
+        if (!node) {
+          return NextResponse.json({ error: "OpenAI Compatible node not found" }, { status: 404 });
+        }
+        const modelsUrl = `${node.baseUrl?.replace(/\/$/, "")}/models`;
+        const res = await fetch(modelsUrl, {
+          headers: { "Authorization": `Bearer ${apiKey}` },
+        });
+        isValid = res.ok;
+        return NextResponse.json({
+          valid: isValid,
+          error: isValid ? null : "Invalid API key",
+        });
+      }
+
       switch (provider) {
         case "openai":
           const openaiRes = await fetch("https://api.openai.com/v1/models", {
@@ -77,8 +95,8 @@ export async function POST(request) {
           break;
         }
 
-        default:
-          return NextResponse.json({ error: "Provider validation not supported" }, { status: 400 });
+          default:
+            return NextResponse.json({ error: "Provider validation not supported" }, { status: 400 });
       }
     } catch (err) {
       error = err.message;

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getProviderConnectionById, updateProviderConnection, isCloudEnabled } from "@/lib/localDb";
 import { getConsistentMachineId } from "@/shared/utils/machineId";
 import { syncToCloud } from "@/app/api/sync/cloud/route";
+import { isOpenAICompatibleProvider } from "@/shared/constants/providers";
 import {
   GEMINI_CONFIG,
   ANTIGRAVITY_CONFIG,
@@ -68,9 +69,9 @@ const OAUTH_TEST_CONFIG = {
 async function refreshOAuthToken(connection) {
   const provider = connection.provider;
   const refreshToken = connection.refreshToken;
-  
+
   if (!refreshToken) return null;
-  
+
   try {
     // Google-based providers (gemini-cli, antigravity)
     if (provider === "gemini-cli" || provider === "antigravity") {
@@ -85,9 +86,9 @@ async function refreshOAuthToken(connection) {
           refresh_token: refreshToken,
         }),
       });
-      
+
       if (!response.ok) return null;
-      
+
       const data = await response.json();
       return {
         accessToken: data.access_token,
@@ -95,7 +96,7 @@ async function refreshOAuthToken(connection) {
         refreshToken: data.refresh_token || refreshToken,
       };
     }
-    
+
     // OpenAI/Codex
     if (provider === "codex") {
       const response = await fetch(CODEX_CONFIG.tokenUrl, {
@@ -107,9 +108,9 @@ async function refreshOAuthToken(connection) {
           refresh_token: refreshToken,
         }),
       });
-      
+
       if (!response.ok) return null;
-      
+
       const data = await response.json();
       return {
         accessToken: data.access_token,
@@ -117,11 +118,11 @@ async function refreshOAuthToken(connection) {
         refreshToken: data.refresh_token || refreshToken,
       };
     }
-    
+
     // Kiro (AWS SSO or Social auth)
     if (provider === "kiro") {
       const { clientId, clientSecret, region } = connection;
-      
+
       // AWS SSO OIDC refresh (Builder ID or IDC)
       if (clientId && clientSecret) {
         const endpoint = `https://oidc.${region || "us-east-1"}.amazonaws.com/token`;
@@ -135,13 +136,13 @@ async function refreshOAuthToken(connection) {
             grantType: "refresh_token",
           }),
         });
-        
+
         if (!response.ok) {
           const errText = await response.text();
           console.log(`Kiro AWS SSO refresh failed: ${response.status} - ${errText}`);
           return null;
         }
-        
+
         const data = await response.json();
         return {
           accessToken: data.accessToken,
@@ -149,20 +150,20 @@ async function refreshOAuthToken(connection) {
           refreshToken: data.refreshToken || refreshToken,
         };
       }
-      
+
       // Social auth refresh (Google/GitHub)
       const response = await fetch(KIRO_CONFIG.socialRefreshUrl, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ refreshToken }),
       });
-      
+
       if (!response.ok) {
         const errText = await response.text();
         console.log(`Kiro social refresh failed: ${response.status} - ${errText}`);
         return null;
       }
-      
+
       const data = await response.json();
       return {
         accessToken: data.accessToken,
@@ -170,7 +171,7 @@ async function refreshOAuthToken(connection) {
         refreshToken: data.refreshToken || refreshToken,
       };
     }
-    
+
     return null;
   } catch (err) {
     console.log(`Error refreshing ${provider} token:`, err.message);
@@ -195,7 +196,7 @@ async function syncToCloudIfEnabled() {
   try {
     const cloudEnabled = await isCloudEnabled();
     if (!cloudEnabled) return;
-    
+
     const machineId = await getConsistentMachineId();
     await syncToCloud(machineId);
   } catch (error) {
@@ -210,20 +211,20 @@ async function syncToCloudIfEnabled() {
  */
 async function testOAuthConnection(connection) {
   const config = OAUTH_TEST_CONFIG[connection.provider];
-  
+
   if (!config) {
     return { valid: false, error: "Provider test not supported", refreshed: false };
   }
-  
+
   // Check if token exists
   if (!connection.accessToken) {
     return { valid: false, error: "No access token", refreshed: false };
   }
-  
+
   let accessToken = connection.accessToken;
   let refreshed = false;
   let newTokens = null;
-  
+
   // Auto-refresh if token is expired and provider supports refresh
   const tokenExpired = isTokenExpired(connection);
   if (config.refreshable && tokenExpired && connection.refreshToken) {
@@ -237,7 +238,7 @@ async function testOAuthConnection(connection) {
       return { valid: false, error: "Token expired and refresh failed", refreshed: false };
     }
   }
-  
+
   // For providers that only check expiry (no test endpoint available)
   if (config.checkExpiry) {
     // If we already refreshed successfully, token is valid
@@ -250,23 +251,23 @@ async function testOAuthConnection(connection) {
     }
     return { valid: true, error: null, refreshed: false, newTokens: null };
   }
-  
+
   // Call test endpoint
   try {
     const headers = {
       [config.authHeader]: `${config.authPrefix}${accessToken}`,
       ...config.extraHeaders,
     };
-    
+
     const res = await fetch(config.url, {
       method: config.method,
       headers,
     });
-    
+
     if (res.ok) {
       return { valid: true, error: null, refreshed, newTokens };
     }
-    
+
     // If 401 and we haven't tried refresh yet, try refresh now
     if (res.status === 401 && config.refreshable && !refreshed && connection.refreshToken) {
       const tokens = await refreshOAuthToken(connection);
@@ -279,21 +280,21 @@ async function testOAuthConnection(connection) {
             ...config.extraHeaders,
           },
         });
-        
+
         if (retryRes.ok) {
           return { valid: true, error: null, refreshed: true, newTokens: tokens };
         }
       }
       return { valid: false, error: "Token invalid or revoked", refreshed: false };
     }
-    
+
     if (res.status === 401) {
       return { valid: false, error: "Token invalid or revoked", refreshed };
     }
     if (res.status === 403) {
       return { valid: false, error: "Access denied", refreshed };
     }
-    
+
     return { valid: false, error: `API returned ${res.status}`, refreshed };
   } catch (err) {
     return { valid: false, error: err.message, refreshed };
@@ -304,6 +305,23 @@ async function testOAuthConnection(connection) {
  * Test API key connection
  */
 async function testApiKeyConnection(connection) {
+  // OpenAI Compatible providers - test via /models endpoint
+  if (isOpenAICompatibleProvider(connection.provider)) {
+    const modelsBase = connection.providerSpecificData?.baseUrl;
+    if (!modelsBase) {
+      return { valid: false, error: "Missing base URL" };
+    }
+    try {
+      const modelsUrl = `${modelsBase.replace(/\/$/, "")}/models`;
+      const res = await fetch(modelsUrl, {
+        headers: { "Authorization": `Bearer ${connection.apiKey}` },
+      });
+      return { valid: res.ok, error: res.ok ? null : "Invalid API key or base URL" };
+    } catch (err) {
+      return { valid: false, error: err.message };
+    }
+  }
+
   try {
     switch (connection.provider) {
       case "openai": {
@@ -312,7 +330,7 @@ async function testApiKeyConnection(connection) {
         });
         return { valid: res.ok, error: res.ok ? null : "Invalid API key" };
       }
-      
+
       case "anthropic": {
         const res = await fetch("https://api.anthropic.com/v1/messages", {
           method: "POST",
@@ -330,19 +348,19 @@ async function testApiKeyConnection(connection) {
         const valid = res.status !== 401;
         return { valid, error: valid ? null : "Invalid API key" };
       }
-      
+
       case "gemini": {
         const res = await fetch(`https://generativelanguage.googleapis.com/v1/models?key=${connection.apiKey}`);
         return { valid: res.ok, error: res.ok ? null : "Invalid API key" };
       }
-      
+
       case "openrouter": {
         const res = await fetch("https://openrouter.ai/api/v1/auth/key", {
           headers: { Authorization: `Bearer ${connection.apiKey}` },
         });
         return { valid: res.ok, error: res.ok ? null : "Invalid API key" };
       }
-      
+
       case "glm": {
         // GLM uses Claude-compatible API at api.z.ai
         const res = await fetch("https://api.z.ai/api/anthropic/v1/messages", {
@@ -361,7 +379,7 @@ async function testApiKeyConnection(connection) {
         const valid = res.status !== 401 && res.status !== 403;
         return { valid, error: valid ? null : "Invalid API key" };
       }
-      
+
       case "minimax": {
         // MiniMax uses Claude-compatible API
         const res = await fetch("https://api.minimax.io/anthropic/v1/messages", {
@@ -380,7 +398,7 @@ async function testApiKeyConnection(connection) {
         const valid = res.status !== 401 && res.status !== 403;
         return { valid, error: valid ? null : "Invalid API key" };
       }
-      
+
       case "kimi": {
         // Kimi uses Claude-compatible API
         const res = await fetch("https://api.kimi.com/coding/v1/messages", {
@@ -399,35 +417,35 @@ async function testApiKeyConnection(connection) {
         const valid = res.status !== 401 && res.status !== 403;
         return { valid, error: valid ? null : "Invalid API key" };
       }
-      
+
       case "deepseek": {
         const res = await fetch("https://api.deepseek.com/models", {
           headers: { Authorization: `Bearer ${connection.apiKey}` },
         });
         return { valid: res.ok, error: res.ok ? null : "Invalid API key" };
       }
-      
+
       case "groq": {
         const res = await fetch("https://api.groq.com/openai/v1/models", {
           headers: { Authorization: `Bearer ${connection.apiKey}` },
         });
         return { valid: res.ok, error: res.ok ? null : "Invalid API key" };
       }
-      
+
       case "mistral": {
         const res = await fetch("https://api.mistral.ai/v1/models", {
           headers: { Authorization: `Bearer ${connection.apiKey}` },
         });
         return { valid: res.ok, error: res.ok ? null : "Invalid API key" };
       }
-      
+
       case "xai": {
         const res = await fetch("https://api.x.ai/v1/models", {
           headers: { Authorization: `Bearer ${connection.apiKey}` },
         });
         return { valid: res.ok, error: res.ok ? null : "Invalid API key" };
       }
-      
+
       default:
         return { valid: false, error: "Provider test not supported" };
     }
@@ -447,7 +465,7 @@ export async function POST(request, { params }) {
     }
 
     let result;
-    
+
     if (connection.authType === "apikey") {
       result = await testApiKeyConnection(connection);
     } else {
@@ -460,7 +478,7 @@ export async function POST(request, { params }) {
       lastError: result.valid ? null : result.error,
       lastErrorAt: result.valid ? null : new Date().toISOString(),
     };
-    
+
     // If token was refreshed, update tokens in DB
     if (result.refreshed && result.newTokens) {
       updateData.accessToken = result.newTokens.accessToken;
@@ -474,7 +492,7 @@ export async function POST(request, { params }) {
 
     // Update status in db
     await updateProviderConnection(id, updateData);
-    
+
     // Sync to cloud if token was refreshed
     if (result.refreshed) {
       await syncToCloudIfEnabled();
@@ -490,4 +508,3 @@ export async function POST(request, { params }) {
     return NextResponse.json({ error: "Test failed" }, { status: 500 });
   }
 }
-

@@ -1,5 +1,25 @@
 import { PROVIDERS } from "../config/constants.js";
 
+const OPENAI_COMPATIBLE_PREFIX = "openai-compatible-";
+const OPENAI_COMPATIBLE_DEFAULTS = {
+  baseUrl: "https://api.openai.com/v1",
+};
+
+function isOpenAICompatible(provider) {
+  return typeof provider === "string" && provider.startsWith(OPENAI_COMPATIBLE_PREFIX);
+}
+
+function getOpenAICompatibleType(provider) {
+  if (!isOpenAICompatible(provider)) return "chat";
+  return provider.includes("responses") ? "responses" : "chat";
+}
+
+function buildOpenAICompatibleUrl(baseUrl, apiType) {
+  const normalized = baseUrl.replace(/\/$/, "");
+  const path = apiType === "responses" ? "/responses" : "/chat/completions";
+  return `${normalized}${path}`;
+}
+
 // Detect request format from body structure
 export function detectFormat(body) {
   // OpenAI Responses API: has input[] array instead of messages[]
@@ -76,6 +96,14 @@ export function detectFormat(body) {
 
 // Get provider config
 export function getProviderConfig(provider) {
+  if (isOpenAICompatible(provider)) {
+    const apiType = getOpenAICompatibleType(provider);
+    return {
+      ...PROVIDERS.openai,
+      format: apiType === "responses" ? "openai-responses" : "openai",
+      baseUrl: OPENAI_COMPATIBLE_DEFAULTS.baseUrl,
+    };
+  }
   return PROVIDERS[provider] || PROVIDERS.openai;
 }
 
@@ -87,6 +115,11 @@ export function getProviderFallbackCount(provider) {
 
 // Build provider URL
 export function buildProviderUrl(provider, model, stream = true, options = {}) {
+  if (isOpenAICompatible(provider)) {
+    const apiType = getOpenAICompatibleType(provider);
+    const baseUrl = options?.baseUrl || OPENAI_COMPATIBLE_DEFAULTS.baseUrl;
+    return buildOpenAICompatibleUrl(baseUrl, apiType);
+  }
   const config = getProviderConfig(provider);
 
   switch (provider) {
@@ -215,6 +248,9 @@ export function buildProviderHeaders(provider, credentials, stream = true, body 
 
 // Get target format for provider
 export function getTargetFormat(provider) {
+  if (isOpenAICompatible(provider)) {
+    return getOpenAICompatibleType(provider) === "responses" ? "openai-responses" : "openai";
+  }
   const config = getProviderConfig(provider);
   return config.format || "openai";
 }
@@ -242,4 +278,3 @@ export function normalizeThinkingConfig(body) {
   }
   return body;
 }
-
