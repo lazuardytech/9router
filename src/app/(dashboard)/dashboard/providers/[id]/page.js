@@ -23,6 +23,7 @@ export default function ProviderDetailPage() {
   const [showEditNodeModal, setShowEditNodeModal] = useState(false);
   const [selectedConnection, setSelectedConnection] = useState(null);
   const [modelAliases, setModelAliases] = useState({});
+  const [headerImgError, setHeaderImgError] = useState(false);
   const { copied, copy } = useCopyToClipboard();
 
   const providerInfo = providerNode
@@ -298,7 +299,7 @@ export default function ProviderDetailPage() {
         <CardSkeleton />
       </div>
     );
-  }
+}
 
   if (!providerInfo) {
     return (
@@ -310,6 +311,14 @@ export default function ProviderDetailPage() {
       </div>
     );
   }
+
+  // Determine icon path: OpenAI Compatible providers use specialized icons
+  const getHeaderIconPath = () => {
+    if (isOpenAICompatible && providerInfo.apiType) {
+      return providerInfo.apiType === "responses" ? "/providers/oai-r.png" : "/providers/oai-cc.png";
+    }
+    return `/providers/${providerInfo.id}.png`;
+  };
 
   return (
     <div className="flex flex-col gap-8">
@@ -327,19 +336,19 @@ export default function ProviderDetailPage() {
             className="rounded-lg flex items-center justify-center"
             style={{ backgroundColor: `${providerInfo.color}15` }}
           >
-            {providerInfo.textIcon ? (
+            {headerImgError ? (
               <span className="text-sm font-bold" style={{ color: providerInfo.color }}>
-                {providerInfo.textIcon}
+                {providerInfo.textIcon || providerInfo.id.slice(0, 2).toUpperCase()}
               </span>
             ) : (
               <Image
-                src={`/providers/${providerInfo.id}.png`}
+                src={getHeaderIconPath()}
                 alt={providerInfo.name}
                 width={48}
                 height={48}
                 className="object-contain rounded-lg max-w-[48px] max-h-[48px]"
                 sizes="48px"
-                onError={(e) => { e.currentTarget.style.display = "none"; }}
+                onError={() => setHeaderImgError(true)}
               />
             )}
           </div>
