@@ -160,14 +160,56 @@ export function geminiToOpenAIResponse(chunk, state) {
     }
   }
 
-  // Finish reason
+  // Usage metadata - extract before finish reason so we can include it
+  const usageMeta = response.usageMetadata || chunk.usageMetadata;
+  if (usageMeta && typeof usageMeta === "object") {
+    const cachedTokens = typeof usageMeta.cachedContentTokenCount === "number" ? usageMeta.cachedContentTokenCount : 0;
+    const promptTokenCountRaw = typeof usageMeta.promptTokenCount === "number" ? usageMeta.promptTokenCount : 0;
+    const thoughtsTokens = typeof usageMeta.thoughtsTokenCount === "number" ? usageMeta.thoughtsTokenCount : 0;
+    let candidatesTokens = typeof usageMeta.candidatesTokenCount === "number" ? usageMeta.candidatesTokenCount : 0;
+    const totalTokens = typeof usageMeta.totalTokenCount === "number" ? usageMeta.totalTokenCount : 0;
+    
+    // prompt_tokens = promptTokenCount (includes cached tokens, matching claude-to-openai.js behavior)
+    const promptTokens = promptTokenCountRaw;
+    
+    // Fallback calculation if candidatesTokenCount is 0 but totalTokenCount exists
+    if (candidatesTokens === 0 && totalTokens > 0) {
+      candidatesTokens = totalTokens - promptTokenCountRaw - thoughtsTokens;
+      if (candidatesTokens < 0) candidatesTokens = 0;
+    }
+    
+    // completion_tokens = candidatesTokenCount + thoughtsTokenCount (match Go code)
+    const completionTokens = candidatesTokens + thoughtsTokens;
+    
+    state.usage = {
+      prompt_tokens: promptTokens,
+      completion_tokens: completionTokens,
+      total_tokens: totalTokens
+    };
+    
+    // Add prompt_tokens_details if cached tokens exist
+    if (cachedTokens > 0) {
+      state.usage.prompt_tokens_details = {
+        cached_tokens: cachedTokens
+      };
+    }
+    
+    // Add completion_tokens_details if reasoning tokens exist
+    if (thoughtsTokens > 0) {
+      state.usage.completion_tokens_details = {
+        reasoning_tokens: thoughtsTokens
+      };
+    }
+  }
+
+  // Finish reason - include usage in final chunk
   if (candidate.finishReason) {
     let finishReason = candidate.finishReason.toLowerCase();
     if (finishReason === "stop" && state.toolCalls.size > 0) {
       finishReason = "tool_calls";
     }
     
-    results.push({
+    const finalChunk = {
       id: `chatcmpl-${state.messageId}`,
       object: "chat.completion.chunk",
       created: Math.floor(Date.now() / 1000),
@@ -177,24 +219,15 @@ export function geminiToOpenAIResponse(chunk, state) {
         delta: {},
         finish_reason: finishReason
       }]
-    });
-    state.finishReason = finishReason;
-  }
-
-// Usage metadata
-  const usage = response.usageMetadata || chunk.usageMetadata;
-  if (usage && typeof usage === 'object') {
-    const promptTokens = (usage.promptTokenCount || 0) + (usage.thoughtsTokenCount || 0);
-    state.usage = {
-      prompt_tokens: promptTokens,
-      completion_tokens: usage.candidatesTokenCount || 0,
-      total_tokens: usage.totalTokenCount || 0
     };
-    if (usage.thoughtsTokenCount > 0) {
-      state.usage.completion_tokens_details = {
-        reasoning_tokens: usage.thoughtsTokenCount
-      };
+    
+    // Include usage in final chunk for downstream translators
+    if (state.usage) {
+      finalChunk.usage = state.usage;
     }
+    
+    results.push(finalChunk);
+    state.finishReason = finishReason;
   }
 
   return results.length > 0 ? results : null;

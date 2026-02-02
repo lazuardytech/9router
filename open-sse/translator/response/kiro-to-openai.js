@@ -17,9 +17,6 @@ export function convertKiroToOpenAI(chunk, state) {
   if (chunk.object === "chat.completion.chunk" && chunk.choices) {
     return chunk;
   }
-
-
-  console.log("chunk", chunk);
   
   // Handle string chunk (raw SSE data)
   let data = chunk;
@@ -160,6 +157,11 @@ export function convertKiroToOpenAI(chunk, state) {
         finish_reason: "stop"
       }]
     };
+
+    // Include usage in final chunk if available
+    if (state.usage && typeof state.usage === "object") {
+      openaiChunk.usage = state.usage;
+    }
 
     return openaiChunk;
   }

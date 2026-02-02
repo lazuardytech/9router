@@ -98,9 +98,16 @@ export class KiroExecutor extends BaseExecutor {
           if (!event) continue;
 
           const eventType = event.headers[":event-type"] || "";
+          
+          // Track total content length for token estimation
+          if (!state.totalContentLength) state.totalContentLength = 0;
+          if (!state.contextUsagePercentage) state.contextUsagePercentage = 0;
 
           // Handle assistantResponseEvent
           if (eventType === "assistantResponseEvent" && event.payload?.content) {
+            const content = event.payload.content;
+            state.totalContentLength += content.length;
+            
             const chunk = {
               id: responseId,
               object: "chat.completion.chunk",
@@ -109,8 +116,8 @@ export class KiroExecutor extends BaseExecutor {
               choices: [{
                 index: 0,
                 delta: chunkIndex === 0
-                  ? { role: "assistant", content: event.payload.content }
-                  : { content: event.payload.content },
+                  ? { role: "assistant", content }
+                  : { content },
                 finish_reason: null
               }]
             };
@@ -233,24 +240,78 @@ export class KiroExecutor extends BaseExecutor {
             controller.enqueue(new TextEncoder().encode(`data: ${JSON.stringify(chunk)}\n\n`));
           }
 
-          // Detect end of stream
-          if ((eventType === "meteringEvent" || eventType === "contextUsageEvent") && !state.endDetected) {
-            state.endDetected = true;
-            if (!state.finishEmitted) {
-              state.finishEmitted = true;
-              const finishChunk = {
-                id: responseId,
-                object: "chat.completion.chunk",
-                created,
-                model,
-                choices: [{
-                  index: 0,
-                  delta: {},
-                  finish_reason: state.hasToolCalls ? "tool_calls" : "stop"
-                }]
-              };
-              controller.enqueue(new TextEncoder().encode(`data: ${JSON.stringify(finishChunk)}\n\n`));
+          // Handle contextUsageEvent to extract contextUsagePercentage
+          if (eventType === "contextUsageEvent" && event.payload?.contextUsagePercentage) {
+            state.contextUsagePercentage = event.payload.contextUsagePercentage;
+            // Mark that we received context usage event
+            state.hasContextUsage = true;
+          }
+
+          // Handle meteringEvent - mark that we received it
+          if (eventType === "meteringEvent") {
+            state.hasMeteringEvent = true;
+          }
+
+          // Handle metricsEvent for token usage
+          if (eventType === "metricsEvent") {
+            // Extract usage data from metricsEvent payload
+            const metrics = event.payload?.metricsEvent || event.payload;
+            if (metrics && typeof metrics === 'object') {
+              const inputTokens = metrics.inputTokens || 0;
+              const outputTokens = metrics.outputTokens || 0;
+              
+              if (inputTokens > 0 || outputTokens > 0) {
+                state.usage = {
+                  prompt_tokens: inputTokens,
+                  completion_tokens: outputTokens,
+                  total_tokens: inputTokens + outputTokens
+                };
+              }
             }
+          }
+
+          // Emit final chunk only after receiving BOTH meteringEvent AND contextUsageEvent
+          if (state.hasMeteringEvent && state.hasContextUsage && !state.finishEmitted) {
+            state.finishEmitted = true;
+            
+            // Estimate tokens if not available from events
+            if (!state.usage) {
+              // Estimate output tokens from content length
+              const estimatedOutputTokens = state.totalContentLength > 0 
+                ? Math.max(1, Math.floor(state.totalContentLength / 4))
+                : 0;
+              
+              // Estimate input tokens from contextUsagePercentage
+              // Kiro models typically have 200k context window
+              const estimatedInputTokens = state.contextUsagePercentage > 0
+                ? Math.floor(state.contextUsagePercentage * 200000 / 100)
+                : 0;
+              
+              state.usage = {
+                prompt_tokens: estimatedInputTokens,
+                completion_tokens: estimatedOutputTokens,
+                total_tokens: estimatedInputTokens + estimatedOutputTokens
+              };
+            }
+            
+            const finishChunk = {
+              id: responseId,
+              object: "chat.completion.chunk",
+              created,
+              model,
+              choices: [{
+                index: 0,
+                delta: {},
+                finish_reason: state.hasToolCalls ? "tool_calls" : "stop"
+              }]
+            };
+            
+            // Include usage in final chunk if available
+            if (state.usage) {
+              finishChunk.usage = state.usage;
+            }
+            
+            controller.enqueue(new TextEncoder().encode(`data: ${JSON.stringify(finishChunk)}\n\n`));
           }
         }
 

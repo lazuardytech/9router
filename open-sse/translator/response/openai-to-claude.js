@@ -33,6 +33,40 @@ export function openaiToClaudeResponse(chunk, state) {
   const choice = chunk.choices[0];
   const delta = choice.delta;
 
+  // Track usage from OpenAI chunk if available
+  if (chunk.usage && typeof chunk.usage === "object") {
+    const promptTokens = typeof chunk.usage.prompt_tokens === "number" ? chunk.usage.prompt_tokens : 0;
+    const outputTokens = typeof chunk.usage.completion_tokens === "number" ? chunk.usage.completion_tokens : 0;
+    
+    // Extract cache tokens from prompt_tokens_details
+    const cachedTokens = chunk.usage.prompt_tokens_details?.cached_tokens;
+    const cacheCreationTokens = chunk.usage.prompt_tokens_details?.cache_creation_tokens;
+    const cacheReadTokens = typeof cachedTokens === "number" ? cachedTokens : 0;
+    const cacheCreateTokens = typeof cacheCreationTokens === "number" ? cacheCreationTokens : 0;
+    
+    // input_tokens = prompt_tokens - cached_tokens - cache_creation_tokens
+    // Because OpenAI's prompt_tokens includes all prompt-side tokens
+    const inputTokens = promptTokens - cacheReadTokens - cacheCreateTokens;
+    
+    state.usage = {
+      input_tokens: inputTokens,
+      output_tokens: outputTokens
+    };
+    
+    // Add cache_read_input_tokens if present
+    if (cacheReadTokens > 0) {
+      state.usage.cache_read_input_tokens = cacheReadTokens;
+    }
+    
+    // Add cache_creation_input_tokens if present
+    if (cacheCreateTokens > 0) {
+      state.usage.cache_creation_input_tokens = cacheCreateTokens;
+    }
+    
+    // Note: completion_tokens_details.reasoning_tokens is already included in output_tokens
+    // No need to add separately as Claude expects total output_tokens
+  }
+
   // First chunk - ALWAYS send message_start first
   if (!state.messageStartSent) {
     state.messageStartSent = true;
@@ -158,10 +192,12 @@ export function openaiToClaudeResponse(chunk, state) {
       });
     }
 
+    // Use tracked usage or default to 0
+    const finalUsage = state.usage || { input_tokens: 0, output_tokens: 0 };
     results.push({
       type: "message_delta",
       delta: { stop_reason: convertFinishReason(choice.finish_reason) },
-      usage: { output_tokens: 0 }
+      usage: finalUsage
     });
     results.push({ type: "message_stop" });
   }

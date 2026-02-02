@@ -43,12 +43,13 @@ function extractUsage(chunk) {
       reasoning_tokens: chunk.usage.completion_tokens_details?.reasoning_tokens
     });
   }
-  // Gemini format
+  // Gemini format (Antigravity)
   if (chunk.usageMetadata && typeof chunk.usageMetadata === 'object') {
     return normalizeUsage({
-      prompt_tokens: chunk.usageMetadata.promptTokenCount || 0,
-      completion_tokens: chunk.usageMetadata.candidatesTokenCount || 0,
-      reasoning_tokens: chunk.usageMetadata.thoughtsTokenCount
+      prompt_tokens: chunk.usageMetadata?.promptTokenCount || 0,
+      completion_tokens: chunk.usageMetadata?.candidatesTokenCount || 0,
+      cached_tokens: chunk.usageMetadata?.cachedContentTokenCount,
+      reasoning_tokens: chunk.usageMetadata?.thoughtsTokenCount
     });
   }
   return null;
@@ -90,21 +91,27 @@ function logUsage(provider, usage, model = null, connectionId = null) {
   if (!usage || typeof usage !== 'object') return;
 
   const p = provider?.toUpperCase() || "UNKNOWN";
-  const inTokens = usage?.prompt_tokens || 0;
-  const outTokens = usage?.completion_tokens || 0;
+  
+  // Support both formats:
+  // - OpenAI: prompt_tokens, completion_tokens
+  // - Claude: input_tokens, output_tokens
+  const inTokens = usage?.prompt_tokens || usage?.input_tokens || 0;
+  const outTokens = usage?.completion_tokens || usage?.output_tokens || 0;
 
   let msg = `[${getTimeString()}] 📊 [USAGE] ${p} | in=${inTokens} | out=${outTokens}`;
   if (connectionId) msg += ` | account=${connectionId.slice(0, 8)}...`;
 
+  // Support both formats: cache_read_input_tokens (Claude) and cached_tokens (OpenAI/Gemini)
+  const cacheRead = usage.cache_read_input_tokens || usage.cached_tokens;
+  if (cacheRead) msg += ` | cache_read=${cacheRead}`;
+  
   if (usage.cache_creation_input_tokens) msg += ` | cache_write=${usage.cache_creation_input_tokens}`;
-  if (usage.cache_read_input_tokens) msg += ` | cache_read=${usage.cache_read_input_tokens}`;
-  if (usage.cached_tokens) msg += ` | cached=${usage.cached_tokens}`;
   if (usage.reasoning_tokens) msg += ` | reasoning=${usage.reasoning_tokens}`;
 
   console.log(`${COLORS.green}${msg}${COLORS.reset}`);
 
   // Log to log.txt
-  appendRequestLog({ model, provider, connectionId, tokens: usage, status: "200 OK" }).catch(() => {});
+  appendRequestLog({ model, provider, connectionId, tokens: usage, status: "200 OK" }).catch(() => { });
 
   // Save to DB
   saveRequestUsage({
@@ -147,7 +154,7 @@ export function formatSSE(data, sourceFormat) {
   if (data === null || data === undefined) {
     return "data: null\n\n";
   }
-  
+
   if (data && data.done) return "data: [DONE]\n\n";
 
   // OpenAI Responses API format: has event field
@@ -230,7 +237,7 @@ export function createSSEStream(options = {}) {
               const parsed = JSON.parse(trimmed.slice(5).trim());
               const extracted = extractUsage(parsed);
               if (extracted) usage = extracted;
-            } catch {}
+            } catch { }
           }
           // Normalize: ensure "data: " has space
           let output;
@@ -263,7 +270,7 @@ export function createSSEStream(options = {}) {
 
         // Translate: targetFormat -> openai -> sourceFormat
         const translated = translateResponse(targetFormat, sourceFormat, parsed, state);
-        
+
         // Log OpenAI intermediate chunks (if available)
         if (translated?._openaiIntermediate) {
           for (const item of translated._openaiIntermediate) {
@@ -271,7 +278,7 @@ export function createSSEStream(options = {}) {
             reqLogger?.appendOpenAIChunk?.(openaiOutput);
           }
         }
-        
+
         if (translated?.length > 0) {
           for (const item of translated) {
             const output = formatSSE(item, sourceFormat);
@@ -297,11 +304,11 @@ export function createSSEStream(options = {}) {
             reqLogger?.appendConvertedChunk?.(output);
             controller.enqueue(sharedEncoder.encode(output));
           }
-if (usage && typeof usage === 'object') {
+          if (usage && typeof usage === 'object') {
             logUsage(provider, usage, model, connectionId);
           } else {
             // No usage data available - still mark request as completed
-            appendRequestLog({ model, provider, connectionId, tokens: null, status: "200 OK" }).catch(() => {});
+            appendRequestLog({ model, provider, connectionId, tokens: null, status: "200 OK" }).catch(() => { });
           }
           return;
         }
@@ -311,7 +318,7 @@ if (usage && typeof usage === 'object') {
           const parsed = parseSSELine(buffer.trim());
           if (parsed && !parsed.done) {
             const translated = translateResponse(targetFormat, sourceFormat, parsed, state);
-            
+
             // Log OpenAI intermediate chunks
             if (translated?._openaiIntermediate) {
               for (const item of translated._openaiIntermediate) {
@@ -319,7 +326,7 @@ if (usage && typeof usage === 'object') {
                 reqLogger?.appendOpenAIChunk?.(openaiOutput);
               }
             }
-            
+
             if (translated?.length > 0) {
               for (const item of translated) {
                 const output = formatSSE(item, sourceFormat);
@@ -332,7 +339,7 @@ if (usage && typeof usage === 'object') {
 
         // Flush remaining events (only once at stream end)
         const flushed = translateResponse(targetFormat, sourceFormat, null, state);
-        
+
         // Log OpenAI intermediate chunks for flushed events
         if (flushed?._openaiIntermediate) {
           for (const item of flushed._openaiIntermediate) {
@@ -340,7 +347,7 @@ if (usage && typeof usage === 'object') {
             reqLogger?.appendOpenAIChunk?.(openaiOutput);
           }
         }
-        
+
         if (flushed?.length > 0) {
           for (const item of flushed) {
             const output = formatSSE(item, sourceFormat);
@@ -354,11 +361,11 @@ if (usage && typeof usage === 'object') {
         reqLogger?.appendConvertedChunk?.(doneOutput);
         controller.enqueue(sharedEncoder.encode(doneOutput));
 
-if (state?.usage && typeof state.usage === 'object') {
+        if (state?.usage && typeof state.usage === 'object') {
           logUsage(state.provider || targetFormat, state.usage, model, connectionId);
         } else {
           // No usage data available - still mark request as completed
-          appendRequestLog({ model, provider, connectionId, tokens: null, status: "200 OK" }).catch(() => {});
+          appendRequestLog({ model, provider, connectionId, tokens: null, status: "200 OK" }).catch(() => { });
         }
       } catch (error) {
         console.log("Error in flush:", error);
