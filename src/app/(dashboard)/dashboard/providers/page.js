@@ -233,10 +233,19 @@ ProviderCard.propTypes = {
   }).isRequired,
 };
 
-// API Key providers - only use textIcon, no image
+// API Key providers - use image with textIcon fallback (same as OAuth providers)
 function ApiKeyProviderCard({ providerId, provider, stats }) {
   const { connected, error, errorCode, errorTime } = stats;
   const isCompatible = providerId.startsWith(OPENAI_COMPATIBLE_PREFIX);
+  const [imgError, setImgError] = useState(false);
+
+  // Determine icon path: OpenAI Compatible providers use specialized icons
+  const getIconPath = () => {
+    if (isCompatible) {
+      return provider.apiType === "responses" ? "/providers/oai-r.png" : "/providers/oai-cc.png";
+    }
+    return `/providers/${provider.id}.png`;
+  };
 
   return (
     <Link href={`/dashboard/providers/${providerId}`} className="group">
@@ -247,12 +256,24 @@ function ApiKeyProviderCard({ providerId, provider, stats }) {
               className="size-8 rounded-lg flex items-center justify-center"
               style={{ backgroundColor: `${provider.color}15` }}
             >
-              <span
-                className="text-xs font-bold"
-                style={{ color: provider.color }}
-              >
-                {provider.textIcon || provider.id.slice(0, 2).toUpperCase()}
-              </span>
+              {imgError ? (
+                <span
+                  className="text-xs font-bold"
+                  style={{ color: provider.color }}
+                >
+                  {provider.textIcon || provider.id.slice(0, 2).toUpperCase()}
+                </span>
+              ) : (
+                <Image
+                  src={getIconPath()}
+                  alt={provider.name}
+                  width={32}
+                  height={32}
+                  className="object-contain rounded-lg max-w-[32px] max-h-[32px]"
+                  sizes="32px"
+                  onError={() => setImgError(true)}
+                />
+              )}
             </div>
             <div>
               <h3 className="font-semibold">{provider.name}</h3>
