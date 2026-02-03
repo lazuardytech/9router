@@ -324,7 +324,7 @@ export default function ProviderDetailPage() {
       return providerInfo.apiType === "responses" ? "/providers/oai-r.png" : "/providers/oai-cc.png";
     }
     if (isAnthropicCompatible) {
-      return "/providers/anthropic.png";
+      return "/providers/anthropic-m.png";
     }
     return `/providers/${providerInfo.id}.png`;
   };

@@ -279,7 +279,7 @@ function ApiKeyProviderCard({ providerId, provider, stats }) {
       return provider.apiType === "responses" ? "/providers/oai-r.png" : "/providers/oai-cc.png";
     }
     if (isAnthropicCompatible) {
-      return "/providers/anthropic.png"; // Use Anthropic icon as base
+      return "/providers/anthropic-m.png"; // Use Anthropic icon as base
     }
     return `/providers/${provider.id}.png`;
   };
