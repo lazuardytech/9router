@@ -3,6 +3,7 @@ import { translateRequest, needsTranslation } from "../translator/index.js";
 import { FORMATS } from "../translator/formats.js";
 import { createSSETransformStreamWithLogger, createPassthroughStreamWithLogger, COLORS } from "../utils/stream.js";
 import { createStreamController, pipeWithDisconnect } from "../utils/streamHandler.js";
+import { addBufferToUsage } from "../utils/usageTracking.js";
 import { refreshWithRetry } from "../services/tokenRefresh.js";
 import { createRequestLogger } from "../utils/requestLogger.js";
 import { getModelTargetFormat, PROVIDER_ID_TO_ALIAS } from "../config/providerModels.js";
@@ -433,6 +434,11 @@ export async function handleChatCore({ body, modelInfo, credentials, log, onCred
     const translatedResponse = needsTranslation(targetFormat, sourceFormat)
       ? translateNonStreamingResponse(responseBody, targetFormat, sourceFormat)
       : responseBody;
+
+    // Add buffer to usage for client (to prevent CLI context errors)
+    if (translatedResponse?.usage) {
+      translatedResponse.usage = addBufferToUsage(translatedResponse.usage);
+    }
 
     return {
       success: true,

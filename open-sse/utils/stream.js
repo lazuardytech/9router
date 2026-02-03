@@ -1,7 +1,7 @@
 import { translateResponse, initState } from "../translator/index.js";
 import { FORMATS } from "../translator/formats.js";
 import { trackPendingRequest, appendRequestLog } from "@/lib/usageDb.js";
-import { extractUsage, hasValidUsage, estimateUsage, logUsage, COLORS } from "./usageTracking.js";
+import { extractUsage, hasValidUsage, estimateUsage, logUsage, addBufferToUsage, COLORS } from "./usageTracking.js";
 
 // Re-export COLORS for backward compatibility
 export { COLORS };
@@ -138,16 +138,21 @@ export function createSSEStream(options = {}) {
               // Extract usage from chunk
               const extracted = extractUsage(parsed);
               if (extracted) {
-                usage = extracted;
+                usage = extracted; // Keep original usage for logging
               }
 
               // Inject estimated usage into final chunk (has finish_reason but no valid usage)
               const isFinishChunk = parsed.choices?.[0]?.finish_reason;
               if (isFinishChunk && !hasValidUsage(parsed.usage)) {
                 const estimated = estimateUsage(body, totalContentLength, FORMATS.OPENAI);
-                parsed.usage = estimated;
+                parsed.usage = estimated; // Already has buffer from formatUsage
                 output = `data: ${JSON.stringify(parsed)}\n`;
                 usage = estimated;
+                injectedUsage = true;
+              } else if (isFinishChunk && usage) {
+                // Add buffer to usage for client (but keep original for logging)
+                parsed.usage = addBufferToUsage(usage);
+                output = `data: ${JSON.stringify(parsed)}\n`;
                 injectedUsage = true;
               }
             } catch { }
@@ -181,16 +186,36 @@ export function createSSEStream(options = {}) {
         }
 
         // Track content length for estimation (from various formats)
-        const content = parsed.delta?.text || // Claude
-          parsed.choices?.[0]?.delta?.content || // OpenAI
-          parsed.candidates?.[0]?.content?.parts?.[0]?.text; // Gemini
-        if (content && typeof content === "string") {
-          totalContentLength += content.length;
+        // Include both regular content and reasoning/thinking content
+        
+        // Claude format
+        if (parsed.delta?.text) {
+          totalContentLength += parsed.delta.text.length;
+        }
+        if (parsed.delta?.thinking) {
+          totalContentLength += parsed.delta.thinking.length;
+        }
+        
+        // OpenAI format
+        if (parsed.choices?.[0]?.delta?.content) {
+          totalContentLength += parsed.choices[0].delta.content.length;
+        }
+        if (parsed.choices?.[0]?.delta?.reasoning_content) {
+          totalContentLength += parsed.choices[0].delta.reasoning_content.length;
+        }
+        
+        // Gemini format - may have multiple parts
+        if (parsed.candidates?.[0]?.content?.parts) {
+          for (const part of parsed.candidates[0].content.parts) {
+            if (part.text && typeof part.text === "string") {
+              totalContentLength += part.text.length;
+            }
+          }
         }
 
         // Extract usage
         const extracted = extractUsage(parsed);
-        if (extracted) state.usage = extracted;
+        if (extracted) state.usage = extracted; // Keep original usage for logging
 
         // Translate: targetFormat -> openai -> sourceFormat
         const translated = translateResponse(targetFormat, sourceFormat, parsed, state);
@@ -209,8 +234,11 @@ export function createSSEStream(options = {}) {
             const isFinishChunk = item.type === "message_delta" || item.choices?.[0]?.finish_reason;
             if (state.finishReason && isFinishChunk && !hasValidUsage(item.usage) && totalContentLength > 0) {
               const estimated = estimateUsage(body, totalContentLength, sourceFormat);
-              item.usage = estimated;
+              item.usage = estimated; // Already has buffer from formatUsage
               state.usage = estimated;
+            } else if (state.finishReason && isFinishChunk && state.usage) {
+              // Add buffer to usage for client (but keep original in state.usage for logging)
+              item.usage = addBufferToUsage(state.usage);
             }
 
             const output = formatSSE(item, sourceFormat);

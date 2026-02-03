@@ -15,9 +15,40 @@ export const COLORS = {
   cyan: "\x1b[36m"
 };
 
+// Buffer tokens to prevent context errors
+const BUFFER_TOKENS = 2000;
+
 // Get HH:MM:SS timestamp
 function getTimeString() {
   return new Date().toLocaleTimeString("en-US", { hour12: false, hour: "2-digit", minute: "2-digit", second: "2-digit" });
+}
+
+/**
+ * Add buffer tokens to usage to prevent context errors
+ * @param {object} usage - Usage object (any format)
+ * @returns {object} Usage with buffer added
+ */
+export function addBufferToUsage(usage) {
+  if (!usage || typeof usage !== "object") return usage;
+
+  const result = { ...usage };
+
+  // Claude format
+  if (result.input_tokens !== undefined) {
+    result.input_tokens += BUFFER_TOKENS;
+  }
+
+  // OpenAI format
+  if (result.prompt_tokens !== undefined) {
+    result.prompt_tokens += BUFFER_TOKENS;
+  }
+
+  // Update total_tokens if exists
+  if (result.total_tokens !== undefined) {
+    result.total_tokens += BUFFER_TOKENS;
+  }
+
+  return result;
 }
 
 /**
@@ -120,43 +151,22 @@ export function extractUsage(chunk) {
 
 /**
  * Estimate input tokens from request body
+ * Calculate total body size for more accurate estimation
  */
 export function estimateInputTokens(body) {
   if (!body || typeof body !== "object") return 0;
 
-  let totalChars = 0;
+  try {
+    // Calculate total body size (includes messages, tools, system, thinking config, etc.)
+    const bodyStr = JSON.stringify(body);
+    const totalChars = bodyStr.length;
 
-  // Count messages
-  if (Array.isArray(body.messages)) {
-    for (const msg of body.messages) {
-      if (msg.content) {
-        if (typeof msg.content === "string") {
-          totalChars += msg.content.length;
-        } else if (Array.isArray(msg.content)) {
-          for (const part of msg.content) {
-            if (part.text) totalChars += part.text.length;
-            if (part.type === "image_url") totalChars += 85; // Rough estimate for images
-          }
-        }
-      }
-      if (msg.role) totalChars += msg.role.length;
-    }
+    // Estimate: ~4 chars per token (rough average across all tokenizers)
+    return Math.ceil(totalChars / 4);
+  } catch (err) {
+    // Fallback if stringify fails
+    return 0;
   }
-
-  // Count tools/functions
-  if (Array.isArray(body.tools)) {
-    totalChars += JSON.stringify(body.tools).length;
-  } else if (Array.isArray(body.functions)) {
-    totalChars += JSON.stringify(body.functions).length;
-  }
-
-  // Count system prompt
-  if (body.system) {
-    totalChars += typeof body.system === "string" ? body.system.length : JSON.stringify(body.system).length;
-  }
-
-  // Estimate: ~4 chars per token (rough average across all tokenizers)
-  return Math.ceil(totalChars / 4);
 }
 
 /**
@@ -176,16 +186,20 @@ export function estimateOutputTokens(contentLength) {
 export function formatUsage(inputTokens, outputTokens, targetFormat) {
   // Claude format uses input_tokens/output_tokens
   if (targetFormat === FORMATS.CLAUDE) {
-    return { input_tokens: inputTokens, output_tokens: outputTokens, estimated: true };
+    return addBufferToUsage({ 
+      input_tokens: inputTokens, 
+      output_tokens: outputTokens, 
+      estimated: true 
+    });
   }
 
   // Default: OpenAI format (works for openai, gemini, responses, etc.)
-  return {
+  return addBufferToUsage({
     prompt_tokens: inputTokens,
     completion_tokens: outputTokens,
     total_tokens: inputTokens + outputTokens,
     estimated: true
-  };
+  });
 }
 
 /**
