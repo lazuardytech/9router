@@ -505,6 +505,8 @@ export function openaiResponsesToOpenAIResponse(chunk, state) {
     
     if (!state.finishReasonSent) {
       state.finishReasonSent = true;
+      state.finishReason = "stop"; // Mark for usage injection in stream.js
+      
       const finalChunk = {
         id: state.chatId,
         object: "chat.completion.chunk",

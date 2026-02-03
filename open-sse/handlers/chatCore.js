@@ -468,9 +468,9 @@ export async function handleChatCore({ body, modelInfo, credentials, log, onCred
     // For Codex, translate FROM openai-responses TO openai (client's expected format)
     const responseSourceFormat = needsCodexTranslation ? 'openai-responses' : targetFormat;
     const responseTargetFormat = needsCodexTranslation ? 'openai' : sourceFormat;
-    transformStream = createSSETransformStreamWithLogger(responseSourceFormat, responseTargetFormat, provider, reqLogger, toolNameMap, model, connectionId);
+    transformStream = createSSETransformStreamWithLogger(responseSourceFormat, responseTargetFormat, provider, reqLogger, toolNameMap, model, connectionId, body);
   } else {
-    transformStream = createPassthroughStreamWithLogger(provider, reqLogger, model, connectionId);
+    transformStream = createPassthroughStreamWithLogger(provider, reqLogger, model, connectionId, body);
   }
 
   // Pipe response through transform with disconnect detection

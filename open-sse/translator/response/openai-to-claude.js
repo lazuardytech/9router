@@ -192,7 +192,10 @@ export function openaiToClaudeResponse(chunk, state) {
       });
     }
 
-    // Use tracked usage or default to 0
+    // Mark finish for later usage injection in stream.js
+    state.finishReason = choice.finish_reason;
+    
+    // Use tracked usage (will be estimated in stream.js if not valid)
     const finalUsage = state.usage || { input_tokens: 0, output_tokens: 0 };
     results.push({
       type: "message_delta",
