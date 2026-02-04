@@ -43,12 +43,70 @@ export function addBufferToUsage(usage) {
     result.prompt_tokens += BUFFER_TOKENS;
   }
 
-  // Update total_tokens if exists
+  // Calculate or update total_tokens
   if (result.total_tokens !== undefined) {
     result.total_tokens += BUFFER_TOKENS;
+  } else if (result.prompt_tokens !== undefined && result.completion_tokens !== undefined) {
+    // Calculate total_tokens if not exists
+    result.total_tokens = result.prompt_tokens + result.completion_tokens;
   }
 
   return result;
+}
+
+export function filterUsageForFormat(usage, targetFormat) {
+  if (!usage || typeof usage !== "object") return usage;
+
+  // Helper to pick only defined fields from usage
+  const pickFields = (fields) => {
+    const filtered = {};
+    for (const field of fields) {
+      if (usage[field] !== undefined) {
+        filtered[field] = usage[field];
+      }
+    }
+    return filtered;
+  };
+
+  // Define allowed fields for each format
+  const formatFields = {
+    [FORMATS.CLAUDE]: [
+      'input_tokens', 'output_tokens', 
+      'cache_read_input_tokens', 'cache_creation_input_tokens',
+      'estimated'
+    ],
+    [FORMATS.GEMINI]: [
+      'promptTokenCount', 'candidatesTokenCount', 'totalTokenCount',
+      'cachedContentTokenCount', 'thoughtsTokenCount',
+      'estimated'
+    ],
+    [FORMATS.OPENAI_RESPONSES]: [
+      'input_tokens', 'output_tokens',
+      'input_tokens_details', 'output_tokens_details',
+      'estimated'
+    ],
+    // OpenAI format (default for OPENAI, CODEX, KIRO, etc.)
+    default: [
+      'prompt_tokens', 'completion_tokens', 'total_tokens',
+      'cached_tokens', 'reasoning_tokens',
+      'prompt_tokens_details', 'completion_tokens_details',
+      'estimated'
+    ]
+  };
+
+  // Get fields for target format
+  let fields = formatFields[targetFormat];
+  
+  // Use same fields for similar formats
+  if (targetFormat === FORMATS.GEMINI_CLI || targetFormat === FORMATS.ANTIGRAVITY) {
+    fields = formatFields[FORMATS.GEMINI];
+  } else if (targetFormat === FORMATS.OPENAI_RESPONSE) {
+    fields = formatFields[FORMATS.OPENAI_RESPONSES];
+  } else if (!fields) {
+    fields = formatFields.default;
+  }
+
+  return pickFields(fields);
 }
 
 /**
@@ -66,6 +124,7 @@ export function normalizeUsage(usage) {
 
   assignNumber("prompt_tokens", usage?.prompt_tokens);
   assignNumber("completion_tokens", usage?.completion_tokens);
+  assignNumber("total_tokens", usage?.total_tokens);
   assignNumber("cache_read_input_tokens", usage?.cache_read_input_tokens);
   assignNumber("cache_creation_input_tokens", usage?.cache_creation_input_tokens);
   assignNumber("cached_tokens", usage?.cached_tokens);
@@ -141,6 +200,7 @@ export function extractUsage(chunk) {
     return normalizeUsage({
       prompt_tokens: chunk.usageMetadata?.promptTokenCount || 0,
       completion_tokens: chunk.usageMetadata?.candidatesTokenCount || 0,
+      total_tokens: chunk.usageMetadata?.totalTokenCount,
       cached_tokens: chunk.usageMetadata?.cachedContentTokenCount,
       reasoning_tokens: chunk.usageMetadata?.thoughtsTokenCount
     });

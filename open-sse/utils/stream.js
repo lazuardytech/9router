@@ -1,7 +1,7 @@
 import { translateResponse, initState } from "../translator/index.js";
 import { FORMATS } from "../translator/formats.js";
 import { trackPendingRequest, appendRequestLog } from "@/lib/usageDb.js";
-import { extractUsage, hasValidUsage, estimateUsage, logUsage, addBufferToUsage, COLORS } from "./usageTracking.js";
+import { extractUsage, hasValidUsage, estimateUsage, logUsage, addBufferToUsage, filterUsageForFormat, COLORS } from "./usageTracking.js";
 
 // Re-export COLORS for backward compatibility
 export { COLORS };
@@ -145,13 +145,14 @@ export function createSSEStream(options = {}) {
               const isFinishChunk = parsed.choices?.[0]?.finish_reason;
               if (isFinishChunk && !hasValidUsage(parsed.usage)) {
                 const estimated = estimateUsage(body, totalContentLength, FORMATS.OPENAI);
-                parsed.usage = estimated; // Already has buffer from formatUsage
+                parsed.usage = filterUsageForFormat(estimated, FORMATS.OPENAI); // Filter + already has buffer
                 output = `data: ${JSON.stringify(parsed)}\n`;
                 usage = estimated;
                 injectedUsage = true;
               } else if (isFinishChunk && usage) {
-                // Add buffer to usage for client (but keep original for logging)
-                parsed.usage = addBufferToUsage(usage);
+                // Add buffer and filter usage for client (but keep original for logging)
+                const buffered = addBufferToUsage(usage);
+                parsed.usage = filterUsageForFormat(buffered, FORMATS.OPENAI);
                 output = `data: ${JSON.stringify(parsed)}\n`;
                 injectedUsage = true;
               }
@@ -234,11 +235,12 @@ export function createSSEStream(options = {}) {
             const isFinishChunk = item.type === "message_delta" || item.choices?.[0]?.finish_reason;
             if (state.finishReason && isFinishChunk && !hasValidUsage(item.usage) && totalContentLength > 0) {
               const estimated = estimateUsage(body, totalContentLength, sourceFormat);
-              item.usage = estimated; // Already has buffer from formatUsage
+              item.usage = filterUsageForFormat(estimated, sourceFormat); // Filter + already has buffer
               state.usage = estimated;
             } else if (state.finishReason && isFinishChunk && state.usage) {
-              // Add buffer to usage for client (but keep original in state.usage for logging)
-              item.usage = addBufferToUsage(state.usage);
+              // Add buffer and filter usage for client (but keep original in state.usage for logging)
+              const buffered = addBufferToUsage(state.usage);
+              item.usage = filterUsageForFormat(buffered, sourceFormat);
             }
 
             const output = formatSSE(item, sourceFormat);

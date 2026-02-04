@@ -27,6 +27,7 @@ export const PROVIDER_MODELS = {
     { id: "gemini-2.5-flash-lite", name: "Gemini 2.5 Flash Lite" },
   ],
   qw: [  // Qwen Code
+    // { id: "qwen3-coder-next", name: "Qwen3 Coder Next" },
     { id: "qwen3-coder-plus", name: "Qwen3 Coder Plus" },
     { id: "qwen3-coder-flash", name: "Qwen3 Coder Flash" },
     { id: "vision-model", name: "Qwen3 Vision Model" },
@@ -38,7 +39,7 @@ export const PROVIDER_MODELS = {
     { id: "deepseek-r1", name: "DeepSeek R1" },
     { id: "deepseek-v3.2-chat", name: "DeepSeek V3.2 Chat" },
     { id: "deepseek-v3.2-reasoner", name: "DeepSeek V3.2 Reasoner" },
-    { id: "minimax-m2", name: "MiniMax M2" },
+    { id: "minimax-m2.1", name: "MiniMax M2.1" },
     { id: "glm-4.7", name: "GLM 4.7" },
   ],
   ag: [  // Antigravity - special case: models call different backends
@@ -59,7 +60,7 @@ export const PROVIDER_MODELS = {
     { id: "gpt-5.1-codex", name: "GPT-5.1 Codex" },
     // { id: "gpt-5.1-codex-mini", name: "GPT-5.1 Codex Mini" },
     { id: "gpt-5.1-codex-max", name: "GPT-5.1 Codex Max" },
-    { id: "gpt-4.1", name: "GPT-4.1" },
+    // { id: "gpt-4.1", name: "GPT-4.1" },
     { id: "claude-4.5-sonnet", name: "Claude 4.5 Sonnet" },
     { id: "claude-4.5-opus", name: "Claude 4.5 Opus" },
     { id: "claude-4.5-haiku", name: "Claude 4.5 Haiku" },
@@ -101,6 +102,8 @@ export const PROVIDER_MODELS = {
     { id: "glm-4.6v", name: "GLM 4.6V (Vision)" },
   ],
   kimi: [
+    { id: "kimi-k2.5", name: "Kimi K2.5" },
+    { id: "kimi-k2.5-thinking", name: "Kimi K2.5 Thinking" },
     { id: "kimi-latest", name: "Kimi Latest" },
   ],
   minimax: [
