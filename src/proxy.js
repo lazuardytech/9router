@@ -12,16 +12,26 @@ export async function proxy(request) {
   if (pathname.startsWith("/dashboard")) {
     const token = request.cookies.get("auth_token")?.value;
 
-    if (!token) {
-      return NextResponse.redirect(new URL("/login", request.url));
+    if (token) {
+      try {
+        await jwtVerify(token, SECRET);
+        return NextResponse.next();
+      } catch (err) {
+        return NextResponse.redirect(new URL("/login", request.url));
+      }
     }
 
+    const origin = request.nextUrl.origin;
     try {
-      await jwtVerify(token, SECRET);
-      return NextResponse.next();
+      const res = await fetch(`${origin}/api/settings/require-login`);
+      const data = await res.json();
+      if (data.requireLogin === false) {
+        return NextResponse.next();
+      }
     } catch (err) {
-      return NextResponse.redirect(new URL("/login", request.url));
+      // On error, require login
     }
+    return NextResponse.redirect(new URL("/login", request.url));
   }
 
   // Redirect / to /dashboard if logged in, or /dashboard if it's the root

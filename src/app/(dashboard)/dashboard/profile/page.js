@@ -95,6 +95,21 @@ export default function ProfilePage() {
     }
   };
 
+  const updateRequireLogin = async (requireLogin) => {
+    try {
+      const res = await fetch("/api/settings", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ requireLogin }),
+      });
+      if (res.ok) {
+        setSettings(prev => ({ ...prev, requireLogin }));
+      }
+    } catch (err) {
+      console.error("Failed to update require login:", err);
+    }
+  };
+
   return (
     <div className="max-w-2xl mx-auto">
       <div className="flex flex-col gap-6">
@@ -116,7 +131,7 @@ export default function ProfilePage() {
           </div>
         </Card>
 
-        {/* Routing Preferences */}
+        {/* Security */}
         <Card>
           <div className="flex items-center gap-3 mb-4">
             <div className="p-2 rounded-lg bg-primary/10 text-primary">
@@ -124,52 +139,78 @@ export default function ProfilePage() {
             </div>
             <h3 className="text-lg font-semibold">Security</h3>
           </div>
-          <form onSubmit={handlePasswordChange} className="flex flex-col gap-4">
-            <div className="flex flex-col gap-2">
-              <label className="text-sm font-medium">Current Password</label>
-              <Input
-                type="password"
-                placeholder="Enter current password"
-                value={passwords.current}
-                onChange={(e) => setPasswords({ ...passwords, current: e.target.value })}
-                required
+          <div className="flex flex-col gap-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="font-medium">Require login</p>
+                <p className="text-sm text-text-muted">
+                  When ON, dashboard requires password. When OFF, access without login.
+                </p>
+              </div>
+              <Toggle
+                checked={settings.requireLogin === true}
+                onChange={() => updateRequireLogin(!settings.requireLogin)}
+                disabled={loading}
               />
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="flex flex-col gap-2">
-                <label className="text-sm font-medium">New Password</label>
-                <Input
-                  type="password"
-                  placeholder="Enter new password"
-                  value={passwords.new}
-                  onChange={(e) => setPasswords({ ...passwords, new: e.target.value })}
-                  required
-                />
-              </div>
-              <div className="flex flex-col gap-2">
-                <label className="text-sm font-medium">Confirm New Password</label>
-                <Input
-                  type="password"
-                  placeholder="Confirm new password"
-                  value={passwords.confirm}
-                  onChange={(e) => setPasswords({ ...passwords, confirm: e.target.value })}
-                  required
-                />
-              </div>
-            </div>
+            {settings.requireLogin === true && (
+              <form onSubmit={handlePasswordChange} className="flex flex-col gap-4 pt-4 border-t border-border/50">
+                {settings.hasPassword && (
+                  <div className="flex flex-col gap-2">
+                    <label className="text-sm font-medium">Current Password</label>
+                    <Input
+                      type="password"
+                      placeholder="Enter current password"
+                      value={passwords.current}
+                      onChange={(e) => setPasswords({ ...passwords, current: e.target.value })}
+                      required
+                    />
+                  </div>
+                )}
+                {/* {!settings.hasPassword && (
+                  <div className="p-3 rounded-lg bg-blue-500/10 border border-blue-500/20">
+                    <p className="text-sm text-blue-600 dark:text-blue-400">
+                      Setting password for the first time. Leave current password empty or use default: <code className="bg-blue-500/20 px-1 rounded">123456</code>
+                    </p>
+                  </div>
+                )} */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="flex flex-col gap-2">
+                    <label className="text-sm font-medium">New Password</label>
+                    <Input
+                      type="password"
+                      placeholder="Enter new password"
+                      value={passwords.new}
+                      onChange={(e) => setPasswords({ ...passwords, new: e.target.value })}
+                      required
+                    />
+                  </div>
+                  <div className="flex flex-col gap-2">
+                    <label className="text-sm font-medium">Confirm New Password</label>
+                    <Input
+                      type="password"
+                      placeholder="Confirm new password"
+                      value={passwords.confirm}
+                      onChange={(e) => setPasswords({ ...passwords, confirm: e.target.value })}
+                      required
+                    />
+                  </div>
+                </div>
 
-            {passStatus.message && (
-              <p className={`text-sm ${passStatus.type === "error" ? "text-red-500" : "text-green-500"}`}>
-                {passStatus.message}
-              </p>
+                {passStatus.message && (
+                  <p className={`text-sm ${passStatus.type === "error" ? "text-red-500" : "text-green-500"}`}>
+                    {passStatus.message}
+                  </p>
+                )}
+
+                <div className="pt-2">
+                  <Button type="submit" variant="primary" loading={passLoading}>
+                    {settings.hasPassword ? "Update Password" : "Set Password"}
+                  </Button>
+                </div>
+              </form>
             )}
-
-            <div className="pt-2">
-              <Button type="submit" variant="primary" loading={passLoading}>
-                Update Password
-              </Button>
-            </div>
-          </form>
+          </div>
         </Card>
 
         {/* Routing Preferences */}

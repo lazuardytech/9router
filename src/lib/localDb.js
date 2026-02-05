@@ -48,7 +48,8 @@ const defaultData = {
   apiKeys: [],
   settings: {
     cloudEnabled: false,
-    stickyRoundRobinLimit: 3
+    stickyRoundRobinLimit: 3,
+    requireLogin: true
   },
   pricing: {} // NEW: pricing configuration
 };
