@@ -147,6 +147,12 @@ export async function getProviderNodeById(id) {
  */
 export async function createProviderNode(data) {
   const db = await getDb();
+  
+  // Initialize providerNodes if undefined (backward compatibility)
+  if (!db.data.providerNodes) {
+    db.data.providerNodes = [];
+  }
+  
   const now = new Date().toISOString();
 
   const node = {
@@ -171,6 +177,10 @@ export async function createProviderNode(data) {
  */
 export async function updateProviderNode(id, data) {
   const db = await getDb();
+  if (!db.data.providerNodes) {
+    db.data.providerNodes = [];
+  }
+  
   const index = db.data.providerNodes.findIndex((node) => node.id === id);
 
   if (index === -1) return null;
@@ -191,6 +201,10 @@ export async function updateProviderNode(id, data) {
  */
 export async function deleteProviderNode(id) {
   const db = await getDb();
+  if (!db.data.providerNodes) {
+    db.data.providerNodes = [];
+  }
+  
   const index = db.data.providerNodes.findIndex((node) => node.id === id);
 
   if (index === -1) return null;
