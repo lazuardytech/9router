@@ -31,6 +31,9 @@ export default function LoginPage() {
             return;
           }
           setHasPassword(!!data.hasPassword);
+        } else {
+          // Safe fallback on non-OK response to avoid infinite loading state.
+          setHasPassword(true);
         }
       } catch (err) {
         clearTimeout(timeoutId);
