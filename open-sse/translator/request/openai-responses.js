@@ -26,8 +26,8 @@ export function openaiResponsesToOpenAIRequest(model, body, stream, credentials)
   let pendingToolResults = [];
 
   for (const item of body.input) {
-    // Determine item type - Droid may send items without 'type' field
-    // If no type but has role, treat as message
+    // Determine item type - Droid CLI sends role-based items without 'type' field
+    // Fallback: if no type but has role property, treat as message
     const itemType = item.type || (item.role ? "message" : null);
 
     if (itemType === "message") {
