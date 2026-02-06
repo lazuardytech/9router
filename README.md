@@ -5,6 +5,12 @@
   
   **Never stop coding. Auto-route to FREE & cheap AI models with smart fallback.**
   
+  **Free AI Provider for OpenClaw.**
+  
+  <p align="center">
+    <img src="./public/providers/openclaw.png" alt="OpenClaw" width="80"/>
+  </p>
+  
   [![npm](https://img.shields.io/npm/v/9router.svg)](https://www.npmjs.com/package/9router)
   [![Downloads](https://img.shields.io/npm/dm/9router.svg)](https://www.npmjs.com/package/9router)
   [![License](https://img.shields.io/npm/l/9router.svg)](https://github.com/decolua/9router/blob/main/LICENSE)
@@ -36,7 +42,7 @@
 
 ```
 ┌─────────────┐
-│  Your CLI   │  (Claude Code, Codex, Gemini CLI, Cursor, Cline...)
+│  Your CLI   │  (Claude Code, Codex, Gemini CLI, OpenClaw, Cursor, Cline...)
 │   Tool      │
 └──────┬──────┘
        │ http://localhost:20128/v1
@@ -72,12 +78,12 @@ npm install -g 9router
 
 **2. Connect a FREE provider (no signup needed):**
 
-Dashboard → Providers → Connect **iFlow** or **Qwen** → OAuth login → Done!
+Dashboard → Providers → Connect **Claude Code** or **Antigravity** → OAuth login → Done!
 
 **3. Use in your CLI tool:**
 
 ```
-Claude Code/Codex/Gemini CLI/Cursor/Cline Settings:
+Claude Code/Codex/Gemini CLI/OpenClaw/Cursor/Cline Settings:
   Endpoint: http://localhost:20128/v1
   API Key: [copy from dashboard]
   Model: if/kimi-k2-thinking
@@ -249,6 +255,21 @@ Combo: "always-on"
 
 Result: 5 layers of fallback = zero downtime
 Monthly cost: $20-200 (subscriptions) + $10-20 (backup)
+```
+
+### Case 4: "I want FREE AI in OpenClaw"
+
+**Problem:** Need AI assistant in messaging apps (WhatsApp, Telegram, Slack...), completely free
+
+**Solution:**
+```
+Combo: "openclaw-free"
+  1. if/glm-4.7                (unlimited free)
+  2. if/minimax-m2.1           (unlimited free)
+  3. if/kimi-k2-thinking       (unlimited free)
+
+Monthly cost: $0
+Access via: WhatsApp, Telegram, Slack, Discord, iMessage, Signal...
 ```
 
 ---
@@ -446,7 +467,7 @@ Settings → Models → Advanced:
 
 Or use combo: `premium-coding`
 
-### Claude Desktop (Claude Code)
+### Claude Code
 
 Edit `~/.claude/config.json`:
 
@@ -465,6 +486,39 @@ export OPENAI_API_KEY="your-9router-api-key"
 
 codex "your prompt"
 ```
+
+### OpenClaw
+
+Edit `~/.openclaw/openclaw.json`:
+
+```json
+{
+  "agents": {
+    "defaults": {
+      "model": {
+        "primary": "9router/if/glm-4.7"
+      }
+    }
+  },
+  "models": {
+    "providers": {
+      "9router": {
+        "baseUrl": "http://localhost:20128/v1",
+        "apiKey": "your-9router-api-key",
+        "api": "openai-completions",
+        "models": [
+          {
+            "id": "if/glm-4.7",
+            "name": "glm-4.7"
+          }
+        ]
+      }
+    }
+  }
+}
+```
+
+**Or use Dashboard:** CLI Tools → OpenClaw → Auto-config
 
 ### Cline / Continue / RooCode
 
