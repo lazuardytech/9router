@@ -76,9 +76,12 @@ export default function Sidebar({ onClose }) {
             <div className="flex items-center justify-center size-9 rounded bg-linear-to-br from-[#f97815] to-[#c2590a]">
               <span className="material-symbols-outlined text-white text-[20px]">hub</span>
             </div>
-            <h1 className="text-lg font-semibold tracking-tight text-text-main">
-              {APP_CONFIG.name}
-            </h1>
+            <div className="flex flex-col">
+              <h1 className="text-lg font-semibold tracking-tight text-text-main">
+                {APP_CONFIG.name}
+              </h1>
+              <span className="text-xs text-text-muted">v{APP_CONFIG.version}</span>
+            </div>
           </Link>
         </div>
 

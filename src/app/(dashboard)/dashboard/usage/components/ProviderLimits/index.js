@@ -358,85 +358,68 @@ export default function ProviderLimits() {
           const isLoading = loading[conn.id];
           const error = errors[conn.id];
 
-          // Use table layout for Antigravity and Kiro, card layout for others
-          if (conn.provider === "antigravity" || conn.provider === "kiro") {
-            return (
-              <Card key={conn.id} padding="none">
-                <div className="p-6 border-b border-black/10 dark:border-white/10">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-lg flex items-center justify-center overflow-hidden">
-                        <Image
-                          src={`/providers/${conn.provider}.png`}
-                          alt={conn.provider}
-                          width={40}
-                          height={40}
-                          className="object-contain"
-                          sizes="40px"
-                        />
-                      </div>
-                      <div>
-                        <h3 className="text-base font-semibold text-text-primary capitalize">
-                          {conn.provider}
-                        </h3>
-                        {conn.name && (
-                          <p className="text-sm text-text-muted">{conn.name}</p>
-                        )}
-                      </div>
-                    </div>
-                    
-                    <button
-                      onClick={() => refreshProvider(conn.id, conn.provider)}
-                      disabled={isLoading}
-                      className="p-2 rounded-lg hover:bg-black/5 dark:hover:bg-white/5 transition-colors disabled:opacity-50"
-                      title="Refresh quota"
-                    >
-                      <span className={`material-symbols-outlined text-[20px] text-text-muted ${isLoading ? "animate-spin" : ""}`}>
-                        refresh
-                      </span>
-                    </button>
-                  </div>
-                </div>
-
-                <div className="p-6">
-                  {isLoading ? (
-                    <div className="text-center py-8 text-text-muted">
-                      <span className="material-symbols-outlined text-[32px] animate-spin">
-                        progress_activity
-                      </span>
-                    </div>
-                  ) : error ? (
-                    <div className="text-center py-8">
-                      <span className="material-symbols-outlined text-[32px] text-red-500">
-                        error
-                      </span>
-                      <p className="mt-2 text-sm text-text-muted">{error}</p>
-                    </div>
-                  ) : quota?.message ? (
-                    <div className="text-center py-8">
-                      <p className="text-sm text-text-muted">{quota.message}</p>
-                    </div>
-                  ) : (
-                    <QuotaTable quotas={quota?.quotas} />
-                  )}
-                </div>
-              </Card>
-            );
-          }
-
-          // Use card layout for other providers
+          // Use table layout for all providers
           return (
-            <ProviderLimitCard
-              key={conn.id}
-              provider={conn.provider}
-              name={conn.name}
-              plan={quota?.plan}
-              quotas={quota?.quotas}
-              message={quota?.message}
-              loading={isLoading}
-              error={error}
-              onRefresh={() => refreshProvider(conn.id, conn.provider)}
-            />
+            <Card key={conn.id} padding="none">
+              <div className="p-6 border-b border-black/10 dark:border-white/10">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-lg flex items-center justify-center overflow-hidden">
+                      <Image
+                        src={`/providers/${conn.provider}.png`}
+                        alt={conn.provider}
+                        width={40}
+                        height={40}
+                        className="object-contain"
+                        sizes="40px"
+                      />
+                    </div>
+                    <div>
+                      <h3 className="text-base font-semibold text-text-primary capitalize">
+                        {conn.provider}
+                      </h3>
+                      {conn.name && (
+                        <p className="text-sm text-text-muted">{conn.name}</p>
+                      )}
+                    </div>
+                  </div>
+                  
+                  <button
+                    onClick={() => refreshProvider(conn.id, conn.provider)}
+                    disabled={isLoading}
+                    className="p-2 rounded-lg hover:bg-black/5 dark:hover:bg-white/5 transition-colors disabled:opacity-50"
+                    title="Refresh quota"
+                  >
+                    <span className={`material-symbols-outlined text-[20px] text-text-muted ${isLoading ? "animate-spin" : ""}`}>
+                      refresh
+                    </span>
+                  </button>
+                </div>
+              </div>
+
+              <div className="p-6">
+                {isLoading ? (
+                  <div className="text-center py-8 text-text-muted">
+                    <span className="material-symbols-outlined text-[32px] animate-spin">
+                      progress_activity
+                    </span>
+                  </div>
+                ) : error ? (
+                  <div className="text-center py-8">
+                    <span className="material-symbols-outlined text-[32px] text-red-500">
+                      error
+                    </span>
+                    <p className="mt-2 text-sm text-text-muted">{error}</p>
+                  </div>
+                ) : quota?.message ? (
+                  <div className="text-center py-8">
+                    <p className="text-sm text-text-muted">{quota.message}</p>
+                  </div>
+                ) : (
+                  <QuotaTable quotas={quota?.quotas} />
+                )}
+              </div>
+            </Card>
           );
         })}
       </div>

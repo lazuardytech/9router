@@ -5,6 +5,7 @@
 export const PROVIDER_MODELS = {
   // OAuth Providers (using alias)
   cc: [  // Claude Code
+    { id: "claude-opus-4-6", name: "Claude Opus 4.6" },
     { id: "claude-opus-4-5-20251101", name: "Claude 4.5 Opus" },
     { id: "claude-sonnet-4-5-20250929", name: "Claude 4.5 Sonnet" },
     { id: "claude-haiku-4-5-20251001", name: "Claude 4.5 Haiku" },
@@ -52,8 +53,8 @@ export const PROVIDER_MODELS = {
     { id: "glm-4.7", name: "GLM 4.7" },
   ],
   ag: [  // Antigravity - special case: models call different backends
+    // { id: "claude-opus-4-6", name: "Claude Opus 4.6" },
     { id: "claude-opus-4-5-thinking", name: "Claude Opus 4.5 Thinking" },
-    { id: "claude-opus-4-5", name: "Claude Opus 4.5" },
     { id: "claude-sonnet-4-5-thinking", name: "Claude Sonnet 4.5 Thinking" },
     { id: "claude-sonnet-4-5", name: "Claude Sonnet 4.5" },
     { id: "gemini-3-pro-high", name: "Gemini 3 Pro High" },

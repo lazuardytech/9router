@@ -40,15 +40,6 @@ function formatResetTimeDisplay(resetTime) {
  * Get color classes based on remaining percentage
  */
 function getColorClasses(remainingPercentage) {
-  if (remainingPercentage === 0) {
-    return {
-      text: "text-text-muted",
-      bg: "bg-bg-muted",
-      bgLight: "bg-bg-muted/20",
-      emoji: "⚫"
-    };
-  }
-  
   if (remainingPercentage > 70) {
     return {
       text: "text-green-600 dark:text-green-400",
@@ -67,6 +58,7 @@ function getColorClasses(remainingPercentage) {
     };
   }
   
+  // 0-29% including 0% (out of quota) - show red
   return {
     text: "text-red-600 dark:text-red-400",
     bg: "bg-red-500",
@@ -85,7 +77,12 @@ export default function QuotaTable({ quotas = [] }) {
 
   return (
     <div className="overflow-x-auto">
-      <table className="w-full">
+      <table className="w-full table-fixed">
+        <colgroup>
+          <col className="w-[30%]" /> {/* Model Name */}
+          <col className="w-[45%]" /> {/* Limit Progress */}
+          <col className="w-[25%]" /> {/* Reset Time */}
+        </colgroup>
         <tbody>
           {quotas.map((quota, index) => {
             const remaining = quota.remainingPercentage !== undefined
@@ -136,18 +133,22 @@ export default function QuotaTable({ quotas = [] }) {
 
                 {/* Reset Time */}
                 <td className="py-2 px-3">
-                  <div className="space-y-0.5">
-                    {countdown !== "-" && (
-                      <div className="text-sm text-text-primary font-medium">
-                        in {countdown}
-                      </div>
-                    )}
-                    {resetDisplay && (
-                      <div className="text-xs text-text-muted">
-                        {resetDisplay}
-                      </div>
-                    )}
-                  </div>
+                  {countdown !== "-" || resetDisplay ? (
+                    <div className="space-y-0.5">
+                      {countdown !== "-" && (
+                        <div className="text-sm text-text-primary font-medium">
+                          in {countdown}
+                        </div>
+                      )}
+                      {resetDisplay && (
+                        <div className="text-xs text-text-muted">
+                          {resetDisplay}
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="text-sm text-text-muted italic">N/A</div>
+                  )}
                 </td>
               </tr>
             );

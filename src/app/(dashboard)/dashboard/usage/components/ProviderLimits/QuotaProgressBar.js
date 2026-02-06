@@ -5,15 +5,6 @@ import { formatResetTime } from "./utils";
 
 // Calculate color based on remaining percentage
 const getColorClasses = (remainingPercentage) => {
-  if (remainingPercentage === 0) {
-    return {
-      text: "text-gray-400",
-      bg: "bg-gray-400",
-      bgLight: "bg-gray-400/10",
-      emoji: "⚫"
-    };
-  }
-  
   if (remainingPercentage > 70) {
     return {
       text: "text-green-500",
@@ -32,6 +23,7 @@ const getColorClasses = (remainingPercentage) => {
     };
   }
   
+  // 0-29% including 0% (out of quota) - show red
   return {
     text: "text-red-500",
     bg: "bg-red-500",

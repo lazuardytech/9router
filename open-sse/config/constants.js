@@ -222,7 +222,7 @@ export const BACKOFF_CONFIG = {
 export const COOLDOWN_MS = {
   unauthorized: 2 * 60 * 1000,       // 401 → 30 min
   paymentRequired: 2 * 60 * 1000,    // 402/403 → 30 min
-  notFound: 2 * 60 * 60 * 1000,      // 404 → 12 hours
+  notFound: 2 * 60 * 1000,      // 404 → 2 minutes
   transient: 30 * 1000,               // 408/500/502/503/504 → 1 min
   requestNotAllowed: 5 * 1000,        // "Request not allowed" → 5 sec
   // Legacy aliases for backward compatibility

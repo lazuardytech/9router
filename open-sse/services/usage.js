@@ -60,6 +60,36 @@ export async function getUsageForProvider(connection) {
 }
 
 /**
+ * Parse reset date/time to ISO string
+ * Handles multiple formats: Unix timestamp (ms), ISO date string, etc.
+ */
+function parseResetTime(resetValue) {
+  if (!resetValue) return null;
+  
+  try {
+    // If it's already a Date object
+    if (resetValue instanceof Date) {
+      return resetValue.toISOString();
+    }
+    
+    // If it's a number (Unix timestamp in milliseconds)
+    if (typeof resetValue === 'number') {
+      return new Date(resetValue).toISOString();
+    }
+    
+    // If it's a string (ISO date or any parseable date string)
+    if (typeof resetValue === 'string') {
+      return new Date(resetValue).toISOString();
+    }
+    
+    return null;
+  } catch (error) {
+    console.warn(`Failed to parse reset time: ${resetValue}`, error);
+    return null;
+  }
+}
+
+/**
  * GitHub Copilot Usage
  * Uses GitHub accessToken (not copilotToken) to call copilot_internal/user API
  */
@@ -92,19 +122,22 @@ async function getGitHubUsage(accessToken, providerSpecificData) {
     if (data.quota_snapshots) {
       // Paid plan format
       const snapshots = data.quota_snapshots;
+      const resetAt = parseResetTime(data.quota_reset_date);
+      
       return {
         plan: data.copilot_plan,
         resetDate: data.quota_reset_date,
         quotas: {
-          chat: formatGitHubQuotaSnapshot(snapshots.chat),
-          completions: formatGitHubQuotaSnapshot(snapshots.completions),
-          premium_interactions: formatGitHubQuotaSnapshot(snapshots.premium_interactions),
+          chat: { ...formatGitHubQuotaSnapshot(snapshots.chat), resetAt },
+          completions: { ...formatGitHubQuotaSnapshot(snapshots.completions), resetAt },
+          premium_interactions: { ...formatGitHubQuotaSnapshot(snapshots.premium_interactions), resetAt },
         },
       };
     } else if (data.monthly_quotas || data.limited_user_quotas) {
       // Free/limited plan format
       const monthlyQuotas = data.monthly_quotas || {};
       const usedQuotas = data.limited_user_quotas || {};
+      const resetAt = parseResetTime(data.limited_user_reset_date);
       
       return {
         plan: data.copilot_plan || data.access_type_sku,
@@ -114,11 +147,13 @@ async function getGitHubUsage(accessToken, providerSpecificData) {
             used: usedQuotas.chat || 0,
             total: monthlyQuotas.chat || 0,
             unlimited: false,
+            resetAt,
           },
           completions: {
             used: usedQuotas.completions || 0,
             total: monthlyQuotas.completions || 0,
             unlimited: false,
+            resetAt,
           },
         },
       };
@@ -236,7 +271,7 @@ async function getAntigravityUsage(accessToken, providerSpecificData) {
         quotas[modelKey] = {
           used,
           total,
-          resetAt: info.quotaInfo.resetTime || null,
+          resetAt: parseResetTime(info.quotaInfo.resetTime),
           remainingPercentage,
           unlimited: false,
           displayName: info.displayName || modelKey,
@@ -372,13 +407,9 @@ async function getCodexUsage(accessToken) {
     const primaryWindow = rateLimit.primary_window || {};
     const secondaryWindow = rateLimit.secondary_window || {};
 
-    // Calculate reset dates
-    const sessionResetAt = primaryWindow.reset_at 
-      ? new Date(primaryWindow.reset_at * 1000).toISOString() 
-      : null;
-    const weeklyResetAt = secondaryWindow.reset_at 
-      ? new Date(secondaryWindow.reset_at * 1000).toISOString() 
-      : null;
+    // Parse reset dates (reset_at is Unix timestamp in seconds, multiply by 1000 for ms)
+    const sessionResetAt = parseResetTime(primaryWindow.reset_at ? primaryWindow.reset_at * 1000 : null);
+    const weeklyResetAt = parseResetTime(secondaryWindow.reset_at ? secondaryWindow.reset_at * 1000 : null);
 
     return {
       plan: data.plan_type || "unknown",
@@ -388,14 +419,14 @@ async function getCodexUsage(accessToken) {
           used: primaryWindow.used_percent || 0,
           total: 100,
           remaining: 100 - (primaryWindow.used_percent || 0),
-          resetTime: sessionResetAt,
+          resetAt: sessionResetAt,
           unlimited: false,
         },
         weekly: {
           used: secondaryWindow.used_percent || 0,
           total: 100,
           remaining: 100 - (secondaryWindow.used_percent || 0),
-          resetTime: weeklyResetAt,
+          resetAt: weeklyResetAt,
           unlimited: false,
         },
       },
@@ -439,10 +470,21 @@ async function getKiroUsage(accessToken, providerSpecificData) {
     }
 
     const data = await response.json();
+    
+    console.log("[Kiro Usage] API Response:", JSON.stringify(data, null, 2));
 
     // Parse usage data from usageBreakdownList
     const usageList = data.usageBreakdownList || [];
     const quotaInfo = {};
+    
+    // Parse reset time - supports multiple formats (nextDateReset, resetDate, etc.)
+    const resetAt = parseResetTime(data.nextDateReset || data.resetDate);
+    
+    console.log("[Kiro Usage] Reset time:", {
+      nextDateReset: data.nextDateReset,
+      resetDate: data.resetDate,
+      parsedResetAt: resetAt
+    });
 
     usageList.forEach((breakdown) => {
       const resourceType = breakdown.resourceType?.toLowerCase() || "unknown";
@@ -453,7 +495,7 @@ async function getKiroUsage(accessToken, providerSpecificData) {
         used,
         total,
         remaining: total - used,
-        resetTime: data.nextDateReset ? new Date(data.nextDateReset).toISOString() : null,
+        resetAt,
         unlimited: false,
       };
 
@@ -466,7 +508,7 @@ async function getKiroUsage(accessToken, providerSpecificData) {
           used: freeUsed,
           total: freeTotal,
           remaining: freeTotal - freeUsed,
-          resetTime: data.nextDateReset ? new Date(data.nextDateReset).toISOString() : null,
+          resetAt,
           unlimited: false,
         };
       }
