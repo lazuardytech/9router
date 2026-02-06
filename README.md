@@ -1,7 +1,7 @@
 <div align="center">
   <img src="./images/9router.png" alt="9Router Dashboard" width="800"/>
   
-  # 9Router - Smart AI Router
+  # 9Router - Free AI Router
   
   **Never stop coding. Auto-route to FREE & cheap AI models with smart fallback.**
   
@@ -28,7 +28,7 @@
 - ✅ **Maximize subscriptions** - Track quota, use every bit before reset
 - ✅ **Auto fallback** - Subscription → Cheap → Free, zero downtime
 - ✅ **Multi-account** - Round-robin between accounts per provider
-- ✅ **Universal** - Works with Cursor, Cline, Claude Desktop, any CLI tool
+- ✅ **Universal** - Works with Claude Code, Codex, Gemini CLI, Cursor, Cline, any CLI tool
 
 ---
 
@@ -36,7 +36,7 @@
 
 ```
 ┌─────────────┐
-│  Your CLI   │  (Cursor, Cline, Claude Desktop...)
+│  Your CLI   │  (Claude Code, Codex, Gemini CLI, Cursor, Cline...)
 │   Tool      │
 └──────┬──────┘
        │ http://localhost:20128/v1
@@ -77,7 +77,7 @@ Dashboard → Providers → Connect **iFlow** or **Qwen** → OAuth login → Do
 **3. Use in your CLI tool:**
 
 ```
-Cursor/Cline Settings:
+Claude Code/Codex/Gemini CLI/Cursor/Cline Settings:
   Endpoint: http://localhost:20128/v1
   API Key: [copy from dashboard]
   Model: if/kimi-k2-thinking
@@ -111,7 +111,7 @@ Create combos with automatic fallback:
 
 ```
 Combo: "my-coding-stack"
-  1. cc/claude-opus-4-5        (your subscription)
+  1. cc/claude-opus-4-6        (your subscription)
   2. glm/glm-4.7               (cheap backup, $0.6/1M)
   3. if/kimi-k2-thinking       (free fallback)
 
@@ -211,9 +211,9 @@ Seamless translation between formats:
 **Solution:**
 ```
 Combo: "maximize-claude"
-  1. cc/claude-opus-4-5        (use subscription fully)
+  1. cc/claude-opus-4-6        (use subscription fully)
   2. glm/glm-4.7               (cheap backup when quota out)
-  3. if/kimi-k2                (free emergency fallback)
+  3. if/kimi-k2-thinking       (free emergency fallback)
 
 Monthly cost: $20 (subscription) + ~$5 (backup) = $25 total
 vs. $20 + hitting limits = frustration
@@ -241,7 +241,7 @@ Quality: Production-ready models
 **Solution:**
 ```
 Combo: "always-on"
-  1. cc/claude-opus-4-5        (best quality)
+  1. cc/claude-opus-4-6        (best quality)
   2. cx/gpt-5.2-codex          (second subscription)
   3. glm/glm-4.7               (cheap, resets daily)
   4. minimax/MiniMax-M2.1      (cheapest, 5h reset)
@@ -266,7 +266,7 @@ Dashboard → Providers → Connect Claude Code
 → 5-hour + weekly quota tracking
 
 Models:
-  cc/claude-opus-4-5-20251101
+  cc/claude-opus-4-6
   cc/claude-sonnet-4-5-20250929
   cc/claude-haiku-4-5-20251001
 ```
@@ -405,7 +405,7 @@ Dashboard → Combos → Create New
 
 Name: premium-coding
 Models:
-  1. cc/claude-opus-4-5-20251101 (Subscription primary)
+  1. cc/claude-opus-4-6 (Subscription primary)
   2. glm/glm-4.7 (Cheap backup, $0.6/1M)
   3. minimax/MiniMax-M2.1 (Cheapest fallback, $0.20/1M)
 
@@ -441,7 +441,7 @@ Cost: $0 forever!
 Settings → Models → Advanced:
   OpenAI API Base URL: http://localhost:20128/v1
   OpenAI API Key: [from 9router dashboard]
-  Model: cc/claude-opus-4-5-20251101
+  Model: cc/claude-opus-4-6
 ```
 
 Or use combo: `premium-coding`
@@ -472,7 +472,7 @@ codex "your prompt"
 Provider: OpenAI Compatible
 Base URL: http://localhost:20128/v1
 API Key: [from dashboard]
-Model: cc/claude-opus-4-5-20251101
+Model: cc/claude-opus-4-6
 ```
 
 </details>
@@ -536,7 +536,7 @@ docker run -d \
 <summary><b>View all available models</b></summary>
 
 **Claude Code (`cc/`)** - Pro/Max:
-- `cc/claude-opus-4-5-20251101`
+- `cc/claude-opus-4-6`
 - `cc/claude-sonnet-4-5-20250929`
 - `cc/claude-haiku-4-5-20251001`
 
@@ -583,7 +583,7 @@ docker run -d \
 
 **Rate limiting**
 - Subscription quota out → Fallback to GLM/MiniMax
-- Add combo: `cc/claude-opus → glm/glm-4.7 → if/kimi-k2`
+- Add combo: `cc/claude-opus-4-6 → glm/glm-4.7 → if/kimi-k2-thinking`
 
 **OAuth token expired**
 - Auto-refreshed by 9Router
@@ -617,7 +617,7 @@ Authorization: Bearer your-api-key
 Content-Type: application/json
 
 {
-  "model": "cc/claude-opus-4-5-20251101",
+  "model": "cc/claude-opus-4-6",
   "messages": [
     {"role": "user", "content": "Write a function to..."}
   ],
@@ -644,17 +644,17 @@ Authorization: Bearer your-api-key
 
 ---
 
-## 🌟 Stargazers
-
-[![Stargazers over time](https://starchart.cc/decolua/9router.svg?variant=adaptive)](https://starchart.cc/decolua/9router)
-
----
-
 ## 👥 Contributors
 
 Thanks to all contributors who helped make 9Router better!
 
-[![Contributors](https://contrib.rocks/image?repo=decolua/9router)](https://github.com/decolua/9router/graphs/contributors)
+[![Contributors](https://contrib.rocks/image?repo=decolua/9router&max=100&columns=20&anon=1)](https://github.com/decolua/9router/graphs/contributors)
+
+---
+
+## 📊 Star Chart
+
+[![Star Chart](https://starchart.cc/decolua/9router.svg?variant=adaptive)](https://starchart.cc/decolua/9router)
 
 ### How to Contribute
 
