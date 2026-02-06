@@ -34,8 +34,9 @@ export function hasValuableContent(chunk, format) {
     const isContentBlockDelta = chunk.type === "content_block_delta";
     const hasText = chunk.delta?.text && chunk.delta.text !== "";
     const hasThinking = chunk.delta?.thinking && chunk.delta.thinking !== "";
+    const hasInputJson = chunk.delta?.partial_json && chunk.delta.partial_json !== "";
     
-    if (isContentBlockDelta && !hasText && !hasThinking) {
+    if (isContentBlockDelta && !hasText && !hasThinking && !hasInputJson) {
       return false;
     }
     return true;
