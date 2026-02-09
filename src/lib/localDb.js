@@ -50,11 +50,7 @@ const defaultData = {
   settings: {
     cloudEnabled: false,
     stickyRoundRobinLimit: 3,
-    requireLogin: true,
-    observabilityMaxRecords: 1000,
-    observabilityBatchSize: 20,
-    observabilityFlushIntervalMs: 5000,
-    observabilityMaxJsonSize: 1024
+    requireLogin: true
   },
   pricing: {} // NEW: pricing configuration
 };
@@ -71,10 +67,6 @@ function cloneDefaultData() {
       cloudEnabled: false,
       stickyRoundRobinLimit: 3,
       requireLogin: true,
-      observabilityMaxRecords: 1000,
-      observabilityBatchSize: 20,
-      observabilityFlushIntervalMs: 5000,
-      observabilityMaxJsonSize: 1024
     },
     pricing: {},
   };

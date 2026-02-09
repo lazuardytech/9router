@@ -3,7 +3,6 @@
 import { useState, Suspense } from "react";
 import { UsageStats, RequestLogger, CardSkeleton, SegmentedControl } from "@/shared/components";
 import ProviderLimits from "./components/ProviderLimits";
-import RequestDetailsTab from "./components/RequestDetailsTab";
 
 export default function UsagePage() {
   const [activeTab, setActiveTab] = useState("overview");
@@ -15,7 +14,6 @@ export default function UsagePage() {
           { value: "overview", label: "Overview" },
           { value: "logs", label: "Logger" },
           { value: "limits", label: "Limits" },
-          { value: "details", label: "Details" },
         ]}
         value={activeTab}
         onChange={setActiveTab}
@@ -33,7 +31,6 @@ export default function UsagePage() {
           <ProviderLimits />
         </Suspense>
       )}
-      {activeTab === "details" && <RequestDetailsTab />}
     </div>
   );
 }
