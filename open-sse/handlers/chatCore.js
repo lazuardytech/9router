@@ -344,8 +344,9 @@ function parseSSEToOpenAIResponse(rawSSE, fallbackModel) {
  * @param {function} options.onRequestSuccess - Callback when request succeeds (to clear error status)
  * @param {function} options.onDisconnect - Callback when client disconnects
  * @param {string} options.connectionId - Connection ID for usage tracking
+ * @param {string} options.apiKey - API key for usage tracking
  */
-export async function handleChatCore({ body, modelInfo, credentials, log, onCredentialsRefreshed, onRequestSuccess, onDisconnect, clientRawRequest, connectionId, userAgent }) {
+export async function handleChatCore({ body, modelInfo, credentials, log, onCredentialsRefreshed, onRequestSuccess, onDisconnect, clientRawRequest, connectionId, userAgent, apiKey }) {
   const { provider, model } = modelInfo;
   const requestStartTime = Date.now();
 
@@ -587,7 +588,8 @@ export async function handleChatCore({ body, modelInfo, credentials, log, onCred
         model: model || "unknown",
         tokens: usage,
         timestamp: new Date().toISOString(),
-        connectionId: connectionId || undefined
+        connectionId: connectionId || undefined,
+        apiKey: apiKey || undefined
       }).catch(err => {
         console.error("Failed to save usage stats:", err.message);
       });
@@ -704,7 +706,8 @@ export async function handleChatCore({ body, modelInfo, credentials, log, onCred
         model: model || "unknown",
         tokens: usage,
         timestamp: new Date().toISOString(),
-        connectionId: connectionId || undefined
+        connectionId: connectionId || undefined,
+        apiKey: apiKey || undefined
       }).catch(err => {
         console.error("Failed to save streaming usage stats:", err.message);
       });
@@ -719,13 +722,13 @@ export async function handleChatCore({ body, modelInfo, credentials, log, onCred
 
   if (needsCodexTranslation) {
     log?.debug?.("STREAM", `Codex translation mode: openai-responses → openai`);
-    transformStream = createSSETransformStreamWithLogger('openai-responses', 'openai', provider, reqLogger, toolNameMap, model, connectionId, body, onStreamComplete);
+    transformStream = createSSETransformStreamWithLogger('openai-responses', 'openai', provider, reqLogger, toolNameMap, model, connectionId, body, onStreamComplete, apiKey);
   } else if (needsTranslation(targetFormat, sourceFormat)) {
     log?.debug?.("STREAM", `Translation mode: ${targetFormat} → ${sourceFormat}`);
-    transformStream = createSSETransformStreamWithLogger(targetFormat, sourceFormat, provider, reqLogger, toolNameMap, model, connectionId, body, onStreamComplete);
+    transformStream = createSSETransformStreamWithLogger(targetFormat, sourceFormat, provider, reqLogger, toolNameMap, model, connectionId, body, onStreamComplete, apiKey);
   } else {
     log?.debug?.("STREAM", `Standard passthrough mode`);
-    transformStream = createPassthroughStreamWithLogger(provider, reqLogger, model, connectionId, body, onStreamComplete);
+    transformStream = createPassthroughStreamWithLogger(provider, reqLogger, model, connectionId, body, onStreamComplete, apiKey);
   }
 
   const transformedBody = pipeWithDisconnect(providerResponse, transformStream, streamController);
