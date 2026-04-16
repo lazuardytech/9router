@@ -1,0 +1,111 @@
+// SQLite connection singleton. Opens one shared better-sqlite3 Database per
+// process, applies pragmas, runs schema.sql, triggers auto-migration from
+// legacy JSON on first boot. Only runs in the Node.js path (`!isCloud`);
+// cloud/Workers callers must not import this file.
+
+import path from "node:path";
+import os from "node:os";
+import fs from "node:fs";
+import { fileURLToPath } from "node:url";
+import { createRequire } from "node:module";
+import { migrateFromJson } from "./migrate-from-json.js";
+
+const require = createRequire(import.meta.url);
+
+const APP_NAME = "9router";
+const SQLITE_FILE_NAME = "9router.sqlite";
+const SCHEMA_VERSION = "1";
+
+function getDataDir() {
+  if (process.env.DATA_DIR) return process.env.DATA_DIR;
+
+  const homeDir = os.homedir();
+  if (process.platform === "win32") {
+    return path.join(
+      process.env.APPDATA || path.join(homeDir, "AppData", "Roaming"),
+      APP_NAME,
+    );
+  }
+  return path.join(homeDir, `.${APP_NAME}`);
+}
+
+export const DATA_DIR = getDataDir();
+export const SQLITE_FILE = path.join(DATA_DIR, SQLITE_FILE_NAME);
+
+let dbInstance = null;
+let schemaReady = false;
+
+function loadSchemaSql() {
+  const here = path.dirname(fileURLToPath(import.meta.url));
+  const schemaPath = path.join(here, "schema.sql");
+  return fs.readFileSync(schemaPath, "utf-8");
+}
+
+function applyPragmas(db) {
+  db.pragma("journal_mode = WAL");
+  db.pragma("synchronous = NORMAL");
+  db.pragma("foreign_keys = ON");
+  db.pragma("busy_timeout = 5000");
+}
+
+function ensureSchema(db) {
+  if (schemaReady) return;
+  db.exec(loadSchemaSql());
+  schemaReady = true;
+}
+
+function readMeta(db, key) {
+  const row = db.prepare("SELECT value FROM meta WHERE key = ?").get(key);
+  return row ? row.value : null;
+}
+
+function writeMeta(db, key, value) {
+  db.prepare(
+    "INSERT INTO meta(key, value) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value",
+  ).run(key, String(value));
+}
+
+function runInitialMigration(db) {
+  if (readMeta(db, "schema_version")) return;
+
+  const summary = migrateFromJson(db, DATA_DIR);
+  if (summary && summary.imported > 0) {
+    console.log("[sqlite] migrated legacy JSON:", summary);
+  }
+  writeMeta(db, "schema_version", SCHEMA_VERSION);
+}
+
+export function getDatabase() {
+  if (dbInstance) return dbInstance;
+
+  if (!fs.existsSync(DATA_DIR)) {
+    fs.mkdirSync(DATA_DIR, { recursive: true });
+  }
+
+  // better-sqlite3 is a CommonJS native module; createRequire avoids the
+  // pitfalls of importing it via ESM. next.config.mjs already lists it in
+  // `serverExternalPackages`.
+  const Database = require("better-sqlite3");
+  const db = new Database(SQLITE_FILE);
+  applyPragmas(db);
+  ensureSchema(db);
+  runInitialMigration(db);
+
+  dbInstance = db;
+  return dbInstance;
+}
+
+export function closeDatabase() {
+  if (dbInstance) {
+    try { dbInstance.close(); } catch {}
+    dbInstance = null;
+    schemaReady = false;
+  }
+}
+
+// Run `fn(db)` inside a BEGIN IMMEDIATE transaction. Returns fn's result.
+export function tx(fn) {
+  const db = getDatabase();
+  const wrapped = db.transaction(fn);
+  return wrapped.immediate(db);
+}
