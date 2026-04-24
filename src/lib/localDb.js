@@ -986,6 +986,7 @@ export async function exportDb() {
     mitmAlias: await getMitmAlias(),
     combos: await getCombos(),
     apiKeys: await getApiKeys(),
+    customModels: await getCustomModels(),
     settings: await getSettings(),
     pricing: await getRawPricing(),
   };
@@ -1024,6 +1025,7 @@ export async function importDb(payload) {
       DELETE FROM api_keys;
       DELETE FROM model_aliases;
       DELETE FROM mitm_aliases;
+      DELETE FROM custom_models;
       DELETE FROM settings;
       DELETE FROM pricing;
     `);
@@ -1106,6 +1108,19 @@ export async function importDb(payload) {
     );
     for (const [tool, mappings] of Object.entries(data.mitmAlias || {})) {
       mitmStmt.run(tool, JSON.stringify(mappings ?? {}));
+    }
+
+    const customModelStmt = db().prepare(
+      "INSERT OR IGNORE INTO custom_models (provider_alias, id, type, name) VALUES (?, ?, ?, ?)",
+    );
+    for (const m of data.customModels || []) {
+      if (!m?.providerAlias || !m?.id) continue;
+      customModelStmt.run(
+        m.providerAlias,
+        m.id,
+        m.type || "llm",
+        m.name || m.id,
+      );
     }
 
     const settingsStmt = db().prepare(

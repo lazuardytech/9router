@@ -191,6 +191,17 @@ function importConfigDb(db, data) {
     }
   }
 
+  if (Array.isArray(data.customModels)) {
+    const stmt = db.prepare(
+      "INSERT OR IGNORE INTO custom_models (provider_alias, id, type, name) VALUES (?, ?, ?, ?)",
+    );
+    for (const m of data.customModels) {
+      if (!m?.providerAlias || !m?.id) continue;
+      stmt.run(m.providerAlias, m.id, m.type || "llm", m.name || m.id);
+      imported++;
+    }
+  }
+
   if (data.settings && typeof data.settings === "object") {
     const stmt = db.prepare(
       "INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)",
