@@ -17,6 +17,16 @@ export const UPDATER_CONFIG = {
   npmPackageName: "9router",
   installCmd: "npm i -g 9router",
   exitDelayMs: 500,
+  statusPort: 20129,
+  statusPollIntervalMs: 1000,
+  statusLogTailLines: 8,
+  installRetries: 3,
+  installRetryDelayMs: 5000,
+  lingerAfterDoneMs: 30000,
+  waitForExitMinMs: 3000,
+  waitForExitMaxMs: 15000,
+  waitForExitCheckMs: 500,
+  appPort: 20128,
 };
 
 // Theme configuration

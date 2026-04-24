@@ -149,7 +149,7 @@ async function handleSingleModelChat(body, modelStr, machineId, env) {
 
     if (shouldFallback) {
       log.warn("FALLBACK", `${provider.toUpperCase()} | ${credentials.id} | ${result.status}`);
-      await markAccountUnavailable(machineId, credentials.id, result.status, result.error, env);
+      await markAccountUnavailable(machineId, credentials.id, result.status, result.error, env, result.resetsAtMs);
       excludeConnectionId = credentials.id;
       lastError = result.error;
       lastStatus = result.status;
@@ -244,13 +244,20 @@ async function getProviderCredentials(machineId, provider, env, excludeConnectio
   };
 }
 
-async function markAccountUnavailable(machineId, connectionId, status, errorText, env) {
+async function markAccountUnavailable(machineId, connectionId, status, errorText, env, resetsAtMs = null) {
   const data = await getMachineData(machineId, env);
   if (!data?.providers?.[connectionId]) return;
 
   const conn = data.providers[connectionId];
   const backoffLevel = conn.backoffLevel || 0;
-  const { cooldownMs, newBackoffLevel } = checkFallbackError(status, errorText, backoffLevel);
+  // Provider-specific precise cooldown (e.g. codex usage_limit_reached) overrides backoff
+  let cooldownMs, newBackoffLevel;
+  if (resetsAtMs && resetsAtMs > Date.now()) {
+    cooldownMs = resetsAtMs - Date.now();
+    newBackoffLevel = 0;
+  } else {
+    ({ cooldownMs, newBackoffLevel } = checkFallbackError(status, errorText, backoffLevel));
+  }
   const rateLimitedUntil = getUnavailableUntil(cooldownMs);
   const reason = typeof errorText === "string" ? errorText.slice(0, 100) : "Provider error";
 
