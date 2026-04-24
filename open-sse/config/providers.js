@@ -357,6 +357,11 @@ export const PROVIDERS = {
     format: "perplexity-web",
     authType: "cookie"
   },
+  azure: {
+    baseUrl: "",
+    format: "openai",
+    headers: {}
+  },
 };
 
 export const OLLAMA_LOCAL_DEFAULT_HOST = "http://localhost:11434";
