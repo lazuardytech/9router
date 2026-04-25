@@ -83,11 +83,11 @@ function toCodexDataUrl(input) {
 }
 
 // Build content array with optional reference images, mirroring codex-imagen tagging
-function buildCodexContent(prompt, refs) {
+function buildCodexContent(prompt, refs, detail = CODEX_REF_DETAIL) {
   const content = [];
   refs.forEach((url, index) => {
     content.push({ type: "input_text", text: `<image name=image${index + 1}>` });
-    content.push({ type: "input_image", image_url: url, detail: CODEX_REF_DETAIL });
+    content.push({ type: "input_image", image_url: url, detail });
     content.push({ type: "input_text", text: "</image>" });
   });
   content.push({ type: "input_text", text: prompt });
@@ -280,11 +280,16 @@ function buildImageBody(provider, model, body) {
       if (Array.isArray(images)) images.forEach((i) => { const u = toCodexDataUrl(i); if (u) refs.push(u); });
       const single = toCodexDataUrl(image);
       if (single) refs.push(single);
+      const detail = body.image_detail || CODEX_REF_DETAIL;
+      const imgTool = { type: "image_generation", output_format: (body.output_format || "png").toLowerCase() };
+      if (body.size && body.size !== "") imgTool.size = body.size;
+      if (body.quality && body.quality !== "") imgTool.quality = body.quality;
+      if (body.background && body.background !== "") imgTool.background = body.background;
       return {
         model: stripCodexImageModel(model),
         instructions: "",
-        input: [{ type: "message", role: "user", content: buildCodexContent(prompt, refs) }],
-        tools: [{ type: "image_generation", output_format: "png" }],
+        input: [{ type: "message", role: "user", content: buildCodexContent(prompt, refs, detail) }],
+        tools: [imgTool],
         tool_choice: "auto",
         parallel_tool_calls: false,
         prompt_cache_key: randomUUID(),
@@ -404,6 +409,7 @@ export async function handleImageGenerationCore({
   credentials,
   log,
   streamToClient = false,
+  binaryOutput = false,
   onCredentialsRefreshed,
   onRequestSuccess,
 }) {
@@ -524,7 +530,26 @@ export async function handleImageGenerationCore({
 
   const normalized = normalizeImageResponse(responseBody, provider, body.prompt);
 
-  log?.debug?.("IMAGE", `Success | images=${normalized.data?.length || 0}`);
+  // Binary output: decode first b64_json into raw bytes
+  if (binaryOutput) {
+    const first = normalized.data?.[0];
+    const b64 = first?.b64_json;
+    if (b64) {
+      const buf = Buffer.from(b64, "base64");
+      const fmt = (body.output_format || "png").toLowerCase();
+      const mime = fmt === "jpeg" || fmt === "jpg" ? "image/jpeg" : fmt === "webp" ? "image/webp" : "image/png";
+      return {
+        success: true,
+        response: new Response(buf, {
+          headers: {
+            "Content-Type": mime,
+            "Content-Disposition": `inline; filename="image.${fmt === "jpeg" ? "jpg" : fmt}"`,
+            "Access-Control-Allow-Origin": "*",
+          },
+        }),
+      };
+    }
+  }
 
   return {
     success: true,

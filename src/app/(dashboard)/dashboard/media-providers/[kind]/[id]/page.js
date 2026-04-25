@@ -65,10 +65,13 @@ const KIND_EXAMPLE_CONFIG = {
     defaultResponse: `{\n  "data": [\n    { "url": "...", "b64_json": "..." }\n  ]\n}`,
     extraFields: [
       { key: "n", label: "n", type: "number", default: 1, min: 1, max: 4 },
-      { key: "size", label: "Size", type: "select", default: "1024x1024", options: ["1024x1024", "1024x1792", "1792x1024", "auto"] },
-      { key: "quality", label: "Quality", type: "select", default: "", options: ["", "standard", "hd", "high", "low", "auto"] },
+      { key: "size", label: "Size", type: "select", default: "auto", options: ["auto", "1024x1024", "1024x1536", "1536x1024", "1024x1792", "1792x1024"] },
+      { key: "quality", label: "Quality", type: "select", default: "auto", options: ["auto", "low", "medium", "high", "standard", "hd"] },
+      { key: "background", label: "Background", type: "select", default: "auto", options: ["auto", "transparent", "opaque"] },
       { key: "style", label: "Style", type: "select", default: "", options: ["", "vivid", "natural"] },
       { key: "response_format", label: "Format", type: "select", default: "", options: ["", "url", "b64_json"] },
+      { key: "image_detail", label: "Image Detail", type: "select", default: "high", options: ["auto", "low", "high", "original"] },
+      { key: "output_format", label: "Codec", type: "select", default: "png", options: ["png", "jpeg", "webp"] },
     ],
   },
   imageToText: {
@@ -879,6 +882,8 @@ function GenericExampleCard({ providerId, kind }) {
   const [result, setResult] = useState(null);
   const [progress, setProgress] = useState(null); // { stage, bytesReceived }
   const [partialImage, setPartialImage] = useState(null);
+  const [imageOutputFormat, setImageOutputFormat] = useState("json"); // json | binary
+  const [binaryImageUrl, setBinaryImageUrl] = useState("");
   const [running, setRunning] = useState(false);
   const [error, setError] = useState("");
   const [connections, setConnections] = useState([]);
@@ -928,12 +933,14 @@ function GenericExampleCard({ providerId, kind }) {
     ...(supportsEdit && refImage.trim() ? { image: refImage.trim() } : {}),
   };
 
-  // Streaming supported for codex image (Plus/Pro accounts)
-  const useStreaming = kind === "image" && providerId === "codex";
+  // Streaming supported for codex image (Plus/Pro accounts) — disabled when binary output requested
+  const wantBinary = kind === "image" && imageOutputFormat === "binary";
+  const useStreaming = kind === "image" && providerId === "codex" && !wantBinary;
+  const apiPathWithQuery = `${apiPath}${wantBinary ? "?response_format=binary" : ""}`;
   const headersPreview = `-H "Content-Type: application/json" \\\n  -H "Authorization: Bearer ${apiKey || "YOUR_KEY"}"${pinnedConnectionId ? ` \\\n  -H "x-connection-id: ${pinnedConnectionId}"` : ""}${useStreaming ? ` \\\n  -H "Accept: text/event-stream"` : ""}`;
-  const curlSnippet = `curl -X ${kindConfig.endpoint.method} ${endpoint}${apiPath} \\
+  const curlSnippet = `curl -X ${kindConfig.endpoint.method} ${endpoint}${apiPathWithQuery} \\
   ${headersPreview.replace(/\\\n  /g, "\\\n  ")} \\
-  -d '${JSON.stringify(requestBody)}'`;
+  -d '${JSON.stringify(requestBody)}'${wantBinary ? " \\\n  --output image.png" : ""}`;
 
   const handleRun = async () => {
     if (!input.trim() || !modelFull) return;
@@ -942,6 +949,7 @@ function GenericExampleCard({ providerId, kind }) {
     setResult(null);
     setProgress(null);
     setPartialImage(null);
+    if (binaryImageUrl) { try { URL.revokeObjectURL(binaryImageUrl); } catch {} setBinaryImageUrl(""); }
     const start = Date.now();
     try {
       const headers = { "Content-Type": "application/json" };
@@ -949,7 +957,7 @@ function GenericExampleCard({ providerId, kind }) {
       if (pinnedConnectionId) headers["x-connection-id"] = pinnedConnectionId;
       if (useStreaming) headers["Accept"] = "text/event-stream";
       const body = { ...requestBody, model: modelFull };
-      const res = await fetch(`/api${apiPath}`, {
+      const res = await fetch(`/api${apiPathWithQuery}`, {
         method: kindConfig.endpoint.method,
         headers,
         body: JSON.stringify(body),
@@ -959,7 +967,16 @@ function GenericExampleCard({ providerId, kind }) {
         setError(data?.error?.message || data?.error || `HTTP ${res.status}`);
         return;
       }
-      const isSse = (res.headers.get("content-type") || "").includes("text/event-stream");
+      const ctype = res.headers.get("content-type") || "";
+      // Binary image response — convert to blob URL
+      if (ctype.startsWith("image/")) {
+        const blob = await res.blob();
+        const objUrl = URL.createObjectURL(blob);
+        setBinaryImageUrl(objUrl);
+        setResult({ data: { binary: true, mime: ctype, size: blob.size }, latencyMs: Date.now() - start });
+        return;
+      }
+      const isSse = ctype.includes("text/event-stream");
       if (isSse && res.body) {
         // Parse SSE: progress / partial_image / done / error
         const reader = res.body.getReader();
@@ -1171,6 +1188,20 @@ function GenericExampleCard({ providerId, kind }) {
           </Row>
         ))}
 
+        {/* Output Format toggle (image only) — last */}
+        {kind === "image" && (
+          <Row label="Output Format">
+            <select
+              value={imageOutputFormat}
+              onChange={(e) => setImageOutputFormat(e.target.value)}
+              className="w-full px-3 py-1.5 text-sm border border-border rounded-lg bg-background focus:outline-none focus:border-primary"
+            >
+              <option value="json">JSON (Base64)</option>
+              <option value="binary">Binary File</option>
+            </select>
+          </Row>
+        )}
+
         {/* Curl + Run */}
         <div className="mt-1">
           <div className="flex items-center justify-between mb-1.5">
@@ -1206,7 +1237,7 @@ function GenericExampleCard({ providerId, kind }) {
             </span>
             <span className="text-xs text-text-muted">
               {progress?.stage || "starting"}
-              {progress?.bytesReceived ? ` · ${(progress.bytesReceived / 1024).toFixed(1)} KB` : ""}
+              {!running && progress?.bytesReceived ? ` · ${(progress.bytesReceived / 1024).toFixed(1)} KB` : ""}
             </span>
           </div>
         )}
@@ -1245,12 +1276,24 @@ function GenericExampleCard({ providerId, kind }) {
           <pre className="bg-sidebar rounded-lg px-3 py-2.5 text-xs font-mono text-text-main overflow-x-auto whitespace-pre opacity-70">
             {result ? resultJson : exConfig.defaultResponse}
           </pre>
-          {kind === "image" && result?.data?.data?.[0] && (
-            <img
-              src={result.data.data[0].b64_json ? `data:image/png;base64,${result.data.data[0].b64_json}` : result.data.data[0].url}
-              alt="Generated"
-              className="max-w-full rounded-lg border border-border mt-2"
-            />
+          {kind === "image" && (binaryImageUrl || result?.data?.data?.[0]) && (
+            <div className="mt-2">
+              <div className="flex items-center justify-end mb-1.5">
+                <a
+                  href={binaryImageUrl || (result?.data?.data?.[0]?.b64_json ? `data:image/png;base64,${result.data.data[0].b64_json}` : result?.data?.data?.[0]?.url || "")}
+                  download="image.png"
+                  className="flex items-center gap-1 text-xs text-text-muted hover:text-primary transition-colors"
+                >
+                  <span className="material-symbols-outlined text-[14px]">download</span>
+                  Download
+                </a>
+              </div>
+              <img
+                src={binaryImageUrl || (result?.data?.data?.[0]?.b64_json ? `data:image/png;base64,${result.data.data[0].b64_json}` : result?.data?.data?.[0]?.url)}
+                alt="Generated"
+                className="max-w-full rounded-lg border border-border"
+              />
+            </div>
           )}
         </div>
       </div>

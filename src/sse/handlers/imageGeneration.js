@@ -27,8 +27,10 @@ export async function handleImageGeneration(request) {
     return errorResponse(HTTP_STATUS.BAD_REQUEST, "Invalid JSON body");
   }
 
+  const url = new URL(request.url);
   const preferredConnectionId = request.headers.get("x-connection-id") || null;
   const wantsStream = (request.headers.get("accept") || "").includes("text/event-stream");
+  const binaryOutput = url.searchParams.get("response_format") === "binary";
   const modelStr = body.model;
 
   const apiKey = extractApiKey(request);
@@ -53,6 +55,7 @@ export async function handleImageGeneration(request) {
       body,
       modelInfo: { provider, model },
       credentials: null,
+      binaryOutput,
     });
     if (result.success) return result.response;
     return errorResponse(result.status || HTTP_STATUS.BAD_GATEWAY, result.error || "Image generation failed");
@@ -85,6 +88,7 @@ export async function handleImageGeneration(request) {
       modelInfo: { provider, model },
       credentials: refreshedCredentials,
       streamToClient: wantsStream,
+      binaryOutput,
       onCredentialsRefreshed: async (newCreds) => {
         await updateProviderCredentials(credentials.connectionId, {
           accessToken: newCreds.accessToken,
