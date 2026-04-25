@@ -3,6 +3,7 @@ import { getProviderNodeById } from "@/models";
 import { isOpenAICompatibleProvider, isAnthropicCompatibleProvider, isCustomEmbeddingProvider } from "@/shared/constants/providers";
 import { getDefaultModel } from "open-sse/config/providerModels.js";
 import { resolveOllamaLocalHost } from "open-sse/config/providers.js";
+import { PROVIDER_ENDPOINTS } from "@/shared/constants/config";
 
 // POST /api/providers/validate - Validate API key with provider
 export async function POST(request) {
@@ -211,16 +212,16 @@ export async function POST(request) {
           }
           break;
         }
-        case "volcengine-ark": {
-          const testModel = getDefaultModel(provider);
-          const res = await fetch("https://ark.cn-beijing.volces.com/api/coding/v3/chat/completions", {
+        case "volcengine-ark":
+        case "byteplus": {
+          const res = await fetch(PROVIDER_ENDPOINTS[provider], {
             method: "POST",
             headers: {
               "Authorization": `Bearer ${apiKey}`,
               "content-type": "application/json",
             },
             body: JSON.stringify({
-              model: testModel,
+              model: getDefaultModel(provider),
               max_tokens: 1,
               messages: [{ role: "user", content: "test" }],
             }),
