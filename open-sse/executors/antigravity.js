@@ -263,21 +263,34 @@ export class AntigravityExecutor extends BaseExecutor {
    * - Inject AG default decoy tools after client tools
    * Returns { cloakedBody, toolNameMap } where toolNameMap maps suffixed → original
    */
-  static cloakTools(body) {
+  static cloakTools(body, clientTool = null) {
     const tools = body.request?.tools;
     if (!tools || tools.length === 0) {
       return { cloakedBody: body, toolNameMap: null };
     }
 
+    const isCopilot = clientTool === "github-copilot";
     const toolNameMap = new Map();
     const clientDeclarations = [];
+    const decoyNames = new Set(AG_DECOY_TOOLS.map(tool => tool.name));
 
     // First: collect renamed client tools
     for (const toolGroup of tools) {
       if (!toolGroup.functionDeclarations) continue;
 
       for (const func of toolGroup.functionDeclarations) {
-        // Skip if already an AG default tool name
+        // For GitHub Copilot, avoid emitting duplicate native Antigravity tool names.
+        // Keep the decoys only once in the final declaration list.
+        if (isCopilot && AG_DEFAULT_TOOLS.has(func.name)) {
+          continue;
+        }
+
+        // Skip if already covered by decoys for Copilot
+        if (isCopilot && decoyNames.has(func.name)) {
+          continue;
+        }
+
+        // Preserve native AG names for non-Copilot clients
         if (AG_DEFAULT_TOOLS.has(func.name)) {
           clientDeclarations.push(func);
           continue;
@@ -290,7 +303,13 @@ export class AntigravityExecutor extends BaseExecutor {
     }
 
     // Client tools first, then AG decoy tools
-    const allDeclarations = [...clientDeclarations, ...AG_DECOY_TOOLS];
+    const allDeclarations = [];
+    const seenNames = new Set();
+    for (const decl of [...clientDeclarations, ...AG_DECOY_TOOLS]) {
+      if (!decl?.name || seenNames.has(decl.name)) continue;
+      seenNames.add(decl.name);
+      allDeclarations.push(decl);
+    }
 
     // Rename tool names in conversation history (contents)
     const cloakedContents = body.request?.contents?.map(msg => {
