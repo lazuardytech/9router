@@ -156,4 +156,18 @@ CREATE TABLE IF NOT EXISTS request_details (
 );
 CREATE INDEX IF NOT EXISTS idx_rd_ts       ON request_details(timestamp DESC);
 CREATE INDEX IF NOT EXISTS idx_rd_provider ON request_details(provider, timestamp DESC);
+
+-- Request log (replaces ~/.9router/log.txt). One row per request entry.
+-- Trimmed periodically to keep the table small.
+CREATE TABLE IF NOT EXISTS request_log (
+  id                INTEGER PRIMARY KEY AUTOINCREMENT,
+  timestamp         TEXT NOT NULL,
+  model             TEXT,
+  provider          TEXT,
+  account           TEXT,
+  prompt_tokens     INTEGER,
+  completion_tokens INTEGER,
+  status            TEXT
+);
+CREATE INDEX IF NOT EXISTS idx_reqlog_id_desc ON request_log(id DESC);
 `;

@@ -188,7 +188,24 @@ export async function updateProviderCredentials(connectionId, newCredentials) {
  * @param {object} credentials
  * @returns {Promise<object>} updated credentials object
  */
+// In-flight refresh dedupe: when N concurrent requests detect the same
+// expired token, only one upstream OAuth refresh call is made.
+const inflightRefresh = new Map(); // Map<connectionId, Promise<creds>>
+
 export async function checkAndRefreshToken(provider, credentials) {
+  const connId = credentials?.connectionId;
+  if (connId && inflightRefresh.has(connId)) {
+    return inflightRefresh.get(connId);
+  }
+  const work = _doCheckAndRefresh(provider, credentials);
+  if (connId) {
+    inflightRefresh.set(connId, work);
+    work.finally(() => inflightRefresh.delete(connId));
+  }
+  return work;
+}
+
+async function _doCheckAndRefresh(provider, credentials) {
   let creds = { ...credentials };
 
   // ── 1. Regular access-token expiry ────────────────────────────────────────

@@ -4,13 +4,11 @@
 // to `statsEmitter` events from SSE routes.
 
 import { EventEmitter } from "events";
-import path from "node:path";
 import fs from "node:fs";
 import { getDatabase } from "./sqlite/connection.js";
 import { DATA_DIR } from "@/lib/dataDir.js";
 
 const isCloud = typeof caches !== "undefined" || typeof caches === "object";
-const LOG_FILE = isCloud ? null : path.join(DATA_DIR, "log.txt");
 
 if (!isCloud && fs?.existsSync && !fs.existsSync(DATA_DIR)) {
   try { fs.mkdirSync(DATA_DIR, { recursive: true }); } catch {}
@@ -135,18 +133,27 @@ export function trackPendingRequest(model, provider, connectionId, started, erro
   }
 
   if (started) {
-    clearTimeout(pendingTimers[timerKey]);
-    pendingTimers[timerKey] = setTimeout(() => {
-      delete pendingTimers[timerKey];
-      if (pendingRequests.byModel[modelKey] > 0) pendingRequests.byModel[modelKey] = 0;
+    if (!pendingTimers[timerKey]) pendingTimers[timerKey] = [];
+    // One timer per started request — decrement only this request, not all.
+    const handle = setTimeout(() => {
+      const arr = pendingTimers[timerKey] || [];
+      const idx = arr.indexOf(handle);
+      if (idx >= 0) arr.splice(idx, 1);
+      if (arr.length === 0) delete pendingTimers[timerKey];
+      if (pendingRequests.byModel[modelKey] > 0) pendingRequests.byModel[modelKey]--;
       if (connectionId && pendingRequests.byAccount[connectionId]?.[modelKey] > 0) {
-        pendingRequests.byAccount[connectionId][modelKey] = 0;
+        pendingRequests.byAccount[connectionId][modelKey]--;
       }
       statsEmitter.emit("pending");
     }, PENDING_TIMEOUT_MS);
+    pendingTimers[timerKey].push(handle);
   } else {
-    clearTimeout(pendingTimers[timerKey]);
-    delete pendingTimers[timerKey];
+    // Pop one outstanding timer for this key (paired with its start).
+    const arr = pendingTimers[timerKey];
+    if (arr && arr.length > 0) {
+      clearTimeout(arr.pop());
+      if (arr.length === 0) delete pendingTimers[timerKey];
+    }
   }
 
   if (!started && error && provider) {
@@ -154,12 +161,69 @@ export function trackPendingRequest(model, provider, connectionId, started, erro
     lastErrorProvider.ts = Date.now();
   }
 
-  const t = new Date().toLocaleTimeString("en-US", { hour12: false, hour: "2-digit", minute: "2-digit", second: "2-digit" });
-  console.log(`[${t}] [PENDING] ${started ? "START" : "END"}${error ? " (ERROR)" : ""} | provider=${provider} | model=${model}`);
+  if (process.env.PENDING_LOG === "true") {
+    const t = new Date().toLocaleTimeString("en-US", { hour12: false, hour: "2-digit", minute: "2-digit", second: "2-digit" });
+    console.log(`[${t}] [PENDING] ${started ? "START" : "END"}${error ? " (ERROR)" : ""} | provider=${provider} | model=${model}`);
+  }
   statsEmitter.emit("pending");
 }
 
 // ===== Write path ========================================================
+
+// In-memory queue of pending daily_summary upserts. usage_history rows still
+// inserted synchronously so dashboard real-time view stays accurate.
+if (!global._summaryQueue) global._summaryQueue = [];
+const summaryQueue = global._summaryQueue;
+let summaryFlushTimer = null;
+const SUMMARY_BATCH_SIZE = 50;
+const SUMMARY_FLUSH_INTERVAL_MS = 500;
+
+function scheduleSummaryFlush() {
+  if (summaryFlushTimer) return;
+  summaryFlushTimer = setTimeout(flushSummaryQueue, SUMMARY_FLUSH_INTERVAL_MS);
+}
+
+function flushSummaryQueue() {
+  if (summaryFlushTimer) { clearTimeout(summaryFlushTimer); summaryFlushTimer = null; }
+  if (summaryQueue.length === 0) return;
+  const batch = summaryQueue.splice(0, summaryQueue.length);
+  try {
+    const db = getDatabase();
+    const run = db.transaction(() => {
+      for (const entry of batch) {
+        const dateKey = getLocalDateKey(entry.timestamp);
+        const vals = {
+          requests: 1,
+          promptTokens: entry.prompt,
+          completionTokens: entry.completion,
+          cost: entry.cost,
+        };
+        upsertSummary(db, dateKey, "day", "_", vals);
+        if (entry.provider) upsertSummary(db, dateKey, "byProvider", entry.provider, vals);
+        const modelKey = entry.provider ? `${entry.model}|${entry.provider}` : entry.model;
+        upsertSummary(db, dateKey, "byModel", modelKey, vals,
+          { rawModel: entry.model, provider: entry.provider });
+        if (entry.connectionId) {
+          upsertSummary(db, dateKey, "byAccount", entry.connectionId, vals,
+            { rawModel: entry.model, provider: entry.provider });
+        }
+        const apiKeyVal = typeof entry.apiKey === "string" ? entry.apiKey : "local-no-key";
+        const akKey = `${apiKeyVal}|${entry.model}|${entry.provider || "unknown"}`;
+        upsertSummary(db, dateKey, "byApiKey", akKey, vals,
+          { rawModel: entry.model, provider: entry.provider, apiKey: entry.apiKey || null });
+        const endpoint = entry.endpoint || "Unknown";
+        const epKey = `${endpoint}|${entry.model}|${entry.provider || "unknown"}`;
+        upsertSummary(db, dateKey, "byEndpoint", epKey, vals,
+          { endpoint, rawModel: entry.model, provider: entry.provider });
+        bumpTotalRequests(db);
+      }
+    });
+    run();
+    statsEmitter.emit("update");
+  } catch (err) {
+    console.error("Failed to flush daily_summary batch:", err?.message || err);
+  }
+}
 
 export async function saveRequestUsage(entry) {
   if (isCloud) return;
@@ -172,112 +236,149 @@ export async function saveRequestUsage(entry) {
     const { prompt, completion } = tokensFromEntry(entry);
     const cost = entry.cost || 0;
 
-    const run = db.transaction(() => {
-      db.prepare(`
-        INSERT INTO usage_history
-        (timestamp, provider, model, connection_id, api_key, endpoint, status,
-         prompt_tokens, completion_tokens, cost, data)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-      `).run(
-        entry.timestamp,
-        entry.provider || null,
-        entry.model || null,
-        entry.connectionId || null,
-        typeof entry.apiKey === "string" ? entry.apiKey : null,
-        entry.endpoint || null,
-        entry.status || null,
-        prompt, completion, cost,
-        JSON.stringify({ tokens: entry.tokens || {} }),
-      );
+    // Insert usage_history row synchronously (dashboard real-time view).
+    db.prepare(`
+      INSERT INTO usage_history
+      (timestamp, provider, model, connection_id, api_key, endpoint, status,
+       prompt_tokens, completion_tokens, cost, data)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `).run(
+      entry.timestamp,
+      entry.provider || null,
+      entry.model || null,
+      entry.connectionId || null,
+      typeof entry.apiKey === "string" ? entry.apiKey : null,
+      entry.endpoint || null,
+      entry.status || null,
+      prompt, completion, cost,
+      JSON.stringify({ tokens: entry.tokens || {} }),
+    );
 
-      const dateKey = getLocalDateKey(entry.timestamp);
-      const vals = { requests: 1, promptTokens: prompt, completionTokens: completion, cost };
-
-      // day-level totals
-      upsertSummary(db, dateKey, "day", "_", vals);
-
-      // byProvider
-      if (entry.provider) {
-        upsertSummary(db, dateKey, "byProvider", entry.provider, vals);
-      }
-
-      // byModel
-      const modelKey = entry.provider ? `${entry.model}|${entry.provider}` : entry.model;
-      upsertSummary(db, dateKey, "byModel", modelKey, vals,
-        { rawModel: entry.model, provider: entry.provider });
-
-      // byAccount
-      if (entry.connectionId) {
-        upsertSummary(db, dateKey, "byAccount", entry.connectionId, vals,
-          { rawModel: entry.model, provider: entry.provider });
-      }
-
-      // byApiKey
-      const apiKeyVal = typeof entry.apiKey === "string" ? entry.apiKey : "local-no-key";
-      const akKey = `${apiKeyVal}|${entry.model}|${entry.provider || "unknown"}`;
-      upsertSummary(db, dateKey, "byApiKey", akKey, vals,
-        { rawModel: entry.model, provider: entry.provider, apiKey: entry.apiKey || null });
-
-      // byEndpoint
-      const endpoint = entry.endpoint || "Unknown";
-      const epKey = `${endpoint}|${entry.model}|${entry.provider || "unknown"}`;
-      upsertSummary(db, dateKey, "byEndpoint", epKey, vals,
-        { endpoint, rawModel: entry.model, provider: entry.provider });
-
-      bumpTotalRequests(db);
+    // Defer the 6+ daily_summary upserts to a batched async flush.
+    summaryQueue.push({
+      timestamp: entry.timestamp,
+      provider: entry.provider,
+      model: entry.model,
+      connectionId: entry.connectionId,
+      apiKey: entry.apiKey,
+      endpoint: entry.endpoint,
+      prompt, completion, cost,
     });
-    run();
-
-    statsEmitter.emit("update");
+    if (summaryQueue.length >= SUMMARY_BATCH_SIZE) flushSummaryQueue();
+    else scheduleSummaryFlush();
   } catch (err) {
     console.error("Failed to save usage stats:", err);
   }
 }
 
-// ===== Logs (plain text file, unchanged) =================================
+// ===== Logs (SQLite-backed, batched async writes) ========================
 
 function formatLogDate(date = new Date()) {
   const pad = (n) => String(n).padStart(2, "0");
   return `${pad(date.getDate())}-${pad(date.getMonth() + 1)}-${date.getFullYear()} ${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`;
 }
 
+// Connection-name cache (TTL) — avoids dynamic import + full SELECT per log line
+let connectionNameCache = null;
+let connectionNameCacheTs = 0;
+const CONN_CACHE_TTL_MS = 30_000;
+
+async function getConnectionName(connectionId) {
+  if (!connectionId) return "-";
+  const now = Date.now();
+  if (!connectionNameCache || (now - connectionNameCacheTs) > CONN_CACHE_TTL_MS) {
+    try {
+      const { getProviderConnections } = await import("@/lib/localDb.js");
+      const list = await getProviderConnections();
+      connectionNameCache = new Map(list.map(c => [c.id, c.name || c.email || c.id?.slice(0, 8)]));
+      connectionNameCacheTs = now;
+    } catch {
+      connectionNameCache = connectionNameCache || new Map();
+    }
+  }
+  return connectionNameCache.get(connectionId) || connectionId.slice(0, 8);
+}
+
+// In-memory log queue, flushed on threshold or interval. Hot path is non-blocking.
+const LOG_BATCH_SIZE = 50;
+const LOG_FLUSH_INTERVAL_MS = 500;
+const LOG_MAX_ROWS = 1000; // trim threshold
+
+if (!global._logQueue) global._logQueue = [];
+const logQueue = global._logQueue;
+let logFlushTimer = null;
+let logTrimCounter = 0;
+
+function scheduleLogFlush() {
+  if (logFlushTimer) return;
+  logFlushTimer = setTimeout(flushLogs, LOG_FLUSH_INTERVAL_MS);
+}
+
+function flushLogs() {
+  if (logFlushTimer) { clearTimeout(logFlushTimer); logFlushTimer = null; }
+  if (logQueue.length === 0) return;
+  const batch = logQueue.splice(0, logQueue.length);
+  try {
+    const db = getDatabase();
+    const stmt = db.prepare(
+      `INSERT INTO request_log (timestamp, model, provider, account, prompt_tokens, completion_tokens, status)
+       VALUES (?, ?, ?, ?, ?, ?, ?)`
+    );
+    const insertMany = db.transaction((rows) => {
+      for (const r of rows) stmt.run(r.timestamp, r.model, r.provider, r.account, r.prompt_tokens, r.completion_tokens, r.status);
+    });
+    insertMany(batch);
+
+    // Periodic trim (keep latest LOG_MAX_ROWS) — runs every ~10 flushes
+    logTrimCounter += 1;
+    if (logTrimCounter >= 10) {
+      logTrimCounter = 0;
+      db.prepare(
+        `DELETE FROM request_log WHERE id <= (
+           SELECT id FROM request_log ORDER BY id DESC LIMIT 1 OFFSET ?
+         )`,
+      ).run(LOG_MAX_ROWS);
+    }
+  } catch (err) {
+    console.error("Failed to flush request_log:", err?.message || err);
+  }
+}
+
 export async function appendRequestLog({ model, provider, connectionId, tokens, status }) {
   if (isCloud) return;
   try {
-    const timestamp = formatLogDate();
-    const p = provider?.toUpperCase() || "-";
-    const m = model || "-";
-    let account = connectionId ? connectionId.slice(0, 8) : "-";
-    try {
-      const { getProviderConnections } = await import("@/lib/localDb.js");
-      const connections = await getProviderConnections();
-      const conn = connections.find(c => c.id === connectionId);
-      if (conn) account = conn.name || conn.email || account;
-    } catch {}
-    const sent = tokens?.prompt_tokens !== undefined ? tokens.prompt_tokens : "-";
-    const received = tokens?.completion_tokens !== undefined ? tokens.completion_tokens : "-";
-    const line = `${timestamp} | ${m} | ${p} | ${account} | ${sent} | ${received} | ${status}\n`;
-
-    fs.appendFileSync(LOG_FILE, line);
-
-    const content = fs.readFileSync(LOG_FILE, "utf-8");
-    const lines = content.trim().split("\n");
-    if (lines.length > 200) {
-      fs.writeFileSync(LOG_FILE, lines.slice(-200).join("\n") + "\n");
-    }
+    const account = await getConnectionName(connectionId);
+    const promptTokens = tokens?.prompt_tokens ?? null;
+    const completionTokens = tokens?.completion_tokens ?? null;
+    logQueue.push({
+      timestamp: formatLogDate(),
+      model: model || "-",
+      provider: provider ? provider.toUpperCase() : "-",
+      account,
+      prompt_tokens: promptTokens,
+      completion_tokens: completionTokens,
+      status: String(status ?? ""),
+    });
+    if (logQueue.length >= LOG_BATCH_SIZE) flushLogs();
+    else scheduleLogFlush();
   } catch (err) {
-    console.error("Failed to append to log.txt:", err.message);
+    console.error("Failed to enqueue request log:", err?.message || err);
   }
 }
 
 export async function getRecentLogs(limit = 200) {
   if (isCloud) return [];
-  if (!fs || typeof fs.existsSync !== "function") return [];
-  if (!LOG_FILE || !fs.existsSync(LOG_FILE)) return [];
   try {
-    const content = fs.readFileSync(LOG_FILE, "utf-8");
-    const lines = content.trim().split("\n");
-    return lines.slice(-limit).reverse();
+    const db = getDatabase();
+    const rows = db.prepare(
+      `SELECT timestamp, model, provider, account, prompt_tokens, completion_tokens, status
+       FROM request_log ORDER BY id DESC LIMIT ?`,
+    ).all(limit);
+    return rows.map(r => {
+      const sent = r.prompt_tokens ?? "-";
+      const received = r.completion_tokens ?? "-";
+      return `${r.timestamp} | ${r.model || "-"} | ${r.provider || "-"} | ${r.account || "-"} | ${sent} | ${received} | ${r.status || ""}`;
+    });
   } catch {
     return [];
   }

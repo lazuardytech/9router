@@ -44,6 +44,12 @@ function applyPragmas(db) {
   setPragma("synchronous = NORMAL");
   setPragma("foreign_keys = ON");
   setPragma("busy_timeout = 5000");
+  // Concurrency tuning: bigger page cache, mmap reads, in-memory temp tables,
+  // and a sane WAL checkpoint cadence to avoid long pauses under load.
+  setPragma("cache_size = -64000");        // ~64 MB
+  setPragma("mmap_size = 268435456");      // 256 MB
+  setPragma("temp_store = MEMORY");
+  setPragma("wal_autocheckpoint = 1000");
 }
 
 function ensureSchema(db) {
