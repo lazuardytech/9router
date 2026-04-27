@@ -200,7 +200,13 @@ export async function checkAndRefreshToken(provider, credentials) {
   const work = _doCheckAndRefresh(provider, credentials);
   if (connId) {
     inflightRefresh.set(connId, work);
-    work.finally(() => inflightRefresh.delete(connId));
+    // Use then(onFulfilled, onRejected) so we don't create an unhandled
+    // rejection on the finally chain when the refresh fails. The original
+    // `work` promise still propagates its rejection to awaiting callers.
+    work.then(
+      () => inflightRefresh.delete(connId),
+      () => inflightRefresh.delete(connId),
+    );
   }
   return work;
 }
