@@ -86,16 +86,16 @@ export function getDatabase() {
     fs.mkdirSync(DATA_DIR, { recursive: true });
   }
 
-  // Under Bun, better-sqlite3 (native N-API) is not supported — use the
-  // built-in `bun:sqlite` instead. On Node, keep better-sqlite3 (CJS native
-  // module loaded via createRequire; next.config.mjs lists it in
-  // `serverExternalPackages`).
-  // Computed module names dodge webpack's static resolution so the Node
-  // build doesn't choke on `bun:sqlite` and the Bun build doesn't choke on
-  // the native `better-sqlite3`.
+  // Under Bun, better-sqlite3 (native N-API) is unsupported — use the
+  // built-in `bun:sqlite` instead. On Node, keep better-sqlite3.
+  // `eval('require')` returns the runtime's real require (Node's or Bun's),
+  // fully escaping webpack/Next bundling so neither driver gets statically
+  // analyzed and "Cannot find module 'bun:sqlite'" errors at runtime.
+  // eslint-disable-next-line no-eval
+  const nativeRequire = eval("require");
   const Database = typeof Bun !== "undefined"
-    ? require(["bun", "sqlite"].join(":")).Database
-    : require(["better", "sqlite3"].join("-"));
+    ? nativeRequire("bun:sqlite").Database
+    : nativeRequire("better-sqlite3");
   const db = new Database(SQLITE_FILE);
   applyPragmas(db);
   ensureSchema(db);

@@ -78,12 +78,14 @@ const normalize = (value) => {
  */
 function extractTokensViaBetterSqlite(dbPath) {
   // Dynamic require so the route stays importable even if native bindings fail.
-  // Computed names dodge webpack static resolution; under Bun, fall back to bun:sqlite.
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  // `eval('require')` returns the runtime's real require, fully escaping
+  // webpack/Next bundling so neither driver gets statically analyzed.
+  // eslint-disable-next-line @typescript-eslint/no-require-imports, no-eval
+  const nativeRequire = eval("require");
   const isBun = typeof Bun !== "undefined";
   const Database = isBun
-    ? require(["bun", "sqlite"].join(":")).Database
-    : require(["better", "sqlite3"].join("-"));
+    ? nativeRequire("bun:sqlite").Database
+    : nativeRequire("better-sqlite3");
   // bun:sqlite uses `create: false` to require an existing file;
   // better-sqlite3 uses `fileMustExist: true`.
   const db = isBun
