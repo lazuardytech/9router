@@ -1,3 +1,11 @@
+// Schema DDL inlined as a JS string so it ships inside the JS bundle —
+// avoids fs.readFileSync against a sibling file, which breaks under Next's
+// standalone output (file tracing skips non-JS assets).
+//
+// Source of truth is still `schema.sql` next to this file; if you edit one,
+// keep the other in sync. The SQL text below is identical to schema.sql.
+
+export const SCHEMA_SQL = `
 -- 9Router SQLite schema v1
 -- Hybrid model: hot fields as columns, flexible fields as JSON TEXT.
 
@@ -111,7 +119,7 @@ CREATE INDEX IF NOT EXISTS idx_hist_provider ON usage_history(provider, timestam
 CREATE INDEX IF NOT EXISTS idx_hist_model    ON usage_history(model, timestamp DESC);
 CREATE INDEX IF NOT EXISTS idx_hist_conn     ON usage_history(connection_id, timestamp DESC);
 
--- daily_summary stored as one row per (date, bucket, key). `data` holds
+-- daily_summary stored as one row per (date, bucket, key). \`data\` holds
 -- the JSON meta originally sitting alongside counters (rawModel, provider,
 -- endpoint, apiKey).
 CREATE TABLE IF NOT EXISTS daily_summary (
@@ -148,3 +156,4 @@ CREATE TABLE IF NOT EXISTS request_details (
 );
 CREATE INDEX IF NOT EXISTS idx_rd_ts       ON request_details(timestamp DESC);
 CREATE INDEX IF NOT EXISTS idx_rd_provider ON request_details(provider, timestamp DESC);
+`;

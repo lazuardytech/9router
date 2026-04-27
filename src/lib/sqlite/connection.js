@@ -6,9 +6,9 @@
 import path from "node:path";
 import os from "node:os";
 import fs from "node:fs";
-import { fileURLToPath } from "node:url";
 import { createRequire } from "node:module";
 import { migrateFromJson } from "./migrate-from-json.js";
+import { SCHEMA_SQL } from "./schema.js";
 
 const require = createRequire(import.meta.url);
 
@@ -35,12 +35,6 @@ export const SQLITE_FILE = path.join(DATA_DIR, SQLITE_FILE_NAME);
 let dbInstance = null;
 let schemaReady = false;
 
-function loadSchemaSql() {
-  const here = path.dirname(fileURLToPath(import.meta.url));
-  const schemaPath = path.join(here, "schema.sql");
-  return fs.readFileSync(schemaPath, "utf-8");
-}
-
 function applyPragmas(db) {
   // bun:sqlite has no `.pragma()` shorthand — fall back to exec.
   const setPragma = typeof db.pragma === "function"
@@ -54,7 +48,7 @@ function applyPragmas(db) {
 
 function ensureSchema(db) {
   if (schemaReady) return;
-  db.exec(loadSchemaSql());
+  db.exec(SCHEMA_SQL);
   schemaReady = true;
 }
 

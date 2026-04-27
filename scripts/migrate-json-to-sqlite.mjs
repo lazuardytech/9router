@@ -19,7 +19,7 @@ import { createRequire } from "node:module";
 import path from "node:path";
 import fs from "node:fs";
 import os from "node:os";
-import { fileURLToPath } from "node:url";
+import { SCHEMA_SQL } from "../src/lib/sqlite/schema.js";
 
 const require = createRequire(import.meta.url);
 
@@ -45,13 +45,6 @@ function resolveDataDir(override) {
   return path.join(home, `.${APP_NAME}`);
 }
 
-function loadSchemaSql() {
-  // Resolve schema relative to the source tree (this script lives in scripts/).
-  const here = path.dirname(fileURLToPath(import.meta.url));
-  const schemaPath = path.resolve(here, "..", "src", "lib", "sqlite", "schema.sql");
-  return fs.readFileSync(schemaPath, "utf-8");
-}
-
 async function main() {
   const args = parseArgs(process.argv.slice(2));
   const dataDir = resolveDataDir(args.dataDir);
@@ -70,7 +63,7 @@ async function main() {
   setPragma("synchronous = NORMAL");
   setPragma("foreign_keys = ON");
   setPragma("busy_timeout = 5000");
-  db.exec(loadSchemaSql());
+  db.exec(SCHEMA_SQL);
 
   const versionRow = db.prepare("SELECT value FROM meta WHERE key = 'schema_version'").get();
   if (versionRow && !args.force) {
