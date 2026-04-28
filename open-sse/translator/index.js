@@ -71,7 +71,7 @@ function stripContentTypes(body, stripList = []) {
 }
 
 // Translate request: source -> openai -> target
-export function translateRequest(sourceFormat, targetFormat, model, body, stream = true, credentials = null, provider = null, reqLogger = null, stripList = [], connectionId = null, rtkEnabled = false) {
+export function translateRequest(sourceFormat, targetFormat, model, body, stream = true, credentials = null, provider = null, reqLogger = null, stripList = [], connectionId = null, rtkEnabled = false, clientTool = null) {
   ensureInitialized();
   let result = body;
 
@@ -140,14 +140,11 @@ export function translateRequest(sourceFormat, targetFormat, model, body, stream
     }
   }
 
-  // Antigravity cloaking: rename client tools + inject decoys (anti-ban)
-  // Skip if client is native AG (userAgent = antigravity)
-  if (provider === FORMATS.ANTIGRAVITY && body.userAgent !== FORMATS.ANTIGRAVITY) {
-    const { cloakedBody, toolNameMap } = AntigravityExecutor.cloakTools(result);
-    result = cloakedBody;
-    if (toolNameMap?.size > 0) {
-      result._toolNameMap = toolNameMap;
-    }
+  // Antigravity cloaking/tool stripping is intentionally disabled for GitHub Copilot.
+  // Keep the translated request intact; final provider-specific sanitization happens
+  // in the Antigravity executor.
+  if (provider === FORMATS.ANTIGRAVITY && clientTool === "github-copilot") {
+    // No-op
   }
 
   return result;
