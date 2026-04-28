@@ -367,6 +367,11 @@ export const PROVIDERS = {
     format: "openai",
     headers: {}
   },
+  // Cloudflare Workers AI - {accountId} resolved from credentials.providerSpecificData.accountId
+  "cloudflare-ai": {
+    baseUrl: "https://api.cloudflare.com/client/v4/accounts/{accountId}/ai/v1/chat/completions",
+    format: "openai"
+  },
 };
 
 export const OLLAMA_LOCAL_DEFAULT_HOST = "http://localhost:11434";

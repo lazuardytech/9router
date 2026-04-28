@@ -344,6 +344,10 @@ export const PROVIDER_MODELS = {
     { id: "GLM-4.7", name: "GLM-4.7" },
     { id: "DeepSeek-V3.2", name: "DeepSeek-V3.2" },
   ],
+  "cloudflare-ai": [
+    { id: "@cf/moonshotai/kimi-k2.6", name: "Kimi K2.6" },
+    { id: "@cf/zai-org/glm-4.7-flash", name: "GLM 4.7 Flash" },
+  ],
   byteplus: [
     { id: "seed-2-0-pro-260328", name: "Seed 2.0 Pro" },
     { id: "seed-2-0-code-preview-260328", name: "Seed 2.0 Code Preview" },

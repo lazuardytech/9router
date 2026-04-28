@@ -32,8 +32,15 @@ export class DefaultExecutor extends BaseExecutor {
         return `${this.config.baseUrl}?beta=true`;
       case "gemini":
         return `${this.config.baseUrl}/${model}:${stream ? "streamGenerateContent?alt=sse" : "generateContent"}`;
-      default:
-        return this.config.baseUrl;
+      default: {
+        const url = this.config.baseUrl;
+        if (url?.includes("{accountId}")) {
+          const accountId = credentials?.providerSpecificData?.accountId;
+          if (!accountId) throw new Error(`${this.provider} requires accountId in providerSpecificData`);
+          return url.replace("{accountId}", accountId);
+        }
+        return url;
+      }
     }
   }
 

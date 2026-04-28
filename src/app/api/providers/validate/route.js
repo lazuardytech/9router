@@ -95,6 +95,29 @@ export async function POST(request) {
         });
       }
 
+      if (provider === "cloudflare-ai") {
+        const { providerSpecificData } = body;
+        const accountId = providerSpecificData?.accountId;
+        if (!accountId) {
+          return NextResponse.json({ valid: false, error: "Missing Account ID" });
+        }
+        const url = `https://api.cloudflare.com/client/v4/accounts/${accountId}/ai/v1/chat/completions`;
+        const cfRes = await fetch(url, {
+          method: "POST",
+          headers: { "Authorization": `Bearer ${apiKey}`, "Content-Type": "application/json" },
+          body: JSON.stringify({
+            model: getDefaultModel("cloudflare-ai"),
+            messages: [{ role: "user", content: "test" }],
+            max_tokens: 1,
+          }),
+        });
+        isValid = cfRes.status !== 401 && cfRes.status !== 403 && cfRes.status !== 404;
+        return NextResponse.json({
+          valid: isValid,
+          error: isValid ? null : "Invalid API token or Account ID",
+        });
+      }
+
       if (provider === "azure") {
         const { providerSpecificData } = body;
         const endpoint = (providerSpecificData?.azureEndpoint || "").replace(/\/$/, "");
