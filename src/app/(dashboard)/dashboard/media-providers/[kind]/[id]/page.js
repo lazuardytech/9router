@@ -1446,10 +1446,15 @@ export default function MediaProviderDetailPage() {
         />
       )}
 
-      {/* Provider Info — config-driven, only for providers with searchConfig/fetchConfig */}
-      {!isCustom && (provider.searchConfig || provider.fetchConfig) && (
+      {/* Provider Info — config-driven, supports searchConfig, fetchConfig, searchViaChat */}
+      {!isCustom && (provider.searchConfig || provider.fetchConfig || provider.searchViaChat) && (
         <ProviderInfoCard
-          config={kind === "webFetch" ? provider.fetchConfig : provider.searchConfig}
+          config={
+            kind === "webFetch"
+              ? provider.fetchConfig
+              : provider.searchConfig || { mode: "chat-completions", defaultModel: provider.searchViaChat?.defaultModel, costPerQuery: 0 }
+          }
+          provider={provider}
           title={`${kindConfig.label} Config`}
         />
       )}
