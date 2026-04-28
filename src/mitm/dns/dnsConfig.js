@@ -214,11 +214,35 @@ async function removeAllDNSEntries(sudoPassword) {
   }
 }
 
+/**
+ * Sync removal of ALL tool DNS entries — for use during process shutdown
+ * when async ops aren't safe. Assumes caller already has root/admin rights.
+ */
+function removeAllDNSEntriesSync() {
+  try {
+    if (!fs.existsSync(HOSTS_FILE)) return;
+    const allHosts = Object.values(TOOL_HOSTS).flat();
+    const content = fs.readFileSync(HOSTS_FILE, "utf8");
+    const eol = IS_WIN ? "\r\n" : "\n";
+    const filtered = content.split(/\r?\n/).filter(l => !allHosts.some(h => l.includes(h))).join(eol);
+    if (filtered === content) return;
+    fs.writeFileSync(HOSTS_FILE, filtered, "utf8");
+    if (IS_WIN) {
+      try { execSync("ipconfig /flushdns", { windowsHide: true, stdio: "ignore" }); } catch { /* ignore */ }
+    } else if (IS_MAC) {
+      try { execSync("dscacheutil -flushcache && killall -HUP mDNSResponder", { stdio: "ignore" }); } catch { /* ignore */ }
+    } else {
+      try { execSync("resolvectl flush-caches 2>/dev/null || true", { stdio: "ignore" }); } catch { /* ignore */ }
+    }
+  } catch { /* best effort during shutdown */ }
+}
+
 module.exports = {
   TOOL_HOSTS,
   addDNSEntry,
   removeDNSEntry,
   removeAllDNSEntries,
+  removeAllDNSEntriesSync,
   execWithPassword,
   isSudoAvailable,
   executeElevatedPowerShell,
