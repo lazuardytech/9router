@@ -20,6 +20,15 @@ const MODEL_SYNONYMS = {
   antigravity: { "gemini-default": "gemini-3-flash" },
 };
 
+// URL substrings whose request/response should NOT be dumped to file (telemetry, polling, empty)
+const LOG_BLACKLIST_URL_PARTS = [
+  "recordCodeAssistMetrics",
+  "recordTrajectoryAnalytics",
+  "fetchAdminControls",
+  "listExperiments",
+  "fetchUserInfo",
+];
+
 function getToolForHost(host) {
   const h = (host || "").split(":")[0];
   if (h === "api.individual.githubcopilot.com") return "copilot";
@@ -29,4 +38,4 @@ function getToolForHost(host) {
   return null;
 }
 
-module.exports = { TARGET_HOSTS, URL_PATTERNS, MODEL_SYNONYMS, getToolForHost };
+module.exports = { TARGET_HOSTS, URL_PATTERNS, MODEL_SYNONYMS, LOG_BLACKLIST_URL_PARTS, getToolForHost };
