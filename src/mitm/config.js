@@ -15,6 +15,11 @@ const URL_PATTERNS = {
   cursor: ["/BidiAppend", "/RunSSE", "/RunPoll", "/Run"],
 };
 
+// Synonym map: rawModel from request → canonical alias key in mitmAlias DB
+const MODEL_SYNONYMS = {
+  antigravity: { "gemini-default": "gemini-3-flash" },
+};
+
 function getToolForHost(host) {
   const h = (host || "").split(":")[0];
   if (h === "api.individual.githubcopilot.com") return "copilot";
@@ -24,4 +29,4 @@ function getToolForHost(host) {
   return null;
 }
 
-module.exports = { TARGET_HOSTS, URL_PATTERNS, getToolForHost };
+module.exports = { TARGET_HOSTS, URL_PATTERNS, MODEL_SYNONYMS, getToolForHost };

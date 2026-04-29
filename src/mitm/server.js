@@ -5,14 +5,14 @@ const dns = require("dns");
 const { promisify } = require("util");
 const { execSync } = require("child_process");
 const { log, err } = require("./logger");
-const { TARGET_HOSTS, URL_PATTERNS, getToolForHost } = require("./config");
+const { TARGET_HOSTS, URL_PATTERNS, MODEL_SYNONYMS, getToolForHost } = require("./config");
 const { DATA_DIR, MITM_DIR } = require("./paths");
 const { getCertForDomain } = require("./cert/generate");
 
 const DB_FILE = path.join(DATA_DIR, "db.json");
 const LOCAL_PORT = 443;
 const IS_WIN = process.platform === "win32";
-const ENABLE_FILE_LOG = false;
+const ENABLE_FILE_LOG = true;
 const LOG_DIR = path.join(DATA_DIR, "logs", "mitm");
 const INTERNAL_REQUEST_HEADER = { name: "x-request-source", value: "local" };
 
@@ -107,9 +107,11 @@ function getMappedModel(tool, model) {
     const db = JSON.parse(fs.readFileSync(DB_FILE, "utf-8"));
     const aliases = db.mitmAlias?.[tool];
     if (!aliases) return null;
-    if (aliases[model]) return aliases[model];
+    // Normalize via synonym map (e.g., gemini-default → gemini-3-flash)
+    const lookup = MODEL_SYNONYMS?.[tool]?.[model] || model;
+    if (aliases[lookup]) return aliases[lookup];
     // Prefix match fallback
-    const prefixKey = Object.keys(aliases).find(k => k && aliases[k] && (model.startsWith(k) || k.startsWith(model)));
+    const prefixKey = Object.keys(aliases).find(k => k && aliases[k] && (lookup.startsWith(k) || k.startsWith(lookup)));
     return prefixKey ? aliases[prefixKey] : null;
   } catch { return null; }
 }
