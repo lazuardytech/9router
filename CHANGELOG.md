@@ -1,3 +1,21 @@
+# v0.4.10 (2026-04-29)
+
+## Features
+- Add new embedding models and Voyage AI provider support
+- Add Coqui, Inworld, Tortoise TTS providers
+- Add Deepgram and Inworld TTS voices API endpoints
+
+## Improvements
+- Enhance MITM Antigravity handler with improved cert install and DNS config
+- Refactor TTS handling to support additional providers
+- Improve API key validation for media providers
+- Enhance MITM logger with better diagnostics
+- Add Windows elevated permissions support for MITM
+
+## Fixes
+- Fix Antigravity MITM connection and handler issues
+- Fix cloudflared tunnel integration with MITM
+
 # v0.4.8 (2026-04-28)
 
 ## Features
