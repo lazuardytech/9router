@@ -1,3 +1,13 @@
+# v0.4.11 (2026-04-30)
+
+## Features
+- Add Caveman feature: terse-style system prompts to reduce output token usage with configurable compression levels
+- Add Caveman settings UI in Endpoint dashboard (enable/disable, compression level)
+
+## Improvements
+- Consolidate AntigravityExecutor function declarations for Gemini compatibility
+- Clean up translator initialization logs across API routes
+
 # v0.4.10 (2026-04-29)
 
 ## Features
