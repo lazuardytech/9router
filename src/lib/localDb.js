@@ -37,6 +37,8 @@ const DEFAULT_SETTINGS = {
   outboundNoProxy: "",
   mitmRouterBaseUrl: DEFAULT_MITM_ROUTER_BASE,
   rtkEnabled: true,
+  cavemanEnabled: false,
+  cavemanLevel: "full",
 };
 
 function cloneDefaultData() {
