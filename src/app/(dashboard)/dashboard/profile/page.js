@@ -223,6 +223,24 @@ export default function ProfilePage() {
     }
   };
 
+  const updateComboStickyLimit = async (limit) => {
+    const numLimit = parseInt(limit);
+    if (isNaN(numLimit) || numLimit < 1) return;
+
+    try {
+      const res = await fetch("/api/settings", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ comboStickyRoundRobinLimit: numLimit }),
+      });
+      if (res.ok) {
+        setSettings(prev => ({ ...prev, comboStickyRoundRobinLimit: numLimit }));
+      }
+    } catch (err) {
+      console.error("Failed to update combo sticky limit:", err);
+    }
+  };
+
   const updateRequireLogin = async (requireLogin) => {
     try {
       const res = await fetch("/api/settings", {
@@ -550,10 +568,34 @@ export default function ProfilePage() {
               />
             </div>
 
+            {/* Combo Sticky Round Robin Limit */}
+            {settings.comboStrategy === "round-robin" && (
+              <div className="flex items-center justify-between pt-2 border-t border-border/50">
+                <div>
+                  <p className="font-medium">Combo Sticky Limit</p>
+                  <p className="text-sm text-text-muted">
+                    Calls per combo model before switching
+                  </p>
+                </div>
+                <Input
+                  type="number"
+                  min="1"
+                  max="100"
+                  value={settings.comboStickyRoundRobinLimit || 1}
+                  onChange={(e) => updateComboStickyLimit(e.target.value)}
+                  disabled={loading}
+                  className="w-20 text-center"
+                />
+              </div>
+            )}
+
             <p className="text-xs text-text-muted italic pt-2 border-t border-border/50">
               {settings.fallbackStrategy === "round-robin"
                 ? `Currently distributing requests across all available accounts with ${settings.stickyRoundRobinLimit || 3} calls per account.`
                 : "Currently using accounts in priority order (Fill First)."}
+              {settings.comboStrategy === "round-robin"
+                ? ` Combos rotate after ${settings.comboStickyRoundRobinLimit || 1} call${(settings.comboStickyRoundRobinLimit || 1) === 1 ? "" : "s"} per model.`
+                : " Combos always start with their first model."}
             </p>
           </div>
         </Card>
