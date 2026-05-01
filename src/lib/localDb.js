@@ -24,6 +24,7 @@ const DEFAULT_SETTINGS = {
   stickyRoundRobinLimit: 3,
   providerStrategies: {},
   comboStrategy: "fallback",
+  comboStickyRoundRobinLimit: 1,
   comboStrategies: {},
   requireLogin: true,
   tunnelDashboardAccess: true,
