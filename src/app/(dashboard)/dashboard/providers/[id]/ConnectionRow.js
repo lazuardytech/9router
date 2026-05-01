@@ -65,8 +65,9 @@ export default function ConnectionRow({ connection, proxyPools, isOAuth, isFirst
     }
   };
 
+  const isEmail = (v) => typeof v === "string" && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
   const displayName = isOAuth
-    ? connection.name || connection.email || connection.displayName || "OAuth Account"
+    ? (isEmail(connection.email) ? connection.email : (isEmail(connection.name) ? connection.name : (connection.name || connection.email || connection.displayName || "OAuth Account")))
     : connection.name;
 
   // Use useState + useEffect for impure Date.now() to avoid calling during render

@@ -760,7 +760,20 @@ export default function ProviderDetailPage() {
             )}
           </div>
           <div className="min-w-0">
-            <h1 className="truncate text-2xl font-semibold tracking-tight sm:text-3xl">{providerInfo.name}</h1>
+            <div className="flex items-center gap-3 flex-wrap">
+              <h1 className="truncate text-2xl font-semibold tracking-tight sm:text-3xl">{providerInfo.name}</h1>
+              {providerInfo.notice?.apiKeyUrl && !providerInfo.deprecated && (
+                <a
+                  href={providerInfo.notice.apiKeyUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-xs text-primary hover:underline inline-flex items-center gap-1"
+                >
+                  <span className="material-symbols-outlined text-sm">open_in_new</span>
+                  Get API Key
+                </a>
+              )}
+            </div>
             <p className="text-text-muted">
               {connections.length} connection{connections.length === 1 ? "" : "s"}
             </p>
@@ -775,7 +788,7 @@ export default function ProviderDetailPage() {
         </div>
       )}
 
-      {providerInfo.notice && !providerInfo.deprecated && (
+      {providerInfo.notice?.text && !providerInfo.deprecated && (
         <div className="flex flex-col gap-2 rounded-lg border border-blue-500/30 bg-blue-500/10 px-3 py-2 sm:flex-row sm:items-center">
           <span className="material-symbols-outlined text-[16px] text-blue-500 shrink-0">info</span>
           <p className="min-w-0 flex-1 text-xs leading-relaxed text-blue-600 dark:text-blue-400">{providerInfo.notice.text}</p>
