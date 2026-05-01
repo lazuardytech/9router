@@ -444,6 +444,12 @@ export const PROVIDER_MODELS = {
     { id: "openai/gpt-oss-120b", name: "GPT OSS 120B" },
     { id: "baidu/ERNIE-4.5-300B-A47B", name: "ERNIE 4.5 300B" },
   ],
+  "xiaomi-mimo": [
+    { id: "mimo-v2.5-pro", name: "MiMo V2.5 Pro" },
+    { id: "mimo-v2.5", name: "MiMo V2.5" },
+    { id: "mimo-v2-omni", name: "MiMo V2 Omni" },
+    { id: "mimo-v2-flash", name: "MiMo V2 Flash" },
+  ],
   hyperbolic: [
     { id: "Qwen/QwQ-32B", name: "QwQ 32B" },
     { id: "deepseek-ai/DeepSeek-R1", name: "DeepSeek R1" },
