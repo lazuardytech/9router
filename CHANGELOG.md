@@ -1,3 +1,18 @@
+# v0.4.12 (2026-05-01)
+
+## Features
+- Add Xiaomi MiMo provider support
+- Add sticky round-robin strategy for combos
+
+## Improvements
+- Refactor proxyFetch and enhance MediaProviderDetailPage layout
+- Improve dashboard responsive layouts
+- Update provider models list
+
+## Fixes
+- Fix custom provider prefix conflicts with built-in alias
+- Strip output_config for MiniMax requests
+
 # v0.4.11 (2026-04-30)
 
 ## Features
