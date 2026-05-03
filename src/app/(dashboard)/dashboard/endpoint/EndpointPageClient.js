@@ -14,6 +14,7 @@ const TUNNEL_BENEFITS = [
 
 const TUNNEL_PING_INTERVAL_MS = 2000;
 const TUNNEL_PING_MAX_MS = 300000;
+const STATUS_POLL_INTERVAL_MS = 5000;
 
 const CAVEMAN_LEVELS = [
   { id: "lite", label: "Lite", desc: "Drop filler, keep grammar" },
@@ -74,14 +75,42 @@ export default function APIPageClient({ machineId }) {
   useEffect(() => {
     fetchData();
     loadSettings();
+    // Poll status periodically + on tab visible to sync after watchdog restarts
+    const interval = setInterval(() => { syncTunnelStatus(); }, STATUS_POLL_INTERVAL_MS);
+    const onVisible = () => { if (!document.hidden) syncTunnelStatus(); };
+    document.addEventListener("visibilitychange", onVisible);
+    return () => {
+      clearInterval(interval);
+      document.removeEventListener("visibilitychange", onVisible);
+    };
   }, []);
+
+  // Trust user intent (settingsEnabled): UI stays "enabled" while watchdog restarts process
+  const syncTunnelStatus = async () => {
+    try {
+      const statusRes = await fetch("/api/tunnel/status", { cache: "no-store" });
+      if (!statusRes.ok) return;
+      const data = await statusRes.json();
+      const tEnabled = data.tunnel?.settingsEnabled ?? data.tunnel?.enabled ?? false;
+      const tUrl = data.tunnel?.tunnelUrl || "";
+      const tPublicUrl = data.tunnel?.publicUrl || "";
+      setTunnelUrl(tUrl);
+      setTunnelPublicUrl(tPublicUrl);
+      setTunnelEnabled(tEnabled);
+
+      const tsEn = data.tailscale?.settingsEnabled ?? data.tailscale?.enabled ?? false;
+      const tsUrlVal = data.tailscale?.tunnelUrl || "";
+      setTsUrl(tsUrlVal);
+      setTsEnabled(tsEn);
+    } catch { /* ignore poll errors */ }
+  };
 
   const loadSettings = async () => {
     setTunnelChecking(true);
     try {
       const [settingsRes, statusRes] = await Promise.all([
         fetch("/api/settings"),
-        fetch("/api/tunnel/status")
+        fetch("/api/tunnel/status", { cache: "no-store" })
       ]);
       if (settingsRes.ok) {
         const data = await settingsRes.json();
@@ -95,55 +124,30 @@ export default function APIPageClient({ machineId }) {
       }
       if (statusRes.ok) {
         const data = await statusRes.json();
-        const tEnabled = data.tunnel?.enabled || false;
+        const tEnabled = data.tunnel?.settingsEnabled ?? data.tunnel?.enabled ?? false;
         const tUrl = data.tunnel?.tunnelUrl || "";
         const tPublicUrl = data.tunnel?.publicUrl || "";
         setTunnelUrl(tUrl);
         setTunnelPublicUrl(tPublicUrl);
-        const tsEn = data.tailscale?.enabled || false;
+        // Trust user intent: stays enabled while watchdog restores process
+        setTunnelEnabled(tEnabled);
+
+        const tsEn = data.tailscale?.settingsEnabled ?? data.tailscale?.enabled ?? false;
         const tsUrlVal = data.tailscale?.tunnelUrl || "";
         setTsUrl(tsUrlVal);
+        setTsEnabled(tsEn);
 
-        if (tsEn && tsUrlVal) {
-          setTsLoading(true);
-          setTsProgress("Checking Tailscale...");
-          const tsHealthUrl = `${tsUrlVal}/api/health`;
-          try {
-            const tsPing = await fetch(tsHealthUrl, { mode: "no-cors", cache: "no-store" });
-            if (tsPing.ok || tsPing.type === "opaque") {
-              setTsEnabled(true);
-            } else {
-              const ok = await pingTsHealth(tsUrlVal);
-              setTsEnabled(ok);
-              if (!ok) setTsStatus({ type: "warning", message: "Tailscale not reachable." });
-            }
-          } catch {
-            const ok = await pingTsHealth(tsUrlVal);
-            setTsEnabled(ok);
-            if (!ok) setTsStatus({ type: "warning", message: "Tailscale not reachable." });
-          } finally {
-            setTsLoading(false);
-            setTsProgress("");
-          }
-        } else {
-          setTsEnabled(tsEn);
-        }
-
+        // Background reachability probes (non-blocking, only show warning)
         if (tEnabled && (tPublicUrl || tUrl)) {
-          // Ping once to verify reachable
           const healthUrl = `${tPublicUrl || tUrl}/api/health`;
-          try {
-            const ping = await fetch(healthUrl, { cache: "no-store" });
-            if (ping.ok) {
-              setTunnelEnabled(true);
-            } else {
-              pingTunnelHealth(tPublicUrl || tUrl);
-            }
-          } catch {
-            pingTunnelHealth(tPublicUrl || tUrl);
-          }
-        } else {
-          setTunnelEnabled(tEnabled);
+          fetch(healthUrl, { cache: "no-store" })
+            .then((r) => { if (!r.ok) setTunnelStatus({ type: "warning", message: "Tunnel reconnecting..." }); })
+            .catch(() => setTunnelStatus({ type: "warning", message: "Tunnel reconnecting..." }));
+        }
+        if (tsEn && tsUrlVal) {
+          fetch(`${tsUrlVal}/api/health`, { mode: "no-cors", cache: "no-store" })
+            .then((r) => { if (!(r.ok || r.type === "opaque")) setTsStatus({ type: "warning", message: "Tailscale reconnecting..." }); })
+            .catch(() => setTsStatus({ type: "warning", message: "Tailscale reconnecting..." }));
         }
       }
     } catch (error) {

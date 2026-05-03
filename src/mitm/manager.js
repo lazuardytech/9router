@@ -444,7 +444,26 @@ async function scheduleMitmRestart(apiKey) {
 /**
  * Start MITM server only (cert + server, no DNS)
  */
-async function startServer(apiKey, sudoPassword) {
+async function killPort443Owner(owner, sudoPassword) {
+  if (!owner || !owner.pid) return;
+  if (IS_WIN) {
+    try {
+      execSync(`powershell -NonInteractive -WindowStyle Hidden -Command "Stop-Process -Id ${owner.pid} -Force -ErrorAction SilentlyContinue"`, { windowsHide: true });
+    } catch { /* best effort */ }
+  } else {
+    try {
+      const { execWithPassword } = require("./dns/dnsConfig");
+      if (sudoPassword || isSudoAvailable()) {
+        await execWithPassword(`kill -9 ${owner.pid}`, sudoPassword || "");
+      } else {
+        execSync(`kill -9 ${owner.pid}`, { windowsHide: true });
+      }
+    } catch { /* best effort */ }
+  }
+  await new Promise(r => setTimeout(r, 800));
+}
+
+async function startServer(apiKey, sudoPassword, forceKillPort443 = false) {
   if (!serverProcess || serverProcess.killed) {
     try {
       if (fs.existsSync(PID_FILE)) {
@@ -472,19 +491,19 @@ async function startServer(apiKey, sudoPassword) {
     const portStatus = await checkPort443Free();
     if (portStatus === "in-use" || portStatus === "no-permission") {
       const owner = await getPort443Owner(sudoPassword);
-      const ownerIsNode = owner && (owner.name === "node" || owner.name.includes("node"));
-      if (ownerIsNode) {
-        log(`Killing orphan node process on port 443 (PID ${owner.pid}, name=${owner.name})...`);
-        try {
-          const { execWithPassword } = require("./dns/dnsConfig");
-          await execWithPassword(`kill -9 ${owner.pid}`, sudoPassword);
-          await new Promise(r => setTimeout(r, 800));
-        } catch { /* best effort */ }
-      } else if (owner) {
+      if (owner) {
         const shortName = owner.name.includes("/")
           ? owner.name.split("/").filter(Boolean).pop()
           : owner.name;
-        throw new Error(`Port 443 is already in use by "${shortName}" (PID ${owner.pid}). Stop that process first.`);
+        if (forceKillPort443) {
+          log(`Killing process on port 443 (PID ${owner.pid}, name=${shortName})...`);
+          await killPort443Owner(owner, sudoPassword);
+        } else {
+          const e = new Error(`Port 443 is already in use by "${shortName}" (PID ${owner.pid}).`);
+          e.code = "PORT_443_BUSY";
+          e.portOwner = { pid: owner.pid, name: shortName };
+          throw e;
+        }
       }
     }
   }
@@ -533,12 +552,19 @@ async function startServer(apiKey, sudoPassword) {
   const mitmRouterBase = await resolveMitmRouterBaseUrl();
   log(`🚀 Starting server... (router: ${mitmRouterBase})`);
   if (IS_WIN) {
-    // Kill any process using port 443 before spawning
-    try {
-      const psKill = `$c = Get-NetTCPConnection -LocalPort 443 -State Listen -ErrorAction SilentlyContinue | Select-Object -First 1; if ($c -and $c.OwningProcess -gt 4) { Stop-Process -Id $c.OwningProcess -Force -ErrorAction SilentlyContinue }`;
-      execSync(`powershell -NonInteractive -WindowStyle Hidden -Command "${psKill}"`, { windowsHide: true });
-      await new Promise(r => setTimeout(r, 500));
-    } catch { /* best effort */ }
+    // Check port 443 — ask user before killing
+    const winOwner = await getPort443Owner(sudoPassword);
+    if (winOwner) {
+      if (forceKillPort443) {
+        log(`Killing process on port 443 (PID ${winOwner.pid}, name=${winOwner.name})...`);
+        await killPort443Owner(winOwner, sudoPassword);
+      } else {
+        const e = new Error(`Port 443 is already in use by "${winOwner.name}" (PID ${winOwner.pid}).`);
+        e.code = "PORT_443_BUSY";
+        e.portOwner = { pid: winOwner.pid, name: winOwner.name };
+        throw e;
+      }
+    }
 
     // Spawn directly — process already has admin rights
     serverProcess = spawn(

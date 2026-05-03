@@ -343,13 +343,13 @@ export default function ProxyPoolsPage() {
         </div>
 
         <div className="grid grid-cols-1 gap-2 sm:flex sm:items-center">
-          <Button variant="secondary" icon="cloud_upload" onClick={openVercelModal}>
+          <Button size="sm" variant="secondary" icon="cloud_upload" onClick={openVercelModal}>
             Vercel Relay
           </Button>
-          <Button variant="secondary" icon="upload" onClick={openBatchImportModal}>
+          <Button size="sm" variant="secondary" icon="upload" onClick={openBatchImportModal}>
             Batch Import
           </Button>
-          <Button icon="add" onClick={openCreateModal}>Add Proxy Pool</Button>
+          <Button size="sm" icon="add" onClick={openCreateModal}>Add Proxy Pool</Button>
         </div>
       </div>
 

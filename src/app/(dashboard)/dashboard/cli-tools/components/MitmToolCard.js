@@ -19,6 +19,7 @@ export default function MitmToolCard({
   dnsActive,
   hasCachedPassword,
   needsSudoPassword,
+  isWin,
   apiKeys,
   activeProviders,
   hasActiveProviders,
@@ -37,7 +38,7 @@ export default function MitmToolCard({
   const [currentEditingAlias, setCurrentEditingAlias] = useState(null);
 
   const mitmHosts = TOOL_HOSTS[tool.id] ?? [];
-  const canRunWithoutPassword = hasCachedPassword || needsSudoPassword === false;
+  const canRunWithoutPassword = isWin || hasCachedPassword || needsSudoPassword === false;
 
   useEffect(() => {
     if (isExpanded) loadSavedMappings();

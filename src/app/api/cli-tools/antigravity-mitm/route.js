@@ -93,7 +93,7 @@ export async function GET() {
 // POST - Start MITM server (cert + server, no DNS)
 export async function POST(request) {
   try {
-    const { apiKey, sudoPassword, mitmRouterBaseUrl } = await request.json();
+    const { apiKey, sudoPassword, mitmRouterBaseUrl, forceKillPort443 } = await request.json();
     const pwd = getPassword(sudoPassword) || await loadEncryptedPassword() || "";
 
     if (!apiKey || requiresSudoPassword(pwd)) {
@@ -122,12 +122,18 @@ export async function POST(request) {
       }
     }
 
-    const result = await startServer(apiKey, pwd);
+    const result = await startServer(apiKey, pwd, !!forceKillPort443);
     if (!isWin) setCachedPassword(pwd);
 
     return NextResponse.json({ success: true, running: result.running, pid: result.pid });
   } catch (error) {
     console.log("Error starting MITM server:", error.message);
+    if (error.code === "PORT_443_BUSY") {
+      return NextResponse.json(
+        { error: error.message, code: "PORT_443_BUSY", portOwner: error.portOwner },
+        { status: 409 }
+      );
+    }
     return NextResponse.json({ error: error.message || "Failed to start MITM server" }, { status: 500 });
   }
 }

@@ -70,17 +70,18 @@ function ComboList({ combos }) {
   return (
     <div className="flex flex-col gap-2">
       {combos.map((combo) => (
-        <Link key={combo.id} href={`/dashboard/media-providers/web/combo/${combo.id}`}>
+        <Link key={combo.id} href={`/dashboard/media-providers/combo/${combo.id}`}>
           <Card padding="xs" className="hover:bg-black/[0.02] dark:hover:bg-white/[0.02] transition-colors cursor-pointer">
             <div className="flex min-w-0 items-center gap-3">
               <span className="material-symbols-outlined text-primary text-[18px]">layers</span>
               <code className="text-sm font-mono font-medium flex-1 truncate">{combo.name}</code>
               {/* Provider icons preview */}
               <div className="flex flex-wrap items-center gap-1 sm:shrink-0">
-                {combo.models.slice(0, 6).map((pid, i) => {
+                {combo.models.slice(0, 6).map((entry, i) => {
+                  const pid = typeof entry === "string" ? entry.split("/")[0] : "";
                   const p = AI_PROVIDERS[pid];
                   return (
-                    <div key={`${pid}-${i}`} title={p?.name || pid} className="size-5 rounded flex items-center justify-center" style={{ backgroundColor: `${(p?.color ?? "#888")}15` }}>
+                    <div key={`${entry}-${i}`} title={p?.name || entry} className="size-5 rounded flex items-center justify-center" style={{ backgroundColor: `${(p?.color ?? "#888")}15` }}>
                       <ProviderIcon
                         src={`/providers/${pid}.png`}
                         alt={p?.name || pid}
@@ -180,7 +181,7 @@ export default function WebProvidersPage() {
     });
     if (res.ok) {
       const created = await res.json();
-      router.push(`/dashboard/media-providers/web/combo/${created.id}`);
+      router.push(`/dashboard/media-providers/combo/${created.id}`);
     } else {
       const err = await res.json();
       alert(err.error || "Failed to create combo");

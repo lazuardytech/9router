@@ -124,6 +124,7 @@ export async function getTunnelStatus() {
 
   return {
     enabled: settings.tunnelEnabled === true && running,
+    settingsEnabled: settings.tunnelEnabled === true,
     tunnelUrl: state?.tunnelUrl || "",
     shortId,
     publicUrl,
@@ -190,6 +191,7 @@ export async function getTailscaleStatus() {
   const running = isTailscaleRunning();
   return {
     enabled: settings.tailscaleEnabled === true && running,
+    settingsEnabled: settings.tailscaleEnabled === true,
     tunnelUrl: settings.tailscaleUrl || "",
     running
   };
