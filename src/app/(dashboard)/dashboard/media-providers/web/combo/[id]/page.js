@@ -44,7 +44,7 @@ function ProviderPickerModal({ isOpen, onClose, onPick, kind, currentIds, connec
           No connected providers available. Add a connection first in the {KIND_LABELS[kind]} section.
         </div>
       ) : (
-      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 max-h-[400px] overflow-y-auto">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2 max-h-[400px] overflow-y-auto">
         {providers.map((p) => {
           const already = currentIds.includes(p.id);
           return (
@@ -218,7 +218,7 @@ export default function ComboDetailPage() {
   return (
     <div className="flex flex-col gap-6">
       {/* Header */}
-      <div className="flex items-center justify-between gap-4">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-3 min-w-0">
           <Link href="/dashboard/media-providers/web" className="text-text-muted hover:text-primary">
             <span className="material-symbols-outlined">arrow_back</span>
@@ -256,7 +256,7 @@ export default function ComboDetailPage() {
 
       {/* Providers Card */}
       <Card>
-        <div className="flex items-center justify-between mb-3">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-3">
           <div>
             <h2 className="text-lg font-semibold">Providers</h2>
             <p className="text-xs text-text-muted">Tried in order (top-down) or rotated when round-robin is on.</p>
@@ -304,7 +304,7 @@ export default function ComboDetailPage() {
       {/* Test Example Card */}
       {combo.kind && (
         <Card>
-          <div className="flex items-center justify-between mb-3">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-3">
             <h2 className="text-lg font-semibold">Test Example</h2>
             <Button size="sm" icon="play_arrow" onClick={handleTest} disabled={testing || providers.length === 0}>
               {testing ? "Running..." : "Run"}

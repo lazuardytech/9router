@@ -287,7 +287,7 @@ export default function DroidToolCard({
               <div className="flex flex-col gap-2">
                 {/* Current Base URL */}
                 {droidStatus?.settings?.customModels?.find(m => m.id?.startsWith("custom:9Router"))?.baseUrl && (
-                  <div className="grid gap-1.5 sm:grid-cols-[8rem_auto_1fr_auto] sm:items-center sm:gap-2">
+                  <div className="grid grid-cols-1 gap-1.5 sm:grid-cols-[8rem_auto_1fr_auto] sm:items-center sm:gap-2">
                     <span className="text-xs font-semibold text-text-main sm:text-right sm:text-sm">Current</span>
                     <span className="material-symbols-outlined hidden text-text-muted text-[14px] sm:inline">arrow_forward</span>
                     <span className="min-w-0 truncate rounded bg-surface/40 px-2 py-2 text-xs text-text-muted sm:py-1.5">
@@ -297,7 +297,7 @@ export default function DroidToolCard({
                 )}
 
                 {/* Base URL */}
-                <div className="grid gap-1.5 sm:grid-cols-[8rem_auto_1fr_auto] sm:items-center sm:gap-2">
+                <div className="grid grid-cols-1 gap-1.5 sm:grid-cols-[8rem_auto_1fr_auto] sm:items-center sm:gap-2">
                   <span className="text-xs font-semibold text-text-main sm:text-right sm:text-sm">Base URL</span>
                   <span className="material-symbols-outlined hidden text-text-muted text-[14px] sm:inline">arrow_forward</span>
                   <input
@@ -305,7 +305,7 @@ export default function DroidToolCard({
                     value={getDisplayUrl()}
                     onChange={(e) => setCustomBaseUrl(e.target.value)}
                     placeholder="https://.../v1"
-                    className="min-w-0 px-2 py-2 bg-surface rounded border border-border text-xs focus:outline-none focus:ring-1 focus:ring-primary/50 sm:py-1.5"
+                    className="w-full min-w-0 px-2 py-2 bg-surface rounded border border-border text-xs focus:outline-none focus:ring-1 focus:ring-primary/50 sm:py-1.5"
                   />
                   {customBaseUrl && customBaseUrl !== baseUrl && (
                     <button onClick={() => setCustomBaseUrl("")} className="p-1 text-text-muted hover:text-primary rounded transition-colors" title="Reset to default">
@@ -315,11 +315,11 @@ export default function DroidToolCard({
                 </div>
 
                 {/* API Key */}
-                <div className="grid gap-1.5 sm:grid-cols-[8rem_auto_1fr_auto] sm:items-center sm:gap-2">
+                <div className="grid grid-cols-1 gap-1.5 sm:grid-cols-[8rem_auto_1fr_auto] sm:items-center sm:gap-2">
                   <span className="text-xs font-semibold text-text-main sm:text-right sm:text-sm">API Key</span>
                   <span className="material-symbols-outlined hidden text-text-muted text-[14px] sm:inline">arrow_forward</span>
                   {apiKeys.length > 0 ? (
-                    <select value={selectedApiKey} onChange={(e) => setSelectedApiKey(e.target.value)} className="min-w-0 px-2 py-2 bg-surface rounded text-xs border border-border focus:outline-none focus:ring-1 focus:ring-primary/50 sm:py-1.5">
+                    <select value={selectedApiKey} onChange={(e) => setSelectedApiKey(e.target.value)} className="w-full min-w-0 px-2 py-2 bg-surface rounded text-xs border border-border focus:outline-none focus:ring-1 focus:ring-primary/50 sm:py-1.5">
                       {apiKeys.map((key) => <option key={key.id} value={key.key}>{key.key}</option>)}
                     </select>
                   ) : (
@@ -330,7 +330,7 @@ export default function DroidToolCard({
                 </div>
 
                 {/* Models */}
-                <div className="grid gap-1.5 sm:grid-cols-[8rem_auto_1fr_auto] sm:items-center sm:gap-2">
+                <div className="grid grid-cols-1 gap-1.5 sm:grid-cols-[8rem_auto_1fr_auto] sm:items-center sm:gap-2">
                   <span className="text-xs font-semibold text-text-main sm:text-right sm:text-sm">
                     Models {modelList.length > 0 && <span className="text-primary">({modelList.length})</span>}
                   </span>
@@ -357,7 +357,7 @@ export default function DroidToolCard({
                         onChange={(e) => setModelInput(e.target.value)}
                         onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addModel(); } }}
                         placeholder="provider/model-id"
-                        className="min-w-0 px-2 py-2 bg-surface rounded border border-border text-xs focus:outline-none focus:ring-1 focus:ring-primary/50 sm:py-1.5"
+                        className="w-full min-w-0 px-2 py-2 bg-surface rounded border border-border text-xs focus:outline-none focus:ring-1 focus:ring-primary/50 sm:py-1.5"
                       />
                       <button
                         onClick={() => setModalOpen(true)}

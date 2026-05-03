@@ -214,8 +214,8 @@ export default function HermesToolCard({
                     <p className="text-sm text-text-muted">Install: curl -fsSL https://raw.githubusercontent.com/NousResearch/hermes-agent/main/scripts/install.sh | bash</p>
                   </div>
                 </div>
-                <div className="flex items-center gap-2 pl-9">
-                  <Button variant="secondary" size="sm" onClick={() => setShowManualConfigModal(true)} className="!bg-yellow-500/20 !border-yellow-500/40 !text-yellow-700 dark:!text-yellow-300 hover:!bg-yellow-500/30">
+                <div className="flex flex-col sm:flex-row sm:items-center gap-2 pl-0 sm:pl-9">
+                  <Button variant="secondary" size="sm" onClick={() => setShowManualConfigModal(true)} className="w-full sm:w-auto !bg-yellow-500/20 !border-yellow-500/40 !text-yellow-700 dark:!text-yellow-300 hover:!bg-yellow-500/30">
                     <span className="material-symbols-outlined text-[18px] mr-1">content_copy</span>
                     Manual Config
                   </Button>
@@ -228,7 +228,7 @@ export default function HermesToolCard({
             <>
               <div className="flex flex-col gap-2">
                 {hermesStatus?.settings?.model?.base_url && (
-                  <div className="grid gap-1.5 sm:grid-cols-[8rem_auto_1fr_auto] sm:items-center sm:gap-2">
+                  <div className="grid grid-cols-1 gap-1.5 sm:grid-cols-[8rem_auto_1fr_auto] sm:items-center sm:gap-2">
                     <span className="text-xs font-semibold text-text-main sm:text-right sm:text-sm">Current</span>
                     <span className="material-symbols-outlined hidden text-text-muted text-[14px] sm:inline">arrow_forward</span>
                     <span className="min-w-0 truncate rounded bg-surface/40 px-2 py-2 text-xs text-text-muted sm:py-1.5">
@@ -237,7 +237,7 @@ export default function HermesToolCard({
                   </div>
                 )}
 
-                <div className="grid gap-1.5 sm:grid-cols-[8rem_auto_1fr_auto] sm:items-center sm:gap-2">
+                <div className="grid grid-cols-1 gap-1.5 sm:grid-cols-[8rem_auto_1fr_auto] sm:items-center sm:gap-2">
                   <span className="text-xs font-semibold text-text-main sm:text-right sm:text-sm">Base URL</span>
                   <span className="material-symbols-outlined hidden text-text-muted text-[14px] sm:inline">arrow_forward</span>
                   <input
@@ -245,7 +245,7 @@ export default function HermesToolCard({
                     value={getEffectiveBaseUrl()}
                     onChange={(e) => setCustomBaseUrl(e.target.value)}
                     placeholder="https://.../v1"
-                    className="min-w-0 px-2 py-2 bg-surface rounded border border-border text-xs focus:outline-none focus:ring-1 focus:ring-primary/50 sm:py-1.5"
+                    className="w-full min-w-0 px-2 py-2 bg-surface rounded border border-border text-xs focus:outline-none focus:ring-1 focus:ring-primary/50 sm:py-1.5"
                   />
                   {customBaseUrl && customBaseUrl !== baseUrl && (
                     <button onClick={() => setCustomBaseUrl("")} className="p-1 text-text-muted hover:text-primary rounded transition-colors" title="Reset to default">
@@ -254,11 +254,11 @@ export default function HermesToolCard({
                   )}
                 </div>
 
-                <div className="grid gap-1.5 sm:grid-cols-[8rem_auto_1fr_auto] sm:items-center sm:gap-2">
+                <div className="grid grid-cols-1 gap-1.5 sm:grid-cols-[8rem_auto_1fr_auto] sm:items-center sm:gap-2">
                   <span className="text-xs font-semibold text-text-main sm:text-right sm:text-sm">API Key</span>
                   <span className="material-symbols-outlined hidden text-text-muted text-[14px] sm:inline">arrow_forward</span>
                   {apiKeys.length > 0 ? (
-                    <select value={selectedApiKey} onChange={(e) => setSelectedApiKey(e.target.value)} className="min-w-0 px-2 py-2 bg-surface rounded text-xs border border-border focus:outline-none focus:ring-1 focus:ring-primary/50 sm:py-1.5">
+                    <select value={selectedApiKey} onChange={(e) => setSelectedApiKey(e.target.value)} className="w-full min-w-0 px-2 py-2 bg-surface rounded text-xs border border-border focus:outline-none focus:ring-1 focus:ring-primary/50 sm:py-1.5">
                       {apiKeys.map((key) => <option key={key.id} value={key.key}>{key.key}</option>)}
                     </select>
                   ) : (
@@ -268,11 +268,11 @@ export default function HermesToolCard({
                   )}
                 </div>
 
-                <div className="grid gap-1.5 sm:grid-cols-[8rem_auto_1fr_auto] sm:items-center sm:gap-2">
+                <div className="grid grid-cols-1 gap-1.5 sm:grid-cols-[8rem_auto_1fr_auto] sm:items-center sm:gap-2">
                   <span className="text-xs font-semibold text-text-main sm:text-right sm:text-sm">Default Model</span>
                   <span className="material-symbols-outlined hidden text-text-muted text-[14px] sm:inline">arrow_forward</span>
-                  <input type="text" value={selectedModel} onChange={(e) => setSelectedModel(e.target.value)} placeholder="provider/model-id" className="min-w-0 px-2 py-2 bg-surface rounded border border-border text-xs focus:outline-none focus:ring-1 focus:ring-primary/50 sm:py-1.5" />
-                  <button onClick={() => setModalOpen(true)} disabled={!hasActiveProviders} className={`rounded border px-2 py-2 text-xs transition-colors sm:py-1.5 whitespace-nowrap sm:shrink-0 ${hasActiveProviders ? "bg-surface border-border text-text-main hover:border-primary cursor-pointer" : "opacity-50 cursor-not-allowed border-border"}`}>Select</button>
+                  <input type="text" value={selectedModel} onChange={(e) => setSelectedModel(e.target.value)} placeholder="provider/model-id" className="w-full min-w-0 px-2 py-2 bg-surface rounded border border-border text-xs focus:outline-none focus:ring-1 focus:ring-primary/50 sm:py-1.5" />
+                  <button onClick={() => setModalOpen(true)} disabled={!hasActiveProviders} className={`w-full sm:w-auto rounded border px-2 py-2 text-xs transition-colors sm:py-1.5 whitespace-nowrap sm:shrink-0 ${hasActiveProviders ? "bg-surface border-border text-text-main hover:border-primary cursor-pointer" : "opacity-50 cursor-not-allowed border-border"}`}>Select</button>
                   {selectedModel && <button onClick={() => setSelectedModel("")} className="p-1 text-text-muted hover:text-red-500 rounded transition-colors" title="Clear"><span className="material-symbols-outlined text-[14px]">close</span></button>}
                 </div>
               </div>
@@ -284,14 +284,14 @@ export default function HermesToolCard({
                 </div>
               )}
 
-              <div className="grid grid-cols-1 gap-2 sm:flex sm:items-center">
-                <Button variant="primary" size="sm" onClick={handleApply} disabled={!selectedModel} loading={applying}>
+              <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+                <Button variant="primary" size="sm" onClick={handleApply} disabled={!selectedModel} loading={applying} className="w-full sm:w-auto">
                   <span className="material-symbols-outlined text-[14px] mr-1">save</span>Apply
                 </Button>
-                <Button variant="outline" size="sm" onClick={handleReset} disabled={!hermesStatus?.has9Router} loading={restoring}>
+                <Button variant="outline" size="sm" onClick={handleReset} disabled={!hermesStatus?.has9Router} loading={restoring} className="w-full sm:w-auto">
                   <span className="material-symbols-outlined text-[14px] mr-1">restore</span>Reset
                 </Button>
-                <Button variant="ghost" size="sm" onClick={() => setShowManualConfigModal(true)}>
+                <Button variant="ghost" size="sm" onClick={() => setShowManualConfigModal(true)} className="w-full sm:w-auto">
                   <span className="material-symbols-outlined text-[14px] mr-1">content_copy</span>Manual Config
                 </Button>
               </div>

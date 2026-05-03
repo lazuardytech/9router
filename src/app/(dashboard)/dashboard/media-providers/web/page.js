@@ -39,7 +39,7 @@ function ProviderCard({ provider, kind, connections }) {
   return (
     <Link href={`/dashboard/media-providers/${kind}/${provider.id}`} className="group">
       <Card padding="xs" className={`h-full hover:bg-black/[0.01] dark:hover:bg-white/[0.01] transition-colors cursor-pointer ${allDisabled ? "opacity-50" : ""}`}>
-        <div className="flex items-center gap-3">
+        <div className="flex min-w-0 items-center gap-3">
           <div
             className="size-8 rounded-lg flex items-center justify-center shrink-0"
             style={{ backgroundColor: `${provider.color?.length > 7 ? provider.color : (provider.color ?? "#888") + "15"}` }}
@@ -72,11 +72,11 @@ function ComboList({ combos }) {
       {combos.map((combo) => (
         <Link key={combo.id} href={`/dashboard/media-providers/web/combo/${combo.id}`}>
           <Card padding="xs" className="hover:bg-black/[0.02] dark:hover:bg-white/[0.02] transition-colors cursor-pointer">
-            <div className="flex items-center gap-3">
+            <div className="flex min-w-0 items-center gap-3">
               <span className="material-symbols-outlined text-primary text-[18px]">layers</span>
               <code className="text-sm font-mono font-medium flex-1 truncate">{combo.name}</code>
               {/* Provider icons preview */}
-              <div className="flex items-center gap-1 shrink-0">
+              <div className="flex flex-wrap items-center gap-1 sm:shrink-0">
                 {combo.models.slice(0, 6).map((pid, i) => {
                   const p = AI_PROVIDERS[pid];
                   return (
@@ -110,8 +110,8 @@ function Section({ title, icon, kind, providers, connections, combos, onCreateCo
   return (
     <div>
       {/* Header — title left, Create Combo right */}
-      <div className="flex items-center justify-between mb-3">
-        <div className="flex items-center gap-2">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-3">
+        <div className="flex flex-wrap items-center gap-2">
           <span className="material-symbols-outlined text-primary">{icon}</span>
           <h2 className="text-base font-semibold">{title}</h2>
           <span className="text-xs text-text-muted">({providers.length} providers · {combos.length} combos)</span>

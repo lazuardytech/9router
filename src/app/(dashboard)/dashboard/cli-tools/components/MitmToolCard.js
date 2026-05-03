@@ -191,7 +191,7 @@ export default function MitmToolCard({
             {tool.defaultModels?.length > 0 && (
               <div className="flex flex-col gap-2">
                 {tool.defaultModels.map((model) => (
-                  <div key={model.alias} className="grid gap-1.5 sm:grid-cols-[9rem_auto_1fr_auto_auto] sm:items-center sm:gap-2">
+                  <div key={model.alias} className="grid grid-cols-1 gap-1.5 sm:grid-cols-[9rem_auto_1fr_auto_auto] sm:items-center sm:gap-2">
                     <span className="text-xs font-semibold text-text-main sm:text-right">{model.name}</span>
                     <span className="material-symbols-outlined hidden text-text-muted text-[14px] sm:inline">arrow_forward</span>
                     <input

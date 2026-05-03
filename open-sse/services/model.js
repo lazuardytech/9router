@@ -65,6 +65,8 @@ const ALIAS_TO_PROVIDER_ID = {
   "perplexity-web": "perplexity-web",
   mimo: "xiaomi-mimo",
   "xiaomi-mimo": "xiaomi-mimo",
+  cf: "cloudflare-ai",
+  "cloudflare-ai": "cloudflare-ai",
 };
 
 /**
