@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { Card, Button, ModelSelectModal, ManualConfigModal } from "@/shared/components";
 import Image from "next/image";
+import EndpointPresetControl from "./EndpointPresetControl";
 
 export default function OpenCodeToolCard({ tool, isExpanded, onToggle, baseUrl, apiKeys, activeProviders, cloudEnabled, initialStatus }) {
   const [status, setStatus] = useState(initialStatus || null);
@@ -81,6 +82,7 @@ export default function OpenCodeToolCard({ tool, isExpanded, onToggle, baseUrl, 
   };
 
   const getDisplayUrl = () => customBaseUrl || `${baseUrl}/v1`;
+  const hasCustomSelectedApiKey = selectedApiKey && !apiKeys.some((key) => key.key === selectedApiKey);
 
   const checkStatus = async () => {
     setChecking(true);
@@ -266,6 +268,13 @@ export default function OpenCodeToolCard({ tool, isExpanded, onToggle, baseUrl, 
                   </div>
                 )}
 
+                <EndpointPresetControl
+                  baseUrl={getDisplayUrl()}
+                  apiKey={selectedApiKey}
+                  onBaseUrlChange={setCustomBaseUrl}
+                  onApiKeyChange={setSelectedApiKey}
+                />
+
                 {/* Base URL */}
                 <div className="grid grid-cols-1 gap-1.5 sm:grid-cols-[8rem_auto_1fr_auto] sm:items-center sm:gap-2">
                   <span className="text-xs font-semibold text-text-main sm:text-right sm:text-sm">Base URL</span>
@@ -288,8 +297,9 @@ export default function OpenCodeToolCard({ tool, isExpanded, onToggle, baseUrl, 
                 <div className="grid grid-cols-1 gap-1.5 sm:grid-cols-[8rem_auto_1fr_auto] sm:items-center sm:gap-2">
                   <span className="text-xs font-semibold text-text-main sm:text-right sm:text-sm">API Key</span>
                   <span className="material-symbols-outlined hidden text-text-muted text-[14px] sm:inline">arrow_forward</span>
-                  {apiKeys.length > 0 ? (
+                  {apiKeys.length > 0 || selectedApiKey ? (
                     <select value={selectedApiKey} onChange={(e) => setSelectedApiKey(e.target.value)} className="w-full min-w-0 px-2 py-2 bg-surface rounded text-xs border border-border focus:outline-none focus:ring-1 focus:ring-primary/50 sm:py-1.5">
+                      {hasCustomSelectedApiKey && <option value={selectedApiKey}>{selectedApiKey}</option>}
                       {apiKeys.map((key) => <option key={key.id} value={key.key}>{key.key}</option>)}
                     </select>
                   ) : (
