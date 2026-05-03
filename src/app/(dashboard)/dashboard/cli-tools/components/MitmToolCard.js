@@ -18,6 +18,7 @@ export default function MitmToolCard({
   serverRunning,
   dnsActive,
   hasCachedPassword,
+  needsSudoPassword,
   apiKeys,
   activeProviders,
   hasActiveProviders,
@@ -36,7 +37,7 @@ export default function MitmToolCard({
   const [currentEditingAlias, setCurrentEditingAlias] = useState(null);
 
   const mitmHosts = TOOL_HOSTS[tool.id] ?? [];
-  const isWindows = typeof navigator !== "undefined" && navigator.userAgent?.includes("Windows");
+  const canRunWithoutPassword = hasCachedPassword || needsSudoPassword === false;
 
   useEffect(() => {
     if (isExpanded) loadSavedMappings();
@@ -85,7 +86,7 @@ export default function MitmToolCard({
   const handleDnsToggle = () => {
     if (!serverRunning) return;
     const action = dnsActive ? "disable" : "enable";
-    if (isWindows || hasCachedPassword) {
+    if (canRunWithoutPassword) {
       doDnsAction(action, "");
     } else {
       setPendingDnsAction(action);

@@ -5,7 +5,7 @@ const os = require("os");
 const net = require("net");
 const https = require("https");
 const crypto = require("crypto");
-const { addDNSEntry, removeDNSEntry, removeAllDNSEntries, checkAllDNSStatus, TOOL_HOSTS, isSudoAvailable } = require("./dns/dnsConfig");
+const { addDNSEntry, removeDNSEntry, removeAllDNSEntries, checkAllDNSStatus, TOOL_HOSTS, isSudoAvailable, isSudoPasswordRequired } = require("./dns/dnsConfig");
 
 const IS_WIN = process.platform === "win32";
 const IS_MAC = process.platform === "darwin";
@@ -139,9 +139,9 @@ function killProcess(pid, force = false, sudoPassword = null) {
   } else {
     const sig = force ? "SIGKILL" : "SIGTERM";
     const cmd = `pkill -${sig} -P ${pid} 2>/dev/null; kill -${sig} ${pid} 2>/dev/null`;
-    if (sudoPassword) {
+    if (sudoPassword || isSudoAvailable()) {
       const { execWithPassword } = require("./dns/dnsConfig");
-      execWithPassword(cmd, sudoPassword).catch(() => exec(cmd, { windowsHide: true }, () => { }));
+      execWithPassword(cmd, sudoPassword || "").catch(() => exec(cmd, { windowsHide: true }, () => { }));
     } else {
       exec(cmd, { windowsHide: true }, () => { });
     }
@@ -279,9 +279,9 @@ async function killLeftoverMitm(sudoPassword) {
   if (!IS_WIN && SERVER_PATH) {
     try {
       const escaped = SERVER_PATH.replace(/'/g, "'\\''");
-      if (sudoPassword) {
+      if (sudoPassword || isSudoAvailable()) {
         const { execWithPassword } = require("./dns/dnsConfig");
-        await execWithPassword(`pkill -SIGKILL -f "${escaped}" 2>/dev/null || true`, sudoPassword).catch(() => { });
+        await execWithPassword(`pkill -SIGKILL -f "${escaped}" 2>/dev/null || true`, sudoPassword || "").catch(() => { });
       } else {
         exec(`pkill -SIGKILL -f "${escaped}" 2>/dev/null || true`, { windowsHide: true }, () => { });
       }
@@ -465,7 +465,7 @@ async function startServer(apiKey, sudoPassword) {
     if (linuxNoSystemTrust) {
       log(`🔐 Cert: skipping system trust (no sudo). Install ${rootCACertPath} as a trusted CA on machines that use this proxy.`);
     } else {
-      if (!password && !IS_WIN) {
+      if (!password && isSudoPasswordRequired()) {
         throw new Error("Sudo password required to install Root CA certificate");
       }
       try {
@@ -698,7 +698,7 @@ async function trustCert(sudoPassword) {
     return;
   }
   const password = sudoPassword || getCachedPassword() || await loadEncryptedPassword();
-  if (!password && !IS_WIN) throw new Error("Sudo password required to trust certificate");
+  if (!password && isSudoPasswordRequired()) throw new Error("Sudo password required to trust certificate");
   await installCert(password, rootCACertPath);
   if (password) setCachedPassword(password);
 }
@@ -721,5 +721,6 @@ module.exports = {
   setCachedPassword,
   loadEncryptedPassword,
   clearEncryptedPassword,
+  isSudoPasswordRequired,
   initDbHooks,
 };

@@ -88,11 +88,12 @@ export default function AntigravityToolCard({
     }
   };
 
-  // Windows uses UAC dialog, no sudo needed
-  const isWindows = typeof navigator !== "undefined" && navigator.userAgent?.includes("Windows");
+  // MITM elevation is decided by the server OS, not by this browser's OS.
+  const serverIsWindows = status?.isWin === true;
+  const canRunWithoutPassword = serverIsWindows || status?.hasCachedPassword || status?.needsSudoPassword === false;
 
   const handleStart = () => {
-    if (isWindows || status?.hasCachedPassword) {
+    if (canRunWithoutPassword) {
       doStart("");
     } else {
       setShowPasswordModal(true);
@@ -101,7 +102,7 @@ export default function AntigravityToolCard({
   };
 
   const handleStop = () => {
-    if (isWindows || status?.hasCachedPassword) {
+    if (canRunWithoutPassword) {
       doStop("");
     } else {
       setShowPasswordModal(true);
@@ -385,7 +386,7 @@ export default function AntigravityToolCard({
           )}
 
           {/* Windows admin warning */}
-          {!isRunning && isWindows && (
+          {!isRunning && serverIsWindows && (
             <div className="flex items-center gap-2 px-2 py-1.5 rounded text-xs bg-yellow-500/10 text-yellow-600 border border-yellow-500/20">
               <span className="material-symbols-outlined text-[14px]">warning</span>
               <span>Windows: Run terminal (9Router) as Administrator to enable MITM</span>

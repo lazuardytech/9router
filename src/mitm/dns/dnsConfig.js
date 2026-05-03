@@ -23,6 +23,20 @@ function isSudoAvailable() {
   }
 }
 
+function canRunSudoWithoutPassword() {
+  if (IS_WIN || !isSudoAvailable()) return true;
+  try {
+    execSync("sudo -n true", { stdio: "ignore", windowsHide: true });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+function isSudoPasswordRequired() {
+  return !IS_WIN && isSudoAvailable() && !canRunSudoWithoutPassword();
+}
+
 /**
  * Execute command with sudo password via stdin (macOS/Linux only).
  * Without sudo in PATH (containers), runs via sh — same user, no elevation.
@@ -216,6 +230,8 @@ module.exports = {
   removeAllDNSEntriesSync,
   execWithPassword,
   isSudoAvailable,
+  canRunSudoWithoutPassword,
+  isSudoPasswordRequired,
   checkDNSEntry,
   checkAllDNSStatus,
 };

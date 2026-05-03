@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Card, Button, Badge, Input } from "@/shared/components";
 
 const DEFAULT_MITM_ROUTER_BASE = "http://localhost:20128";
@@ -14,26 +14,17 @@ export default function MitmServerCard({ apiKeys, cloudEnabled, onStatusChange }
   const [loading, setLoading] = useState(false);
   const [showPasswordModal, setShowPasswordModal] = useState(false);
   const [sudoPassword, setSudoPassword] = useState("");
-  const [selectedApiKey, setSelectedApiKey] = useState("");
+  const [selectedApiKey, setSelectedApiKey] = useState(() => apiKeys?.[0]?.key || "");
   const [pendingAction, setPendingAction] = useState(null);
   const [modalError, setModalError] = useState(null);
   const [actionError, setActionError] = useState(null);
   const [mitmRouterBaseUrl, setMitmRouterBaseUrl] = useState(DEFAULT_MITM_ROUTER_BASE);
 
-  const isWindows = typeof navigator !== "undefined" && navigator.userAgent?.includes("Windows");
+  const serverIsWindows = status?.isWin === true;
+  const canRunWithoutPassword = serverIsWindows || status?.hasCachedPassword || status?.needsSudoPassword === false;
   const isAdmin = status?.isAdmin !== false;
 
-  useEffect(() => {
-    if (apiKeys?.length > 0 && !selectedApiKey) {
-      setSelectedApiKey(apiKeys[0].key);
-    }
-  }, [apiKeys, selectedApiKey]);
-
-  useEffect(() => {
-    fetchStatus();
-  }, []);
-
-  const fetchStatus = async () => {
+  const fetchStatus = useCallback(async () => {
     try {
       const res = await fetch("/api/cli-tools/antigravity-mitm");
       if (res.ok) {
@@ -47,11 +38,17 @@ export default function MitmServerCard({ apiKeys, cloudEnabled, onStatusChange }
     } catch {
       setStatus({ running: false, certExists: false, dnsStatus: {} });
     }
-  };
+  }, [onStatusChange]);
+
+  useEffect(() => {
+    queueMicrotask(() => {
+      fetchStatus();
+    });
+  }, [fetchStatus]);
 
   const handleAction = (action) => {
     setActionError(null);
-    if (isWindows || status?.hasCachedPassword) {
+    if (canRunWithoutPassword) {
       doAction(action, "");
     } else {
       setPendingAction(action);
@@ -219,7 +216,7 @@ export default function MitmServerCard({ apiKeys, cloudEnabled, onStatusChange }
             ) : (
               <button
                 onClick={() => handleAction("start")}
-                disabled={loading || (isWindows && !isAdmin)}
+                disabled={loading || (serverIsWindows && !isAdmin)}
                 className="flex w-full items-center justify-center gap-1.5 rounded-lg border border-primary/30 bg-primary/10 px-4 py-2 text-xs font-medium text-primary transition-colors hover:bg-primary/20 disabled:opacity-50 sm:w-auto sm:py-1.5"
               >
                 <span className="material-symbols-outlined text-[16px]">play_circle</span>
@@ -240,7 +237,7 @@ export default function MitmServerCard({ apiKeys, cloudEnabled, onStatusChange }
           )}
 
           {/* Windows admin warning */}
-          {isWindows && !isAdmin && (
+          {serverIsWindows && !isAdmin && (
             <div className="flex items-center gap-2 px-2 py-1.5 rounded text-xs bg-red-500/10 text-red-600 border border-red-500/20">
               <span className="material-symbols-outlined text-[14px]">shield_lock</span>
               <span>Administrator required — restart 9Router as Administrator to use MITM</span>

@@ -98,6 +98,7 @@ export default function MitmPageClient() {
             serverRunning={mitmStatus.running}
             dnsActive={mitmStatus.dnsStatus?.[toolId] || false}
             hasCachedPassword={mitmStatus.hasCachedPassword || false}
+            needsSudoPassword={mitmStatus.needsSudoPassword !== false}
             apiKeys={apiKeys}
             activeProviders={getActiveProviders()}
             hasActiveProviders={hasActiveProviders()}
