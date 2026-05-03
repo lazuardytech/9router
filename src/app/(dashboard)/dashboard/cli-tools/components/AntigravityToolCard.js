@@ -345,13 +345,24 @@ export default function AntigravityToolCard({
                 <div key={model.alias} className="grid grid-cols-1 gap-1.5 sm:grid-cols-[8rem_auto_1fr_auto] sm:items-center sm:gap-2">
                   <span className="text-xs font-semibold text-text-main sm:text-right sm:text-sm">{model.name}</span>
                   <span className="material-symbols-outlined hidden text-text-muted text-[14px] sm:inline">arrow_forward</span>
-                  <input
-                    type="text"
-                    value={modelMappings[model.alias] || ""}
-                    onChange={(e) => handleModelMappingChange(model.alias, e.target.value)}
-                    placeholder="provider/model-id"
-                    className="w-full min-w-0 px-2 py-2 bg-surface rounded border border-border text-xs focus:outline-none focus:ring-1 focus:ring-primary/50 sm:py-1.5"
-                  />
+                  <div className="relative w-full min-w-0">
+                    <input
+                      type="text"
+                      value={modelMappings[model.alias] || ""}
+                      onChange={(e) => handleModelMappingChange(model.alias, e.target.value)}
+                      placeholder="provider/model-id"
+                      className="w-full min-w-0 pl-2 pr-7 py-2 bg-surface rounded border border-border text-xs focus:outline-none focus:ring-1 focus:ring-primary/50 sm:py-1.5"
+                    />
+                    {modelMappings[model.alias] && (
+                      <button
+                        onClick={() => handleModelMappingChange(model.alias, "")}
+                        className="absolute right-1 top-1/2 -translate-y-1/2 p-0.5 text-text-muted hover:text-red-500 rounded transition-colors"
+                        title="Clear"
+                      >
+                        <span className="material-symbols-outlined text-[14px]">close</span>
+                      </button>
+                    )}
+                  </div>
                   <button
                     onClick={() => openModelSelector(model.alias)}
                     disabled={!hasActiveProviders}
@@ -359,15 +370,6 @@ export default function AntigravityToolCard({
                   >
                     Select
                   </button>
-                  {modelMappings[model.alias] && (
-                    <button
-                      onClick={() => handleModelMappingChange(model.alias, "")}
-                      className="p-1 text-text-muted hover:text-red-500 rounded transition-colors"
-                      title="Clear"
-                    >
-                      <span className="material-symbols-outlined text-[14px]">close</span>
-                    </button>
-                  )}
                 </div>
               ))}
 
