@@ -152,6 +152,10 @@ export default function OAuthModal({ isOpen, provider, providerInfo, onSuccess, 
 
         setDeviceData(data);
 
+        // Auto-open verification URL in new tab
+        const verifyUrl = data.verification_uri_complete || data.verification_uri;
+        if (verifyUrl) window.open(verifyUrl, "_blank", "noopener,noreferrer");
+
         // Pass extraData for Kiro (contains _clientId, _clientSecret)
         const extraData = provider === "kiro"
           ? {

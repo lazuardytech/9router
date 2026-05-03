@@ -46,13 +46,22 @@ function requiresSudoPassword(pwd) {
 }
 
 function checkIsAdmin() {
-  if (!isWin) return true;
-  try {
-    require("child_process").execSync("net session >nul 2>&1", { windowsHide: true });
-    return true;
-  } catch {
-    return false;
+  if (isWin) {
+    try {
+      require("child_process").execSync("net session >nul 2>&1", { windowsHide: true });
+      return true;
+    } catch {
+      return false;
+    }
   }
+  return typeof process.getuid === "function" && process.getuid() === 0;
+}
+
+function checkPrivilege(pwd) {
+  if (checkIsAdmin()) return true;
+  if (isWin) return false;
+  if (!isSudoPasswordRequired()) return true;
+  return !!pwd;
 }
 
 // GET - Full MITM status (server + per-tool DNS)
@@ -91,6 +100,13 @@ export async function POST(request) {
       return NextResponse.json(
         { error: !apiKey ? "Missing apiKey" : "Missing sudoPassword" },
         { status: 400 }
+      );
+    }
+
+    if (!checkPrivilege(pwd)) {
+      return NextResponse.json(
+        { error: isWin ? "Administrator required — restart 9Router as Administrator" : "Root or sudo password required to start MITM" },
+        { status: 403 }
       );
     }
 
@@ -148,6 +164,12 @@ export async function PATCH(request) {
     }
     if (requiresSudoPassword(pwd)) {
       return NextResponse.json({ error: "Missing sudoPassword" }, { status: 400 });
+    }
+    if (!checkPrivilege(pwd)) {
+      return NextResponse.json(
+        { error: isWin ? "Administrator required — restart 9Router as Administrator" : "Root or sudo password required to modify DNS" },
+        { status: 403 }
+      );
     }
 
     if (action === "enable") {

@@ -257,10 +257,8 @@ export async function spawnCloudflared(tunnelToken) {
         }
         return;
       }
-      // Only notify on unexpected exit AFTER successful connection
-      if (wasConnected && unexpectedExitHandler) {
-        unexpectedExitHandler();
-      }
+      // Watchdog (initializeApp) handles recovery — no auto-reconnect here
+      if (wasConnected && unexpectedExitHandler) unexpectedExitHandler();
     });
   });
 }

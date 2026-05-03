@@ -675,8 +675,8 @@ export default function APIPageClient({ machineId }) {
           />
           {/* Cloudflare Tunnel */}
           <div className="flex items-center gap-2">
-            <span className={`text-xs font-mono px-1.5 py-0.5 rounded shrink-0 min-w-[68px] text-center ${
-              tunnelEnabled ? "bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400" : "bg-sidebar text-text-muted"
+            <span className={`text-xs font-mono px-1.5 py-0.5 rounded shrink-0 min-w-[88px] text-center ${
+              tunnelEnabled ? "bg-primary/10 text-primary" : "bg-surface-2 text-text-muted"
             }`}>Tunnel</span>
             {tunnelEnabled && !tunnelLoading ? (
               <>
@@ -742,7 +742,6 @@ export default function APIPageClient({ machineId }) {
                   }
                   setShowEnableTunnelModal(true);
                 }}
-                className="bg-linear-to-r from-primary to-blue-500 hover:from-primary-hover hover:to-blue-600 text-white!"
               >
                 Enable
               </Button>
@@ -750,8 +749,8 @@ export default function APIPageClient({ machineId }) {
           </div>
           {/* Tailscale */}
           <div className="flex items-center gap-2">
-            <span className={`text-xs font-mono px-1.5 py-0.5 rounded shrink-0 min-w-[68px] text-center ${
-              tsEnabled ? "bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400" : "bg-sidebar text-text-muted"
+            <span className={`text-xs font-mono px-1.5 py-0.5 rounded shrink-0 min-w-[88px] text-center ${
+              tsEnabled ? "bg-primary/10 text-primary" : "bg-surface-2 text-text-muted"
             }`}>Tailscale</span>
             {tsEnabled && !tsLoading ? (
               <>
@@ -850,8 +849,8 @@ export default function APIPageClient({ machineId }) {
         <div className="flex items-center justify-between mb-2">
           <h2 className="text-lg font-semibold">Token Saver</h2>
         </div>
-        <div className="flex items-center justify-between pt-2 pb-4 border-b border-border">
-          <div className="pr-4">
+        <div className="flex items-center justify-between pt-2 pb-4 border-b border-border gap-4">
+          <div className="min-w-0 flex-1">
             <p className="font-medium">
               Compress tool output{" "}
               <a
@@ -864,7 +863,7 @@ export default function APIPageClient({ machineId }) {
               </a>
             </p>
             <p className="text-sm text-text-muted">
-              Auto-compress tool output (git diff/grep/ls/tree/logs) before sending to LLM (60-90% fewer input tokens on common dev commands). Disable if you see issues.
+              git/grep/ls/tree/logs → 60-90% fewer input tokens
             </p>
           </div>
           <Toggle
@@ -872,8 +871,8 @@ export default function APIPageClient({ machineId }) {
             onChange={() => handleRtkEnabled(!rtkEnabled)}
           />
         </div>
-        <div className="flex items-center justify-between pt-4">
-          <div className="pr-4">
+        <div className="flex items-center justify-between pt-4 gap-4 flex-wrap">
+          <div className="min-w-0 flex-1">
             <p className="font-medium">
               Compress LLM output{" "}
               <a
@@ -886,32 +885,34 @@ export default function APIPageClient({ machineId }) {
               </a>
             </p>
             <p className="text-sm text-text-muted">
-              Inject a terse-style instruction into the system prompt so the LLM replies shorter (~65% fewer output tokens on average, up to 87%). Code, errors and warnings stay exact.
+              Terse-style system prompt → ~65% fewer output tokens (up to 87%)
             </p>
           </div>
-          <Toggle
-            checked={cavemanEnabled}
-            onChange={() => handleCavemanEnabled(!cavemanEnabled)}
-          />
-        </div>
-        {cavemanEnabled && (
-          <div className="mt-3 flex items-center gap-2">
-            {CAVEMAN_LEVELS.map((lvl) => (
-              <button
-                key={lvl.id}
-                onClick={() => handleCavemanLevel(lvl.id)}
-                className={`px-3 py-1.5 rounded text-xs font-medium border transition-colors ${
-                  cavemanLevel === lvl.id
-                    ? "bg-primary text-white border-primary"
-                    : "bg-transparent border-border text-text-muted hover:bg-black/5 dark:hover:bg-white/5"
-                }`}
-                title={lvl.desc}
-              >
-                {lvl.label}
-              </button>
-            ))}
+          <div className="flex items-center gap-3 shrink-0">
+            {cavemanEnabled && (
+              <div className="flex items-center gap-1.5">
+                {CAVEMAN_LEVELS.map((lvl) => (
+                  <button
+                    key={lvl.id}
+                    onClick={() => handleCavemanLevel(lvl.id)}
+                    className={`px-3 py-1.5 rounded text-xs font-medium border transition-colors ${
+                      cavemanLevel === lvl.id
+                        ? "bg-primary text-white border-primary"
+                        : "bg-transparent border-border text-text-muted hover:bg-surface-2"
+                    }`}
+                    title={lvl.desc}
+                  >
+                    {lvl.label}
+                  </button>
+                ))}
+              </div>
+            )}
+            <Toggle
+              checked={cavemanEnabled}
+              onChange={() => handleCavemanEnabled(!cavemanEnabled)}
+            />
           </div>
-        )}
+        </div>
       </Card>
 
       {/* API Keys */}
@@ -1089,14 +1090,14 @@ export default function APIPageClient({ machineId }) {
         onClose={() => setShowEnableTunnelModal(false)}
       >
         <div className="flex flex-col gap-4">
-          <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+          <div className="bg-surface-2 border border-border-subtle rounded-lg p-4">
             <div className="flex items-start gap-3">
-              <span className="material-symbols-outlined text-blue-600 dark:text-blue-400">cloud_upload</span>
+              <span className="material-symbols-outlined text-primary">cloud_upload</span>
               <div>
-                <p className="text-sm text-blue-800 dark:text-blue-200 font-medium mb-1">
+                <p className="text-sm text-text-main font-medium mb-1">
                   Cloudflare Tunnel
                 </p>
-                <p className="text-sm text-blue-700 dark:text-blue-300">
+                <p className="text-sm text-text-muted">
                   Expose your local 9Router to the internet. No port forwarding, no static IP needed. Share endpoint URL with your team or use it in Cursor, Cline, and other AI tools from anywhere.
                 </p>
               </div>
@@ -1118,11 +1119,7 @@ export default function APIPageClient({ machineId }) {
           </p>
 
           <div className="flex gap-2">
-            <Button
-              onClick={handleEnableTunnel}
-              fullWidth
-              className="bg-linear-to-r from-primary to-blue-500 hover:from-primary-hover hover:to-blue-600 text-white!"
-            >
+            <Button onClick={handleEnableTunnel} fullWidth>
               Start Tunnel
             </Button>
             <Button onClick={() => setShowEnableTunnelModal(false)} variant="ghost" fullWidth>Cancel</Button>
@@ -1139,7 +1136,7 @@ export default function APIPageClient({ machineId }) {
         <div className="flex flex-col gap-4">
           <p className="text-sm text-text-muted">The Cloudflare tunnel will be disconnected. Remote access via tunnel URL will stop working.</p>
           <div className="flex gap-2">
-            <Button onClick={handleDisableTunnel} fullWidth disabled={tunnelLoading} className="bg-red-500! hover:bg-red-600! text-white!">
+            <Button onClick={handleDisableTunnel} fullWidth disabled={tunnelLoading} variant="danger">
               {tunnelLoading ? "Disabling..." : "Disable"}
             </Button>
             <Button onClick={() => setShowDisableTunnelModal(false)} variant="ghost" fullWidth disabled={tunnelLoading}>Cancel</Button>
@@ -1167,11 +1164,7 @@ export default function APIPageClient({ machineId }) {
             <div className="flex flex-col gap-3">
               <p className="text-sm text-text-muted">Tailscale is not installed. Install it to enable Funnel.</p>
               <div className="flex gap-2">
-                <Button
-                  onClick={handleInstallTailscale}
-                  fullWidth
-                  className="bg-linear-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600 text-white!"
-                >
+                <Button onClick={handleInstallTailscale} fullWidth>
                   Install Tailscale
                 </Button>
                 <Button onClick={() => setShowTsModal(false)} variant="ghost" fullWidth>Cancel</Button>
@@ -1211,7 +1204,6 @@ export default function APIPageClient({ machineId }) {
                     handleConnectTailscale(tab);
                   }}
                   fullWidth
-                  className="bg-linear-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600 text-white!"
                 >
                   Connect
                 </Button>
@@ -1233,7 +1225,7 @@ export default function APIPageClient({ machineId }) {
         <div className="flex flex-col gap-4">
           <p className="text-sm text-text-muted">Tailscale Funnel will be stopped. Remote access via Tailscale URL will stop working.</p>
           <div className="flex gap-2">
-            <Button onClick={handleDisableTailscale} fullWidth disabled={tsLoading} className="bg-red-500! hover:bg-red-600! text-white!">
+            <Button onClick={handleDisableTailscale} fullWidth disabled={tsLoading} variant="danger">
               {tsLoading ? "Disabling..." : "Disable"}
             </Button>
             <Button onClick={() => setShowDisableTsModal(false)} variant="ghost" fullWidth disabled={tsLoading}>Cancel</Button>
@@ -1248,9 +1240,8 @@ export default function APIPageClient({ machineId }) {
 function EndpointRow({ label, url, copyId, copied, onCopy, badge, actions }) {
   return (
     <div className="flex items-center gap-2">
-      <span className={`text-xs font-mono px-1.5 py-0.5 rounded shrink-0 min-w-[68px] text-center ${badge === "CF" ? "bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400" :
-          badge === "TS" ? "bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400" :
-            "bg-sidebar text-text-muted"
+      <span className={`text-xs font-mono px-1.5 py-0.5 rounded shrink-0 min-w-[88px] text-center ${
+          (badge === "CF" || badge === "TS") ? "bg-primary/10 text-primary" : "bg-surface-2 text-text-muted"
         }`}>{label}</span>
       <Input value={url} readOnly className="flex-1 font-mono text-sm" />
       <button

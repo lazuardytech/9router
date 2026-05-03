@@ -5,7 +5,8 @@ const os = require("os");
 const net = require("net");
 const https = require("https");
 const crypto = require("crypto");
-const { addDNSEntry, removeDNSEntry, removeAllDNSEntries, checkAllDNSStatus, TOOL_HOSTS, isSudoAvailable, isSudoPasswordRequired } = require("./dns/dnsConfig");
+const { addDNSEntry, removeDNSEntry, removeAllDNSEntries, removeAllDNSEntriesSync, checkAllDNSStatus, TOOL_HOSTS, isSudoAvailable, isSudoPasswordRequired } = require("./dns/dnsConfig");
+const { isAdmin } = require("./winElevated.js");
 
 const IS_WIN = process.platform === "win32";
 const IS_MAC = process.platform === "darwin";
@@ -217,6 +218,55 @@ async function loadEncryptedPassword() {
   } catch {
     return null;
   }
+}
+
+async function saveDnsToolState(tool, enabled) {
+  if (!_updateSettings || !_getSettings) return;
+  try {
+    const s = await _getSettings();
+    const next = { ...(s.dnsToolEnabled || {}), [tool]: enabled };
+    await _updateSettings({ dnsToolEnabled: next });
+  } catch (e) {
+    err(`Failed to save DNS state: ${e.message}`);
+  }
+}
+
+async function loadDnsToolState() {
+  if (!_getSettings) return {};
+  try {
+    const s = await _getSettings();
+    return s.dnsToolEnabled || {};
+  } catch {
+    return {};
+  }
+}
+
+/**
+ * Re-apply DNS for tools previously enabled — called on app startup after MITM running.
+ */
+async function restoreToolDNS(sudoPassword) {
+  const state = await loadDnsToolState();
+  const password = sudoPassword || getCachedPassword() || await loadEncryptedPassword();
+  for (const [tool, enabled] of Object.entries(state)) {
+    if (!enabled || !TOOL_HOSTS[tool]) continue;
+    try {
+      await addDNSEntry(tool, password);
+    } catch (e) {
+      err(`DNS ${tool}: restore failed — ${e.message}`);
+    }
+  }
+}
+
+/**
+ * Check if user has privilege to mutate hosts file.
+ * Win: needs admin. Mac/Linux: root OR cached/encrypted sudo password.
+ */
+async function hasDnsPrivilege() {
+  if (IS_WIN) return isAdmin();
+  if (isAdmin()) return true;
+  if (!isSudoPasswordRequired()) return true;
+  const pwd = getCachedPassword() || await loadEncryptedPassword();
+  return !!pwd;
 }
 
 function checkPort443Free() {
@@ -634,7 +684,8 @@ async function stopServer(sudoPassword) {
         // Direct fs write — bypass PowerShell to avoid parser pitfalls
         const content = fs.readFileSync(hostsFile, "utf8");
         const filtered = content.split(/\r?\n/).filter(l => !allHosts.some(h => l.includes(h))).join("\r\n");
-        if (filtered !== content) fs.writeFileSync(hostsFile, filtered, "utf8");
+        const next = filtered.replace(/[\r\n\s]+$/g, "") + "\r\n";
+        if (next !== content) fs.writeFileSync(hostsFile, next, "utf8");
         try { require("child_process").execSync("ipconfig /flushdns", { windowsHide: true, stdio: "ignore" }); } catch { /* ignore */ }
         log("🌐 DNS: ✅ all tool hosts removed");
       } else {
@@ -669,10 +720,10 @@ async function stopServer(sudoPassword) {
 async function enableToolDNS(tool, sudoPassword) {
   const status = await getMitmStatus();
   if (!status.running) throw new Error("MITM server is not running. Start the server first.");
-  
-  // Use cached password if not provided
+
   const password = sudoPassword || getCachedPassword() || await loadEncryptedPassword();
   await addDNSEntry(tool, password);
+  await saveDnsToolState(tool, true);
   return { success: true };
 }
 
@@ -680,9 +731,9 @@ async function enableToolDNS(tool, sudoPassword) {
  * Disable DNS for a specific tool
  */
 async function disableToolDNS(tool, sudoPassword) {
-  // Use cached password if not provided
   const password = sudoPassword || getCachedPassword() || await loadEncryptedPassword();
   await removeDNSEntry(tool, password);
+  await saveDnsToolState(tool, false);
   return { success: true };
 }
 
@@ -723,4 +774,7 @@ module.exports = {
   clearEncryptedPassword,
   isSudoPasswordRequired,
   initDbHooks,
+  restoreToolDNS,
+  hasDnsPrivilege,
+  removeAllDNSEntriesSync,
 };

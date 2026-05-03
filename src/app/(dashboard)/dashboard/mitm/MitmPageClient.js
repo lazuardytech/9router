@@ -75,11 +75,7 @@ export default function MitmPageClient() {
   const mitmTools = Object.entries(MITM_TOOLS);
 
   return (
-    <div className="mx-auto flex w-full max-w-5xl flex-col gap-6 px-1 sm:px-0">
-      <div className="flex flex-col gap-1">
-        <h1 className="text-xl font-semibold text-text-main sm:text-2xl">MITM</h1>
-        <p className="text-sm text-text-muted">Route supported IDE traffic through 9Router with local DNS interception.</p>
-      </div>
+    <div className="flex w-full flex-col gap-6">
       {/* MITM Server Card */}
       <MitmServerCard
         apiKeys={apiKeys}

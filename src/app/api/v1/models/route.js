@@ -138,9 +138,6 @@ export async function GET() {
         object: "model",
         created: timestamp,
         owned_by: "combo",
-        permission: [],
-        root: combo.name,
-        parent: null,
       });
     }
 
@@ -154,9 +151,6 @@ export async function GET() {
             object: "model",
             created: timestamp,
             owned_by: alias,
-            permission: [],
-            root: model.id,
-            parent: null,
           });
         }
       }
@@ -175,9 +169,6 @@ export async function GET() {
           object: "model",
           created: timestamp,
           owned_by: providerAlias,
-          permission: [],
-          root: modelId,
-          parent: null,
         });
       }
     } else {
@@ -267,9 +258,6 @@ export async function GET() {
             object: "model",
             created: timestamp,
             owned_by: outputAlias,
-            permission: [],
-            root: modelId,
-            parent: null,
           });
         }
       }
