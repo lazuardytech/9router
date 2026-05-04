@@ -29,10 +29,10 @@ function SkillRow({ skill }) {
   const url = getSkillRawUrl(skill.id);
   return (
     <div
-      className={`flex items-start gap-3 p-3 rounded-lg border transition-colors ${
+      className={`flex items-start gap-3 p-4 rounded-[14px] border shadow-[var(--shadow-soft)] transition-colors ${
         skill.isEntry
-          ? "border-primary/40 bg-primary/5"
-          : "border-border-subtle hover:bg-surface-2"
+          ? "border-brand-500/40 bg-brand-500/5"
+          : "border-border-subtle bg-surface hover:bg-surface-2"
       }`}
     >
       <div
@@ -97,7 +97,7 @@ export default function SkillsPage() {
             </p>
           </div>
           <a
-            href={`${SKILLS_REPO_URL}/tree/main/app/skills`}
+            href={`${SKILLS_REPO_URL}/tree/master/skills`}
             target="_blank"
             rel="noreferrer"
             className="text-sm text-primary hover:underline inline-flex items-center gap-1"
