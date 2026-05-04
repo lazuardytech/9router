@@ -34,6 +34,7 @@ const debugItems = [
 
 const systemItems = [
   { href: "/dashboard/proxy-pools", label: "Proxy Pools", icon: "lan" },
+  { href: "/dashboard/skills", label: "Skills", icon: "extension" },
 ];
 
 export default function Sidebar({ onClose }) {
@@ -171,14 +172,14 @@ export default function Sidebar({ onClose }) {
         </div>
 
         {/* Navigation */}
-        <nav className="flex-1 px-4 py-2 space-y-1 overflow-y-auto custom-scrollbar">
+        <nav className="flex-1 px-4 py-2 space-y-0.5 overflow-y-auto custom-scrollbar">
           {navItems.map((item) => (
             <Link
               key={item.href}
               href={item.href}
               onClick={onClose}
               className={cn(
-                "flex items-center gap-3 px-3 py-1.5 rounded-lg transition-all group",
+                "flex items-center gap-3 px-3 py-1 rounded-lg transition-all group",
                 isActive(item.href)
                   ? "bg-primary/10 text-primary"
                   : "text-text-muted hover:bg-surface-2 hover:text-text-main"
@@ -197,7 +198,7 @@ export default function Sidebar({ onClose }) {
           ))}
 
           {/* System section */}
-          <div className="pt-4 mt-2 space-y-1">
+          <div className="pt-3 mt-2 space-y-0.5">
             <p className="px-4 text-xs font-semibold text-text-muted/60 uppercase tracking-wider mb-2">
               System
             </p>
@@ -206,7 +207,7 @@ export default function Sidebar({ onClose }) {
             <button
               onClick={() => setMediaOpen((v) => !v)}
               className={cn(
-                "w-full flex items-center gap-3 px-3 py-1.5 rounded-lg transition-all group",
+                "w-full flex items-center gap-3 px-3 py-1 rounded-lg transition-all group",
                 pathname.startsWith("/dashboard/media-providers")
                   ? "bg-primary/10 text-primary"
                   : "text-text-muted hover:bg-surface-2 hover:text-text-main"
@@ -226,7 +227,7 @@ export default function Sidebar({ onClose }) {
                     href={`/dashboard/media-providers/${kind.id}`}
                     onClick={onClose}
                     className={cn(
-                      "flex items-center gap-3 px-4 py-1.5 rounded-lg transition-all group",
+                      "flex items-center gap-3 px-4 py-1 rounded-lg transition-all group",
                       pathname.startsWith(`/dashboard/media-providers/${kind.id}`)
                         ? "bg-primary/10 text-primary"
                         : "text-text-muted hover:bg-surface-2 hover:text-text-main"
@@ -241,7 +242,7 @@ export default function Sidebar({ onClose }) {
                   href={COMBINED_WEB_ITEM.href}
                   onClick={onClose}
                   className={cn(
-                    "flex items-center gap-3 px-4 py-1.5 rounded-lg transition-all group",
+                    "flex items-center gap-3 px-4 py-1 rounded-lg transition-all group",
                     pathname.startsWith(COMBINED_WEB_ITEM.href)
                       ? "bg-primary/10 text-primary"
                       : "text-text-muted hover:bg-surface-2 hover:text-text-main"
@@ -259,7 +260,7 @@ export default function Sidebar({ onClose }) {
                 href={item.href}
                 onClick={onClose}
                 className={cn(
-                  "flex items-center gap-3 px-3 py-1.5 rounded-lg transition-all group",
+                  "flex items-center gap-3 px-3 py-1 rounded-lg transition-all group",
                   isActive(item.href)
                     ? "bg-primary/10 text-primary"
                     : "text-text-muted hover:bg-surface-2 hover:text-text-main"
@@ -286,7 +287,7 @@ export default function Sidebar({ onClose }) {
                   href={item.href}
                   onClick={onClose}
                   className={cn(
-                    "flex items-center gap-3 px-3 py-1.5 rounded-lg transition-all group",
+                    "flex items-center gap-3 px-3 py-1 rounded-lg transition-all group",
                     isActive(item.href)
                       ? "bg-primary/10 text-primary"
                       : "text-text-muted hover:bg-surface-2 hover:text-text-main"
@@ -310,7 +311,7 @@ export default function Sidebar({ onClose }) {
               href="/dashboard/profile"
               onClick={onClose}
               className={cn(
-                "flex items-center gap-3 px-3 py-1.5 rounded-lg transition-all group",
+                "flex items-center gap-3 px-3 py-1 rounded-lg transition-all group",
                 isActive("/dashboard/profile")
                   ? "bg-primary/10 text-primary"
                   : "text-text-muted hover:bg-surface-2 hover:text-text-main"

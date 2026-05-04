@@ -885,6 +885,10 @@ function GenericExampleCard({ providerId, kind }) {
 
   // Get models for this kind (e.g., type="image")
   const kindModels = getModelsByProviderId(providerId).filter((m) => m.type === kind);
+  // Kinds that need a model identifier in the request (image/video/music)
+  const KIND_NEEDS_MODEL = new Set(["image", "video", "music", "stt", "imageToText"]);
+  const needsModel = KIND_NEEDS_MODEL.has(kind);
+  const allowManualModel = needsModel && kindModels.length === 0;
   const [selectedModel, setSelectedModel] = useState(kindModels[0]?.id ?? "");
   const selectedModelObj = kindModels.find((m) => m.id === selectedModel);
   const supportsEdit = !!selectedModelObj?.capabilities?.includes("edit");
@@ -935,8 +939,10 @@ function GenericExampleCard({ providerId, kind }) {
 
   const endpoint = useTunnel ? tunnelEndpoint : localEndpoint;
   const apiPath = kindConfig.endpoint.path;
-  // For kinds without model concept (webSearch/webFetch), use providerAlias directly
-  const modelFull = kindModels.length === 0 ? providerAlias : (selectedModel ? `${providerAlias}/${selectedModel}` : "");
+  // webSearch/webFetch: use providerAlias only. Other kinds: append model when present.
+  const modelFull = !needsModel
+    ? providerAlias
+    : (selectedModel ? `${providerAlias}/${selectedModel}` : (allowManualModel ? "" : providerAlias));
 
   // Build request body with optional extra fields (only non-empty values)
   const extraBodyFromFields = Object.entries(extraValues).reduce((acc, [k, v]) => {
@@ -1060,8 +1066,8 @@ function GenericExampleCard({ providerId, kind }) {
     <Card>
       <h2 className="text-lg font-semibold mb-4">Example</h2>
       <div className="flex flex-col gap-2.5">
-        {/* Model selector - only show if models available */}
-        {kindModels.length > 0 && (
+        {/* Model selector — dropdown if presets exist, else manual input for media kinds */}
+        {kindModels.length > 0 ? (
           <Row label="Model">
             <select
               value={selectedModel}
@@ -1073,7 +1079,16 @@ function GenericExampleCard({ providerId, kind }) {
               ))}
             </select>
           </Row>
-        )}
+        ) : allowManualModel ? (
+          <Row label="Model">
+            <input
+              value={selectedModel}
+              onChange={(e) => setSelectedModel(e.target.value)}
+              placeholder="Enter model id (provider-specific)"
+              className="w-full px-3 py-1.5 text-sm border border-border rounded-lg bg-background focus:outline-none focus:border-primary font-mono"
+            />
+          </Row>
+        ) : null}
 
         {/* Endpoint */}
         <Row label="Endpoint">

@@ -665,7 +665,10 @@ export default function APIPageClient({ machineId }) {
     <div className="flex flex-col gap-8">
       {/* Endpoint Card */}
       <Card>
-        <h2 className="text-lg font-semibold mb-4">API Endpoint</h2>
+        <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
+          <span className="material-symbols-outlined text-primary">api</span>
+          API Endpoint
+        </h2>
 
         {/* Endpoint rows */}
         <div className="flex flex-col gap-2">
@@ -851,7 +854,10 @@ export default function APIPageClient({ machineId }) {
       {/* Token Saver (RTK + Caveman) */}
       <Card id="rtk">
         <div className="flex items-center justify-between mb-2">
-          <h2 className="text-lg font-semibold">Token Saver</h2>
+          <h2 className="text-lg font-semibold flex items-center gap-2">
+            <span className="material-symbols-outlined text-primary">bolt</span>
+            Token Saver
+          </h2>
         </div>
         <div className="flex items-center justify-between pt-2 pb-4 border-b border-border gap-4">
           <div className="min-w-0 flex-1">
@@ -922,7 +928,10 @@ export default function APIPageClient({ machineId }) {
       {/* API Keys */}
       <Card id="require-api-key">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-semibold">API Keys</h2>
+          <h2 className="text-lg font-semibold flex items-center gap-2">
+            <span className="material-symbols-outlined text-primary">vpn_key</span>
+            API Keys
+          </h2>
           <Button icon="add" onClick={() => setShowAddModal(true)}>
             Create Key
           </Button>

@@ -556,6 +556,40 @@ export const PROVIDER_MODELS = {
     { id: "black-forest-labs/FLUX.1-schnell", name: "FLUX.1 Schnell", type: "image", params: [] },
     { id: "stabilityai/stable-diffusion-xl-base-1.0", name: "SDXL Base 1.0", type: "image", params: [] },
   ],
+  "fal-ai": [
+    { id: "fal-ai/flux/schnell", name: "FLUX Schnell", type: "image", params: ["n", "size"] },
+    { id: "fal-ai/flux/dev", name: "FLUX Dev", type: "image", params: ["n", "size"] },
+    { id: "fal-ai/flux-pro/v1.1", name: "FLUX Pro v1.1", type: "image", params: ["n", "size"] },
+    { id: "fal-ai/flux-pro/v1.1-ultra", name: "FLUX Pro v1.1 Ultra", type: "image", params: ["n", "size"] },
+    { id: "fal-ai/recraft-v3", name: "Recraft V3", type: "image", params: ["n", "size", "style"] },
+    { id: "fal-ai/ideogram/v2", name: "Ideogram V2", type: "image", params: ["n", "size", "style"] },
+    { id: "fal-ai/stable-diffusion-v35-large", name: "SD 3.5 Large", type: "image", params: ["n", "size"] },
+  ],
+  "stability-ai": [
+    { id: "stable-image-ultra", name: "Stable Image Ultra", type: "image", params: ["size"] },
+    { id: "stable-image-core", name: "Stable Image Core", type: "image", params: ["size", "style"] },
+    { id: "sd3.5-large", name: "Stable Diffusion 3.5 Large", type: "image", params: ["size"] },
+    { id: "sd3.5-large-turbo", name: "Stable Diffusion 3.5 Large Turbo", type: "image", params: ["size"] },
+    { id: "sd3.5-medium", name: "Stable Diffusion 3.5 Medium", type: "image", params: ["size"] },
+  ],
+  "black-forest-labs": [
+    { id: "flux-pro-1.1", name: "FLUX Pro 1.1", type: "image", params: ["n", "size"] },
+    { id: "flux-pro-1.1-ultra", name: "FLUX Pro 1.1 Ultra", type: "image", params: ["size"] },
+    { id: "flux-pro", name: "FLUX Pro", type: "image", params: ["n", "size"] },
+    { id: "flux-dev", name: "FLUX Dev", type: "image", params: ["n", "size"] },
+    { id: "flux-kontext-pro", name: "FLUX Kontext Pro (Edit)", type: "image", params: ["size"], capabilities: ["edit"] },
+    { id: "flux-kontext-max", name: "FLUX Kontext Max (Edit)", type: "image", params: ["size"], capabilities: ["edit"] },
+  ],
+  recraft: [
+    { id: "recraftv3", name: "Recraft V3", type: "image", params: ["n", "size", "style"] },
+    { id: "recraftv2", name: "Recraft V2", type: "image", params: ["n", "size", "style"] },
+  ],
+  runwayml: [
+    { id: "gen4_image", name: "Gen-4 Image", type: "image", params: ["size"] },
+    { id: "gen4_image_turbo", name: "Gen-4 Image Turbo", type: "image", params: ["size"] },
+    { id: "gen4_turbo", name: "Gen-4 Turbo", type: "video", params: [] },
+    { id: "gen3a_turbo", name: "Gen-3 Alpha Turbo", type: "video", params: [] },
+  ],
 };
 
 // Helper functions
