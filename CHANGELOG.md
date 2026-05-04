@@ -1,3 +1,11 @@
+# v0.4.16 (2026-05-04)
+
+## Features
+- Skills system: manage and execute custom AI skills
+
+## Fixes
+- Fix input fields in tool cards
+
 # v0.4.14 (2026-05-03)
 
 ## Improvements
