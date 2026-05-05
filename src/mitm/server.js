@@ -12,7 +12,7 @@ const { getCertForDomain } = require("./cert/generate");
 const DB_FILE = path.join(DATA_DIR, "db.json");
 const LOCAL_PORT = 443;
 const IS_WIN = process.platform === "win32";
-const ENABLE_FILE_LOG = true;
+const ENABLE_FILE_LOG = process.env.MITM_ENABLE_FILE_LOG === "true";
 const INTERNAL_REQUEST_HEADER = { name: "x-request-source", value: "local" };
 
 // Host rewrite for upstream forward: PROD cloudcode-pa is rate-limited (429),
@@ -37,6 +37,7 @@ const handlers = {
 // ── SSL / SNI ─────────────────────────────────────────────────
 
 const certCache = new Map();
+const CERT_CACHE_MAX_SIZE = 100;
 let rootCAPem;
 
 function sniCallback(servername, cb) {
@@ -48,6 +49,9 @@ function sniCallback(servername, cb) {
       key: certData.key,
       cert: `${certData.cert}\n${rootCAPem}`
     });
+    if (certCache.size >= CERT_CACHE_MAX_SIZE) {
+      certCache.delete(certCache.keys().next().value);
+    }
     certCache.set(servername, ctx);
     cb(null, ctx);
   } catch (e) {
@@ -82,6 +86,15 @@ async function resolveTargetIP(hostname) {
   cachedTargetIPs[hostname] = { ip: addresses[0], ts: Date.now() };
   return cachedTargetIPs[hostname].ip;
 }
+
+setInterval(() => {
+  const now = Date.now();
+  for (const hostname in cachedTargetIPs) {
+    if (now - cachedTargetIPs[hostname].ts >= CACHE_TTL_MS) {
+      delete cachedTargetIPs[hostname];
+    }
+  }
+}, CACHE_TTL_MS);
 
 function collectBodyRaw(req) {
   return new Promise((resolve, reject) => {

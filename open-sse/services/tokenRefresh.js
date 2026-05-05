@@ -7,9 +7,21 @@ export const TOKEN_EXPIRY_BUFFER_MS = 5 * 60 * 1000;
 
 // In-flight refresh dedup: prevents race condition that triggers refresh_token_reused → Auth0 family revoke
 const refreshPromiseCache = new Map();
+const CACHE_CLEANUP_INTERVAL_MS = 60 * 1000;
+const CACHE_ENTRY_MAX_AGE_MS = 5 * 60 * 1000;
+
 function getRefreshCacheKey(provider, refreshToken) {
   return `${provider}:${refreshToken}`;
 }
+
+setInterval(() => {
+  const now = Date.now();
+  for (const [key, entry] of refreshPromiseCache.entries()) {
+    if (entry.timestamp && now - entry.timestamp > CACHE_ENTRY_MAX_AGE_MS) {
+      refreshPromiseCache.delete(key);
+    }
+  }
+}, CACHE_CLEANUP_INTERVAL_MS);
 
 // Check if refresh result indicates unrecoverable error (caller should stop retry, force re-auth)
 export function isUnrecoverableRefreshError(result) {
@@ -522,14 +534,14 @@ export async function getAccessToken(provider, credentials, log) {
 
   if (refreshPromiseCache.has(cacheKey)) {
     log?.info?.("TOKEN_REFRESH", `Reusing in-flight refresh for ${provider}`);
-    return refreshPromiseCache.get(cacheKey);
+    return refreshPromiseCache.get(cacheKey).promise;
   }
 
   const refreshPromise = _getAccessTokenInternal(provider, credentials, log).finally(() => {
     refreshPromiseCache.delete(cacheKey);
   });
 
-  refreshPromiseCache.set(cacheKey, refreshPromise);
+  refreshPromiseCache.set(cacheKey, { promise: refreshPromise, timestamp: Date.now() });
   return refreshPromise;
 }
 

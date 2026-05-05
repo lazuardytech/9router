@@ -29,10 +29,20 @@ const RESPONSE_TAG_RE = /<\/?response\b[^>]*>/gi;
 const MULTI_SPACE = / {2,}/g;
 const MULTI_NL = /\n{3,}/g;
 
-const SESSION_MAX_AGE_MS = 3600_000;
+const SESSION_MAX_AGE_MS = 30 * 60 * 1000;
 const SESSION_MAX_ENTRIES = 200;
+const SESSION_CLEANUP_INTERVAL_MS = 10 * 60 * 1000;
 
 const sessionCache = new Map();
+
+setInterval(() => {
+  const now = Date.now();
+  for (const [key, entry] of sessionCache) {
+    if (now - entry.ts > SESSION_MAX_AGE_MS) {
+      sessionCache.delete(key);
+    }
+  }
+}, SESSION_CLEANUP_INTERVAL_MS);
 
 // FNV-1a hash for session key lookup
 function sessionKey(history) {
