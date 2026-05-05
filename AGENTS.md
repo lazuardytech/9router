@@ -2,6 +2,16 @@
 
 Documentation for AI agents working on **melma-router** (an internal Lazuardy Tech project, forked from [decolua/9router](https://github.com/decolua/9router)).
 
+## CRITICAL: Response Rules
+
+**NEVER show empty responses like "..." or "…" while processing/thinking.**
+
+- ❌ FORBIDDEN: Displaying "..." or "…" as a message response
+- ✅ REQUIRED: Either show meaningful content OR don't respond at all
+- This is MANDATORY and MUST be followed without exception
+
+If you're processing/thinking and have nothing to say yet, **do not send any message**. Wait until you have actual content to share.
+
 ## Read first
 
 Before editing anything non-trivial, read:
