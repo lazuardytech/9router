@@ -1,3 +1,22 @@
+# v0.4.18 (2026-05-05)
+
+## Features
+- Speech-to-Text: full pipeline with sttCore + /v1/audio/transcriptions; configs for OpenAI, Gemini, Groq, Deepgram, AssemblyAI, HuggingFace, NVIDIA Parakeet; new 9router-stt skill
+- Gemini TTS: dedicated provider with 30 prebuilt voices
+- Usage quotas: GLM (intl/cn) and MiniMax (intl/cn) fetchers; Gemini CLI usage via retrieveUserQuota per-model buckets
+- Disabled models: lowdb-backed disabledModelsDb + /api/models/disabled route
+- Header search: reusable Zustand store wired into Header
+- CLI tools: Claude Cowork tool card + cowork-settings API
+- Providers: mediaPriority sorting in getProvidersByKind, add Kimi K2.6
+
+## Improvements
+- Expand media-providers/[kind]/[id] page; enhance OAuthModal, ModelSelectModal, ProviderTopology, ProxyPools, ProviderLimits
+- Refresh provider icons (alicode, byteplus, cloudflare-ai, nvidia, ollama, vertex, volcengine-ark); add aws-polly, fal-ai, jina-ai, recraft, runwayml, stability-ai, topaz, black-forest-labs
+- Reorder hermes provider, drop qwen STT kind
+
+## Fixes
+- Fix skills metadata/text in 9router, chat, embeddings, image, tts, web-fetch, web-search SKILL.md and skills page
+
 # v0.4.16 (2026-05-04)
 
 ## Features
