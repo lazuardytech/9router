@@ -375,13 +375,15 @@ export async function appendRequestLog({ model, provider, connectionId, tokens, 
 
     const line = `${timestamp} | ${m} | ${p} | ${account} | ${sent} | ${received} | ${status}\n`;
 
-    fs.appendFileSync(LOG_FILE, line);
+    await fs.promises.appendFile(LOG_FILE, line);
 
-    // Trim to keep only last 200 lines
-    const content = fs.readFileSync(LOG_FILE, "utf-8");
-    const lines = content.trim().split("\n");
-    if (lines.length > 200) {
-      fs.writeFileSync(LOG_FILE, lines.slice(-200).join("\n") + "\n");
+    const stats = await fs.promises.stat(LOG_FILE);
+    if (stats.size > 50000) {
+      const content = await fs.promises.readFile(LOG_FILE, "utf-8");
+      const lines = content.trim().split("\n");
+      if (lines.length > 200) {
+        await fs.promises.writeFile(LOG_FILE, lines.slice(-200).join("\n") + "\n");
+      }
     }
   } catch (error) {
     console.error("Failed to append to log.txt:", error.message);
@@ -409,7 +411,7 @@ export async function getRecentLogs(limit = 200) {
   }
   
   try {
-    const content = fs.readFileSync(LOG_FILE, "utf-8");
+    const content = await fs.promises.readFile(LOG_FILE, "utf-8");
     const lines = content.trim().split("\n");
     return lines.slice(-limit).reverse();
   } catch (error) {

@@ -35,14 +35,20 @@ const SESSION_CLEANUP_INTERVAL_MS = 10 * 60 * 1000;
 
 const sessionCache = new Map();
 
-setInterval(() => {
+const _cleanupInterval = setInterval(() => {
   const now = Date.now();
   for (const [key, entry] of sessionCache) {
     if (now - entry.ts > SESSION_MAX_AGE_MS) {
       sessionCache.delete(key);
     }
   }
+  if (sessionCache.size > SESSION_MAX_ENTRIES) {
+    const entries = Array.from(sessionCache.entries()).sort((a, b) => a[1].ts - b[1].ts);
+    const toDelete = entries.slice(0, sessionCache.size - SESSION_MAX_ENTRIES);
+    toDelete.forEach(([key]) => sessionCache.delete(key));
+  }
 }, SESSION_CLEANUP_INTERVAL_MS);
+if (_cleanupInterval.unref) _cleanupInterval.unref();
 
 // FNV-1a hash for session key lookup
 function sessionKey(history) {

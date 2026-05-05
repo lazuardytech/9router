@@ -5,8 +5,11 @@ import { MAX_RATE_LIMIT_COOLDOWN_MS } from "open-sse/config/errorConfig.js";
 import { resolveProviderId, FREE_PROVIDERS } from "@/shared/constants/providers.js";
 import * as log from "../utils/logger.js";
 
-// Mutex to prevent race conditions during account selection
 let selectionMutex = Promise.resolve();
+
+const credentialsCache = new Map();
+const pendingRequests = new Map();
+const CACHE_TTL_MS = 500;
 
 /**
  * Get provider credentials from localDb
@@ -16,18 +19,29 @@ let selectionMutex = Promise.resolve();
  * @param {string|null} model - Model name for per-model rate limit filtering
  */
 export async function getProviderCredentials(provider, excludeConnectionIds = null, model = null, options = {}) {
-  // Normalize to Set for consistent handling
   const excludeSet = excludeConnectionIds instanceof Set
     ? excludeConnectionIds
     : (excludeConnectionIds ? new Set([excludeConnectionIds]) : new Set());
   const preferredConnectionId = options?.preferredConnectionId || null;
-  // Acquire mutex to prevent race conditions
-  const currentMutex = selectionMutex;
-  let resolveMutex;
-  selectionMutex = new Promise(resolve => { resolveMutex = resolve; });
 
-  try {
-    await currentMutex;
+  const cacheKey = `${provider}:${model || "any"}:${preferredConnectionId || "none"}:${[...excludeSet].sort().join(",")}`;
+  
+  const cached = credentialsCache.get(cacheKey);
+  if (cached && Date.now() < cached.expiresAt) {
+    return cached.data;
+  }
+
+  if (pendingRequests.has(cacheKey)) {
+    return await pendingRequests.get(cacheKey);
+  }
+
+  const promise = (async () => {
+    const currentMutex = selectionMutex;
+    let resolveMutex;
+    selectionMutex = new Promise(resolve => { resolveMutex = resolve; });
+
+    try {
+      await currentMutex;
 
     // Resolve alias to provider ID (e.g., "kc" -> "kilocode")
     const providerId = resolveProviderId(provider);
@@ -180,8 +194,21 @@ export async function getProviderCredentials(provider, excludeConnectionIds = nu
       // Pass full connection for clearAccountError to read modelLock_* keys
       _connection: connection
     };
+    } finally {
+      if (resolveMutex) resolveMutex();
+    }
+  })();
+
+  pendingRequests.set(cacheKey, promise);
+
+  try {
+    const result = await promise;
+    if (result && !result.allRateLimited) {
+      credentialsCache.set(cacheKey, { data: result, expiresAt: Date.now() + CACHE_TTL_MS });
+    }
+    return result;
   } finally {
-    if (resolveMutex) resolveMutex();
+    pendingRequests.delete(cacheKey);
   }
 }
 

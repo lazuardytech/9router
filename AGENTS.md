@@ -2,15 +2,34 @@
 
 Documentation for AI agents working on **melma-router** (an internal Lazuardy Tech project, forked from [decolua/9router](https://github.com/decolua/9router)).
 
-## CRITICAL: Response Rules
+## 🚨 CRITICAL: Response Rules (READ FIRST)
 
-**NEVER show empty responses like "..." or "…" while processing/thinking.**
+### Rule #1: NO EMPTY RESPONSES
 
-- ❌ FORBIDDEN: Displaying "..." or "…" as a message response
-- ✅ REQUIRED: Either show meaningful content OR don't respond at all
-- This is MANDATORY and MUST be followed without exception
+**NEVER send "..." or "…" or any placeholder text while processing.**
 
-If you're processing/thinking and have nothing to say yet, **do not send any message**. Wait until you have actual content to share.
+```
+❌ FORBIDDEN:
+User: "analyze the code"
+Agent: "..."
+Agent: <uses tools>
+
+✅ CORRECT:
+User: "analyze the code"
+Agent: <uses tools immediately, no text>
+```
+
+**When to send text:**
+- ✅ After tools complete, with actual findings
+- ✅ Asking clarifying questions
+- ✅ Reporting results
+
+**When NOT to send text:**
+- ❌ Before/during tool execution
+- ❌ "Processing...", "Thinking...", "...", "…"
+- ❌ Any placeholder or filler
+
+**If you have nothing meaningful to say, DO NOT RESPOND. Just call tools directly.**
 
 ## Read first
 
@@ -42,48 +61,80 @@ Authoritative deep-dive: `docs/ARCHITECTURE.md` (557 lines, written by upstream 
 - **Storage**: `~/.9router/db.json` (lowdb)
 - **Config**: read `.env.example` for required env (`JWT_SECRET`, `INITIAL_PASSWORD`, `DATA_DIR`)
 
-## MANDATORY: use subagents
+## Rule #2: Use Subagents for Non-Trivial Work
 
-For any non-trivial work — codebase exploration, multi-file analysis, parallel research, build/refactor planning, large-scope coordination — you **MUST delegate to subagents** rather than doing it inline in the main thread.
+**WHEN to delegate to subagents:**
 
-Why: keeps the main context window clean, parallelizes independent queries, prevents single-thread token blow-up on big repos.
+| Task Type | Use Subagent? | Agent Type |
+|-----------|---------------|------------|
+| Find all files matching pattern | ✅ YES | `explore` |
+| Analyze how system X works | ✅ YES | `explore` |
+| Multiple independent searches | ✅ YES | `explore` (parallel) |
+| Multi-step research | ✅ YES | `general` |
+| Single file edit | ❌ NO | Do inline |
+| 1-2 grep queries | ❌ NO | Do inline |
+| Read specific known file | ❌ NO | Do inline |
 
-### Available subagents (configured in `opencode.jsonc`)
+**Available subagents:**
 
-| Agent | Mode | When to use |
-|---|---|---|
-| `explore` / `explorer` | subagent | Codebase exploration: "find all X", "how does Y work", "map the Z system". Specify thoroughness: `quick` / `medium` / `very thorough`. |
-| `general` | subagent | Multi-step research, parallel independent units of work, anything that needs a fresh context. |
-| `build` | primary | Larger build/refactor sessions where you want a dedicated agent driving. |
-| `plan` | primary | Planning a non-trivial change before touching code. |
+- `explore` / `explorer` — Codebase exploration. Specify thoroughness: `quick` / `medium` / `very thorough`
+- `general` — Multi-step research, parallel work
+- `build` — Large refactors (primary mode)
+- `plan` — Planning before implementation (primary mode)
 
-If you use a different harness (Claude Code, Cursor, etc.) check its config for equivalent subagent setup. The principle stays: **delegate exploration and analysis, don't bloat the main thread.**
+**Quick decision tree:**
 
-> **Note**: `opencode.jsonc` is git-ignored (contains tokens). If it's missing in your checkout, create one using the official opencode docs at <https://opencode.ai/docs> (config schema: <https://opencode.ai/config.json>). Mirror the agent block above (`build`, `plan`, `general`, `explore`, `explorer`) so the subagent workflow works.
+```
+Need >3 searches? → explore subagent
+Multiple independent tasks? → spawn parallel subagents
+Single file edit? → do inline
+Context getting heavy? → spawn subagent
+```
 
-### Rules of thumb
+## Rule #3: NO NESTED SUBAGENTS
 
-- **>3 search/grep queries needed?** → spawn an `explore` subagent.
-- **Multiple independent investigations?** → spawn them **in parallel** (one message, multiple Task calls).
-- **Context already getting heavy?** → spawn a subagent rather than continuing inline.
-- **Trivial single-file edits, single greps, direct tool calls?** → fine to do inline. Don't over-delegate.
+**Subagents CANNOT spawn other subagents. Period.**
 
-### Don't
+```
+❌ FORBIDDEN:
+Main agent → subagent A → subagent B (NEVER DO THIS)
 
-- Don't spawn a subagent and then redo the same searches yourself.
-- Don't spawn subagents for tasks that need only 1–2 tool calls.
-- Don't skip the subagent step on big tasks just because it feels faster — it isn't.
+✅ CORRECT:
+Main agent → subagent A
+Main agent → subagent B (parallel)
+```
 
-## Working rules
+**If you are a subagent:**
+- ✅ Use: read, grep, glob, bash, edit, write
+- ❌ NEVER use: Task tool
 
-1. **No comments unless asked.** Code conventions discourage them.
-2. **Don't blanket-rename `9router` → `melma-router`.** Internal code still says 9router (package name, data dir, env, skills URL). Coordinate first. See gotcha #13.
-3. **Don't `npm install open-sse`** — it's a local package, aliased via `jsconfig.json`.
-4. **No PR/push CI** — run lint and tests locally before pushing.
-5. **`/v1/*` Next pages will be shadowed** by rewrites — don't add them.
-6. **`log.warn()` is silently disabled** — use `log.error` or `console.warn`.
-7. **CI publishes Docker on tag push (`v*`)** — version bump is manual in `package.json`.
-8. **Sync upstream**: `git fetch upstream && git merge upstream/master` (remote already configured).
+**If subagent needs more work:**
+1. Return findings to main agent
+2. Main agent spawns additional subagents if needed
+
+**Why this rule exists:** Subagents only have tools, not skills. Nesting creates complexity and violates execution model.
+
+## Quick Reference: Common Mistakes
+
+| ❌ DON'T | ✅ DO |
+|---------|-------|
+| Send "..." while processing | Call tools directly without text |
+| Add code comments | Only add if user asks |
+| `npm install open-sse` | It's local package (jsconfig.json) |
+| Rename `9router` → `melma-router` | Keep internal names (see gotcha #13) |
+| Use `log.warn()` | Use `log.error` or `console.warn` |
+| Add `/v1/*` Next pages | They're shadowed by rewrites |
+| Push without testing | Run lint/tests locally first |
+
+## Working Rules
+
+1. **No comments unless asked** — code conventions discourage them
+2. **Don't rename `9router`** — internal code uses original name (package, data dir, env, skills URL). See `.agents/knowledge/07-gotchas.md` #13
+3. **`open-sse` is local** — aliased via `jsconfig.json`, don't npm install
+4. **Test before push** — no PR/push CI, run locally
+5. **`log.warn()` disabled** — use `log.error` or `console.warn`
+6. **Docker publish** — CI auto-publishes on `v*` tag push, bump `package.json` manually
+7. **Sync upstream** — `git fetch upstream && git merge upstream/master`
 
 ## When in doubt
 
