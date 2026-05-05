@@ -49,7 +49,7 @@ async function probeMediaProvider(provider, apiKey) {
   const kinds = p.serviceKinds || ["llm"];
   const isMediaOnly = kinds.every((k) => MEDIA_KINDS.has(k));
   if (!isMediaOnly) return null;
-  const cfg = p.ttsConfig || p.embeddingConfig || p.imageConfig || p.videoConfig || p.musicConfig;
+  const cfg = p.ttsConfig || p.sttConfig || p.embeddingConfig || p.imageConfig || p.videoConfig || p.musicConfig;
   // No probe config → best-effort accept (validate at usage time)
   if (!cfg) return true;
   if (p.noAuth || cfg.authType === "none") return true;

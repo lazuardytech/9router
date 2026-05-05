@@ -156,6 +156,7 @@ export const PROVIDER_MODELS = {
     { id: "gpt-5.3-codex", name: "GPT 5.3 Codex" },
   ],
   kmc: [  // Kimi Coding
+    { id: "kimi-k2.6", name: "Kimi K2.6" },
     { id: "kimi-k2.5", name: "Kimi K2.5" },
     { id: "kimi-k2.5-thinking", name: "Kimi K2.5 Thinking" },
     { id: "kimi-latest", name: "Kimi Latest" },
@@ -233,6 +234,10 @@ export const PROVIDER_MODELS = {
     { id: "tts-1", name: "TTS-1", type: "tts" },
     { id: "tts-1-hd", name: "TTS-1 HD", type: "tts" },
     { id: "gpt-4o-mini-tts", name: "GPT-4o Mini TTS", type: "tts" },
+    // STT models
+    { id: "whisper-1", name: "Whisper 1", type: "stt", params: ["language", "response_format", "temperature", "prompt"] },
+    { id: "gpt-4o-transcribe", name: "GPT-4o Transcribe", type: "stt", params: ["language", "response_format", "temperature", "prompt"] },
+    { id: "gpt-4o-mini-transcribe", name: "GPT-4o Mini Transcribe", type: "stt", params: ["language", "response_format", "temperature", "prompt"] },
     // Image models
     { id: "gpt-image-1", name: "GPT Image 1", type: "image", params: ["n", "size", "quality", "response_format"] },
     { id: "dall-e-3", name: "DALL-E 3", type: "image", params: ["size", "quality", "style", "response_format"] },
@@ -267,6 +272,11 @@ export const PROVIDER_MODELS = {
     { id: "gemini-3.1-flash-image-preview", name: "Gemini 3.1 Flash Image (Nano Banana 2)", type: "image", params: [] },
     { id: "gemini-3-pro-image-preview", name: "Gemini 3 Pro Image (Nano Banana Pro)", type: "image", params: [] },
     { id: "gemini-2.5-flash-image", name: "Gemini 2.5 Flash Image (Nano Banana)", type: "image", params: [] },
+    // STT models (multimodal generateContent)
+    { id: "gemini-2.5-pro", name: "Gemini 2.5 Pro (Best)", type: "stt", params: ["language", "prompt"] },
+    { id: "gemini-2.5-flash", name: "Gemini 2.5 Flash", type: "stt", params: ["language", "prompt"] },
+    { id: "gemini-2.5-flash-lite", name: "Gemini 2.5 Flash Lite (Cheapest)", type: "stt", params: ["language", "prompt"] },
+    { id: "gemini-2.0-flash", name: "Gemini 2.0 Flash", type: "stt", params: ["language", "prompt"] },
   ],
   openrouter: [
     // Embedding models
@@ -301,6 +311,7 @@ export const PROVIDER_MODELS = {
     { id: "glm-4.5-air", name: "GLM-4.5-Air" },
   ],
   kimi: [
+    { id: "kimi-k2.6", name: "Kimi K2.6" },
     { id: "kimi-k2.5", name: "Kimi K2.5" },
     { id: "kimi-k2.5-thinking", name: "Kimi K2.5 Thinking" },
     { id: "kimi-latest", name: "Kimi Latest" },
@@ -402,6 +413,10 @@ export const PROVIDER_MODELS = {
     { id: "meta-llama/llama-4-maverick-17b-128e-instruct", name: "Llama 4 Maverick" },
     { id: "qwen/qwen3-32b", name: "Qwen3 32B" },
     { id: "openai/gpt-oss-120b", name: "GPT-OSS 120B" },
+    // STT models
+    { id: "whisper-large-v3", name: "Whisper Large v3", type: "stt", params: ["language", "response_format", "temperature", "prompt"] },
+    { id: "whisper-large-v3-turbo", name: "Whisper Large v3 Turbo", type: "stt", params: ["language", "response_format", "temperature", "prompt"] },
+    { id: "distil-whisper-large-v3-en", name: "Distil Whisper Large v3 EN", type: "stt", params: ["language", "response_format", "temperature", "prompt"] },
   ],
   xai: [
     { id: "grok-4", name: "Grok 4" },
@@ -450,6 +465,8 @@ export const PROVIDER_MODELS = {
     { id: "minimaxai/minimax-m2.7", name: "Minimax M2.7" },
     { id: "z-ai/glm4.7", name: "GLM 4.7" },
     { id: "nvidia/nv-embedqa-e5-v5", name: "NV EmbedQA E5 v5", type: "embedding" },
+    // STT models
+    { id: "nvidia/parakeet-ctc-1.1b-asr", name: "Parakeet CTC 1.1B", type: "stt", params: ["language"] },
   ],
   nebius: [
     { id: "meta-llama/Llama-3.3-70B-Instruct", name: "Llama 3.3 70B Instruct" },
@@ -555,6 +572,18 @@ export const PROVIDER_MODELS = {
   huggingface: [
     { id: "black-forest-labs/FLUX.1-schnell", name: "FLUX.1 Schnell", type: "image", params: [] },
     { id: "stabilityai/stable-diffusion-xl-base-1.0", name: "SDXL Base 1.0", type: "image", params: [] },
+    // STT models
+    { id: "openai/whisper-large-v3", name: "Whisper Large v3 (HF)", type: "stt", params: ["language"] },
+    { id: "openai/whisper-small", name: "Whisper Small (HF)", type: "stt", params: ["language"] },
+  ],
+  deepgram: [
+    { id: "nova-3", name: "Nova 3", type: "stt", params: ["language"] },
+    { id: "nova-2", name: "Nova 2", type: "stt", params: ["language"] },
+    { id: "whisper-large", name: "Whisper Large", type: "stt", params: ["language"] },
+  ],
+  assemblyai: [
+    { id: "universal-3-pro", name: "Universal 3 Pro", type: "stt", params: ["language"] },
+    { id: "universal-2", name: "Universal 2", type: "stt", params: ["language"] },
   ],
   "fal-ai": [
     { id: "fal-ai/flux/schnell", name: "FLUX Schnell", type: "image", params: ["n", "size"] },

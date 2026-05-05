@@ -40,6 +40,7 @@ export default function ModelSelectModal({
   const [combos, setCombos] = useState([]);
   const [providerNodes, setProviderNodes] = useState([]);
   const [customModels, setCustomModels] = useState([]);
+  const [disabledModels, setDisabledModels] = useState({});
 
   const fetchCombos = async () => {
     try {
@@ -89,6 +90,22 @@ export default function ModelSelectModal({
     if (isOpen) fetchCustomModels();
   }, [isOpen]);
 
+  const fetchDisabledModels = async () => {
+    try {
+      const res = await fetch("/api/models/disabled");
+      if (!res.ok) throw new Error(`Failed to fetch disabled models: ${res.status}`);
+      const data = await res.json();
+      setDisabledModels(data.disabled || {});
+    } catch (error) {
+      console.error("Error fetching disabled models:", error);
+      setDisabledModels({});
+    }
+  };
+
+  useEffect(() => {
+    if (isOpen) fetchDisabledModels();
+  }, [isOpen]);
+
   const allProviders = useMemo(() => ({ ...OAUTH_PROVIDERS, ...FREE_PROVIDERS, ...FREE_TIER_PROVIDERS, ...APIKEY_PROVIDERS }), []);
 
   // Group models by provider with priority order
@@ -104,7 +121,9 @@ export default function ModelSelectModal({
 
     // Filter a models[] array by kindFilter (keep only matching m.type)
     const filterByKind = (models) => {
-      if (!kindFilter || !TYPED_KINDS.has(kindFilter)) return models;
+      // No kindFilter → LLM context: keep only LLM models (no type or type === "llm")
+      if (!kindFilter) return models.filter((m) => m.isPlaceholder || !m.type || m.type === "llm");
+      if (!TYPED_KINDS.has(kindFilter)) return models;
       return models.filter((m) => m.isPlaceholder || m.type === kindFilter);
     };
 
@@ -239,11 +258,18 @@ export default function ModelSelectModal({
           .filter((m) => m.providerAlias === alias && !hardcodedIds.has(m.id) && !customAliasIds.has(m.id))
           .map((m) => ({ id: m.id, name: m.name || m.id, value: `${alias}/${m.id}`, isCustom: true }));
 
-        let allModels = filterByKind([
+        const merged = [
           ...hardcodedModels.map((m) => ({ id: m.id, name: m.name, value: `${alias}/${m.id}`, type: m.type })),
           ...customAliasModels,
           ...customRegisteredModels,
-        ]);
+        ];
+        // Dedupe by value (alias may equal hardcoded id, causing React key collision)
+        const seen = new Set();
+        let allModels = filterByKind(merged.filter((m) => {
+          if (seen.has(m.value)) return false;
+          seen.add(m.value);
+          return true;
+        }));
 
         // Provider-as-model fallback: providers that support the kind but have no hardcoded models
         // can still be picked (value = providerAlias). Skips embedding (always needs model).
@@ -265,8 +291,20 @@ export default function ModelSelectModal({
       }
     });
 
+    // Filter out disabled models per provider (disabled keyed by storage alias OR providerId)
+    Object.entries(groups).forEach(([providerId, group]) => {
+      const aliasKey = getProviderAlias(providerId);
+      const disabledIds = new Set([
+        ...(disabledModels[aliasKey] || []),
+        ...(disabledModels[providerId] || []),
+      ]);
+      if (disabledIds.size === 0) return;
+      group.models = group.models.filter((m) => !disabledIds.has(m.id));
+      if (group.models.length === 0) delete groups[providerId];
+    });
+
     return groups;
-  }, [filteredActiveProviders, modelAliases, allProviders, providerNodes, customModels, kindFilter]);
+  }, [filteredActiveProviders, modelAliases, allProviders, providerNodes, customModels, disabledModels, kindFilter, activeProviders]);
 
   // Filter combos by search query (and hide combos when kindFilter is set — combos are LLM-only by design)
   const filteredCombos = useMemo(() => {

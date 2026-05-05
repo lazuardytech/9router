@@ -7,7 +7,12 @@ import Toggle from "@/shared/components/Toggle";
 import { parseQuotaData, calculatePercentage } from "./utils";
 import Card from "@/shared/components/Card";
 import { EditConnectionModal } from "@/shared/components";
-import { USAGE_SUPPORTED_PROVIDERS } from "@/shared/constants/providers";
+import { USAGE_SUPPORTED_PROVIDERS, USAGE_APIKEY_PROVIDERS } from "@/shared/constants/providers";
+
+// Connection is eligible for the quota page when it uses OAuth or is an apikey provider whitelisted for quota
+const isUsageEligible = (conn) =>
+  USAGE_SUPPORTED_PROVIDERS.includes(conn.provider) &&
+  (conn.authType === "oauth" || USAGE_APIKEY_PROVIDERS.includes(conn.provider));
 
 const REFRESH_INTERVAL_MS = 60000; // 60 seconds
 const DEPLETED_QUOTA_THRESHOLD = 5; // percent
@@ -239,16 +244,11 @@ export default function ProviderLimits() {
     try {
       const conns = await fetchConnections();
 
-      // Filter only supported OAuth providers
-      const oauthConnections = conns.filter(
-        (conn) =>
-          USAGE_SUPPORTED_PROVIDERS.includes(conn.provider) &&
-          conn.authType === "oauth",
-      );
+      // Filter eligible connections (OAuth + whitelisted apikey)
+      const eligibleConnections = conns.filter(isUsageEligible);
 
-      // Fetch quota for supported OAuth connections only
       await Promise.all(
-        oauthConnections.map((conn) => fetchQuota(conn.id, conn.provider)),
+        eligibleConnections.map((conn) => fetchQuota(conn.id, conn.provider)),
       );
 
       setLastUpdated(new Date());
@@ -266,21 +266,17 @@ export default function ProviderLimits() {
       const conns = await fetchConnections();
       setConnectionsLoading(false);
 
-      const oauthConnections = conns.filter(
-        (conn) =>
-          USAGE_SUPPORTED_PROVIDERS.includes(conn.provider) &&
-          conn.authType === "oauth",
-      );
+      const eligibleConnections = conns.filter(isUsageEligible);
 
       // Mark all as loading before fetching
       const loadingState = {};
-      oauthConnections.forEach((conn) => {
+      eligibleConnections.forEach((conn) => {
         loadingState[conn.id] = true;
       });
       setLoading(loadingState);
 
       await Promise.all(
-        oauthConnections.map((conn) => fetchQuota(conn.id, conn.provider)),
+        eligibleConnections.map((conn) => fetchQuota(conn.id, conn.provider)),
       );
       setLastUpdated(new Date());
     };
@@ -354,12 +350,8 @@ export default function ProviderLimits() {
     };
   }, [autoRefresh, refreshAll]);
 
-  // Filter only supported providers
-  const filteredConnections = connections.filter(
-    (conn) =>
-      USAGE_SUPPORTED_PROVIDERS.includes(conn.provider) &&
-      conn.authType === "oauth",
-  );
+  // Filter eligible connections (OAuth + whitelisted apikey)
+  const filteredConnections = connections.filter(isUsageEligible);
 
   const providerFilteredConnections = filteredConnections.filter(
     (conn) => providerFilter === "all" || conn.provider === providerFilter,

@@ -4,7 +4,32 @@ const path = require("path");
 const os = require("os");
 const { log, err } = require("../logger");
 const { TOOL_HOSTS } = require("../../shared/constants/mitmToolHosts");
-const { runElevatedPowerShell, quotePs, isAdmin } = require("../winElevated.js");
+const { runElevatedPowerShell, isAdmin } = require("../winElevated.js");
+
+/**
+ * Atomic-ish write for Windows hosts file with rollback on failure.
+ * Strategy: write `.new` sibling → rename current to `.bak` → rename `.new` to target.
+ * If anything fails mid-way, restore from `.bak`. Same-volume renames are atomic on NTFS.
+ */
+function atomicWriteHostsWin(target, originalContent, newContent) {
+  const tmpNew = `${target}.9router.new`;
+  const tmpBak = `${target}.9router.bak`;
+  try {
+    fs.writeFileSync(tmpNew, newContent, "utf8");
+    try { fs.unlinkSync(tmpBak); } catch { /* none */ }
+    fs.renameSync(target, tmpBak);
+    try {
+      fs.renameSync(tmpNew, target);
+    } catch (e) {
+      // Rollback: restore original
+      try { fs.renameSync(tmpBak, target); } catch { fs.writeFileSync(target, originalContent, "utf8"); }
+      throw e;
+    }
+    try { fs.unlinkSync(tmpBak); } catch { /* best effort */ }
+  } finally {
+    try { fs.unlinkSync(tmpNew); } catch { /* already moved or never created */ }
+  }
+}
 
 const IS_WIN = process.platform === "win32";
 const IS_MAC = process.platform === "darwin";
@@ -130,16 +155,13 @@ async function addDNSEntry(tool, sudoPassword) {
 
   try {
     if (IS_WIN) {
-      // Read → trim → append → write (avoids stacked blank lines from Add-Content)
+      // Read → trim → append → atomic write (Node-side, no CLI size limit)
       const current = fs.readFileSync(HOSTS_FILE, "utf8");
       const trimmed = current.replace(/[\r\n\s]+$/g, "");
       const toAppend = entriesToAdd.map(h => `127.0.0.1 ${h}`).join("\r\n");
       const next = `${trimmed}\r\n${toAppend}\r\n`;
-      const script = `
-        Set-Content -LiteralPath ${quotePs(HOSTS_FILE)} -Value ${quotePs(next)} -NoNewline
-        ipconfig /flushdns | Out-Null
-      `;
-      await runElevatedPowerShell(script);
+      atomicWriteHostsWin(HOSTS_FILE, current, next);
+      await runElevatedPowerShell("ipconfig /flushdns | Out-Null");
     } else {
       const current = fs.readFileSync(HOSTS_FILE, "utf8");
       const trimmed = current.replace(/[\r\n\s]+$/g, "");
@@ -175,11 +197,8 @@ async function removeDNSEntry(tool, sudoPassword) {
       const current = fs.readFileSync(HOSTS_FILE, "utf8");
       const filtered = current.split(/\r?\n/).filter(l => !entriesToRemove.some(h => l.includes(h))).join("\r\n");
       const next = filtered.replace(/[\r\n\s]+$/g, "") + "\r\n";
-      const script = `
-        Set-Content -LiteralPath ${quotePs(HOSTS_FILE)} -Value ${quotePs(next)} -NoNewline
-        ipconfig /flushdns | Out-Null
-      `;
-      await runElevatedPowerShell(script);
+      atomicWriteHostsWin(HOSTS_FILE, current, next);
+      await runElevatedPowerShell("ipconfig /flushdns | Out-Null");
     } else {
       const current = fs.readFileSync(HOSTS_FILE, "utf8");
       const filtered = current.split(/\r?\n/).filter(l => !entriesToRemove.some(h => l.includes(h))).join("\n");

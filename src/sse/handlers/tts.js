@@ -29,7 +29,8 @@ export async function handleTts(request) {
   const url = new URL(request.url);
   const modelStr = body.model;
   const responseFormat = url.searchParams.get("response_format") || "mp3"; // mp3 (default) | json
-  log.request("POST", `${url.pathname} | ${modelStr} | format=${responseFormat}`);
+  const language = body.language || ""; // Optional language hint (currently used by Gemini)
+  log.request("POST", `${url.pathname} | ${modelStr} | format=${responseFormat}${language ? ` | lang=${language}` : ""}`);
 
   const settings = await getSettings();
   if (settings.requireApiKey) {
@@ -52,7 +53,7 @@ export async function handleTts(request) {
     return handleComboChat({
       body,
       models: comboModels,
-      handleSingleModel: (b, m) => handleSingleModelTts(b, m, responseFormat),
+      handleSingleModel: (b, m) => handleSingleModelTts(b, m, responseFormat, language),
       log,
       comboName: modelStr,
       comboStrategy,
@@ -60,10 +61,10 @@ export async function handleTts(request) {
     });
   }
 
-  return handleSingleModelTts(body, modelStr, responseFormat);
+  return handleSingleModelTts(body, modelStr, responseFormat, language);
 }
 
-async function handleSingleModelTts(body, modelStr, responseFormat) {
+async function handleSingleModelTts(body, modelStr, responseFormat, language) {
   const modelInfo = await getModelInfo(modelStr);
   if (!modelInfo.provider) return errorResponse(HTTP_STATUS.BAD_REQUEST, "Invalid model format");
 
@@ -72,7 +73,7 @@ async function handleSingleModelTts(body, modelStr, responseFormat) {
 
   // noAuth providers — no credential needed
   if (!CREDENTIALED_PROVIDERS.has(provider)) {
-    const result = await handleTtsCore({ provider, model, input: body.input, responseFormat });
+    const result = await handleTtsCore({ provider, model, input: body.input, responseFormat, language });
     if (result.success) return result.response;
     return errorResponse(result.status || HTTP_STATUS.BAD_GATEWAY, result.error || "TTS failed");
   }
@@ -97,7 +98,7 @@ async function handleSingleModelTts(body, modelStr, responseFormat) {
 
     log.info("AUTH", `\x1b[32mUsing ${provider} account: ${credentials.connectionName}\x1b[0m`);
 
-    const result = await handleTtsCore({ provider, model, input: body.input, credentials, responseFormat });
+    const result = await handleTtsCore({ provider, model, input: body.input, credentials, responseFormat, language });
 
     if (result.success) return result.response;
 

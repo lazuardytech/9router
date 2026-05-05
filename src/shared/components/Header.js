@@ -7,6 +7,7 @@ import PropTypes from "prop-types";
 import ProviderIcon from "@/shared/components/ProviderIcon";
 import HeaderMenu from "@/shared/components/HeaderMenu";
 import ThemeToggle from "@/shared/components/ThemeToggle";
+import { useHeaderSearchStore } from "@/store/headerSearchStore";
 import { OAUTH_PROVIDERS, APIKEY_PROVIDERS } from "@/shared/constants/config";
 import { MEDIA_PROVIDER_KINDS, AI_PROVIDERS } from "@/shared/constants/providers";
 import { translate } from "@/i18n/runtime";
@@ -265,10 +266,45 @@ export default function Header({ onMenuClick, showMenuButton = true }) {
 
       {/* Right actions */}
       <div className="flex items-center gap-1 shrink-0">
+        <HeaderSearch />
         <ThemeToggle />
         <HeaderMenu onLogout={handleLogout} />
       </div>
     </header>
+  );
+}
+
+function HeaderSearch() {
+  const visible = useHeaderSearchStore((s) => s.visible);
+  const query = useHeaderSearchStore((s) => s.query);
+  const placeholder = useHeaderSearchStore((s) => s.placeholder);
+  const setQuery = useHeaderSearchStore((s) => s.setQuery);
+
+  if (!visible) return null;
+
+  return (
+    <div className="relative w-[160px] sm:w-[220px]">
+      <span className="material-symbols-outlined absolute left-2 top-1/2 -translate-y-1/2 text-text-muted text-[16px] pointer-events-none">
+        search
+      </span>
+      <input
+        type="text"
+        value={query}
+        onChange={(e) => setQuery(e.target.value)}
+        placeholder={placeholder}
+        className="w-full h-8 pl-7 pr-7 rounded-lg border border-border bg-surface/60 text-sm focus:outline-none focus:border-primary/50 transition-colors"
+      />
+      {query && (
+        <button
+          type="button"
+          onClick={() => setQuery("")}
+          className="absolute right-1 top-1/2 -translate-y-1/2 text-text-muted hover:text-text-main p-0.5 rounded"
+          aria-label="Clear search"
+        >
+          <span className="material-symbols-outlined text-[16px]">close</span>
+        </button>
+      )}
+    </div>
   );
 }
 

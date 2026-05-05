@@ -40,6 +40,13 @@ export const SKILLS = [
     icon: "record_voice_over",
   },
   {
+    id: "9router-stt",
+    name: "Speech-to-Text",
+    description: "Transcribe audio via OpenAI Whisper, Groq, Gemini, Deepgram, AssemblyAI…",
+    endpoint: "/v1/audio/transcriptions",
+    icon: "mic",
+  },
+  {
     id: "9router-embeddings",
     name: "Embeddings",
     description: "Vectors for RAG / semantic search via OpenAI, Gemini, Mistral…",

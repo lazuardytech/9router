@@ -46,6 +46,7 @@ export default function ProviderDetailPage() {
   const [thinkingMode, setThinkingMode] = useState("auto");
   const [suggestedModels, setSuggestedModels] = useState([]);
   const [kiloFreeModels, setKiloFreeModels] = useState([]);
+  const [disabledModelIds, setDisabledModelIds] = useState([]);
   const { copied, copy } = useCopyToClipboard();
 
   const providerInfo = providerNode
@@ -73,6 +74,62 @@ export default function ProviderDetailPage() {
   const providerDisplayAlias = isCompatible
     ? (providerNode?.prefix || providerId)
     : providerAlias;
+
+  const fetchDisabledModels = useCallback(async () => {
+    try {
+      const res = await fetch(`/api/models/disabled?providerAlias=${encodeURIComponent(providerStorageAlias)}`, { cache: "no-store" });
+      const data = await res.json();
+      if (res.ok) setDisabledModelIds(data.ids || []);
+    } catch (error) {
+      console.log("Error fetching disabled models:", error);
+    }
+  }, [providerStorageAlias]);
+
+  const handleDisableModel = async (modelId) => {
+    try {
+      const res = await fetch("/api/models/disabled", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ providerAlias: providerStorageAlias, ids: [modelId] }),
+      });
+      if (res.ok) await fetchDisabledModels();
+    } catch (error) {
+      console.log("Error disabling model:", error);
+    }
+  };
+
+  const handleEnableModel = async (modelId) => {
+    try {
+      const res = await fetch(`/api/models/disabled?providerAlias=${encodeURIComponent(providerStorageAlias)}&id=${encodeURIComponent(modelId)}`, { method: "DELETE" });
+      if (res.ok) await fetchDisabledModels();
+    } catch (error) {
+      console.log("Error enabling model:", error);
+    }
+  };
+
+  const handleDisableAll = async (ids) => {
+    if (!ids.length) return;
+    if (!confirm(`Disable all ${ids.length} model(s)?`)) return;
+    try {
+      const res = await fetch("/api/models/disabled", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ providerAlias: providerStorageAlias, ids }),
+      });
+      if (res.ok) await fetchDisabledModels();
+    } catch (error) {
+      console.log("Error disabling all models:", error);
+    }
+  };
+
+  const handleEnableAll = async () => {
+    try {
+      const res = await fetch(`/api/models/disabled?providerAlias=${encodeURIComponent(providerStorageAlias)}`, { method: "DELETE" });
+      if (res.ok) await fetchDisabledModels();
+    } catch (error) {
+      console.log("Error enabling all models:", error);
+    }
+  };
 
   // Define callbacks BEFORE the useEffect that uses them
   const fetchAliases = useCallback(async () => {
@@ -237,7 +294,8 @@ export default function ProviderDetailPage() {
   useEffect(() => {
     fetchConnections();
     fetchAliases();
-  }, [fetchConnections, fetchAliases]);
+    fetchDisabledModels();
+  }, [fetchConnections, fetchAliases, fetchDisabledModels]);
 
   // Fetch suggested models from provider's public API (if configured)
   useEffect(() => {
@@ -587,10 +645,13 @@ export default function ProviderDetailPage() {
     }
     // Combine hardcoded models with Kilo free models (deduplicated)
     // Exclude non-llm models (embedding, tts, etc.) — they have dedicated pages under media-providers
-    const displayModels = [
+    const allModels = [
       ...models,
       ...kiloFreeModels.filter((fm) => !models.some((m) => m.id === fm.id)),
     ].filter((m) => !m.type || m.type === "llm");
+    const disabledSet = new Set(disabledModelIds);
+    const displayModels = allModels.filter((m) => !disabledSet.has(m.id));
+    const disabledDisplayModels = allModels.filter((m) => disabledSet.has(m.id));
     // Custom models added by user (stored as aliases: modelId → providerAlias/modelId)
     const customModels = Object.entries(modelAliases)
       .filter(([alias, fullModel]) => {
@@ -610,6 +671,25 @@ export default function ProviderDetailPage() {
 
     return (
       <div className="flex flex-wrap gap-3">
+        {/* Custom models first */}
+        {customModels.map((model) => (
+          <ModelRow
+            key={model.id}
+            model={{ id: model.id }}
+            fullModel={`${providerDisplayAlias}/${model.id}`}
+            alias={model.alias}
+            copied={copied}
+            onCopy={copy}
+            onSetAlias={() => {}}
+            onDeleteAlias={() => handleDeleteAlias(model.alias)}
+            testStatus={modelTestResults[model.id]}
+            onTest={connections.length > 0 || isFreeNoAuth ? () => handleTestModel(model.id) : undefined}
+            isTesting={testingModelId === model.id}
+            isCustom
+            isFree={false}
+          />
+        ))}
+
         {displayModels.map((model) => {
           const fullModel = `${providerStorageAlias}/${model.id}`;
           const oldFormatModel = `${providerId}/${model.id}`;
@@ -630,33 +710,15 @@ export default function ProviderDetailPage() {
               onTest={connections.length > 0 || isFreeNoAuth ? () => handleTestModel(model.id) : undefined}
               isTesting={testingModelId === model.id}
               isFree={model.isFree}
+              onDisable={() => handleDisableModel(model.id)}
             />
           );
         })}
 
-        {/* Custom models inline */}
-        {customModels.map((model) => (
-          <ModelRow
-            key={model.id}
-            model={{ id: model.id }}
-            fullModel={`${providerDisplayAlias}/${model.id}`}
-            alias={model.alias}
-            copied={copied}
-            onCopy={copy}
-            onSetAlias={() => {}}
-            onDeleteAlias={() => handleDeleteAlias(model.alias)}
-            testStatus={modelTestResults[model.id]}
-            onTest={connections.length > 0 || isFreeNoAuth ? () => handleTestModel(model.id) : undefined}
-            isTesting={testingModelId === model.id}
-            isCustom
-            isFree={false}
-          />
-        ))}
-
         {/* Add model button — inline, same style as model chips */}
         <button
           onClick={() => setShowAddCustomModel(true)}
-          className="flex w-full items-center justify-center gap-1.5 rounded-lg border border-dashed border-black/15 px-3 py-2 text-xs text-text-muted transition-colors hover:border-primary/40 hover:text-primary sm:w-auto"
+          className="flex w-full items-center justify-center gap-1.5 rounded-lg border border-dashed border-primary/40 px-3 py-2 text-xs text-primary transition-colors hover:border-primary hover:bg-primary/5 sm:w-auto"
         >
           <span className="material-symbols-outlined text-sm">add</span>
           Add Model
@@ -692,6 +754,26 @@ export default function ProviderDetailPage() {
             </div>
           );
         })()}
+
+        {/* Disabled models — restorable */}
+        {disabledDisplayModels.length > 0 && (
+          <div className="w-full mt-2">
+            <p className="text-xs text-text-muted mb-2">Disabled models ({disabledDisplayModels.length}):</p>
+            <div className="flex flex-wrap gap-2">
+              {disabledDisplayModels.map((m) => (
+                <button
+                  key={m.id}
+                  onClick={() => handleEnableModel(m.id)}
+                  className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg border border-dashed border-black/10 dark:border-white/10 text-xs text-text-muted hover:text-primary hover:border-primary/40 hover:bg-primary/5 transition-colors"
+                  title="Restore model"
+                >
+                  <span className="material-symbols-outlined text-[13px]">add</span>
+                  {m.id}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
     );
   };
@@ -969,6 +1051,27 @@ export default function ProviderDetailPage() {
           <h2 className="text-lg font-semibold">
             {"Available Models"}
           </h2>
+          {!isCompatible && (() => {
+            const allIds = [
+              ...models,
+              ...kiloFreeModels.filter((fm) => !models.some((m) => m.id === fm.id)),
+            ].filter((m) => !m.type || m.type === "llm").map((m) => m.id);
+            const activeIds = allIds.filter((id) => !disabledModelIds.includes(id));
+            return (
+              <div className="flex gap-2">
+                {disabledModelIds.length > 0 && (
+                  <Button size="sm" variant="secondary" icon="restart_alt" onClick={handleEnableAll}>
+                    Active All
+                  </Button>
+                )}
+                {activeIds.length > 0 && (
+                  <Button size="sm" variant="secondary" icon="block" onClick={() => handleDisableAll(activeIds)}>
+                    Disable All
+                  </Button>
+                )}
+              </div>
+            );
+          })()}
         </div>
         {!!modelsTestError && (
           <p className="text-xs text-red-500 mb-3 break-words">{modelsTestError}</p>

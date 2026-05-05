@@ -5,6 +5,7 @@ import localDevice, { fetchLocalDeviceVoices } from "./localDevice.js";
 import elevenlabs, { fetchElevenLabsVoices } from "./elevenlabs.js";
 import openai from "./openai.js";
 import openrouter from "./openrouter.js";
+import gemini, { fetchGeminiVoices } from "./gemini.js";
 import { FORMAT_HANDLERS } from "./genericFormats.js";
 import { parseModelVoice } from "./_base.js";
 
@@ -16,6 +17,7 @@ const SPECIAL_ADAPTERS = {
   elevenlabs,
   openai,
   openrouter,
+  gemini,
 };
 
 export function getTtsAdapter(provider) {
@@ -41,7 +43,8 @@ export const VOICE_FETCHERS = {
   "edge-tts": fetchEdgeTtsVoices,
   "local-device": fetchLocalDeviceVoices,
   elevenlabs: fetchElevenLabsVoices,
+  gemini: fetchGeminiVoices,
 };
 
 // Re-export for backward compat
-export { fetchEdgeTtsVoices, fetchLocalDeviceVoices, fetchElevenLabsVoices };
+export { fetchEdgeTtsVoices, fetchLocalDeviceVoices, fetchElevenLabsVoices, fetchGeminiVoices };
