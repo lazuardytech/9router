@@ -13,7 +13,8 @@ Ships with a Next.js dashboard for managing accounts, combos, API keys, usage, M
 - **Next.js 16** (App Router, webpack bundler) + **React 19**
 - **Pure JavaScript ESM** (no TS — JSDoc only). Path aliases via `jsconfig.json`.
 - **Tailwind v4** (CSS-config), Monaco editor, recharts, @xyflow/react, zustand
-- **Storage**: lowdb JSON files in `$DATA_DIR` (default `~/.9router/`); optional `better-sqlite3` for Cursor token import
+- **Package manager**: **pnpm** (migrated from npm). Config: `.npmrc` with `node-linker=hoisted`. `paseo.json` for Paseo worktree.
+- **Storage**: **SQLite** (`~/.9router/9router.sqlite`) via `better-sqlite3` (Node) or `bun:sqlite` (Bun). Legacy `db.json` auto-migrated on first boot. Cloudflare Workers branch uses in-memory lowdb stub.
 - **Streaming**: Web Streams API + `open-sse/` local package (the actual router engine)
 - **Runtime**: Node or Bun (`dev:bun`, `start:bun`); production Docker uses Bun
 
@@ -25,13 +26,13 @@ Ships with a Next.js dashboard for managing accounts, combos, API keys, usage, M
 | `open-sse/` | LLM router engine (provider configs, executors, translators, RTK, handlers) — local package, NOT npm dep |
 | `cloud/` | Standalone Cloudflare Worker companion (D1, KV) |
 | `skills/` | Markdown SKILL.md files for AI agents (raw-served from GitHub) |
-| `tests/` | Vitest unit tests (isolated subpackage, deps in `/tmp`) |
+| `tests/` | Vitest unit tests (managed via root `vitest.config.mjs`, deps via pnpm) |
 | `tester/` | Manual translator harness |
 | `docs/` | `ARCHITECTURE.md` (557 lines, authoritative) |
 | `i18n/` | README translations (ja, vi, zh-CN) |
 | `public/` | Static assets + `i18n/literals/` runtime locale JSON |
-| `scripts/` | One-off scripts (README translator) |
-| `.github/workflows/` | docker-publish on tag push |
+| `scripts/` | One-off scripts incl. `migrate-json-to-sqlite.mjs` + README translator |
+| `.github/workflows/` | Docker publish + CI workflows |
 
 ## Naming note
 

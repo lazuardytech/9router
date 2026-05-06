@@ -25,13 +25,14 @@ Authoritative deep-dive: `docs/ARCHITECTURE.md` (557 lines, written by upstream 
 
 ## TL;DR for a new agent
 
-- **Stack**: Next.js 16 + React 19 + Tailwind v4, pure JS ESM (no TS), zustand, lowdb storage, runs on Bun in prod
+- **Stack**: Next.js 16 + React 19 + Tailwind v4, pure JS ESM (no TS), zustand, **SQLite-backed** (better-sqlite3 / bun:sqlite), runs on Bun in prod
 - **Two packages**: `src/` (app) + `open-sse/` (router engine, local-aliased not npm)
+- **Package manager**: **pnpm** (migrated from npm). Uses `node-linker=hoisted`.
 - **Dev port**: `20128`
-- **Lint**: `npx eslint .` (no npm script)
-- **Test**: `cd tests && npm test` (vitest deps live in `/tmp/node_modules`)
+- **Lint**: `pnpm exec eslint .` or `npx eslint .` (no npm script)
+- **Test**: `npm run test:run` (vitest, deps via pnpm). Root `vitest.config.mjs` + single-fork pool.
 - **Run**: `npm run dev` or `npm run dev:bun`
-- **Storage**: `~/.9router/db.json` (lowdb)
+- **Storage**: `~/.9router/9router.sqlite` (SQLite). Legacy `db.json` auto-migrated on first boot.
 - **Config**: read `.env.example` for required env (`JWT_SECRET`, `INITIAL_PASSWORD`, `DATA_DIR`)
 
 ## When in doubt
@@ -39,4 +40,4 @@ Authoritative deep-dive: `docs/ARCHITECTURE.md` (557 lines, written by upstream 
 - Search `docs/ARCHITECTURE.md` first — most "how does X work" answers live there
 - For routing/translator behavior: read `open-sse/handlers/chatCore.js` end-to-end
 - For auth/credential selection: `src/sse/services/auth.js`
-- For DB schema: `src/lib/localDb.js`
+- For DB schema: `src/lib/sqlite/schema.js` (SQLite) and `src/lib/localDb.js` (facade)

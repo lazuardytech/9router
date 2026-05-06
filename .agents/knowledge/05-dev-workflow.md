@@ -1,8 +1,21 @@
 # Development Workflow
 
+## Package manager
+
+**pnpm** (migrated from npm in `c720d3f`). Config: `.npmrc` with `node-linker=hoisted`. Install:
+
+```bash
+pnpm install              # install deps (no --frozen-lockfile for dev)
+pnpm install --frozen-lockfile  # CI/Docker
+```
+
+For convenience, `npm run` still works (delegates to pnpm via `package.json` scripts).
+
+`paseo.json` at root for [Paseo](https://paseo.dev) worktree integration.
+
 ## Run / Build
 
-`package.json:6-13`:
+`package.json:6-14`:
 
 ```bash
 npm run dev          # next dev --webpack --port 20128
@@ -19,13 +32,15 @@ npm run start:bun    # bun ./.next/standalone/server.js
 
 | Task | Command | Notes |
 |---|---|---|
-| Lint | `npx eslint .` | No npm script. Flat config in `eslint.config.mjs`, extends `eslint-config-next/core-web-vitals` |
+| Lint | `pnpm exec eslint .` or `npx eslint .` | No npm script. Flat config in `eslint.config.mjs`, extends `eslint-config-next/core-web-vitals` |
 | Typecheck | none | Pure JS. Only `jsconfig.json`, no TS |
-| Tests | `cd tests && npm test` | Vitest. **Deps live in `/tmp/node_modules`** to dodge Next workspace hoist. Script: `NODE_PATH=/tmp/node_modules /tmp/node_modules/.bin/vitest run` |
+| Tests | `npm run test:run` | Vitest via root `vitest.config.mjs`. Single-fork pool. Deps via pnpm. |
 
-17 unit files in `tests/unit/`: embeddings (core+cloud), claude header forwarding, codex image/refresh, combo routing, image-gen, oauth-cursor import, openai↔claude translation, perplexity-web, provider validation, rtk (3 incl. e2e + multi-provider e2e), translator normalization, web-cookie validation, antigravity-cache.
+18 unit files in `tests/unit/` (17 + `sqlite-migration.test.js`): embeddings (core+cloud), claude header forwarding, codex image/refresh, combo routing, image-gen, oauth-cursor import, openai↔claude translation, perplexity-web, provider validation, rtk (3 incl. e2e + multi-provider e2e), translator normalization, web-cookie validation, antigravity-cache, sqlite-migration.
 
 `tester/translator/testFromFile.js` = standalone manual translator harness, NOT Vitest.
+
+Root `vitest.config.mjs` uses `vite-tsconfig-paths` for `@/` alias resolution. Pool: `forks` with `singleFork: true` (SQLite migration test requires isolation).
 
 ## Docker
 
@@ -39,7 +54,8 @@ docker run -d -p 20128:20128 -v "$HOME/.9router:/app/data" -e DATA_DIR=/app/data
 ```
 
 - Base: `oven/bun:1.3.2-alpine`
-- Multi-stage: builder (nodejs/npm/python3/g++ for native deps) → runner
+- Multi-stage: builder (nodejs/pnpm/python3/g++ for native deps) → runner
+- Builder installs pnpm globally (`npm i -g pnpm`), then `pnpm install --frozen-lockfile`
 - Standalone Next output + `open-sse/` + `src/mitm/` copied separately (Next standalone tracing misses them)
 - `node-forge` copied separately for MITM cert gen
 - `su-exec` drops to `bun` user after chowning `/app/data`
@@ -47,11 +63,18 @@ docker run -d -p 20128:20128 -v "$HOME/.9router:/app/data" -e DATA_DIR=/app/data
 
 ## CI/CD
 
-`.github/workflows/docker-publish.yml`:
+Two workflows:
+
+### `.github/workflows/ci.yml` (lint + test + build)
+- **Trigger**: push/PR (any branch)
+- Steps: pnpm install → lint (`pnpm exec eslint . || true`) → install test deps → `npm run test:run` → `npm run build`
+- pnpm via `pnpm/action-setup@v4` (v10)
+
+### `.github/workflows/docker-publish.yml`
 - **Trigger**: push tags `v*` + manual `workflow_dispatch`
-- **NO PR/push CI** → no automated lint/test gate
+- NO lint/test gate (separate CI)
 - Builds & pushes to `ghcr.io/<repo>` via buildx, `linux/amd64`, registry buildcache
-- Tags: SHA, `{{version}}`, `{{major}}.{{minor}}`, `latest` on default branch
+- Tags: SHA, `{{version}}`, `{{major}}.{{minor}}`, `latest` (always, not just on default branch)
 - Release process: git tag `vX.Y.Z` → image published. Manual version bump in `package.json`.
 
 ## Env vars (`.env.example`)
@@ -69,6 +92,7 @@ docker run -d -p 20128:20128 -v "$HOME/.9router:/app/data" -e DATA_DIR=/app/data
 
 ### Ops/observability
 - `ENABLE_REQUEST_LOGS`, `OBSERVABILITY_ENABLED`
+- `API_TIMEOUT_MS` — upstream request timeout (default 45000ms, used in `chatCore.js:158`)
 
 ### Cloud sync
 - `CLOUD_URL` / `NEXT_PUBLIC_CLOUD_URL`, `NEXT_PUBLIC_BASE_URL`
@@ -96,9 +120,20 @@ docker run -d -p 20128:20128 -v "$HOME/.9router:/app/data" -e DATA_DIR=/app/data
 
 Closed-source MITM dev/debug helper.
 
+## SQLite migration
+
+Auto-migration from legacy `db.json` runs on first boot (`src/lib/sqlite/connection.js:72-80`). Manual trigger:
+
+```bash
+curl -X POST http://localhost:20128/api/settings/migrate-sqlite
+curl http://localhost:20128/api/settings/migrate-sqlite  # GET to inspect
+```
+
+One-off script: `node scripts/migrate-json-to-sqlite.mjs` (standalone, outside Next).
+
 ## Versioning
 
-- Source: `package.json:3` (currently `0.4.18`)
+- Source: `package.json:3` (currently `0.4.24`)
 - Bump: manual
 - Format `CHANGELOG.md`: `# vX.Y.Z (YYYY-MM-DD)` then `## Features / Improvements / Fixes`. Plain markdown, NOT Keep-a-Changelog.
 - Cadence: ~daily releases since mid-Apr 2026, fast-moving.

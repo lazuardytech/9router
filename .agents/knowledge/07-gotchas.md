@@ -35,9 +35,11 @@ But **`npm start` (production `next start`) does NOT pass `--port`** (`package.j
 
 **Don't add `/v1/*` Next pages** — they'll be shadowed by API routes.
 
-## 7. `better-sqlite3` is optional
+## 7. SQLite is now the primary store (was optional)
 
-`package.json:43-45` lists it under `optionalDependencies` and `next.config.mjs:4` marks it `serverExternalPackages` (so native binding isn't bundled). Code falls back to `sql.js` / `lowdb` when native build fails. **Don't hard-import it.** Currently only used in `src/app/api/oauth/cursor/auto-import/route.js` for reading Cursor's SQLite (with `sqlite3` CLI fallback).
+`better-sqlite3` is in `optionalDependencies` — still optional. But now **SQLite is the primary store** (`~/.9router/9router.sqlite`), NOT lowdb JSON. On Node: `better-sqlite3`. On Bun: `bun:sqlite` (built-in, via `createRequire`). Both are externals in `next.config.mjs`. Code falls back to in-memory lowdb only on Cloudflare Workers (`isCloud` check).
+
+Legacy `db.json` is auto-migrated on first boot. Don't hard-import `better-sqlite3` directly — use `src/lib/sqlite/connection.js:82` `getDatabase()` which handles runtime detection.
 
 ## 8. MITM bootstrap = ESM→CJS bridged via env var
 
@@ -69,19 +71,23 @@ But **`npm start` (production `next start`) does NOT pass `--port`** (`package.j
 
 Only the README + repo name say "melma-router". **Don't blanket-rename** — coordinate first. Skills metadata pulls from `decolua/9router` GitHub raw — changing this would require forking skills and updating `SKILLS_RAW_BASE`.
 
-## 14. Account "Mongo-style" `_id` is lowdb
+## 14. Account "Mongo-style" `_id` is SQLite
 
-Zustand stores use `_id` for record IDs (`providerStore.js:18,24`) but backing store is **lowdb JSON files**, not MongoDB. Don't try to query MongoDB — just edit `db.json` via `localDb.js`.
+Zustand stores use `_id` for record IDs (`providerStore.js:18,24`) but backing store is **SQLite**, not MongoDB. Don't try to query MongoDB. Edit via `localDb.js` (which wraps SQLite). You can also query directly: `sqlite3 ~/.9router/9router.sqlite "SELECT * FROM provider_connections"`.
 
-## 15. `tests/` is an isolated subpackage
+## 15. Tests use root vitest config + pnpm
 
-Vitest deps live in **`/tmp/node_modules`** (`tests/package.json:8` script: `NODE_PATH=/tmp/node_modules ...`) to dodge Next workspace hoist. To run tests: `cd tests && npm test`. To install test deps: check `tests/package.json`.
+Tests now run via `npm run test:run` which uses the root `vitest.config.mjs` (single-fork pool, `vite-tsconfig-paths` plugin). No more `cd tests && npm test` with `/tmp/node_modules`. Install test deps via `pnpm install` at root.
 
-## 16. CI runs only on tag push
+Root `vitest.config.mjs` uses `pool: "forks"` with `singleFork: true` — SQLite migration test mutates `process.env.DATA_DIR` and needs isolation from other suites.
 
-`.github/workflows/docker-publish.yml` triggers on `v*` tag push + manual. **NO PR/push CI** — no automated lint/test gate. Run locally before pushing.
+## 16. CI runs on push/PR and tag push (two workflows)
 
-**Note**: There is also a separate CI workflow (`.github/workflows/ci.yml`) that runs lint, test, and build validation on PR/push, but Docker publish only happens on tag push.
+Two CI workflows:
+- **`.github/workflows/ci.yml`** — lint + test + build on **push/PR** (any branch). Uses pnpm.
+- **`.github/workflows/docker-publish.yml`** — Docker build+push on `v*` tag push + manual. `latest` tag emitted on every build (not just default branch).
+
+`ci.yml` removed the `|| true` on lint — failures now fail the pipeline. Reports: `npm run test:run` and `npm run build`.
 
 ## 17. Cooldown is per-MODEL, not per-account
 
@@ -95,3 +101,33 @@ Vitest deps live in **`/tmp/node_modules`** (`tests/package.json:8` script: `NOD
 3. Push to `decolua/9router@master` for the link to resolve
 
 **For melma-router**, this URL is wrong (points at upstream). Consider whether to fork skills hosting.
+
+## 19. pnpm migration — don't use npm to install
+
+Package manager is pnpm (migrated `c720d3f`). `.npmrc` sets `node-linker=hoisted` for compatibility. `pnpm-lock.yaml` is committed. **Don't use `npm install`** — it will produce a different `node_modules` layout. `npm run` scripts still work (delegated).
+
+`better-sqlite3` is in `pnpm.onlyBuiltDependencies` in `package.json` so its native bindings compile. If you add a new native dep, add it to this list.
+
+`paseo.json` exists for [Paseo](https://paseo.dev) worktree — ignore if not using it.
+
+## 20. Upstream timeout: 408 ≠ 499
+
+`chatCore.js:158-190` introduces a combined `AbortController` for both client disconnect and upstream timeout:
+- Client closes connection → 499
+- Upstream timeout (`API_TIMEOUT_MS`, default 45000ms) → 408 (Request Timeout)
+- 502/503 retries: 2 attempts @ 1500ms each (was 3 @ 3000ms)
+- 504: no retry (0 attempts)
+
+The `LOCAL_UPSTREAM_TIMEOUT_MS = 45000` constant is in `open-sse/config/runtimeConfig.js:49`.
+
+## 21. Exit flush hooks for buffered queues
+
+`usageDb.js:340-348` registers `beforeExit`, `SIGINT`, `SIGTERM`, and `exit` handlers that flush `summaryQueue` and `logQueue`. Guarded by `global._flushHooksRegistered`. If you add buffered queues elsewhere, follow this pattern.
+
+## 22. Claude tool name decloaking runs on every SSE line
+
+`open-sse/utils/claudeCloaking.js` `decloakToolNames()` is a recursive shape-agnostic walker applied per SSE line in `stream.js`. It also strips `CLAUDE_TOOL_SUFFIX` (`_9r`) from tool names for Claude provider passthrough. When debugging missing tool calls, check if the decloaking is stripping names you expect.
+
+## 23. NineRemote promo components removed
+
+`NineRemoteButton.js`, `NineRemotePromoModal.js`, and the "Remote" menu item in `HeaderMenu.js` were deleted. No replacement. If you see references to NineRemote promo in old commits, ignore — not coming back.

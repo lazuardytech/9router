@@ -71,6 +71,17 @@ Main agent → subagent B (parallel)
 - ✅ Use: read, grep, glob, bash, edit, write
 - ❌ NEVER use: Task tool, skill tool
 
+**Known opencode bug — `grep` SchemaError**: opencode's `explore` subagent sometimes calls `grep` without the required `pattern` key, triggering `SchemaError(Missing key`. This is an opencode harness bug.
+
+**Mitigation**: When delegating grep tasks to subagents, always explicitly specify both `pattern` (regex string) and `include` (file glob). The subagent prompt must contain clear instructions like:
+
+```
+❌ Risky: "Search for references to hasUpdate"
+✅ Safe: "Use grep with pattern="hasUpdate" include="*.js" to find all references"
+```
+
+The key is that the subagent prompt itself contains the literal `pattern=` and `include=` values so the generated tool call always has them populated. If you see this error in a subagent's output, ignore it (it's the harness, not your code) and re-task with explicit pattern/include.
+
 **If subagent needs more work:**
 1. Return findings to main agent
 2. Main agent spawns additional subagents if needed
