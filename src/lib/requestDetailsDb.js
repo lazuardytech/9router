@@ -187,34 +187,6 @@ async function flushToDatabase() {
   }
 }
 
-      // Upsert: replace existing record with same id
-      const idx = db.data.records.findIndex(r => r.id === record.id);
-      if (idx !== -1) {
-        db.data.records[idx] = record;
-      } else {
-        db.data.records.push(record);
-      }
-    }
-
-    // Keep only latest maxRecords (sorted by timestamp desc)
-    db.data.records.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
-    if (db.data.records.length > config.maxRecords) {
-      db.data.records = db.data.records.slice(0, config.maxRecords);
-    }
-
-    // Shrink records until total serialized size is within safe limit
-    while (db.data.records.length > 1) {
-      const totalSize = Buffer.byteLength(JSON.stringify(db.data), "utf8");
-      if (totalSize <= MAX_TOTAL_DB_SIZE) break;
-      db.data.records = db.data.records.slice(0, Math.floor(db.data.records.length / 2));
-    }
-
-    await db.write();
-  } catch (error) {
-    console.error("[requestDetailsDb] Batch write failed:", error);
-  } finally {
-    isFlushing = false;
-  }
 }
 
 export async function saveRequestDetail(detail) {
