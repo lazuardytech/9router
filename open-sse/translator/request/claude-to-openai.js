@@ -197,11 +197,11 @@ function convertClaudeMessage(msg) {
       return result;
     }
 
-    // Return content
     if (parts.length > 0) {
+      const allText = parts.every(p => p.type === "text");
       return {
         role,
-        content: parts.length === 1 && parts[0].type === "text" ? parts[0].text : parts
+        content: allText ? parts.map(p => p.text).join("\n") : parts
       };
     }
     
