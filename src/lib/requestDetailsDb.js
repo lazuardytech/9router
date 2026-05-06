@@ -186,7 +186,6 @@ async function flushToDatabase() {
     isFlushing = false;
   }
 }
-      }
 
       // Upsert: replace existing record with same id
       const idx = db.data.records.findIndex(r => r.id === record.id);
