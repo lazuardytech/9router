@@ -187,7 +187,6 @@ async function flushToDatabase() {
   }
 }
 
-}
 
 export async function saveRequestDetail(detail) {
   const config = await getObservabilityConfig();
