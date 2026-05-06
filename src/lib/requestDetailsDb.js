@@ -187,16 +187,54 @@ async function flushToDatabase() {
   }
 }
 
-    // Keep only latest maxRecords (sorted by timestamp desc)
-    db.data.records.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
-    if (db.data.records.length > config.maxRecords) {
-      db.data.records = db.data.records.slice(0, config.maxRecords);
-    }
+async function saveRequestDetail(record) {
+  if (!record || !record.id) return;
+  
+  pendingRecords.push(record);
+  
+  if (!flushTimer) {
+    flushTimer = setTimeout(() => {
+      flushPendingRecords().catch(err => 
+        console.error("[requestDetailsDb] Auto-flush failed:", err)
+      );
+    }, FLUSH_INTERVAL_MS);
+  }
+}
 
-    // Shrink records until total serialized size is within safe limit
-    while (db.data.records.length > 1) {
-      const totalSize = Buffer.byteLength(JSON.stringify(db.data), "utf8");
-      if (totalSize <= MAX_TOTAL_DB_SIZE) break;
+async function getRequestDetail(id) {
+  try {
+    await ensureDb();
+    return db.data.records.find(r => r.id === id) || null;
+  } catch (error) {
+    console.error("[requestDetailsDb] Get failed:", error);
+    return null;
+  }
+}
+
+async function getRecentRequests(limit = 20) {
+  try {
+    await ensureDb();
+    return db.data.records
+      .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
+      .slice(0, limit);
+  } catch (error) {
+    console.error("[requestDetailsDb] Get recent failed:", error);
+    return [];
+  }
+}
+
+async function clearAllRecords() {
+  try {
+    await ensureDb();
+    db.data.records = [];
+    estimatedDbSize = Buffer.byteLength(JSON.stringify(db.data), "utf8");
+    await db.write();
+  } catch (error) {
+    console.error("[requestDetailsDb] Clear failed:", error);
+  }
+}
+
+export { saveRequestDetail, getRequestDetail, getRecentRequests, clearAllRecords, flushPendingRecords };
       db.data.records = db.data.records.slice(0, Math.floor(db.data.records.length / 2));
     }
 
