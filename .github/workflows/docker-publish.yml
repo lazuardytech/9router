@@ -33,7 +33,7 @@ jobs:
             type=semver,pattern={{version}}
             type=semver,pattern={{major}}.{{minor}},enable=false
             type=semver,pattern={{major}},enable=false
-            type=raw,value=latest,enable={{is_default_branch}}
+            type=raw,value=latest
 
       - name: Build and push
         uses: docker/build-push-action@v6
