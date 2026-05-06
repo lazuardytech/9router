@@ -111,8 +111,8 @@ if (!global._statsEmitter) {
 export const statsEmitter = global._statsEmitter;
 
 // Safety timers — force-clear pending counts after 1 min if END was never called
-if (!global._pendingRequests) global._pendingRequests = new Map();
-const pendingRequestsMap = global._pendingRequests;
+if (!global._pendingRequestsMap) global._pendingRequestsMap = new Map();
+const pendingRequestsMap = global._pendingRequestsMap;
 
 const PENDING_TIMEOUT_MS = 60 * 1000;
 
