@@ -235,48 +235,6 @@ async function clearAllRecords() {
 }
 
 export { saveRequestDetail, getRequestDetail, getRecentRequests, clearAllRecords, flushPendingRecords };
-      db.data.records = db.data.records.slice(0, Math.floor(db.data.records.length / 2));
-    }
-
-    await db.write();
-  } catch (error) {
-    console.error("[requestDetailsDb] Batch write failed:", error);
-  } finally {
-    isFlushing = false;
-  }
-}
-
-export async function saveRequestDetail(detail) {
-  const config = await getObservabilityConfig();
-  if (!config.enabled) return;
-
-  writeBuffer.push(detail);
-
-  if (writeBuffer.length >= config.batchSize) {
-    await flushToDatabase();
-    if (flushTimer) { clearTimeout(flushTimer); flushTimer = null; }
-  } else if (!flushTimer) {
-    flushTimer = setTimeout(() => {
-      flushToDatabase().catch(() => {});
-      flushTimer = null;
-    }, config.flushIntervalMs);
-  }
-}
-
-export async function getRequestDetails(filter = {}) {
-  const db = await getDb();
-  let records = [...db.data.records];
-
-  // Apply filters
-  if (filter.provider) records = records.filter(r => r.provider === filter.provider);
-  if (filter.model) records = records.filter(r => r.model === filter.model);
-  if (filter.connectionId) records = records.filter(r => r.connectionId === filter.connectionId);
-  if (filter.status) records = records.filter(r => r.status === filter.status);
-  if (filter.startDate) records = records.filter(r => new Date(r.timestamp) >= new Date(filter.startDate));
-  if (filter.endDate) records = records.filter(r => new Date(r.timestamp) <= new Date(filter.endDate));
-
-  // Sort desc
-  records.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
 
   const totalItems = records.length;
   const page = filter.page || 1;
