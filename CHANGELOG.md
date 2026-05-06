@@ -1,34 +1,39 @@
-# v0.4.22 (2026-05-06)
+# v0.4.24 (2026-05-07)
 
-## Fixes
-- Fix initTranslators function missing after optimization commit
-- Restore lazy initialization pattern with ensureInitialized()
-- Fix "initTranslators is not a function" runtime error in Docker
-- Fix "v.entries is not a function" error by separating global._pendingRequests and global._pendingRequestsMap
+## Breaking
+- Remove self-updater (appUpdater, updater.js, POST /api/version/update), simplify GET /api/version to local version only
+- Remove CLI Tools feature, keep only MITM
+- Migrate package manager from npm to pnpm (project now requires pnpm)
+- Migrate storage from lowdb JSON to SQLite (better-sqlite3)
 
-# v0.4.21 (2026-05-06)
-
-## Fixes
-- Fix duplicate code in requestDetailsDb.js
-- Add vitest to devDependencies for testing
-- Fix CI workflow for lint, test, and build validation
-
-# v0.4.20 (2026-05-06)
+## Features
+- SQLite storage: migrate from lowdb JSON to SQLite (better-sqlite3), with manual migration button for legacy db.json
+- SQLite: Bun runtime support via bun:sqlite, inline schema module for Next.js standalone build
+- Docker: add docker-compose with persistent data volume, env_file support
+- Rate limit: add daily-token and per-minute rate-limit lock rules for fallback strategy
+- CI: add GitHub Actions workflow for lint, test, and build validation
 
 ## Performance
-- Optimize caches with LRU eviction: credentialsCache (500 max), refreshPromiseCache (100 max), sessionCache
-- Increase credentials cache TTL from 500ms to 5s for read-heavy workloads
-- Optimize recentRequests sort: limit to last 100 entries before sorting (30% faster)
+- Optimize hot path for high-concurrency request handling (LRU cache eviction, 5s credentials TTL, sorted recentRequests limit)
 - Replace per-request timeout timers with single interval checker
-- Add incremental size tracking in requestDetailsDb (avoid full JSON serialization)
 - Pre-initialize translators at module load (eliminate 50ms TTFT penalty)
-- Estimated impact: 15-25% performance improvement, prevent memory leaks
+- Add upstream timeout with 502/503/504 fallback and tuned retry logic
+- Add exit flush hooks for graceful shutdown
 
-## Refactor
-- Remove CLI Tools feature, keep only MITM
+## Fixes
+- Fix duplicate code blocks in requestDetailsDb.js
+- Restore initTranslators function with lazy initialization (ensureInitialized)
+- Fix "v.entries is not a function" runtime error in Docker (separate _pendingRequests from _pendingRequestsMap)
+- Fix merge conflict syntax errors in usageDb and requestDetailsDb
+- Restore missing helper functions: calculateCost, readTotalRequests
+- Fix token-refresh unhandled rejection in dedupe cleanup
+- Fix unused dangling usage_history query variable
+- Fix(open-sse): decloak Claude tool names on every client-bound path
+- Resolve all pre-existing test failures
 
 ## Documentation
-- Revise mandatory rules with clearer structure and examples
+- Update knowledge base with SQLite, pnpm migration, CI overhaul, fork divergence
+- Revise mandatory rules with clearer structure, examples, and subagent guidelines
 
 # v0.4.18 (2026-05-05)
 
