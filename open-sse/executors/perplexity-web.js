@@ -42,11 +42,6 @@ const _cleanupInterval = setInterval(() => {
       sessionCache.delete(key);
     }
   }
-  if (sessionCache.size > SESSION_MAX_ENTRIES) {
-    const entries = Array.from(sessionCache.entries()).sort((a, b) => a[1].ts - b[1].ts);
-    const toDelete = entries.slice(0, sessionCache.size - SESSION_MAX_ENTRIES);
-    toDelete.forEach(([key]) => sessionCache.delete(key));
-  }
 }, SESSION_CLEANUP_INTERVAL_MS);
 if (_cleanupInterval.unref) _cleanupInterval.unref();
 
@@ -77,15 +72,11 @@ function sessionStore(history, currentMsg, responseText, backendUuid) {
   if (!backendUuid) return;
   const full = [...history, { role: "user", content: currentMsg }, { role: "assistant", content: responseText }];
   const key = sessionKey(full);
-  sessionCache.set(key, { backendUuid, ts: Date.now() });
-  if (sessionCache.size > SESSION_MAX_ENTRIES) {
-    let oldestKey = null;
-    let oldestTs = Infinity;
-    for (const [k, v] of sessionCache) {
-      if (v.ts < oldestTs) { oldestTs = v.ts; oldestKey = k; }
-    }
-    if (oldestKey) sessionCache.delete(oldestKey);
+  if (sessionCache.size >= SESSION_MAX_ENTRIES) {
+    const firstKey = sessionCache.keys().next().value;
+    sessionCache.delete(firstKey);
   }
+  sessionCache.set(key, { backendUuid, ts: Date.now() });
 }
 
 function cleanResponse(text, strip = true) {

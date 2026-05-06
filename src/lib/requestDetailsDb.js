@@ -71,6 +71,8 @@ async function getObservabilityConfig() {
 let writeBuffer = [];
 let flushTimer = null;
 let isFlushing = false;
+let estimatedDbSize = 0;
+let flushCount = 0;
 
 function safeJsonStringify(obj, maxSize) {
   try {
@@ -119,7 +121,6 @@ async function flushToDatabase() {
       if (!item.timestamp) item.timestamp = new Date().toISOString();
       if (item.request?.headers) item.request.headers = sanitizeHeaders(item.request.headers);
 
-      // Serialize large fields
       const record = {
         id: item.id,
         provider: item.provider || null,
@@ -135,13 +136,56 @@ async function flushToDatabase() {
         response: item.response || {},
       };
 
-      // Truncate oversized JSON fields
       const maxSize = config.maxJsonSize;
       for (const field of ["request", "providerRequest", "providerResponse", "response"]) {
         const str = JSON.stringify(record[field]);
         if (str.length > maxSize) {
           record[field] = { _truncated: true, _originalSize: str.length, _preview: str.substring(0, 200) };
         }
+      }
+
+      const idx = db.data.records.findIndex(r => r.id === record.id);
+      if (idx !== -1) {
+        const oldRecordSize = Buffer.byteLength(JSON.stringify(db.data.records[idx]), "utf8");
+        db.data.records[idx] = record;
+        const newRecordSize = Buffer.byteLength(JSON.stringify(record), "utf8");
+        estimatedDbSize += (newRecordSize - oldRecordSize);
+      } else {
+        db.data.records.push(record);
+        estimatedDbSize += Buffer.byteLength(JSON.stringify(record), "utf8");
+      }
+    }
+
+    db.data.records.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+    if (db.data.records.length > config.maxRecords) {
+      const removed = db.data.records.slice(config.maxRecords);
+      for (const rec of removed) {
+        estimatedDbSize -= Buffer.byteLength(JSON.stringify(rec), "utf8");
+      }
+      db.data.records = db.data.records.slice(0, config.maxRecords);
+    }
+
+    flushCount++;
+    if (flushCount % 100 === 0) {
+      estimatedDbSize = Buffer.byteLength(JSON.stringify(db.data), "utf8");
+    }
+
+    while (db.data.records.length > 1 && estimatedDbSize > MAX_TOTAL_DB_SIZE) {
+      const halfLength = Math.floor(db.data.records.length / 2);
+      const removed = db.data.records.slice(halfLength);
+      for (const rec of removed) {
+        estimatedDbSize -= Buffer.byteLength(JSON.stringify(rec), "utf8");
+      }
+      db.data.records = db.data.records.slice(0, halfLength);
+    }
+
+    await db.write();
+  } catch (error) {
+    console.error("[requestDetailsDb] Batch write failed:", error);
+  } finally {
+    isFlushing = false;
+  }
+}
       }
 
       // Upsert: replace existing record with same id

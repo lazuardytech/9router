@@ -111,10 +111,29 @@ if (!global._statsEmitter) {
 export const statsEmitter = global._statsEmitter;
 
 // Safety timers — force-clear pending counts after 1 min if END was never called
-if (!global._pendingTimers) global._pendingTimers = {};
-const pendingTimers = global._pendingTimers;
+if (!global._pendingRequests) global._pendingRequests = new Map();
+const pendingRequestsMap = global._pendingRequests;
 
-const PENDING_TIMEOUT_MS = 60 * 1000; // 1 minute
+const PENDING_TIMEOUT_MS = 60 * 1000;
+
+if (!global._pendingCleanupInterval) {
+  global._pendingCleanupInterval = setInterval(() => {
+    const now = Date.now();
+    for (const [timerKey, entry] of pendingRequestsMap.entries()) {
+      if (now - entry.timestamp >= PENDING_TIMEOUT_MS) {
+        const { modelKey, connectionId } = entry;
+        pendingRequestsMap.delete(timerKey);
+        if (pendingRequests.byModel[modelKey] > 0) {
+          pendingRequests.byModel[modelKey] = 0;
+        }
+        if (connectionId && pendingRequests.byAccount[connectionId]?.[modelKey] > 0) {
+          pendingRequests.byAccount[connectionId][modelKey] = 0;
+        }
+        statsEmitter.emit("pending");
+      }
+    }
+  }, 5000);
+}
 
 /**
  * Track a pending request
@@ -140,22 +159,9 @@ export function trackPendingRequest(model, provider, connectionId, started, erro
   }
 
   if (started) {
-    // Safety timeout: force-clear if END is never called (client disconnect, crash, etc.)
-    clearTimeout(pendingTimers[timerKey]);
-    pendingTimers[timerKey] = setTimeout(() => {
-      delete pendingTimers[timerKey];
-      if (pendingRequests.byModel[modelKey] > 0) {
-        pendingRequests.byModel[modelKey] = 0;
-      }
-      if (connectionId && pendingRequests.byAccount[connectionId]?.[modelKey] > 0) {
-        pendingRequests.byAccount[connectionId][modelKey] = 0;
-      }
-      statsEmitter.emit("pending");
-    }, PENDING_TIMEOUT_MS);
+    pendingRequestsMap.set(timerKey, { modelKey, connectionId, timestamp: Date.now() });
   } else {
-    // END called normally — cancel the safety timer
-    clearTimeout(pendingTimers[timerKey]);
-    delete pendingTimers[timerKey];
+    pendingRequestsMap.delete(timerKey);
   }
 
   // Track error provider (auto-clears after 10s)
@@ -514,7 +520,8 @@ export async function getUsageStats(period = "all") {
 
   // Recent requests (always from live history)
   const seen = new Set();
-  const recentRequests = [...history]
+  const recentRequests = history
+    .slice(-100)
     .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
     .map((e) => {
       const t = e.tokens || {};

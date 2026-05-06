@@ -9,6 +9,7 @@ export const TOKEN_EXPIRY_BUFFER_MS = 5 * 60 * 1000;
 const refreshPromiseCache = new Map();
 const CACHE_CLEANUP_INTERVAL_MS = 60 * 1000;
 const CACHE_ENTRY_MAX_AGE_MS = 5 * 60 * 1000;
+const MAX_REFRESH_CACHE_SIZE = 100;
 
 function getRefreshCacheKey(provider, refreshToken) {
   return `${provider}:${refreshToken}`;
@@ -541,6 +542,10 @@ export async function getAccessToken(provider, credentials, log) {
     refreshPromiseCache.delete(cacheKey);
   });
 
+  if (refreshPromiseCache.size >= MAX_REFRESH_CACHE_SIZE) {
+    const firstKey = refreshPromiseCache.keys().next().value;
+    refreshPromiseCache.delete(firstKey);
+  }
   refreshPromiseCache.set(cacheKey, { promise: refreshPromise, timestamp: Date.now() });
   return refreshPromise;
 }

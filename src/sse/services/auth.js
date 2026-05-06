@@ -9,7 +9,8 @@ let selectionMutex = Promise.resolve();
 
 const credentialsCache = new Map();
 const pendingRequests = new Map();
-const CACHE_TTL_MS = 500;
+const CACHE_TTL_MS = 5000;
+const MAX_CREDENTIALS_CACHE_SIZE = 500;
 
 /**
  * Get provider credentials from localDb
@@ -204,6 +205,10 @@ export async function getProviderCredentials(provider, excludeConnectionIds = nu
   try {
     const result = await promise;
     if (result && !result.allRateLimited) {
+      if (credentialsCache.size >= MAX_CREDENTIALS_CACHE_SIZE) {
+        const firstKey = credentialsCache.keys().next().value;
+        credentialsCache.delete(firstKey);
+      }
       credentialsCache.set(cacheKey, { data: result, expiresAt: Date.now() + CACHE_TTL_MS });
     }
     return result;
