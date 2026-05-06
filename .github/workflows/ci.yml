@@ -22,16 +22,21 @@ jobs:
         with:
           node-version: '20'
 
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
       - name: Install dependencies
-        run: npm install
+        run: pnpm install --no-frozen-lockfile
 
       - name: Run lint
-        run: npx eslint . || true
+        run: pnpm exec eslint . || true
 
       - name: Install test dependencies
         run: |
-          cd /tmp && npm install vitest
-          cd $GITHUB_WORKSPACE/tests && npm install
+          cd /tmp && pnpm add vitest
+          cd $GITHUB_WORKSPACE/tests && pnpm install --no-frozen-lockfile
 
       - name: Run tests
         run: |
@@ -39,7 +44,7 @@ jobs:
           NODE_PATH=/tmp/node_modules /tmp/node_modules/.bin/vitest run --reporter=verbose || true
 
       - name: Build application
-        run: npm run build
+        run: pnpm run build
 
       - name: Test build artifacts
         run: |
