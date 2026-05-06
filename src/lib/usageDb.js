@@ -340,6 +340,16 @@ function flushLogs() {
   }
 }
 
+// Final flush on process exit (safety net for buffered queues)
+if (!isCloud && !global._flushHooksRegistered) {
+  global._flushHooksRegistered = true;
+  const flushAll = () => { flushSummaryQueue(); flushLogs(); };
+  process.on("beforeExit", flushAll);
+  process.on("SIGINT", flushAll);
+  process.on("SIGTERM", flushAll);
+  process.on("exit", flushAll);
+}
+
 export async function appendRequestLog({ model, provider, connectionId, tokens, status }) {
   if (isCloud) return;
   try {
