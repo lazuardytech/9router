@@ -186,55 +186,69 @@ async function flushToDatabase() {
     isFlushing = false;
   }
 }
+      }
 
-async function saveRequestDetail(record) {
-  if (!record || !record.id) return;
-  
-  pendingRecords.push(record);
-  
-  if (!flushTimer) {
-    flushTimer = setTimeout(() => {
-      flushPendingRecords().catch(err => 
-        console.error("[requestDetailsDb] Auto-flush failed:", err)
-      );
-    }, FLUSH_INTERVAL_MS);
-  }
-}
+      // Upsert: replace existing record with same id
+      const idx = db.data.records.findIndex(r => r.id === record.id);
+      if (idx !== -1) {
+        db.data.records[idx] = record;
+      } else {
+        db.data.records.push(record);
+      }
+    }
 
-async function getRequestDetail(id) {
-  try {
-    await ensureDb();
-    return db.data.records.find(r => r.id === id) || null;
-  } catch (error) {
-    console.error("[requestDetailsDb] Get failed:", error);
-    return null;
-  }
-}
+    // Keep only latest maxRecords (sorted by timestamp desc)
+    db.data.records.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+    if (db.data.records.length > config.maxRecords) {
+      db.data.records = db.data.records.slice(0, config.maxRecords);
+    }
 
-async function getRecentRequests(limit = 20) {
-  try {
-    await ensureDb();
-    return db.data.records
-      .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
-      .slice(0, limit);
-  } catch (error) {
-    console.error("[requestDetailsDb] Get recent failed:", error);
-    return [];
-  }
-}
+    // Shrink records until total serialized size is within safe limit
+    while (db.data.records.length > 1) {
+      const totalSize = Buffer.byteLength(JSON.stringify(db.data), "utf8");
+      if (totalSize <= MAX_TOTAL_DB_SIZE) break;
+      db.data.records = db.data.records.slice(0, Math.floor(db.data.records.length / 2));
+    }
 
-async function clearAllRecords() {
-  try {
-    await ensureDb();
-    db.data.records = [];
-    estimatedDbSize = Buffer.byteLength(JSON.stringify(db.data), "utf8");
     await db.write();
   } catch (error) {
-    console.error("[requestDetailsDb] Clear failed:", error);
+    console.error("[requestDetailsDb] Batch write failed:", error);
+  } finally {
+    isFlushing = false;
   }
 }
 
-export { saveRequestDetail, getRequestDetail, getRecentRequests, clearAllRecords, flushPendingRecords };
+export async function saveRequestDetail(detail) {
+  const config = await getObservabilityConfig();
+  if (!config.enabled) return;
+
+  writeBuffer.push(detail);
+
+  if (writeBuffer.length >= config.batchSize) {
+    await flushToDatabase();
+    if (flushTimer) { clearTimeout(flushTimer); flushTimer = null; }
+  } else if (!flushTimer) {
+    flushTimer = setTimeout(() => {
+      flushToDatabase().catch(() => {});
+      flushTimer = null;
+    }, config.flushIntervalMs);
+  }
+}
+
+export async function getRequestDetails(filter = {}) {
+  const db = await getDb();
+  let records = [...db.data.records];
+
+  // Apply filters
+  if (filter.provider) records = records.filter(r => r.provider === filter.provider);
+  if (filter.model) records = records.filter(r => r.model === filter.model);
+  if (filter.connectionId) records = records.filter(r => r.connectionId === filter.connectionId);
+  if (filter.status) records = records.filter(r => r.status === filter.status);
+  if (filter.startDate) records = records.filter(r => new Date(r.timestamp) >= new Date(filter.startDate));
+  if (filter.endDate) records = records.filter(r => new Date(r.timestamp) <= new Date(filter.endDate));
+
+  // Sort desc
+  records.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
 
   const totalItems = records.length;
   const page = filter.page || 1;
