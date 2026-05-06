@@ -97,6 +97,13 @@ export function parseSSEToOpenAIResponse(rawSSE, fallbackModel) {
 /**
  * Handle case: provider forced streaming but client wants JSON.
  * Supports both Codex/Responses API SSE and standard Chat Completions SSE.
+ *
+ * No decloak step here on purpose: this path is gated by
+ * providerRequiresStreaming === ("openai" | "codex") in chatCore, while
+ * cloakClaudeTools() only fires for provider === "claude". So toolNameMap is
+ * always null when we get here, and there are no cloaked names in the bytes
+ * to undo. If a future change adds Claude to providerRequiresStreaming, this
+ * function MUST plumb toolNameMap through and decloak.
  */
 export async function handleForcedSSEToJson({ providerResponse, sourceFormat, provider, model, body, stream, translatedBody, finalBody, requestStartTime, connectionId, apiKey, clientRawRequest, onRequestSuccess, trackDone, appendLog }) {
   const contentType = providerResponse.headers.get("content-type") || "";

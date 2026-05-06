@@ -3,8 +3,57 @@ import { FORMATS } from "../translator/formats.js";
 import { trackPendingRequest, appendRequestLog } from "@/lib/usageDb.js";
 import { extractUsage, hasValidUsage, estimateUsage, logUsage, addBufferToUsage, filterUsageForFormat, COLORS } from "./usageTracking.js";
 import { parseSSELine, hasValuableContent, fixInvalidId, formatSSE } from "./streamHelpers.js";
+import { decloakToolNames } from "./claudeCloaking.js";
+import { CLAUDE_TOOL_SUFFIX } from "../config/appConstants.js";
 
 export { COLORS, formatSSE };
+
+function stripClaudeToolSuffixes(node) {
+  if (!node || typeof node !== "object") return node;
+
+  if (Array.isArray(node)) {
+    let changed = false;
+    const next = node.map(child => {
+      const mapped = stripClaudeToolSuffixes(child);
+      if (mapped !== child) changed = true;
+      return mapped;
+    });
+    return changed ? next : node;
+  }
+
+  if (node.type === "tool_use" && typeof node.name === "string" && node.name.endsWith(CLAUDE_TOOL_SUFFIX)) {
+    return { ...node, name: node.name.slice(0, -CLAUDE_TOOL_SUFFIX.length) };
+  }
+
+  let changed = false;
+  const next = {};
+  for (const key of Object.keys(node)) {
+    const mapped = stripClaudeToolSuffixes(node[key]);
+    if (mapped !== node[key]) changed = true;
+    next[key] = mapped;
+  }
+  return changed ? next : node;
+}
+
+function decloakSSELine(line, toolNameMap, allowSuffixFallback = false) {
+  if (!line.includes("tool_use")) return line;
+
+  const isDataLine = line.startsWith("data:");
+  const payload = isDataLine ? line.slice(5).trim() : line.trim();
+  if (!payload || payload === "[DONE]" || !payload.startsWith("{")) return line;
+
+  try {
+    const parsed = JSON.parse(payload);
+    let decloaked = decloakToolNames(parsed, toolNameMap);
+    if (decloaked === parsed && allowSuffixFallback) {
+      decloaked = stripClaudeToolSuffixes(parsed);
+    }
+    if (decloaked === parsed) return line;
+    return (isDataLine ? "data: " : "") + JSON.stringify(decloaked);
+  } catch {
+    return line;
+  }
+}
 
 // sharedEncoder is stateless — safe to share across streams
 const sharedEncoder = new TextEncoder();
@@ -59,6 +108,13 @@ export function createSSEStream(options = {}) {
   let accumulatedThinking = "";
   let ttftAt = null;
 
+  const allowSuffixFallback = provider === "claude";
+
+  function emit(output, controller) {
+    reqLogger?.appendConvertedChunk?.(output);
+    controller.enqueue(sharedEncoder.encode(output));
+  }
+
   return new TransformStream({
     transform(chunk, controller) {
       if (!ttftAt) {
@@ -70,6 +126,10 @@ export function createSSEStream(options = {}) {
 
       const lines = buffer.split("\n");
       buffer = lines.pop() || "";
+
+      for (let i = 0; i < lines.length; i++) {
+        lines[i] = decloakSSELine(lines[i], toolNameMap, allowSuffixFallback);
+      }
 
       for (const line of lines) {
         const trimmed = line.trim();
@@ -154,8 +214,7 @@ export function createSSEStream(options = {}) {
             }
           }
 
-          reqLogger?.appendConvertedChunk?.(output);
-          controller.enqueue(sharedEncoder.encode(output));
+          emit(output, controller);
           continue;
         }
 
@@ -168,9 +227,7 @@ export function createSSEStream(options = {}) {
         // For Ollama: done=true is the final chunk with finish_reason/usage, must translate
         // For other formats: done=true is the [DONE] sentinel, skip
         if (parsed && parsed.done && targetFormat !== FORMATS.OLLAMA) {
-          const output = "data: [DONE]\n\n";
-          reqLogger?.appendConvertedChunk?.(output);
-          controller.enqueue(sharedEncoder.encode(output));
+          emit("data: [DONE]\n\n", controller);
           continue;
         }
 
@@ -245,9 +302,7 @@ export function createSSEStream(options = {}) {
               item.usage = filterUsageForFormat(buffered, sourceFormat);
             }
 
-            const output = formatSSE(item, sourceFormat);
-            reqLogger?.appendConvertedChunk?.(output);
-            controller.enqueue(sharedEncoder.encode(output));
+            emit(formatSSE(item, sourceFormat), controller);
           }
         }
       }
@@ -261,12 +316,13 @@ export function createSSEStream(options = {}) {
 
         if (mode === STREAM_MODE.PASSTHROUGH) {
           if (buffer) {
-            let output = buffer;
-            if (buffer.startsWith("data:") && !buffer.startsWith("data: ")) {
-              output = "data: " + buffer.slice(5);
+            const decloaked = decloakSSELine(buffer, toolNameMap, allowSuffixFallback);
+            let output = decloaked;
+            if (decloaked.startsWith("data:") && !decloaked.startsWith("data: ")) {
+              output = "data: " + decloaked.slice(5);
             }
-            reqLogger?.appendConvertedChunk?.(output);
-            controller.enqueue(sharedEncoder.encode(output));
+            if (!output.endsWith("\n")) output += "\n";
+            emit(output, controller);
           }
 
           if (!hasValidUsage(usage) && totalContentLength > 0) {
@@ -279,13 +335,7 @@ export function createSSEStream(options = {}) {
             appendRequestLog({ model, provider, connectionId, tokens: null, status: "200 OK" }).catch(() => { });
           }
           
-          // IMPORTANT: In passthrough mode we still must terminate the SSE stream.
-          // Some clients (e.g. OpenClaw) expect the OpenAI-style sentinel:
-          //   data: [DONE]\n\n
-          // Without it they can hang until timeout and trigger failover.
-          const doneOutput = "data: [DONE]\n\n";
-          reqLogger?.appendConvertedChunk?.(doneOutput);
-          controller.enqueue(sharedEncoder.encode(doneOutput));
+          emit("data: [DONE]\n\n", controller);
 
           if (onStreamComplete) {
             onStreamComplete({
@@ -297,7 +347,8 @@ export function createSSEStream(options = {}) {
         }
 
         if (buffer.trim()) {
-          const parsed = parseSSELine(buffer.trim());
+          const decloaked = decloakSSELine(buffer, toolNameMap, allowSuffixFallback);
+          const parsed = parseSSELine(decloaked.trim());
           if (parsed && !parsed.done) {
             const translated = translateResponse(targetFormat, sourceFormat, parsed, state);
 
@@ -310,9 +361,7 @@ export function createSSEStream(options = {}) {
 
             if (translated?.length > 0) {
               for (const item of translated) {
-                const output = formatSSE(item, sourceFormat);
-                reqLogger?.appendConvertedChunk?.(output);
-                controller.enqueue(sharedEncoder.encode(output));
+                emit(formatSSE(item, sourceFormat), controller);
               }
             }
           }
@@ -329,15 +378,11 @@ export function createSSEStream(options = {}) {
 
         if (flushed?.length > 0) {
           for (const item of flushed) {
-            const output = formatSSE(item, sourceFormat);
-            reqLogger?.appendConvertedChunk?.(output);
-            controller.enqueue(sharedEncoder.encode(output));
+            emit(formatSSE(item, sourceFormat), controller);
           }
         }
 
-        const doneOutput = "data: [DONE]\n\n";
-        reqLogger?.appendConvertedChunk?.(doneOutput);
-        controller.enqueue(sharedEncoder.encode(doneOutput));
+        emit("data: [DONE]\n\n", controller);
 
         if (!hasValidUsage(state?.usage) && totalContentLength > 0) {
           state.usage = estimateUsage(body, totalContentLength, sourceFormat);
@@ -378,11 +423,13 @@ export function createSSETransformStreamWithLogger(targetFormat, sourceFormat, p
   });
 }
 
-export function createPassthroughStreamWithLogger(provider = null, reqLogger = null, model = null, connectionId = null, body = null, onStreamComplete = null, apiKey = null) {
+export function createPassthroughStreamWithLogger(provider = null, reqLogger = null, model = null, connectionId = null, body = null, onStreamComplete = null, apiKey = null, sourceFormat = null, toolNameMap = null) {
   return createSSEStream({
     mode: STREAM_MODE.PASSTHROUGH,
+    sourceFormat,
     provider,
     reqLogger,
+    toolNameMap,
     model,
     connectionId,
     body,
