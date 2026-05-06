@@ -2,13 +2,6 @@
 import { useEffect, useState } from "react";
 import ProviderIcon from "@/shared/components/ProviderIcon";
 
-const CLI_TOOLS = [
-  { id: "claude", name: "Claude Code", image: "/providers/claude.png" },
-  { id: "codex", name: "OpenAI Codex", image: "/providers/codex.png" },
-  { id: "cline", name: "Cline", image: "/providers/cline.png" },
-  { id: "cursor", name: "Cursor", image: "/providers/cursor.png" },
-];
-
 const PROVIDERS = [
   {
     id: "openai",
@@ -58,61 +51,6 @@ export default function FlowAnimation() {
         </span>
         <div className="absolute inset-0 rounded-full border border-[#f97815]/30 animate-ping opacity-20"></div>
       </div>
-
-      {/* CLI Tools - Left side */}
-      <div className="absolute left-0 top-1/2 -translate-y-1/2 flex flex-col gap-7">
-        {CLI_TOOLS.map((tool) => (
-          <div
-            key={tool.id}
-            className="flex items-center gap-3 opacity-70 hover:opacity-100 transition-opacity group"
-          >
-            <div className="w-16 h-16 rounded-2xl bg-[#23180f] border border-[#3a2f27] flex items-center justify-center overflow-hidden p-2 hover:border-[#f97815]/50 transition-all hover:scale-105">
-              <ProviderIcon
-                src={tool.image}
-                alt={tool.name}
-                size={48}
-                className="object-contain rounded-xl max-w-[48px] max-h-[48px]"
-                fallbackText={tool.name.slice(0, 2).toUpperCase()}
-              />
-            </div>
-          </div>
-        ))}
-      </div>
-
-      {/* SVG Lines from CLI to 9Router */}
-      <svg
-        className="absolute inset-0 w-full h-full z-10 pointer-events-none stroke-yellow-700"
-        xmlns="http://www.w3.org/2000/svg"
-      >
-        <path
-          className="animate-[dash_2s_linear_infinite]"
-          d="M 60 50 C 250 70, 250 180, 360 180"
-          fill="none"
-          strokeDasharray="5,5"
-          strokeWidth="2"
-        ></path>
-        <path
-          className="animate-[dash_2s_linear_infinite]"
-          d="M 60 140 C 250 140, 250 180, 360 180"
-          fill="none"
-          strokeDasharray="5,5"
-          strokeWidth="2"
-        ></path>
-        <path
-          className="animate-[dash_2s_linear_infinite]"
-          d="M 60 210 C 250 210, 250 180, 360 180"
-          fill="none"
-          strokeDasharray="5,5"
-          strokeWidth="2"
-        ></path>
-        <path
-          className="animate-[dash_2s_linear_infinite]"
-          d="M 60 300 C 250 280, 250 180, 360 180"
-          fill="none"
-          strokeDasharray="5,5"
-          strokeWidth="2"
-        ></path>
-      </svg>
 
       {/* SVG Lines from 9Router to Providers */}
       <svg

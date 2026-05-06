@@ -117,7 +117,6 @@ Management domains:
 - Keys/aliases/combos/pricing: `src/app/api/keys*`, `src/app/api/models/alias`, `src/app/api/combos*`, `src/app/api/pricing`
 - Usage: `src/app/api/usage/*`
 - Sync/cloud: `src/app/api/sync/*`, `src/app/api/cloud/*`
-- CLI tooling helpers: `src/app/api/cli-tools/*`
 
 ## 2) SSE + Translation Core
 
@@ -387,7 +386,6 @@ Physical storage files:
 ```mermaid
 flowchart LR
     subgraph LocalHost[Developer Host]
-        CLI[CLI Tools]
         Browser[Dashboard Browser]
     end
 
@@ -427,7 +425,6 @@ flowchart LR
 - `src/app/api/pricing`: pricing overrides for cost calculation
 - `src/app/api/usage/*`: usage and logs APIs
 - `src/app/api/sync/*` + `src/app/api/cloud/*`: cloud sync and cloud-facing helpers
-- `src/app/api/cli-tools/*`: local CLI config writers/checkers
 
 ### Routing and Execution Core
 

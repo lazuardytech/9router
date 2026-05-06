@@ -38,6 +38,21 @@ export function hasValuableContent(chunk, format) {
   // OpenAI format
   if (format === FORMATS.OPENAI && chunk.choices?.[0]?.delta) {
     const delta = chunk.choices[0].delta;
+    
+    if (delta.content && delta.content !== "") {
+      const trimmed = delta.content.trim();
+      if (trimmed === "..." || trimmed === "…") {
+        return false;
+      }
+    }
+    
+    if (delta.reasoning_content && delta.reasoning_content !== "") {
+      const trimmed = delta.reasoning_content.trim();
+      if (trimmed === "..." || trimmed === "…") {
+        return false;
+      }
+    }
+    
     return delta.content && delta.content !== "" ||
            delta.reasoning_content && delta.reasoning_content !== "" ||
            delta.tool_calls && delta.tool_calls.length > 0 ||
@@ -51,6 +66,20 @@ export function hasValuableContent(chunk, format) {
     const hasText = chunk.delta?.text && chunk.delta.text !== "";
     const hasThinking = chunk.delta?.thinking && chunk.delta.thinking !== "";
     const hasInputJson = chunk.delta?.partial_json && chunk.delta.partial_json !== "";
+    
+    if (hasText) {
+      const trimmed = chunk.delta.text.trim();
+      if (trimmed === "..." || trimmed === "…") {
+        return false;
+      }
+    }
+    
+    if (hasThinking) {
+      const trimmed = chunk.delta.thinking.trim();
+      if (trimmed === "..." || trimmed === "…") {
+        return false;
+      }
+    }
     
     if (isContentBlockDelta && !hasText && !hasThinking && !hasInputJson) {
       return false;

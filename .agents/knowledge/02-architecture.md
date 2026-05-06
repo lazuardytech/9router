@@ -81,7 +81,7 @@ Strip rules per model: `PROVIDER_MODELS.strip[]` (image/audio content-types remo
 
 ## Frontend (dashboard)
 
-Route group `src/app/(dashboard)/dashboard/`: basic-chat, cli-tools, combos, console-log, endpoint, media-providers, mitm, profile, providers, proxy-pools, quota, skills, translator, usage.
+Route group `src/app/(dashboard)/dashboard/`: basic-chat, combos, console-log, endpoint, media-providers, mitm, profile, providers, proxy-pools, quota, skills, translator, usage.
 
 Public pages: `login/`, `landing/`, `callback/` (OAuth).
 

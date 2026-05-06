@@ -14,7 +14,7 @@
 |---|---|---|
 | Lib/util files | camelCase | `localDb.js`, `tunnelManager.js`, `requestDetailsDb.js` |
 | React components | PascalCase | `Sidebar.js`, `OAuthModal.js`, `AddCustomEmbeddingModal.js` |
-| Next.js route segments | kebab-case | `cli-tools/`, `proxy-pools/`, `api/v1/chat/completions/route.js` |
+| Next.js route segments | kebab-case | `proxy-pools/`, `media-providers/`, `api/v1/chat/completions/route.js` |
 | Client splits | `…Client.js` suffix | `ConsoleLogClient.js`, `BasicChatPageClient.js` |
 | Functions | camelCase | `getProviderCredentials`, `formatProviderError` |
 | React components | PascalCase | `<Sidebar />` |

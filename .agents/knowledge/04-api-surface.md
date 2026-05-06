@@ -49,7 +49,7 @@ All `/v1/*` rewritten to `/api/v1/*` (`next.config.mjs:23-46`). `/codex/*` alway
 
 `src/app/api/` — non-`v1` routes for the dashboard:
 
-`auth/`, `oauth/[provider]/`, `providers/`, `provider-nodes/`, `keys/`, `combos/`, `models/alias/`, `pricing/`, `settings/`, `usage/`, `sync/`, `cloud/`, `cli-tools/`, `media-providers/`, `proxy-pools/`, `tunnel/`, `translator/`, `init/`, `health/`, `version/`, `shutdown/`, `tags/`, `locale/`.
+`auth/`, `oauth/[provider]/`, `providers/`, `provider-nodes/`, `keys/`, `combos/`, `models/alias/`, `pricing/`, `settings/`, `usage/`, `sync/`, `cloud/`, `media-providers/`, `proxy-pools/`, `tunnel/`, `translator/`, `init/`, `health/`, `version/`, `shutdown/`, `tags/`, `locale/`.
 
 ## Public endpoints (`/v1/*`) — auth model
 
