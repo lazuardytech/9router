@@ -5,6 +5,8 @@
 
 import { getDatabase } from "./sqlite/connection.js";
 
+const isCloud = typeof caches !== "undefined" || typeof caches === "object";
+
 const DEFAULT_MAX_RECORDS = 200;
 const DEFAULT_BATCH_SIZE = 20;
 const DEFAULT_FLUSH_INTERVAL_MS = 5000;
@@ -241,7 +243,6 @@ const _shutdownHandler = async () => {
   if (writeBuffer.length > 0) await flushToDatabase();
 };
 
-function ensureShutdownHandler() {
 function ensureShutdownHandler() {
   if (isCloud) return;
   process.off("beforeExit", _shutdownHandler);

@@ -13,7 +13,6 @@ const isCloud = typeof caches !== "undefined" || typeof caches === "object";
 if (!isCloud && fs?.existsSync && !fs.existsSync(DATA_DIR)) {
   try { fs.mkdirSync(DATA_DIR, { recursive: true }); } catch {}
 }
-}
 
 // ===== Global in-memory state (unchanged semantics) ======================
 
