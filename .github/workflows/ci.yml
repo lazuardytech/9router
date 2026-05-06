@@ -39,12 +39,10 @@ jobs:
           cd $GITHUB_WORKSPACE/tests && pnpm install --no-frozen-lockfile
 
       - name: Run tests
-        run: |
-          cd $GITHUB_WORKSPACE/tests
-          NODE_PATH=/tmp/node_modules /tmp/node_modules/.bin/vitest run --reporter=verbose || true
+        run: npm run test:run
 
       - name: Build application
-        run: pnpm run build
+        run: npm run build
 
       - name: Test build artifacts
         run: |
@@ -53,11 +51,3 @@ jobs:
             exit 1
           fi
           echo "Build successful"
-
-      - name: Report status
-        if: always()
-        run: |
-          echo "CI pipeline completed"
-          echo "Lint: Check output above"
-          echo "Tests: Check output above"
-          echo "Build: Check output above"
