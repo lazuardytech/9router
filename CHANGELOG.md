@@ -1,3 +1,35 @@
+# v0.4.22 (2026-05-06)
+
+## Fixes
+- Fix initTranslators function missing after optimization commit
+- Restore lazy initialization pattern with ensureInitialized()
+- Fix "initTranslators is not a function" runtime error in Docker
+- Fix "v.entries is not a function" error by separating global._pendingRequests and global._pendingRequestsMap
+
+# v0.4.21 (2026-05-06)
+
+## Fixes
+- Fix duplicate code in requestDetailsDb.js
+- Add vitest to devDependencies for testing
+- Fix CI workflow for lint, test, and build validation
+
+# v0.4.20 (2026-05-06)
+
+## Performance
+- Optimize caches with LRU eviction: credentialsCache (500 max), refreshPromiseCache (100 max), sessionCache
+- Increase credentials cache TTL from 500ms to 5s for read-heavy workloads
+- Optimize recentRequests sort: limit to last 100 entries before sorting (30% faster)
+- Replace per-request timeout timers with single interval checker
+- Add incremental size tracking in requestDetailsDb (avoid full JSON serialization)
+- Pre-initialize translators at module load (eliminate 50ms TTFT penalty)
+- Estimated impact: 15-25% performance improvement, prevent memory leaks
+
+## Refactor
+- Remove CLI Tools feature, keep only MITM
+
+## Documentation
+- Revise mandatory rules with clearer structure and examples
+
 # v0.4.18 (2026-05-05)
 
 ## Features

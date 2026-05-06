@@ -81,6 +81,8 @@ Vitest deps live in **`/tmp/node_modules`** (`tests/package.json:8` script: `NOD
 
 `.github/workflows/docker-publish.yml` triggers on `v*` tag push + manual. **NO PR/push CI** — no automated lint/test gate. Run locally before pushing.
 
+**Note**: There is also a separate CI workflow (`.github/workflows/ci.yml`) that runs lint, test, and build validation on PR/push, but Docker publish only happens on tag push.
+
 ## 17. Cooldown is per-MODEL, not per-account
 
 `src/sse/services/auth.js:198` `markAccountUnavailable` writes `modelLock_${model}` key. So if account A fails on `gemini-3-pro`, the lock applies to that model, and account A might still be tried for `gemini-2-flash`. Counter-intuitive — read `accountFallback.js:23` `checkFallbackError` carefully when debugging.

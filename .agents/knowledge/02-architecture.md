@@ -27,7 +27,7 @@ POST /v1/chat/completions
   → src/dashboardGuard.js (passthrough; not in protected list)
   → src/app/api/v1/chat/completions/route.js  (POST handler)
   → src/sse/handlers/chat.js:28  handleChat()
-      ├─ ensureInitialized() → initTranslators()
+      ├─ initTranslators() (lazy-loads translators via ensureInitialized())
       ├─ parse body, extract API key, enforce requireApiKey
       ├─ check combo → handleComboChat (open-sse/services/combo.js)
       └─ single model → handleSingleModelChat (chat.js:120)
@@ -36,7 +36,7 @@ POST /v1/chat/completions
             │   ├─ checkAndRefreshToken
             │   └─ handleChatCore (open-sse/handlers/chatCore.js:29)
             │         ├─ format detect (translator/formats.js:21)
-            │         ├─ translateRequest
+            │         ├─ translateRequest (lazy-loads translators on first call)
             │         ├─ compressMessages (RTK)
             │         ├─ getExecutor(provider) (executors/index.js)
             │         ├─ executor.execute() → upstream fetch
