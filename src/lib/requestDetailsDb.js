@@ -186,16 +186,6 @@ async function flushToDatabase() {
     isFlushing = false;
   }
 }
-      }
-
-      // Upsert: replace existing record with same id
-      const idx = db.data.records.findIndex(r => r.id === record.id);
-      if (idx !== -1) {
-        db.data.records[idx] = record;
-      } else {
-        db.data.records.push(record);
-      }
-    }
 
     // Keep only latest maxRecords (sorted by timestamp desc)
     db.data.records.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
