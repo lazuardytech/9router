@@ -31,11 +31,11 @@ jobs:
       - name: Install test dependencies
         run: |
           cd /tmp && npm install vitest
-          cd tests && npm install
+          cd $GITHUB_WORKSPACE/tests && npm install
 
       - name: Run tests
         run: |
-          cd tests
+          cd $GITHUB_WORKSPACE/tests
           NODE_PATH=/tmp/node_modules /tmp/node_modules/.bin/vitest run --reporter=verbose || true
 
       - name: Build application
