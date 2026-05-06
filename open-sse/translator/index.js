@@ -21,26 +21,32 @@ export function register(from, to, requestFn, responseFn) {
   }
 }
 
-// Load all translators at module initialization
-require("./request/claude-to-openai.js");
-require("./request/openai-to-claude.js");
-require("./request/gemini-to-openai.js");
-require("./request/openai-to-gemini.js");
-require("./request/openai-to-vertex.js");
-require("./request/antigravity-to-openai.js");
-require("./request/openai-responses.js");
-require("./request/openai-to-kiro.js");
-require("./request/openai-to-cursor.js");
-require("./request/openai-to-ollama.js");
+let initialized = false;
 
-require("./response/claude-to-openai.js");
-require("./response/openai-to-claude.js");
-require("./response/gemini-to-openai.js");
-require("./response/openai-to-antigravity.js");
-require("./response/openai-responses.js");
-require("./response/kiro-to-openai.js");
-require("./response/cursor-to-openai.js");
-require("./response/ollama-to-openai.js");
+function ensureInitialized() {
+  if (initialized) return;
+  initialized = true;
+
+  require("./request/claude-to-openai.js");
+  require("./request/openai-to-claude.js");
+  require("./request/gemini-to-openai.js");
+  require("./request/openai-to-gemini.js");
+  require("./request/openai-to-vertex.js");
+  require("./request/antigravity-to-openai.js");
+  require("./request/openai-responses.js");
+  require("./request/openai-to-kiro.js");
+  require("./request/openai-to-cursor.js");
+  require("./request/openai-to-ollama.js");
+
+  require("./response/claude-to-openai.js");
+  require("./response/openai-to-claude.js");
+  require("./response/gemini-to-openai.js");
+  require("./response/openai-to-antigravity.js");
+  require("./response/openai-responses.js");
+  require("./response/kiro-to-openai.js");
+  require("./response/cursor-to-openai.js");
+  require("./response/ollama-to-openai.js");
+}
 
 // Strip specific content types from messages (explicit opt-in via strip[] in PROVIDER_MODELS)
 function stripContentTypes(body, stripList = []) {
@@ -61,6 +67,7 @@ function stripContentTypes(body, stripList = []) {
 
 // Translate request: source -> openai -> target
 export function translateRequest(sourceFormat, targetFormat, model, body, stream = true, credentials = null, provider = null, reqLogger = null, stripList = [], connectionId = null, clientTool = null) {
+  ensureInitialized();
   let result = body;
 
   // Strip explicit content types (opt-in via strip[] in PROVIDER_MODELS entry)
@@ -135,6 +142,7 @@ export function translateRequest(sourceFormat, targetFormat, model, body, stream
 
 // Translate response chunk: target -> openai -> source
 export function translateResponse(targetFormat, sourceFormat, chunk, state) {
+  ensureInitialized();
   // If same format, return as-is
   if (sourceFormat === targetFormat) {
     return [chunk];
@@ -229,4 +237,8 @@ export function initState(sourceFormat) {
   }
 
   return base;
+}
+
+export function initTranslators() {
+  ensureInitialized();
 }
