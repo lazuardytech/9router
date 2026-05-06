@@ -33,6 +33,47 @@ const pendingTimers = global._pendingTimers;
 
 const PENDING_TIMEOUT_MS = 60 * 1000;
 
+// ===== Helpers ===========================================================
+
+function getLocalDateKey(timestamp) {
+  const d = timestamp ? new Date(timestamp) : new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
+
+function tokensFromEntry(entry) {
+  const t = entry.tokens || {};
+  return {
+    prompt: t.prompt_tokens ?? t.input_tokens ?? 0,
+    completion: t.completion_tokens ?? t.output_tokens ?? 0,
+  };
+}
+
+function upsertSummary(db, dateKey, bucket, key, delta, meta = null) {
+  db.prepare(`
+    INSERT INTO daily_summary
+      (date_key, bucket, key, requests, prompt_tokens, completion_tokens, cost, data)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    ON CONFLICT(date_key, bucket, key) DO UPDATE SET
+      requests          = requests + excluded.requests,
+      prompt_tokens     = prompt_tokens + excluded.prompt_tokens,
+      completion_tokens = completion_tokens + excluded.completion_tokens,
+      cost              = cost + excluded.cost,
+      data              = COALESCE(excluded.data, data)
+  `).run(
+    dateKey, bucket, key,
+    delta.requests || 0, delta.promptTokens || 0,
+    delta.completionTokens || 0, delta.cost || 0,
+    meta ? JSON.stringify(meta) : null,
+  );
+}
+
+function bumpTotalRequests(db) {
+  db.prepare(`
+    INSERT INTO meta (key, value) VALUES ('totalRequestsLifetime', '1')
+    ON CONFLICT(key) DO UPDATE SET value = CAST((CAST(meta.value AS INTEGER) + 1) AS TEXT)
+  `).run();
+}
+
 export function trackPendingRequest(model, provider, connectionId, started, error = false) {
   const modelKey = provider ? `${model} (${provider})` : model;
   const timerKey = `${connectionId}|${modelKey}`;
