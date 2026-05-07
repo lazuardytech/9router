@@ -517,11 +517,10 @@ export async function getUsageStats(period = "all") {
   const apiKeyMap = {};
   for (const k of allApiKeys) apiKeyMap[k.key] = { name: k.name, id: k.id, createdAt: k.createdAt };
 
-  // Recent requests (always live)
   const { recentRequests } = await getActiveRequests();
 
   const stats = {
-    totalRequests: readTotalRequests(db),
+    totalRequests: 0,
     totalPromptTokens: 0, totalCompletionTokens: 0, totalCost: 0,
     byProvider: {}, byModel: {}, byAccount: {}, byApiKey: {}, byEndpoint: {},
     last10Minutes: [],
@@ -776,6 +775,9 @@ export async function getUsageStats(period = "all") {
       if (new Date(r.timestamp) > new Date(t.lastUsed)) t.lastUsed = r.timestamp;
     }
   }
+
+  // Calculate totalRequests from period-filtered data (not lifetime)
+  stats.totalRequests = Object.values(stats.byProvider).reduce((sum, p) => sum + (p.requests || 0), 0);
 
   return stats;
 }
