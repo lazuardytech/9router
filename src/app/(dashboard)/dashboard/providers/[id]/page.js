@@ -28,6 +28,7 @@ export default function ProviderDetailPage() {
   const [showOAuthModal, setShowOAuthModal] = useState(false);
   const [showIFlowCookieModal, setShowIFlowCookieModal] = useState(false);
   const [showAddApiKeyModal, setShowAddApiKeyModal] = useState(false);
+  const [addConnectionError, setAddConnectionError] = useState("");
   const [showEditModal, setShowEditModal] = useState(false);
   const [showEditNodeModal, setShowEditNodeModal] = useState(false);
   const [showBulkProxyModal, setShowBulkProxyModal] = useState(false);
@@ -359,18 +360,31 @@ export default function ProviderDetailPage() {
   };
 
   const handleSaveApiKey = async (formData) => {
+    setAddConnectionError("");
     try {
       const res = await fetch("/api/providers", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ provider: providerId, ...formData }),
       });
+
+      let data = null;
+      try {
+        data = await res.json();
+      } catch {
+        data = null;
+      }
+
       if (res.ok) {
         await fetchConnections();
         setShowAddApiKeyModal(false);
+        return;
       }
+
+      setAddConnectionError(data?.error || "Failed to save connection");
     } catch (error) {
       console.log("Error saving connection:", error);
+      setAddConnectionError("Failed to save connection");
     }
   };
 
@@ -901,11 +915,14 @@ export default function ProviderDetailPage() {
               <Button
                 size="sm"
                 icon="add"
-                onClick={() => setShowAddApiKeyModal(true)}
+                onClick={() => {
+                  setAddConnectionError("");
+                  setShowAddApiKeyModal(true);
+                }}
                 disabled={connections.length > 0}
                 className="w-full sm:w-auto"
               >
-                Add
+                Add API Key
               </Button>
               <Button
                 size="sm"
@@ -1000,18 +1017,27 @@ export default function ProviderDetailPage() {
                 </div>
                 <p className="text-sm text-text-muted">No connections yet</p>
               </div>
-              {!isCompatible && (
-                <div className="flex gap-2">
-                  {providerId === "iflow" && (
-                    <Button size="sm" icon="cookie" variant="secondary" onClick={() => setShowIFlowCookieModal(true)}>
-                      Cookie
-                    </Button>
-                  )}
-                  <Button size="sm" icon="add" onClick={() => isOAuth ? setShowOAuthModal(true) : setShowAddApiKeyModal(true)}>
-                    {providerId === "iflow" ? "OAuth" : "Add Connection"}
+              <div className="flex gap-2">
+                {!isCompatible && providerId === "iflow" && (
+                  <Button size="sm" icon="cookie" variant="secondary" onClick={() => setShowIFlowCookieModal(true)}>
+                    Cookie
                   </Button>
-                </div>
-              )}
+                )}
+                <Button
+                  size="sm"
+                  icon="add"
+                  onClick={() => {
+                    if (isOAuth) {
+                      setShowOAuthModal(true);
+                      return;
+                    }
+                    setAddConnectionError("");
+                    setShowAddApiKeyModal(true);
+                  }}
+                >
+                  {isCompatible ? "Add API Key" : (providerId === "iflow" ? "OAuth" : "Add Connection")}
+                </Button>
+              </div>
             </div>
           ) : (
             <>
@@ -1033,7 +1059,14 @@ export default function ProviderDetailPage() {
                   <Button
                     size="sm"
                     icon="add"
-                    onClick={() => isOAuth ? setShowOAuthModal(true) : setShowAddApiKeyModal(true)}
+                    onClick={() => {
+                      if (isOAuth) {
+                        setShowOAuthModal(true);
+                        return;
+                      }
+                      setAddConnectionError("");
+                      setShowAddApiKeyModal(true);
+                    }}
                     className="w-full sm:w-auto"
                   >
                     Add
@@ -1128,8 +1161,12 @@ export default function ProviderDetailPage() {
         authHint={providerInfo?.authHint}
         website={providerInfo?.website}
         proxyPools={proxyPools}
+        error={addConnectionError}
         onSave={handleSaveApiKey}
-        onClose={() => setShowAddApiKeyModal(false)}
+        onClose={() => {
+          setAddConnectionError("");
+          setShowAddApiKeyModal(false);
+        }}
       />
       <EditConnectionModal
         isOpen={showEditModal}
