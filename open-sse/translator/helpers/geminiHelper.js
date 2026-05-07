@@ -57,6 +57,23 @@ export function convertOpenAIContentToParts(content) {
         parts.push({
           fileData: { fileUri: item.image_url.url, mimeType: "image/*" }
         });
+      } else if (item.type === "input_audio" && item.input_audio?.data) {
+        const format = item.input_audio.format || "wav";
+        const mimeType = format === "mp3" ? "audio/mpeg" : `audio/${format}`;
+        parts.push({
+          inlineData: { mime_type: mimeType, data: item.input_audio.data }
+        });
+      } else if (item.type === "audio_url" && item.audio_url?.url?.startsWith("data:")) {
+        const url = item.audio_url.url;
+        const commaIndex = url.indexOf(",");
+        if (commaIndex !== -1) {
+          const mimePart = url.substring(5, commaIndex);
+          const data = url.substring(commaIndex + 1);
+          const mimeType = mimePart.split(";")[0];
+          parts.push({
+            inlineData: { mime_type: mimeType, data: data }
+          });
+        }
       }
     }
   }
