@@ -64,6 +64,7 @@ export async function POST(request, { params }) {
 
     let models = getProviderModels(alias);
 
+
     // Compatible providers: fetch live model list
     if (isCompatible && models.length === 0) {
       try {
