@@ -187,7 +187,7 @@ export default function Header({ onMenuClick, showMenuButton = true, sidebarColl
             <button
               type="button"
               onClick={onToggleSidebar}
-              className="p-1.5 text-text-muted hover:text-primary transition-all rounded-lg hover:bg-surface-subtle border border-transparent hover:border-primary/20"
+              className="p-0 mr-2 text-text-muted hover:text-primary transition-all rounded-lg hover:bg-surface-subtle border border-transparent hover:border-primary/20"
               aria-label={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
               title={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
             >
