@@ -1,55 +1,32 @@
-"use client";
+import { useState } from "react";
+import Button from "@/shared/components/Button";
+import { useRouter } from "next/navigation";
 
-import { useState, useEffect, useRef } from "react";
-import PropTypes from "prop-types";
-import { LOCALE_COOKIE, normalizeLocale } from "@/i18n/config";
-import { useTheme } from "@/shared/hooks/useTheme";
-import ChangelogModal from "./ChangelogModal";
-import LanguageSwitcher from "./LanguageSwitcher";
+export default function HeaderMenu({ onLogout }) {
+  const [open, setOpen] = useState(false);
+  const router = useRouter();
 
-const LOCALE_INFO = {
-  "en": { name: "English", flag: "🇺🇸" },
-  "vi": { name: "Tiếng Việt", flag: "🇻🇳" },
-  "zh-CN": { name: "简体中文", flag: "🇨🇳" },
-  "zh-TW": { name: "繁體中文", flag: "🇹🇼" },
-  "ja": { name: "日本語", flag: "🇯🇵" },
-  "pt-BR": { name: "Português (BR)", flag: "🇧🇷" },
-  "pt-PT": { name: "Português (PT)", flag: "🇵🇹" },
-  "ko": { name: "한국어", flag: "🇰🇷" },
-  "es": { name: "Español", flag: "🇪🇸" },
-  "de": { name: "Deutsch", flag: "🇩🇪" },
-  "fr": { name: "Français", flag: "🇫🇷" },
-  "he": { name: "עברית", flag: "🇮🇱" },
-  "ar": { name: "العربية", flag: "🇸🇦" },
-  "ru": { name: "Русский", flag: "🇷🇺" },
-  "pl": { name: "Polski", flag: "🇵🇱" },
-  "cs": { name: "Čeština", flag: "🇨🇿" },
-  "nl": { name: "Nederlands", flag: "🇳🇱" },
-  "tr": { name: "Türkçe", flag: "🇹🇷" },
-  "uk": { name: "Українська", flag: "🇺🇦" },
-  "tl": { name: "Tagalog", flag: "🇵🇭" },
-  "id": { name: "Indonesia", flag: "🇮🇩" },
-  "th": { name: "ไทย", flag: "🇹🇭" },
-  "hi": { name: "हिन्दी", flag: "🇮🇳" },
-  "bn": { name: "বাংলা", flag: "🇧🇩" },
-  "ur": { name: "اردو", flag: "🇵🇰" },
-  "ro": { name: "Română", flag: "🇷🇴" },
-  "sv": { name: "Svenska", flag: "🇸🇪" },
-  "it": { name: "Italiano", flag: "🇮🇹" },
-  "el": { name: "Ελληνικά", flag: "🇬🇷" },
-  "hu": { name: "Magyar", flag: "🇭🇺" },
-  "fi": { name: "Suomi", flag: "🇫🇮" },
-  "da": { name: "Dansk", flag: "🇩🇰" },
-  "no": { name: "Norsk", flag: "🇳🇴" },
-};
-
-function getLocaleFromCookie() {
-  if (typeof document === "undefined") return "en";
-  const cookie = document.cookie
-    .split(";")
-    .find((c) => c.trim().startsWith(`${LOCALE_COOKIE}=`));
-  const value = cookie ? decodeURIComponent(cookie.split("=")[1]) : "en";
-  return normalizeLocale(value);
+  return (
+    <div className="relative">
+      <Button
+        variant="ghost"
+        icon="more_vert"
+        onClick={() => setOpen(!open)}
+        className="!p-1.5"
+      />
+      {open && (
+        <div className="absolute right-0 top-full mt-2 w-48 bg-surface rounded-lg shadow-lg border border-border-subtle p-1 z-50">
+          <button
+            onClick={() => { setOpen(false); onLogout(); }}
+            className="w-full flex items-center gap-2 px-3 py-2 text-sm text-text-muted hover:text-text-main hover:bg-surface-2 rounded-md transition-colors"
+          >
+            <span className="material-symbols-outlined text-[16px]">logout</span>
+            Logout
+          </button>
+        </div>
+      )}
+    </div>
+  );
 }
 
 function MenuItem({ icon, label, onClick, trailing, danger }) {

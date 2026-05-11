@@ -60,8 +60,8 @@ Page renders the list, lets user copy/preview the raw `SKILL.md` URL.
 2. Add entry to `SKILLS` array in `src/shared/constants/skills.js:12-70`
 3. **Commit + push to `decolua/9router@master`** for the raw URL to resolve
 
-⚠️ **For melma-router**, `SKILLS_RAW_BASE` points at the upstream repo. New skills committed only to melma-router won't be reachable via the dashboard until either:
+⚠️ **For 9router**, `SKILLS_RAW_BASE` points at the upstream repo. New skills committed only to 9router won't be reachable via the dashboard until either:
 - Skills are mirrored to `decolua/9router@master`, OR
-- `SKILLS_RAW_BASE` is changed to `lazuardytech/melma-router`
+- `SKILLS_RAW_BASE` is changed to `lazuardytech/9router`
 
 Coordinate before adding skills to avoid dead links.

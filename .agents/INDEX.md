@@ -1,0 +1,13 @@
+# .agents Index
+
+Entrypoint for documentation and knowledge base.
+
+- [Overview](knowledge/01-overview.md)
+- [Architecture](knowledge/02-architecture.md)
+- [Providers and Routing](knowledge/03-providers-and-routing.md)
+- [API Surface](knowledge/04-api-surface.md)
+- [Dev Workflow](knowledge/05-dev-workflow.md)
+- [Conventions](knowledge/06-conventions.md)
+- [Gotchas](knowledge/07-gotchas.md)
+- [Skills System](knowledge/08-skills-system.md)
+- [Fork Status](knowledge/09-fork-status.md)

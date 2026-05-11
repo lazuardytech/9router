@@ -1,6 +1,6 @@
 services:
   9router:
-    build: .
+    image: lazuardytech/9router
     container_name: 9router
     restart: unless-stopped
     env_file: .env

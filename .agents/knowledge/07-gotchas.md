@@ -61,7 +61,9 @@ Legacy `db.json` is auto-migrated on first boot. Don't hard-import `better-sqlit
 
 `src/sse/utils/logger.js:43` body is commented-out. Calls produce no output. Use `log.error` or `console.warn` directly.
 
-## 13. Naming: code says "9router", repo says "melma-router"
+## 13. Naming: "9router" internally, "9router" externally (intentional)
+
+This is the established convention (see `AGENTS.md`), not an oversight:
 
 - Package name: `9router-app`
 - Data dir: `~/.9router/`
@@ -69,7 +71,7 @@ Legacy `db.json` is auto-migrated on first boot. Don't hard-import `better-sqlit
 - Skills GitHub repo URL: `decolua/9router` (hardcoded in `src/shared/constants/skills.js:9`)
 - npm CLI tool: not present here, but referenced
 
-Only the README + repo name say "melma-router". **Don't blanket-rename** — coordinate first. Skills metadata pulls from `decolua/9router` GitHub raw — changing this would require forking skills and updating `SKILLS_RAW_BASE`.
+"9router" is used only for external/repo context (README, repo name, GitHub URL). Do not blanket-rename internal 9router references. Skills metadata pulls from `decolua/9router` GitHub raw — changing this would require forking skills and updating `SKILLS_RAW_BASE`.
 
 ## 14. Account "Mongo-style" `_id` is SQLite
 
@@ -100,7 +102,7 @@ Two CI workflows:
 2. Entry in `SKILLS` array in `src/shared/constants/skills.js:12-70`
 3. Push to `decolua/9router@master` for the link to resolve
 
-**For melma-router**, this URL is wrong (points at upstream). Consider whether to fork skills hosting.
+**For 9router**, this URL is wrong (points at upstream). Consider whether to fork skills hosting.
 
 ## 19. pnpm migration — don't use npm to install
 

@@ -7,14 +7,14 @@ CLIProxyAPI (Go)         original — by router-for-me
         ↓
 9Router (JS port)        active upstream — github.com/decolua/9router
         ↓
-melma-router             this repo — github.com/lazuardytech/melma-router
+9router             this repo — github.com/lazuardytech/9router
         ↓
 OmniRoute (TS port)      sister fork — github.com/diegosouzapw/OmniRoute
 ```
 
 ## Sync state (as of 2026-05-07)
 
-melma-router `master` HEAD = upstream `decolua/9router@master` HEAD with merged PR #794 (SQLite migration) + 10 local commits.
+9router `master` HEAD = upstream `decolua/9router@master` HEAD with merged PR #794 (SQLite migration) + 10 local commits.
 
 Upstream merge `bbc3f65` (`Merge upstream PR #794: SQLite migration for high concurrency`) — 23 files changed, ~3K lines added. SQLite-backed storage, new `src/lib/sqlite/`, rewritten `localDb.js`.
 
@@ -27,7 +27,7 @@ Local commits after merge: pnpm migration, upstream timeout/fallback, Claude too
 Remote already configured:
 ```bash
 git remote -v
-# origin    git@github.com:lazuardytech/melma-router.git
+# origin    git@github.com:lazuardytech/9router.git
 # upstream  https://github.com/decolua/9router.git
 ```
 
@@ -39,7 +39,7 @@ git merge upstream/master                   # merge (or rebase if preferred)
 git push origin master
 ```
 
-## Local divergence (what makes this melma-router not 9router)
+## Local divergence (what makes this 9router not 9router)
 
 Divergence is still small but growing:
 
@@ -54,7 +54,7 @@ Divergence is still small but growing:
 | CI overhaul (`d188511`) | `npm run test:run`, no `|| true`, `latest` always emitted |
 | Test fixes (`c8e8d7a`) | Fixed 4 test files |
 
-**Code references still say "9router"** (package name `9router-app`, data dir `~/.9router/`, env vars, GitHub raw URLs in `skills.js`). See gotcha #13 in `07-gotchas.md`.
+**Code references use "9router" internally, by design** (package name `9router-app`, data dir `~/.9router/`, env vars, GitHub raw URLs in `skills.js`). "9router" is used only for external/repo context. See gotcha #13 in `07-gotchas.md`.
 
 ## When merging upstream
 
@@ -68,10 +68,10 @@ Divergence is still small but growing:
 8. Tests — may conflict with our fixes.
 9. Everything else: prefer upstream.
 
-## Branding decision pending
+## Branding decision
 
-Not yet decided whether to:
-- Rename internal references (`9router` → `melma-router`, data dir, env vars, package name, skills URL), OR
-- Stay as a "skin" fork that only differs in README + agent docs
+Per the project convention (`AGENTS.md`):
+- Internal references keep "9router" (package name, data dir, env vars).
+- "9router" is used only for external/repo context (README, repo name, GitHub URLs).
 
-Default assumption: stay minimal-divergence until product owner says otherwise. **Ask before bulk-renaming.**
+This is a deliberate minimal-divergence approach. Do not bulk-rename internal references to 9router. If the upstream (`decolua/9router`) adopts a different naming convention, coordinate before diverging.
