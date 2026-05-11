@@ -166,7 +166,7 @@ export default function Header({ onMenuClick, showMenuButton = true, sidebarColl
   };
 
   return (
-    <header className="shrink-0 flex items-center justify-between gap-3 px-4 lg:px-8 pt-3 pb-2 border-b border-border-subtle bg-surface/60 backdrop-blur-xl lg:bg-transparent lg:backdrop-blur-none z-20">
+    <header className="shrink-0 flex items-center justify-between gap-3 ps-2 pe-4 lg:ps-4 lg:pe-8 pt-3 pb-2 border-b border-border-subtle bg-surface/60 backdrop-blur-xl lg:bg-transparent lg:backdrop-blur-none z-20">
       {/* Sidebar toggle button (Mobile: menu, Desktop: collapse/expand) */}
       <div className="flex items-center gap-2 shrink-0 pt-1">
         {/* Mobile menu button */}
@@ -191,7 +191,7 @@ export default function Header({ onMenuClick, showMenuButton = true, sidebarColl
               aria-label={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
               title={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
             >
-              <span className="material-symbols-outlined text-[20px] leading-none">
+              <span className="material-symbols-outlined text-[20px] leading-none mt-1.5 px-2">
                 {sidebarCollapsed ? "left_panel_open" : "left_panel_close"}
               </span>
             </button>
