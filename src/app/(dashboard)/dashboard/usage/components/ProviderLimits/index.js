@@ -66,10 +66,7 @@ export default function ProviderLimits() {
   // Sync cache
   useEffect(() => {
     if (Object.keys(quotaData).length > 0) {
-      window.localStorage.setItem(
-        QUOTA_CACHE_KEY,
-        JSON.stringify({ data: quotaData, timestamp: Date.now() }),
-      );
+      window.localStorage.setItem(QUOTA_CACHE_KEY, JSON.stringify({ data: quotaData, timestamp: Date.now() }));
     }
   }, [quotaData]);
 

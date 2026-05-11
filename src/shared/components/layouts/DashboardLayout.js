@@ -89,9 +89,9 @@ export default function DashboardLayout({ children }) {
 
       {/* Main content */}
       <main className="flex flex-col flex-1 h-full min-w-0 relative transition-colors duration-300 isolate">
-        <Header 
-          key={pathname} 
-          onMenuClick={() => setSidebarOpen(true)} 
+        <Header
+          key={pathname}
+          onMenuClick={() => setSidebarOpen(true)}
           sidebarCollapsed={sidebarCollapsed}
           onToggleSidebar={() => setSidebarCollapsed((v) => !v)}
         />
