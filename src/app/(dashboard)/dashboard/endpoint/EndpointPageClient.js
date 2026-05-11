@@ -702,8 +702,6 @@ export default function APIPageClient({ machineId }) {
 
         {/* Endpoint rows */}
         <div className="flex flex-col gap-2">
-          {/* Local */}
-          <EndpointRow label="Local" url={currentEndpoint} copyId="local_url" copied={copied} onCopy={copy} />
           <EndpointRow label="OpenAI" url={currentEndpoint} copyId="openai_url" copied={copied} onCopy={copy} />
           <EndpointRow label="Anthropic" url={anthropicEndpoint} copyId="anthropic_url" copied={copied} onCopy={copy} />
           {/* Cloudflare Tunnel */}
