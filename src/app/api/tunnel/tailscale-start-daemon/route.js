@@ -2,10 +2,9 @@
 
 import { NextResponse } from "next/server";
 import { startDaemonWithPassword } from "@/lib/tunnel/tailscale";
-import { getCachedPassword, loadEncryptedPassword, initDbHooks } from "@/mitm/manager";
 import { getSettings, updateSettings } from "@/lib/localDb";
 
-initDbHooks(getSettings, updateSettings);
+// Removed initDbHooks call
 
 export async function POST(request) {
   try {

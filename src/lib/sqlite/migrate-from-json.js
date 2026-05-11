@@ -181,15 +181,7 @@ function importConfigDb(db, data) {
     }
   }
 
-  if (data.mitmAlias && typeof data.mitmAlias === "object") {
-    const stmt = db.prepare(
-      "INSERT OR REPLACE INTO mitm_aliases (tool, data) VALUES (?, ?)",
-    );
-    for (const [tool, mappings] of Object.entries(data.mitmAlias)) {
-      stmt.run(tool, JSON.stringify(mappings ?? {}));
-      imported++;
-    }
-  }
+  // Removed MITM import block
 
   if (Array.isArray(data.customModels)) {
     const stmt = db.prepare(

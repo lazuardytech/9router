@@ -3,11 +3,10 @@
 import os from "os";
 import { execSync } from "child_process";
 import { installTailscale } from "@/lib/tunnel/tailscale";
-import { getCachedPassword, loadEncryptedPassword, initDbHooks } from "@/mitm/manager";
 import { getSettings, updateSettings } from "@/lib/localDb";
 import { loadState, generateShortId } from "@/lib/tunnel/state.js";
 
-initDbHooks(getSettings, updateSettings);
+// Removed initDbHooks call
 
 const EXTENDED_PATH = `/usr/local/bin:/opt/homebrew/bin:/usr/bin:/bin:${process.env.PATH || ""}`;
 

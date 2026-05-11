@@ -1,33 +1,8 @@
-import { useState } from "react";
-import Button from "@/shared/components/Button";
-import { useRouter } from "next/navigation";
+"use client";
 
-export default function HeaderMenu({ onLogout }) {
-  const [open, setOpen] = useState(false);
-  const router = useRouter();
-
-  return (
-    <div className="relative">
-      <Button
-        variant="ghost"
-        icon="more_vert"
-        onClick={() => setOpen(!open)}
-        className="!p-1.5"
-      />
-      {open && (
-        <div className="absolute right-0 top-full mt-2 w-48 bg-surface rounded-lg shadow-lg border border-border-subtle p-1 z-50">
-          <button
-            onClick={() => { setOpen(false); onLogout(); }}
-            className="w-full flex items-center gap-2 px-3 py-2 text-sm text-text-muted hover:text-text-main hover:bg-surface-2 rounded-md transition-colors"
-          >
-            <span className="material-symbols-outlined text-[16px]">logout</span>
-            Logout
-          </button>
-        </div>
-      )}
-    </div>
-  );
-}
+import { useState, useRef, useEffect } from "react";
+import PropTypes from "prop-types";
+import useThemeStore from "@/store/themeStore";
 
 function MenuItem({ icon, label, onClick, trailing, danger }) {
   return (
@@ -58,15 +33,8 @@ MenuItem.propTypes = {
 
 export default function HeaderMenu({ onLogout }) {
   const [isOpen, setIsOpen] = useState(false);
-  const [changelogOpen, setChangelogOpen] = useState(false);
-  const [langOpen, setLangOpen] = useState(false);
-  const [locale, setLocale] = useState("en");
-  const { toggleTheme, isDark } = useTheme();
+  const { toggleTheme, isDark } = useThemeStore();
   const menuRef = useRef(null);
-
-  useEffect(() => {
-    setLocale(getLocaleFromCookie());
-  }, [langOpen]);
 
   useEffect(() => {
     const handleClickOutside = (e) => {
@@ -83,47 +51,31 @@ export default function HeaderMenu({ onLogout }) {
   const close = () => setIsOpen(false);
 
   return (
-    <>
-      <div className="relative" ref={menuRef}>
-        <button
-          onClick={() => setIsOpen((v) => !v)}
-          className="flex items-center justify-center p-2 rounded-lg text-text-muted hover:text-text-main hover:bg-black/5 dark:hover:bg-white/5 transition-all"
-          title="Menu"
-        >
-          <span className="material-symbols-outlined">grid_view</span>
-        </button>
+    <div className="relative" ref={menuRef}>
+      <button
+        onClick={() => setIsOpen((v) => !v)}
+        className="flex items-center justify-center p-2 rounded-lg text-text-muted hover:text-text-main hover:bg-black/5 dark:hover:bg-white/5 transition-all"
+        title="Menu"
+      >
+        <span className="material-symbols-outlined">grid_view</span>
+      </button>
 
-        {isOpen && (
-          <div className="absolute right-0 top-full mt-2 w-60 bg-surface border border-black/10 dark:border-white/10 rounded-xl shadow-2xl z-50 animate-in fade-in zoom-in-95 duration-150 overflow-hidden py-1">
-            <MenuItem
-              icon="history"
-              label="Change Log"
-              onClick={() => { close(); setChangelogOpen(true); }}
-            />
-            <MenuItem
-              icon="language"
-              label={LOCALE_INFO[locale]?.name || locale}
-              trailing={LOCALE_INFO[locale]?.flag || "🌐"}
-              onClick={() => { close(); setLangOpen(true); }}
-            />
-            <MenuItem
-              icon={isDark ? "light_mode" : "dark_mode"}
-              label="Theme"
-              onClick={() => { toggleTheme(); close(); }}
-            />
-            <MenuItem
-              icon="logout"
-              label="Logout"
-              danger
-              onClick={() => { close(); onLogout(); }}
-            />
-          </div>
-        )}
-      </div>
-
-      <ChangelogModal isOpen={changelogOpen} onClose={() => setChangelogOpen(false)} />
-      <LanguageSwitcher hideTrigger isOpen={langOpen} onClose={() => setLangOpen(false)} />
-    </>
+      {isOpen && (
+        <div className="absolute right-0 top-full mt-2 w-60 bg-surface border border-black/10 dark:border-white/10 rounded-xl shadow-2xl z-50 animate-in fade-in zoom-in-95 duration-150 overflow-hidden py-1">
+          <MenuItem
+            icon={isDark ? "light_mode" : "dark_mode"}
+            label="Theme"
+            onClick={() => { toggleTheme(); close(); }}
+          />
+          <MenuItem
+            icon="logout"
+            label="Logout"
+            danger
+            onClick={() => { close(); onLogout(); }}
+          />
+        </div>
+      )}
+    </div>
   );
 }
 

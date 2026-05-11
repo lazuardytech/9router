@@ -73,7 +73,6 @@ CREATE TABLE IF NOT EXISTS model_aliases (
   target       TEXT NOT NULL
 );
 
-CREATE TABLE IF NOT EXISTS mitm_aliases (
   tool         TEXT PRIMARY KEY,
   data         TEXT NOT NULL
 );

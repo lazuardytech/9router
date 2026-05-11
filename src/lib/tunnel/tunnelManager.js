@@ -3,10 +3,9 @@ import { loadState, saveState, generateShortId } from "./state.js";
 import { spawnQuickTunnel, killCloudflared, isCloudflaredRunning, setUnexpectedExitHandler } from "./cloudflared.js";
 import { startFunnel, stopFunnel, isTailscaleRunning, isTailscaleLoggedIn, startLogin, startDaemonWithPassword } from "./tailscale.js";
 import { getSettings, updateSettings } from "@/lib/localDb";
-import { getCachedPassword, loadEncryptedPassword, initDbHooks } from "@/mitm/manager";
 import { waitForHealth, probeUrlAlive } from "./networkProbe.js";
 
-initDbHooks(getSettings, updateSettings);
+// Removed initDbHooks call
 
 const WORKER_URL = process.env.TUNNEL_WORKER_URL || "https://9router.com";
 const MACHINE_ID_SALT = "9router-tunnel-salt";

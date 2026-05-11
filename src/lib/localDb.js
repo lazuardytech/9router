@@ -31,7 +31,6 @@ const DEFAULT_SETTINGS = {
   outboundProxyEnabled: false,
   outboundProxyUrl: "",
   outboundNoProxy: "",
-  mitmRouterBaseUrl: DEFAULT_MITM_ROUTER_BASE,
   dnsToolEnabled: {},
   rtkEnabled: true,
   cavemanEnabled: false,
@@ -45,7 +44,6 @@ function cloneDefaultData() {
     proxyPools: [],
     modelAliases: {},
     customModels: [],
-    mitmAlias: {},
     combos: [],
     apiKeys: [],
     settings: { ...DEFAULT_SETTINGS },
@@ -706,14 +704,11 @@ export async function deleteCustomModel({ providerAlias, id, type = "llm" }) {
 export async function getMitmAlias(toolName) {
   if (isCloud) {
     const d = await getCloudDb();
-    const all = d.data.mitmAlias || {};
     return toolName ? (all[toolName] || {}) : all;
   }
   if (toolName) {
-    const r = db().prepare("SELECT data FROM mitm_aliases WHERE tool = ?").get(toolName);
     return r ? (parseExtras(r.data) || {}) : {};
   }
-  const rows = db().prepare("SELECT tool, data FROM mitm_aliases").all();
   const out = {};
   for (const r of rows) out[r.tool] = parseExtras(r.data);
   return out;
@@ -722,12 +717,9 @@ export async function getMitmAlias(toolName) {
 export async function setMitmAliasAll(toolName, mappings) {
   if (isCloud) {
     const d = await getCloudDb();
-    if (!d.data.mitmAlias) d.data.mitmAlias = {};
-    d.data.mitmAlias[toolName] = mappings || {};
     return;
   }
   db().prepare(
-    "INSERT OR REPLACE INTO mitm_aliases (tool, data) VALUES (?, ?)",
   ).run(toolName, JSON.stringify(mappings || {}));
 }
 
@@ -988,7 +980,6 @@ export async function exportDb() {
     providerNodes: await getProviderNodes(),
     proxyPools: await getProxyPools(),
     modelAliases: await getModelAliases(),
-    mitmAlias: await getMitmAlias(),
     combos: await getCombos(),
     apiKeys: await getApiKeys(),
     customModels: await getCustomModels(),
@@ -1029,7 +1020,6 @@ export async function importDb(payload) {
       DELETE FROM combos;
       DELETE FROM api_keys;
       DELETE FROM model_aliases;
-      DELETE FROM mitm_aliases;
       DELETE FROM custom_models;
       DELETE FROM settings;
       DELETE FROM pricing;
@@ -1106,13 +1096,6 @@ export async function importDb(payload) {
     );
     for (const [a, t] of Object.entries(data.modelAliases || {})) {
       if (typeof t === "string") aliasStmt.run(a, t);
-    }
-
-    const mitmStmt = db().prepare(
-      "INSERT INTO mitm_aliases (tool, data) VALUES (?, ?)",
-    );
-    for (const [tool, mappings] of Object.entries(data.mitmAlias || {})) {
-      mitmStmt.run(tool, JSON.stringify(mappings ?? {}));
     }
 
     const customModelStmt = db().prepare(
