@@ -73,10 +73,6 @@ CREATE TABLE IF NOT EXISTS model_aliases (
   target       TEXT NOT NULL
 );
 
-  tool         TEXT PRIMARY KEY,
-  data         TEXT NOT NULL
-);
-
 CREATE TABLE IF NOT EXISTS custom_models (
   provider_alias TEXT NOT NULL,
   id             TEXT NOT NULL,
