@@ -17,10 +17,20 @@ const isUsageEligible = (conn) =>
 const REFRESH_INTERVAL_MS = 60000; // 60 seconds
 const DEPLETED_QUOTA_THRESHOLD = 5; // percent
 const AUTO_REFRESH_STORAGE_KEY = "quotaAutoRefresh";
+const QUOTA_CACHE_KEY = "providerQuotaCache";
+const QUOTA_CACHE_TTL_MS = 300000; // 5 minutes cache TTL
 
 export default function ProviderLimits() {
   const [connections, setConnections] = useState([]);
-  const [quotaData, setQuotaData] = useState({});
+  const [quotaData, setQuotaData] = useState(() => {
+    if (typeof window === "undefined") return {};
+    const cached = window.localStorage.getItem(QUOTA_CACHE_KEY);
+    if (cached) {
+      const { data, timestamp } = JSON.parse(cached);
+      if (Date.now() - timestamp < QUOTA_CACHE_TTL_MS) return data;
+    }
+    return {};
+  });
   const [loading, setLoading] = useState({});
   const [errors, setErrors] = useState({});
   const [autoRefresh, setAutoRefresh] = useState(() => {
@@ -28,7 +38,15 @@ export default function ProviderLimits() {
     const stored = window.localStorage.getItem(AUTO_REFRESH_STORAGE_KEY);
     return stored === null ? true : stored === "true";
   });
-  const [lastUpdated, setLastUpdated] = useState(null);
+  const [lastUpdated, setLastUpdated] = useState(() => {
+    if (typeof window === "undefined") return null;
+    const cached = window.localStorage.getItem(QUOTA_CACHE_KEY);
+    if (cached) {
+      const { timestamp } = JSON.parse(cached);
+      if (Date.now() - timestamp < QUOTA_CACHE_TTL_MS) return new Date(timestamp);
+    }
+    return null;
+  });
   const [refreshingAll, setRefreshingAll] = useState(false);
   const [countdown, setCountdown] = useState(60);
   const [connectionsLoading, setConnectionsLoading] = useState(true);
@@ -44,6 +62,16 @@ export default function ProviderLimits() {
 
   const intervalRef = useRef(null);
   const countdownRef = useRef(null);
+
+  // Sync cache
+  useEffect(() => {
+    if (Object.keys(quotaData).length > 0) {
+      window.localStorage.setItem(
+        QUOTA_CACHE_KEY,
+        JSON.stringify({ data: quotaData, timestamp: Date.now() }),
+      );
+    }
+  }, [quotaData]);
 
   // Fetch all provider connections
   const fetchConnections = useCallback(async () => {

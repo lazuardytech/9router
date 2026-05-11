@@ -145,7 +145,7 @@ const getPageInfo = (pathname) => {
   return { title: "", description: "", breadcrumbs: [] };
 };
 
-export default function Header({ onMenuClick, showMenuButton = true }) {
+export default function Header({ onMenuClick, showMenuButton = true, sidebarCollapsed, onToggleSidebar }) {
   const pathname = usePathname();
   const router = useRouter();
 
@@ -167,13 +167,36 @@ export default function Header({ onMenuClick, showMenuButton = true }) {
 
   return (
     <header className="shrink-0 flex items-center justify-between gap-3 px-4 lg:px-8 pt-3 pb-2 border-b border-border-subtle bg-surface/60 backdrop-blur-xl lg:bg-transparent lg:backdrop-blur-none z-20">
-      {/* Mobile menu button */}
-      <div className="flex items-center gap-3 lg:hidden shrink-0 pt-1 mr-2">
-        {showMenuButton && (
-          <button onClick={onMenuClick} className="text-text-main hover:text-primary transition-colors">
-            <span className="material-symbols-outlined">menu</span>
-          </button>
-        )}
+      {/* Sidebar toggle button (Mobile: menu, Desktop: collapse/expand) */}
+      <div className="flex items-center gap-2 shrink-0 pt-1">
+        {/* Mobile menu button */}
+        <div className="lg:hidden">
+          {showMenuButton && (
+            <button
+              onClick={onMenuClick}
+              className="p-1.5 text-text-main hover:text-primary transition-colors rounded-lg hover:bg-surface-subtle"
+            >
+              <span className="material-symbols-outlined">menu</span>
+            </button>
+          )}
+        </div>
+
+        {/* Desktop collapse button */}
+        <div className="hidden lg:block">
+          {showMenuButton && (
+            <button
+              type="button"
+              onClick={onToggleSidebar}
+              className="p-1.5 text-text-muted hover:text-primary transition-all rounded-lg hover:bg-surface-subtle border border-transparent hover:border-primary/20"
+              aria-label={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+              title={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+            >
+              <span className="material-symbols-outlined text-[20px] leading-none">
+                {sidebarCollapsed ? "left_panel_open" : "left_panel_close"}
+              </span>
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Page title with breadcrumbs */}

@@ -77,17 +77,6 @@ export default function DashboardLayout({ children }) {
       >
         <Sidebar />
       </div>
-      <button
-        type="button"
-        onClick={() => setSidebarCollapsed((v) => !v)}
-        className="hidden lg:flex fixed left-3 top-3 z-50 size-8 items-center justify-center rounded-lg border border-border bg-surface text-text-muted shadow-sm transition-colors hover:border-primary/40 hover:text-primary"
-        aria-label={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
-        title={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
-      >
-        <span className="material-symbols-outlined text-[18px]">
-          {sidebarCollapsed ? "left_panel_open" : "left_panel_close"}
-        </span>
-      </button>
 
       {/* Sidebar - Mobile */}
       <div
@@ -100,7 +89,12 @@ export default function DashboardLayout({ children }) {
 
       {/* Main content */}
       <main className="flex flex-col flex-1 h-full min-w-0 relative transition-colors duration-300 isolate">
-        <Header key={pathname} onMenuClick={() => setSidebarOpen(true)} />
+        <Header 
+          key={pathname} 
+          onMenuClick={() => setSidebarOpen(true)} 
+          sidebarCollapsed={sidebarCollapsed}
+          onToggleSidebar={() => setSidebarCollapsed((v) => !v)}
+        />
         <div
           className={`flex-1 overflow-y-auto custom-scrollbar ${pathname === "/dashboard/basic-chat" ? "" : "p-6 lg:p-10"} ${pathname === "/dashboard/basic-chat" ? "flex flex-col overflow-hidden" : ""}`}
         >
