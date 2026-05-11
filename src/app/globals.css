@@ -203,6 +203,21 @@ input, textarea {
   accent-color: var(--color-primary);
 }
 
+.usage-flow-controls .react-flow__controls-button {
+  background: var(--color-primary);
+  border-color: rgba(255, 255, 255, 0.18);
+  color: #ffffff;
+}
+
+.usage-flow-controls .react-flow__controls-button:hover {
+  background: var(--color-primary-hover);
+}
+
+.usage-flow-controls .react-flow__controls-button svg {
+  fill: #ffffff;
+  color: #ffffff;
+}
+
 /* Scrollbar (custom-scrollbar utility kept for compat) */
 .custom-scrollbar::-webkit-scrollbar {
   width: 6px;

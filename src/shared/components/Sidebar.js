@@ -38,6 +38,7 @@ export default function Sidebar({ onClose }) {
   const [mediaOpen, setMediaOpen] = useState(false);
   const [showShutdownModal, setShowShutdownModal] = useState(false);
   const [isShuttingDown, setIsShuttingDown] = useState(false);
+  const [isRestarting, setIsRestarting] = useState(false);
   const [isDisconnected, setIsDisconnected] = useState(false);
   const [enableTranslator, setEnableTranslator] = useState(false);
 
@@ -59,24 +60,23 @@ export default function Sidebar({ onClose }) {
     setIsShuttingDown(true);
     try {
       await fetch("/api/shutdown", { method: "POST" });
-    } catch (e) {
-      // Expected to fail as server shuts down; ignore error
-    }
+    } catch {}
     setIsShuttingDown(false);
     setShowShutdownModal(false);
     setIsDisconnected(true);
   };
 
+  const handleRestart = async () => {
+    setIsRestarting(true);
+    try {
+      await fetch("/api/restart", { method: "POST" });
+    } catch {}
+    setTimeout(() => globalThis.location.reload(), 3000);
+  };
+
   return (
     <>
       <aside className="flex w-72 flex-col border-r border-border-subtle bg-vibrancy backdrop-blur-xl transition-colors duration-300 min-h-full">
-        {/* Traffic lights */}
-        <div className="flex items-center gap-2 px-6 pt-5 pb-2">
-          <div className="w-3 h-3 rounded-full bg-[#FF5F56]" />
-          <div className="w-3 h-3 rounded-full bg-[#FFBD2E]" />
-          <div className="w-3 h-3 rounded-full bg-[#27C93F]" />
-        </div>
-
         {/* Logo */}
         <div className="px-6 py-4 flex flex-col gap-2">
           <Link href="/dashboard" className="flex items-center gap-3">
@@ -87,7 +87,7 @@ export default function Sidebar({ onClose }) {
               <h1 className="text-lg font-semibold tracking-tight text-text-main">
                 {APP_CONFIG.name}
               </h1>
-              <span className="text-xs text-text-muted">v{APP_CONFIG.version}</span>
+              <span className="text-xs text-text-muted">v{APP_CONFIG.displayVersion}</span>
             </div>
           </Link>
         </div>
@@ -252,8 +252,17 @@ export default function Sidebar({ onClose }) {
         </nav>
 
         {/* Footer section */}
-        <div className="p-3 border-t border-border-subtle">
-          {/* Shutdown button */}
+        <div className="grid grid-cols-2 gap-2 p-3 border-t border-border-subtle">
+          <Button
+            variant="outline"
+            fullWidth
+            icon="restart_alt"
+            onClick={handleRestart}
+            loading={isRestarting}
+            className="text-yellow-500 border-yellow-300 hover:bg-yellow-50 hover:border-yellow-400"
+          >
+            Restart
+          </Button>
           <Button
             variant="outline"
             fullWidth

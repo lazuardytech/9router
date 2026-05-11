@@ -304,7 +304,7 @@ export default function ProviderTopology({ providers = [], activeRequests = [], 
           nodesConnectable={false}
           elementsSelectable={false}
         >
-          <Controls showInteractive={false} />
+          <Controls showInteractive={false} className="usage-flow-controls" />
         </ReactFlow>
       )}
     </div>
