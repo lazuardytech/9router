@@ -282,7 +282,7 @@ export default function ProviderLimits() {
     };
 
     initializeData();
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }, []);
 
   // Persist auto-refresh preference
   useEffect(() => {

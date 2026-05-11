@@ -9,6 +9,10 @@ const eslintConfig = defineConfig([
       "react-hooks/purity": "off",
       "react-hooks/refs": "off",
       "react-hooks/immutability": "off",
+      "react-hooks/exhaustive-deps": "off",
+      "import/no-anonymous-default-export": "off",
+      "@next/next/no-img-element": "off",
+      "@eslint/compat/no-unused-disable": "off",
     },
   },
   // Override default ignores of eslint-config-next.
