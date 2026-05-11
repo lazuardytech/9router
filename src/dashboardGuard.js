@@ -3,9 +3,7 @@ import { jwtVerify } from "jose";
 import { getSettings } from "@/lib/localDb";
 import { getConsistentMachineId } from "@/shared/utils/machineId";
 
-const SECRET = new TextEncoder().encode(
-  process.env.JWT_SECRET || "9router-default-secret-change-me"
-);
+const SECRET = new TextEncoder().encode(process.env.JWT_SECRET || "9router-default-secret-change-me");
 
 const CLI_TOKEN_HEADER = "x-9r-cli-token";
 const CLI_TOKEN_SALT = "9r-cli-auth";
@@ -19,23 +17,14 @@ async function getCliToken() {
 async function hasValidCliToken(request) {
   const token = request.headers.get(CLI_TOKEN_HEADER);
   if (!token) return false;
-  return token === await getCliToken();
+  return token === (await getCliToken());
 }
 
 // Always require JWT token regardless of requireLogin setting
-const ALWAYS_PROTECTED = [
-  "/api/shutdown",
-  "/api/settings/database",
-  "/api/settings/migrate-sqlite",
-];
+const ALWAYS_PROTECTED = ["/api/shutdown", "/api/settings/database", "/api/settings/migrate-sqlite"];
 
 // Require auth, but allow through if requireLogin is disabled
-const PROTECTED_API_PATHS = [
-  "/api/settings",
-  "/api/keys",
-  "/api/providers/client",
-  "/api/provider-nodes/validate",
-];
+const PROTECTED_API_PATHS = ["/api/settings", "/api/keys", "/api/providers/client", "/api/provider-nodes/validate"];
 
 async function hasValidToken(request) {
   const token = request.cookies.get("auth_token")?.value;
@@ -69,16 +58,14 @@ export async function proxy(request) {
 
   // Always protected - require valid JWT or local CLI token (machineId-based)
   if (ALWAYS_PROTECTED.some((p) => pathname.startsWith(p))) {
-    if (await hasValidCliToken(request) || await hasValidToken(request))
-      return NextResponse.next();
+    if ((await hasValidCliToken(request)) || (await hasValidToken(request))) return NextResponse.next();
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   // Protect sensitive API endpoints (allow CLI token, JWT, or requireLogin=false)
   if (PROTECTED_API_PATHS.some((p) => pathname.startsWith(p))) {
     if (pathname === "/api/settings/require-login") return NextResponse.next();
-    if (await hasValidCliToken(request) || await isAuthenticated(request))
-      return NextResponse.next();
+    if ((await hasValidCliToken(request)) || (await isAuthenticated(request))) return NextResponse.next();
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 

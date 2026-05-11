@@ -5,17 +5,10 @@ import PropTypes from "prop-types";
 import { Button } from "@/shared/components";
 
 function PassthroughModelRow({ modelId, fullModel, copied, onCopy, onDeleteAlias, onTest, testStatus, isTesting }) {
-  const borderColor = testStatus === "ok"
-    ? "border-green-500/40"
-    : testStatus === "error"
-    ? "border-red-500/40"
-    : "border-border";
+  const borderColor =
+    testStatus === "ok" ? "border-green-500/40" : testStatus === "error" ? "border-red-500/40" : "border-border";
 
-  const iconColor = testStatus === "ok"
-    ? "#22c55e"
-    : testStatus === "error"
-    ? "#ef4444"
-    : undefined;
+  const iconColor = testStatus === "ok" ? "#22c55e" : testStatus === "error" ? "#ef4444" : undefined;
 
   return (
     <div className={`flex items-center gap-3 p-3 rounded-lg border ${borderColor} hover:bg-sidebar/50`}>
@@ -30,7 +23,7 @@ function PassthroughModelRow({ modelId, fullModel, copied, onCopy, onDeleteAlias
         <p className="text-sm font-medium truncate">{modelId}</p>
 
         <div className="flex items-center gap-1 mt-1">
-        <code className="text-xs text-text-muted font-mono bg-sidebar px-1.5 py-0.5 rounded">{fullModel}</code>
+          <code className="text-xs text-text-muted font-mono bg-sidebar px-1.5 py-0.5 rounded">{fullModel}</code>
           <div className="relative group/btn">
             <button
               onClick={() => onCopy(fullModel, `model-${modelId}`)}
@@ -51,7 +44,10 @@ function PassthroughModelRow({ modelId, fullModel, copied, onCopy, onDeleteAlias
                 disabled={isTesting}
                 className="p-0.5 hover:bg-sidebar rounded text-text-muted hover:text-primary transition-colors"
               >
-                <span className="material-symbols-outlined text-sm" style={isTesting ? { animation: "spin 1s linear infinite" } : undefined}>
+                <span
+                  className="material-symbols-outlined text-sm"
+                  style={isTesting ? { animation: "spin 1s linear infinite" } : undefined}
+                >
                   {isTesting ? "progress_activity" : "science"}
                 </span>
               </button>
@@ -64,11 +60,7 @@ function PassthroughModelRow({ modelId, fullModel, copied, onCopy, onDeleteAlias
       </div>
 
       {/* Delete button */}
-      <button
-        onClick={onDeleteAlias}
-        className="p-1 hover:bg-red-50 rounded text-red-500"
-        title="Remove model"
-      >
+      <button onClick={onDeleteAlias} className="p-1 hover:bg-red-50 rounded text-red-500" title="Remove model">
         <span className="material-symbols-outlined text-sm">delete</span>
       </button>
     </div>
@@ -86,14 +78,19 @@ PassthroughModelRow.propTypes = {
   isTesting: PropTypes.bool,
 };
 
-export default function PassthroughModelsSection({ providerAlias, modelAliases, copied, onCopy, onSetAlias, onDeleteAlias }) {
+export default function PassthroughModelsSection({
+  providerAlias,
+  modelAliases,
+  copied,
+  onCopy,
+  onSetAlias,
+  onDeleteAlias,
+}) {
   const [newModel, setNewModel] = useState("");
   const [adding, setAdding] = useState(false);
 
   // Filter aliases for this provider - models are persisted via alias
-  const providerAliases = Object.entries(modelAliases).filter(
-    ([, model]) => model.startsWith(`${providerAlias}/`)
-  );
+  const providerAliases = Object.entries(modelAliases).filter(([, model]) => model.startsWith(`${providerAlias}/`));
 
   const allModels = providerAliases.map(([alias, fullModel]) => ({
     modelId: fullModel.replace(`${providerAlias}/`, ""),
@@ -111,13 +108,13 @@ export default function PassthroughModelsSection({ providerAlias, modelAliases, 
     if (!newModel.trim() || adding) return;
     const modelId = newModel.trim();
     const defaultAlias = generateDefaultAlias(modelId);
-    
+
     // Check if alias already exists
     if (modelAliases[defaultAlias]) {
       alert(`Alias "${defaultAlias}" already exists. Please use a different model or edit existing alias.`);
       return;
     }
-    
+
     setAdding(true);
     try {
       await onSetAlias(modelId, defaultAlias);
@@ -138,7 +135,9 @@ export default function PassthroughModelsSection({ providerAlias, modelAliases, 
       {/* Add new model */}
       <div className="flex items-end gap-2">
         <div className="flex-1">
-          <label htmlFor="new-model-input" className="text-xs text-text-muted mb-1 block">Model ID (from OpenRouter)</label>
+          <label htmlFor="new-model-input" className="text-xs text-text-muted mb-1 block">
+            Model ID (from OpenRouter)
+          </label>
           <input
             id="new-model-input"
             type="text"

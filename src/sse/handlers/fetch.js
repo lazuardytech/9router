@@ -85,7 +85,10 @@ export async function handleFetch(request) {
     const comboStrategies = settings.comboStrategies || {};
     const comboStrategy = comboStrategies[providerInput]?.fallbackStrategy || settings.comboStrategy || "fallback";
     const comboStickyLimit = settings.comboStickyRoundRobinLimit;
-    log.info("FETCH", `Combo "${providerInput}" with ${comboModels.length} providers (strategy: ${comboStrategy}, sticky: ${comboStickyLimit})`);
+    log.info(
+      "FETCH",
+      `Combo "${providerInput}" with ${comboModels.length} providers (strategy: ${comboStrategy}, sticky: ${comboStickyLimit})`,
+    );
     return handleComboChat({
       body,
       models: comboModels,
@@ -93,7 +96,7 @@ export async function handleFetch(request) {
       log,
       comboName: providerInput,
       comboStrategy,
-      comboStickyLimit
+      comboStickyLimit,
     });
   }
 
@@ -134,11 +137,11 @@ async function handleSingleProviderFetch(body, providerInput, request, apiKey, s
       provider: resolvedProvider.id,
       providerConfig,
       credentials: null,
-      log
+      log,
     });
     if (result.success) {
       return new Response(JSON.stringify(result.data), {
-        headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" }
+        headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },
       });
     }
     return errorResponse(result.status || HTTP_STATUS.BAD_GATEWAY, result.error || "Fetch failed");
@@ -157,7 +160,12 @@ async function handleSingleProviderFetch(body, providerInput, request, apiKey, s
         const errorMsg = lastError || credentials.lastError || "Unavailable";
         const status = lastStatus || Number(credentials.lastErrorCode) || HTTP_STATUS.SERVICE_UNAVAILABLE;
         log.warn("FETCH", `[${providerId}] ${errorMsg} (${credentials.retryAfterHuman})`);
-        return unavailableResponse(status, `[${providerId}] ${errorMsg}`, credentials.retryAfter, credentials.retryAfterHuman);
+        return unavailableResponse(
+          status,
+          `[${providerId}] ${errorMsg}`,
+          credentials.retryAfter,
+          credentials.retryAfterHuman,
+        );
       }
       if (excludeConnectionIds.size === 0) {
         log.error("AUTH", `No credentials for provider: ${providerId}`);
@@ -184,21 +192,26 @@ async function handleSingleProviderFetch(body, providerInput, request, apiKey, s
           accessToken: newCreds.accessToken,
           refreshToken: newCreds.refreshToken,
           providerSpecificData: newCreds.providerSpecificData,
-          testStatus: "active"
+          testStatus: "active",
         });
       },
       onRequestSuccess: async () => {
         await clearAccountError(credentials.connectionId, credentials);
-      }
+      },
     });
 
     if (result.success) {
       return new Response(JSON.stringify(result.data), {
-        headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" }
+        headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },
       });
     }
 
-    const { shouldFallback } = await markAccountUnavailable(credentials.connectionId, result.status, result.error, providerId);
+    const { shouldFallback } = await markAccountUnavailable(
+      credentials.connectionId,
+      result.status,
+      result.error,
+      providerId,
+    );
 
     if (shouldFallback) {
       log.warn("AUTH", `Account ${credentials.connectionName} unavailable (${result.status}), trying fallback`);

@@ -78,7 +78,11 @@ export default function ComboDetailPage() {
         setApiKey((k.keys || []).find((x) => x.isActive !== false)?.key || "");
       }
       if (connsRes.ok) setConnections((await connsRes.json()).connections || []);
-      if (!comboRes.ok) { setCombo(null); setLoading(false); return; }
+      if (!comboRes.ok) {
+        setCombo(null);
+        setLoading(false);
+        return;
+      }
       const c = await comboRes.json();
       setCombo(c);
       setName(c.name);
@@ -87,15 +91,25 @@ export default function ComboDetailPage() {
       setRoundRobin(s.comboStrategies?.[c.name]?.fallbackStrategy === "round-robin");
       const allLogs = logsRes.ok ? await logsRes.json() : [];
       setLogs(allLogs.filter((l) => typeof l === "string" && l.includes(c.name)).slice(0, 50));
-    } catch { /* noop */ }
+    } catch {
+      /* noop */
+    }
     setLoading(false);
   };
 
-  useEffect(() => { fetchAll(); }, [id]);
+  useEffect(() => {
+    fetchAll();
+  }, [id]);
 
   const validateName = (v) => {
-    if (!v.trim()) { setNameError("Name is required"); return false; }
-    if (!VALID_NAME_REGEX.test(v)) { setNameError("Only letters, numbers, -, _ and ."); return false; }
+    if (!v.trim()) {
+      setNameError("Name is required");
+      return false;
+    }
+    if (!VALID_NAME_REGEX.test(v)) {
+      setNameError("Only letters, numbers, -, _ and .");
+      return false;
+    }
     setNameError("");
     return true;
   };
@@ -106,7 +120,11 @@ export default function ComboDetailPage() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(patch),
     });
-    if (!res.ok) { const err = await res.json(); alert(err.error || "Failed to save"); return false; }
+    if (!res.ok) {
+      const err = await res.json();
+      alert(err.error || "Failed to save");
+      return false;
+    }
     return true;
   };
 
@@ -172,8 +190,16 @@ export default function ComboDetailPage() {
     setTesting(true);
     setTestResult(null);
     setTestError("");
-    if (testResult?.audioUrl) { try { URL.revokeObjectURL(testResult.audioUrl); } catch {} }
-    if (testResult?.imageUrl?.startsWith("blob:")) { try { URL.revokeObjectURL(testResult.imageUrl); } catch {} }
+    if (testResult?.audioUrl) {
+      try {
+        URL.revokeObjectURL(testResult.audioUrl);
+      } catch {}
+    }
+    if (testResult?.imageUrl?.startsWith("blob:")) {
+      try {
+        URL.revokeObjectURL(testResult.imageUrl);
+      } catch {}
+    }
     const start = Date.now();
     try {
       const path = EXAMPLE_PATHS[combo.kind];
@@ -204,9 +230,7 @@ export default function ComboDetailPage() {
       // JSON — could be image (data[0].b64_json/url) or generic
       const data = await res.json();
       const first = data?.data?.[0];
-      const imageUrl = first?.b64_json
-        ? `data:image/png;base64,${first.b64_json}`
-        : (first?.url || "");
+      const imageUrl = first?.b64_json ? `data:image/png;base64,${first.b64_json}` : first?.url || "";
       setTestResult({ json: JSON.stringify(maskB64(data), null, 2), imageUrl, latencyMs });
     } catch (e) {
       setTestError(e.message || "Network error");
@@ -220,9 +244,7 @@ export default function ComboDetailPage() {
     if (Array.isArray(obj)) return obj.map(maskB64);
     const out = {};
     for (const [k, v] of Object.entries(obj)) {
-      out[k] = (k === "b64_json" && typeof v === "string" && v.length > 100)
-        ? `<${v.length} chars base64>`
-        : maskB64(v);
+      out[k] = k === "b64_json" && typeof v === "string" && v.length > 100 ? `<${v.length} chars base64>` : maskB64(v);
     }
     return out;
   }
@@ -254,7 +276,12 @@ export default function ComboDetailPage() {
             <code className="text-lg font-semibold font-mono">{combo.name}</code>
           </div>
         </div>
-        <Button variant="outline" icon="delete" onClick={handleDelete} className="text-red-500 border-red-200 hover:bg-red-50">
+        <Button
+          variant="outline"
+          icon="delete"
+          onClick={handleDelete}
+          className="text-red-500 border-red-200 hover:bg-red-50"
+        >
           Delete
         </Button>
       </div>
@@ -264,13 +291,24 @@ export default function ComboDetailPage() {
         <h2 className="text-lg font-semibold mb-3">Settings</h2>
         <div className="flex flex-col gap-4">
           <div>
-            <Input label="Combo Name" value={name} onChange={(e) => { setName(e.target.value); validateName(e.target.value); }} onBlur={handleSaveName} error={nameError} />
+            <Input
+              label="Combo Name"
+              value={name}
+              onChange={(e) => {
+                setName(e.target.value);
+                validateName(e.target.value);
+              }}
+              onBlur={handleSaveName}
+              error={nameError}
+            />
             <p className="text-[10px] text-text-muted mt-0.5">Only letters, numbers, -, _ and .</p>
           </div>
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium">Round Robin</p>
-              <p className="text-xs text-text-muted">Rotate providers across requests instead of strict fallback order.</p>
+              <p className="text-xs text-text-muted">
+                Rotate providers across requests instead of strict fallback order.
+              </p>
             </div>
             <Toggle checked={roundRobin} onChange={handleToggleRoundRobin} />
           </div>
@@ -284,7 +322,9 @@ export default function ComboDetailPage() {
             <h2 className="text-lg font-semibold">Providers</h2>
             <p className="text-xs text-text-muted">Tried in order (top-down) or rotated when round-robin is on.</p>
           </div>
-          <Button size="sm" icon="add" onClick={() => setShowPicker(true)}>Add Provider</Button>
+          <Button size="sm" icon="add" onClick={() => setShowPicker(true)}>
+            Add Provider
+          </Button>
         </div>
         {providers.length === 0 ? (
           <div className="text-center py-6 border border-dashed border-border rounded-lg text-text-muted text-sm">
@@ -296,7 +336,10 @@ export default function ComboDetailPage() {
               const { providerId, model } = parseModelEntry(entry);
               const p = AI_PROVIDERS[providerId];
               return (
-                <div key={`${entry}-${idx}`} className="flex items-center gap-3 p-2 rounded-lg bg-black/[0.02] dark:bg-white/[0.02]">
+                <div
+                  key={`${entry}-${idx}`}
+                  className="flex items-center gap-3 p-2 rounded-lg bg-black/[0.02] dark:bg-white/[0.02]"
+                >
                   <span className="text-xs text-text-muted w-5 text-center">{idx + 1}</span>
                   <ProviderIcon
                     src={`/providers/${providerId}.png`}
@@ -311,13 +354,27 @@ export default function ComboDetailPage() {
                     {model && <code className="text-[10px] text-text-muted font-mono truncate block">{model}</code>}
                   </div>
                   <div className="flex items-center gap-0.5">
-                    <button onClick={() => handleMove(idx, -1)} disabled={idx === 0} className={`p-1 rounded ${idx === 0 ? "text-text-muted/20" : "text-text-muted hover:text-primary hover:bg-black/5"}`} title="Move up">
+                    <button
+                      onClick={() => handleMove(idx, -1)}
+                      disabled={idx === 0}
+                      className={`p-1 rounded ${idx === 0 ? "text-text-muted/20" : "text-text-muted hover:text-primary hover:bg-black/5"}`}
+                      title="Move up"
+                    >
                       <span className="material-symbols-outlined text-[16px]">arrow_upward</span>
                     </button>
-                    <button onClick={() => handleMove(idx, 1)} disabled={idx === providers.length - 1} className={`p-1 rounded ${idx === providers.length - 1 ? "text-text-muted/20" : "text-text-muted hover:text-primary hover:bg-black/5"}`} title="Move down">
+                    <button
+                      onClick={() => handleMove(idx, 1)}
+                      disabled={idx === providers.length - 1}
+                      className={`p-1 rounded ${idx === providers.length - 1 ? "text-text-muted/20" : "text-text-muted hover:text-primary hover:bg-black/5"}`}
+                      title="Move down"
+                    >
                       <span className="material-symbols-outlined text-[16px]">arrow_downward</span>
                     </button>
-                    <button onClick={() => handleRemoveProvider(idx)} className="p-1 rounded text-text-muted hover:text-red-500 hover:bg-red-500/10" title="Remove">
+                    <button
+                      onClick={() => handleRemoveProvider(idx)}
+                      className="p-1 rounded text-text-muted hover:text-red-500 hover:bg-red-500/10"
+                      title="Remove"
+                    >
                       <span className="material-symbols-outlined text-[16px]">close</span>
                     </button>
                   </div>
@@ -340,9 +397,7 @@ export default function ComboDetailPage() {
           <pre className="text-xs font-mono bg-black/[0.03] dark:bg-white/[0.03] p-3 rounded-lg overflow-x-auto whitespace-pre-wrap break-all">
             {curlExample}
           </pre>
-          {testError && (
-            <p className="mt-3 text-xs text-red-500 break-words">{testError}</p>
-          )}
+          {testError && <p className="mt-3 text-xs text-red-500 break-words">{testError}</p>}
           {testResult && (
             <div className="mt-3 flex flex-col gap-3">
               {testResult.latencyMs != null && (
@@ -351,18 +406,30 @@ export default function ComboDetailPage() {
               {testResult.imageUrl && (
                 <div>
                   <div className="flex items-center justify-end mb-1.5">
-                    <a href={testResult.imageUrl} download="image.png" className="inline-flex items-center gap-1 text-xs text-text-muted hover:text-primary transition-colors">
+                    <a
+                      href={testResult.imageUrl}
+                      download="image.png"
+                      className="inline-flex items-center gap-1 text-xs text-text-muted hover:text-primary transition-colors"
+                    >
                       <span className="material-symbols-outlined text-[14px]">download</span>
                       Download
                     </a>
                   </div>
-                  <img src={testResult.imageUrl} alt="Generated" className="max-w-full rounded-lg border border-border" />
+                  <img
+                    src={testResult.imageUrl}
+                    alt="Generated"
+                    className="max-w-full rounded-lg border border-border"
+                  />
                 </div>
               )}
               {testResult.audioUrl && (
                 <div>
                   <div className="flex items-center justify-end mb-1.5">
-                    <a href={testResult.audioUrl} download="speech.mp3" className="inline-flex items-center gap-1 text-xs text-text-muted hover:text-primary transition-colors">
+                    <a
+                      href={testResult.audioUrl}
+                      download="speech.mp3"
+                      className="inline-flex items-center gap-1 text-xs text-text-muted hover:text-primary transition-colors"
+                    >
                       <span className="material-symbols-outlined text-[14px]">download</span>
                       Download
                     </a>

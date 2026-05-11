@@ -40,11 +40,11 @@ async function ttsRequest(text, voiceId, token) {
     body: body.toString(),
     headers: {
       "Content-Type": "application/x-www-form-urlencoded",
-      "Accept": "*/*",
-      "Origin": "https://www.bing.com",
-      "Referer": "https://www.bing.com/translator",
+      Accept: "*/*",
+      Origin: "https://www.bing.com",
+      Referer: "https://www.bing.com/translator",
       "User-Agent": UA,
-      ...(token.cookie ? { "Cookie": token.cookie } : {}),
+      ...(token.cookie ? { Cookie: token.cookie } : {}),
     },
   });
 }
@@ -54,7 +54,7 @@ export async function fetchEdgeTtsVoices() {
   if (_voicesCache && now - _voicesCacheTime < VOICES_TTL) return _voicesCache;
   const res = await fetch(
     "https://speech.platform.bing.com/consumer/speech/synthesize/readaloud/voices/list?trustedclienttoken=6A5AA1D4EAFF4E9FB37E23D68491D6F4",
-    { headers: { "User-Agent": UA } }
+    { headers: { "User-Agent": UA } },
   );
   if (!res.ok) throw new Error(`Edge TTS voices fetch failed: ${res.status}`);
   const voices = await res.json();

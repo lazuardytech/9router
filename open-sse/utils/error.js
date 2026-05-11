@@ -7,8 +7,9 @@ import { ERROR_TYPES, DEFAULT_ERROR_MESSAGES } from "../config/errorConfig.js";
  * @returns {object} Error response object
  */
 export function buildErrorBody(statusCode, message) {
-  const errorInfo = ERROR_TYPES[statusCode] || 
-    (statusCode >= 500 
+  const errorInfo =
+    ERROR_TYPES[statusCode] ||
+    (statusCode >= 500
       ? { type: "server_error", code: "internal_server_error" }
       : { type: "invalid_request_error", code: "" });
 
@@ -16,8 +17,8 @@ export function buildErrorBody(statusCode, message) {
     error: {
       message: message || DEFAULT_ERROR_MESSAGES[statusCode] || "An error occurred",
       type: errorInfo.type,
-      code: errorInfo.code
-    }
+      code: errorInfo.code,
+    },
   };
 }
 
@@ -32,8 +33,8 @@ export function errorResponse(statusCode, message) {
     status: statusCode,
     headers: {
       "Content-Type": "application/json",
-      "Access-Control-Allow-Origin": "*"
-    }
+      "Access-Control-Allow-Origin": "*",
+    },
   });
 }
 
@@ -71,7 +72,9 @@ export async function parseUpstreamError(response, executor = null) {
         const msg = parsed.message || DEFAULT_ERROR_MESSAGES[response.status] || `Upstream error: ${response.status}`;
         return { statusCode: parsed.status || response.status, message: msg, resetsAtMs: parsed.resetsAtMs };
       }
-    } catch { /* fall through to default parsing */ }
+    } catch {
+      /* fall through to default parsing */
+    }
   }
 
   let message = "";
@@ -101,7 +104,7 @@ export function createErrorResult(statusCode, message, resetsAtMs) {
     status: statusCode,
     error: message,
     resetsAtMs,
-    response: errorResponse(statusCode, message)
+    response: errorResponse(statusCode, message),
   };
 }
 
@@ -116,16 +119,13 @@ export function createErrorResult(statusCode, message, resetsAtMs) {
 export function unavailableResponse(statusCode, message, retryAfter, retryAfterHuman) {
   const retryAfterSec = Math.max(Math.ceil((new Date(retryAfter).getTime() - Date.now()) / 1000), 1);
   const msg = `${message} (${retryAfterHuman})`;
-  return new Response(
-    JSON.stringify({ error: { message: msg } }),
-    {
-      status: statusCode,
-      headers: {
-        "Content-Type": "application/json",
-        "Retry-After": String(retryAfterSec)
-      }
-    }
-  );
+  return new Response(JSON.stringify({ error: { message: msg } }), {
+    status: statusCode,
+    headers: {
+      "Content-Type": "application/json",
+      "Retry-After": String(retryAfterSec),
+    },
+  });
 }
 
 /**

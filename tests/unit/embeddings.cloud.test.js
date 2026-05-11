@@ -194,9 +194,11 @@ describe("handleEmbeddings — authentication", () => {
   it("valid key format but key value not in machine apiKeys → 401", async () => {
     vi.mocked(extractBearerToken).mockReturnValue("sk-mach01-key01-ab12cd34");
     vi.mocked(parseApiKey).mockResolvedValue({ machineId: MACHINE_ID, keyId: "key01", isNewFormat: true });
-    vi.mocked(getMachineData).mockResolvedValue(makeMachineData({
-      apiKeys: [{ key: "sk-different-key" }], // key doesn't match
-    }));
+    vi.mocked(getMachineData).mockResolvedValue(
+      makeMachineData({
+        apiKeys: [{ key: "sk-different-key" }], // key doesn't match
+      }),
+    );
 
     const req = makeRequest("POST", { model: "ag/gemini-embedding-001", input: "hello" });
     const res = await handleEmbeddings(req, makeEnv(), {});
@@ -246,7 +248,7 @@ describe("handleEmbeddings — body validation", () => {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "Authorization": `Bearer ${VALID_API_KEY}`,
+        Authorization: `Bearer ${VALID_API_KEY}`,
       },
       body: "{ bad json",
     });
@@ -365,7 +367,7 @@ describe("handleEmbeddings — valid request (happy path)", () => {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "Authorization": `Bearer ${VALID_API_KEY}`,
+        Authorization: `Bearer ${VALID_API_KEY}`,
       },
       body: JSON.stringify({ model: "openai/text-embedding-ada-002", input: "Hello" }),
     });
@@ -391,21 +393,23 @@ describe("handleEmbeddings — rate limit fallback", () => {
 
   it("all provider accounts rate-limited → 503 with Retry-After header", async () => {
     const rateLimitedUntil = new Date(Date.now() + 60000).toISOString(); // 60s from now
-    vi.mocked(getMachineData).mockResolvedValue(makeMachineData({
-      providers: {
-        "conn-001": {
-          provider: "openai",
-          apiKey: "sk-key",
-          isActive: true,
-          priority: 1,
-          status: "unavailable",
-          rateLimitedUntil,  // rate-limited
-          lastError: "Rate limit exceeded",
-          errorCode: 429,
-          backoffLevel: 1,
+    vi.mocked(getMachineData).mockResolvedValue(
+      makeMachineData({
+        providers: {
+          "conn-001": {
+            provider: "openai",
+            apiKey: "sk-key",
+            isActive: true,
+            priority: 1,
+            status: "unavailable",
+            rateLimitedUntil, // rate-limited
+            lastError: "Rate limit exceeded",
+            errorCode: 429,
+            backoffLevel: 1,
+          },
         },
-      },
-    }));
+      }),
+    );
 
     const req = makeRequest("POST", { model: "openai/text-embedding-ada-002", input: "hello" });
     const res = await handleEmbeddings(req, makeEnv(), {});
@@ -417,9 +421,11 @@ describe("handleEmbeddings — rate limit fallback", () => {
   });
 
   it("provider account not found → 400 No credentials", async () => {
-    vi.mocked(getMachineData).mockResolvedValue(makeMachineData({
-      providers: {}, // no providers
-    }));
+    vi.mocked(getMachineData).mockResolvedValue(
+      makeMachineData({
+        providers: {}, // no providers
+      }),
+    );
 
     const req = makeRequest("POST", { model: "openai/text-embedding-ada-002", input: "hello" });
     const res = await handleEmbeddings(req, makeEnv(), {});
@@ -435,10 +441,10 @@ describe("handleEmbeddings — rate limit fallback", () => {
       success: false,
       status: 400,
       error: "input must be a string or array",
-      response: new Response(
-        JSON.stringify({ error: { message: "input must be a string or array" } }),
-        { status: 400, headers: { "Content-Type": "application/json" } }
-      ),
+      response: new Response(JSON.stringify({ error: { message: "input must be a string or array" } }), {
+        status: 400,
+        headers: { "Content-Type": "application/json" },
+      }),
     });
 
     const req = makeRequest("POST", { model: "openai/text-embedding-ada-002", input: "hello" });
@@ -454,10 +460,10 @@ describe("handleEmbeddings — rate limit fallback", () => {
       success: false,
       status: 429,
       error: "Rate limit exceeded",
-      response: new Response(
-        JSON.stringify({ error: { message: "Rate limit exceeded" } }),
-        { status: 429, headers: { "Content-Type": "application/json" } }
-      ),
+      response: new Response(JSON.stringify({ error: { message: "Rate limit exceeded" } }), {
+        status: 429,
+        headers: { "Content-Type": "application/json" },
+      }),
     });
 
     const req = makeRequest("POST", { model: "openai/text-embedding-ada-002", input: "hello" });
@@ -495,7 +501,7 @@ describe("handleEmbeddings — machineId override path", () => {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "Authorization": `Bearer ${VALID_API_KEY}`,
+        Authorization: `Bearer ${VALID_API_KEY}`,
       },
       body: JSON.stringify({ model: "openai/text-embedding-ada-002", input: "test" }),
     });
@@ -505,15 +511,17 @@ describe("handleEmbeddings — machineId override path", () => {
   });
 
   it("with machineIdOverride, wrong API key → 401", async () => {
-    vi.mocked(getMachineData).mockResolvedValue(makeMachineData({
-      apiKeys: [{ key: "sk-correct-key" }],
-    }));
+    vi.mocked(getMachineData).mockResolvedValue(
+      makeMachineData({
+        apiKeys: [{ key: "sk-correct-key" }],
+      }),
+    );
 
     const req = new Request(`https://9cli.hxd.app/${MACHINE_ID}/v1/embeddings`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "Authorization": "Bearer sk-wrong-key",
+        Authorization: "Bearer sk-wrong-key",
       },
       body: JSON.stringify({ model: "openai/text-embedding-ada-002", input: "test" }),
     });

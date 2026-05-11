@@ -5,10 +5,10 @@
 
 // Map of CLI tool identifiers to provider IDs they are "native" to
 const NATIVE_PAIRS = {
-  "claude":      ["claude", "anthropic"],
-  "gemini-cli":  ["gemini-cli"],
-  "antigravity": ["antigravity"],
-  "codex":       ["codex"],
+  claude: ["claude", "anthropic"],
+  "gemini-cli": ["gemini-cli"],
+  antigravity: ["antigravity"],
+  codex: ["codex"],
 };
 
 /**
@@ -53,8 +53,6 @@ export function isNativePassthrough(clientTool, provider) {
   const nativeProviders = NATIVE_PAIRS[clientTool];
   if (!nativeProviders) return false;
   // Support anthropic-compatible-* variants
-  const normalizedProvider = provider.startsWith("anthropic-compatible")
-    ? "anthropic"
-    : provider;
+  const normalizedProvider = provider.startsWith("anthropic-compatible") ? "anthropic" : provider;
   return nativeProviders.includes(normalizedProvider);
 }

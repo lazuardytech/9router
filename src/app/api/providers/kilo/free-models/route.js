@@ -17,7 +17,7 @@ export async function GET() {
 
   try {
     const res = await fetch(KILO_MODELS_URL, {
-      headers: { "Accept": "application/json" },
+      headers: { Accept: "application/json" },
       signal: AbortSignal.timeout(10000),
     });
 
@@ -47,9 +47,6 @@ export async function GET() {
       return NextResponse.json({ models: cachedModels, cached: true, warning: error.message });
     }
 
-    return NextResponse.json(
-      { models: [], error: `Failed to fetch Kilo models: ${error.message}` },
-      { status: 502 }
-    );
+    return NextResponse.json({ models: [], error: `Failed to fetch Kilo models: ${error.message}` }, { status: 502 });
   }
 }

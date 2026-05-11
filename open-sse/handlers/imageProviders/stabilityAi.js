@@ -16,8 +16,8 @@ export default {
     const key = creds?.apiKey || creds?.accessToken;
     return {
       "Content-Type": "application/json",
-      "Authorization": `Bearer ${key}`,
-      "Accept": "application/json",
+      Authorization: `Bearer ${key}`,
+      Accept: "application/json",
     };
   },
   buildBody: (model, body) => {

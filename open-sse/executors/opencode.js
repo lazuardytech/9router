@@ -11,17 +11,15 @@ export class OpenCodeExecutor extends BaseExecutor {
 
   buildUrl(model) {
     const base = "https://opencode.ai";
-    return MESSAGES_MODELS.has(model)
-      ? `${base}/zen/v1/messages`
-      : `${base}/zen/v1/chat/completions`;
+    return MESSAGES_MODELS.has(model) ? `${base}/zen/v1/messages` : `${base}/zen/v1/chat/completions`;
   }
 
   buildHeaders() {
     return {
       "Content-Type": "application/json",
-      "Authorization": "Bearer public",
+      Authorization: "Bearer public",
       "x-opencode-client": "desktop",
-      "Accept": "text/event-stream"
+      Accept: "text/event-stream",
     };
   }
 }

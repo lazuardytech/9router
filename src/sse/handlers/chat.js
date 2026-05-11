@@ -40,7 +40,7 @@ export async function handleChat(request, clientRawRequest = null) {
     clientRawRequest = {
       endpoint: url.pathname,
       body,
-      headers: Object.fromEntries(request.headers.entries())
+      headers: Object.fromEntries(request.headers.entries()),
     };
   }
   cacheClaudeHeaders(clientRawRequest.headers);
@@ -53,7 +53,10 @@ export async function handleChat(request, clientRawRequest = null) {
   const msgCount = body.messages?.length || body.input?.length || 0;
   const toolCount = body.tools?.length || 0;
   const effort = body.reasoning_effort || body.reasoning?.effort || null;
-  log.request("POST", `${url.pathname} | ${modelStr} | ${msgCount} msgs${toolCount ? ` | ${toolCount} tools` : ""}${effort ? ` | effort=${effort}` : ""}`);
+  log.request(
+    "POST",
+    `${url.pathname} | ${modelStr} | ${msgCount} msgs${toolCount ? ` | ${toolCount} tools` : ""}${effort ? ` | effort=${effort}` : ""}`,
+  );
 
   // Log API key (masked)
   const authHeader = request.headers.get("Authorization");
@@ -96,9 +99,12 @@ export async function handleChat(request, clientRawRequest = null) {
     const comboStrategies = settings.comboStrategies || {};
     const comboSpecificStrategy = comboStrategies[modelStr]?.fallbackStrategy;
     const comboStrategy = comboSpecificStrategy || settings.comboStrategy || "fallback";
-    
+
     const comboStickyLimit = settings.comboStickyRoundRobinLimit;
-    log.info("CHAT", `Combo "${modelStr}" with ${comboModels.length} models (strategy: ${comboStrategy}, sticky: ${comboStickyLimit})`);
+    log.info(
+      "CHAT",
+      `Combo "${modelStr}" with ${comboModels.length} models (strategy: ${comboStrategy}, sticky: ${comboStickyLimit})`,
+    );
     return handleComboChat({
       body,
       models: comboModels,
@@ -106,7 +112,7 @@ export async function handleChat(request, clientRawRequest = null) {
       log,
       comboName: modelStr,
       comboStrategy,
-      comboStickyLimit
+      comboStickyLimit,
     });
   }
 
@@ -129,9 +135,12 @@ async function handleSingleModelChat(body, modelStr, clientRawRequest = null, re
       const comboStrategies = chatSettings.comboStrategies || {};
       const comboSpecificStrategy = comboStrategies[modelStr]?.fallbackStrategy;
       const comboStrategy = comboSpecificStrategy || chatSettings.comboStrategy || "fallback";
-      
+
       const comboStickyLimit = chatSettings.comboStickyRoundRobinLimit;
-      log.info("CHAT", `Combo "${modelStr}" with ${comboModels.length} models (strategy: ${comboStrategy}, sticky: ${comboStickyLimit})`);
+      log.info(
+        "CHAT",
+        `Combo "${modelStr}" with ${comboModels.length} models (strategy: ${comboStrategy}, sticky: ${comboStickyLimit})`,
+      );
       return handleComboChat({
         body,
         models: comboModels,
@@ -139,7 +148,7 @@ async function handleSingleModelChat(body, modelStr, clientRawRequest = null, re
         log,
         comboName: modelStr,
         comboStrategy,
-        comboStickyLimit
+        comboStickyLimit,
       });
     }
     log.warn("CHAT", "Invalid model format", { model: modelStr });
@@ -172,7 +181,12 @@ async function handleSingleModelChat(body, modelStr, clientRawRequest = null, re
         const errorMsg = lastError || credentials.lastError || "Unavailable";
         const status = lastStatus || Number(credentials.lastErrorCode) || HTTP_STATUS.SERVICE_UNAVAILABLE;
         log.warn("CHAT", `[${provider}/${model}] ${errorMsg} (${credentials.retryAfterHuman})`);
-        return unavailableResponse(status, `[${provider}/${model}] ${errorMsg}`, credentials.retryAfter, credentials.retryAfterHuman);
+        return unavailableResponse(
+          status,
+          `[${provider}/${model}] ${errorMsg}`,
+          credentials.retryAfter,
+          credentials.retryAfterHuman,
+        );
       }
       if (excludeConnectionIds.size === 0) {
         log.warn("AUTH", `No active credentials for provider: ${provider}`);
@@ -193,7 +207,7 @@ async function handleSingleModelChat(body, modelStr, clientRawRequest = null, re
       if (pid) {
         refreshedCredentials.projectId = pid;
         // Persist to DB in background so subsequent requests have it immediately
-        updateProviderCredentials(credentials.connectionId, { projectId: pid }).catch(() => { });
+        updateProviderCredentials(credentials.connectionId, { projectId: pid }).catch(() => {});
       }
     }
 
@@ -221,18 +235,25 @@ async function handleSingleModelChat(body, modelStr, clientRawRequest = null, re
           accessToken: newCreds.accessToken,
           refreshToken: newCreds.refreshToken,
           providerSpecificData: newCreds.providerSpecificData,
-          testStatus: "active"
+          testStatus: "active",
         });
       },
       onRequestSuccess: async () => {
         await clearAccountError(credentials.connectionId, credentials, model);
-      }
+      },
     });
 
     if (result.success) return result.response;
 
     // Mark account unavailable (auto-calculates cooldown with exponential backoff, or precise resetsAtMs)
-    const { shouldFallback } = await markAccountUnavailable(credentials.connectionId, result.status, result.error, provider, model, result.resetsAtMs);
+    const { shouldFallback } = await markAccountUnavailable(
+      credentials.connectionId,
+      result.status,
+      result.error,
+      provider,
+      model,
+      result.resetsAtMs,
+    );
 
     if (shouldFallback) {
       log.warn("AUTH", `Account ${credentials.connectionName} unavailable (${result.status}), trying fallback`);

@@ -18,7 +18,7 @@ export async function GET(request) {
     if (!apiKey) return NextResponse.json({ error: "No Deepgram connection found" }, { status: 400 });
 
     const res = await fetch("https://api.deepgram.com/v1/models", {
-      headers: { "Authorization": `Token ${apiKey}` },
+      headers: { Authorization: `Token ${apiKey}` },
     });
     if (!res.ok) {
       const text = await res.text().catch(() => "");
@@ -30,14 +30,19 @@ export async function GET(request) {
     const byLang = {};
     for (const m of ttsModels) {
       // Deepgram returns `languages: ["en"]` or sometimes language inferred from canonical_name suffix
-      const langs = Array.isArray(m.languages) && m.languages.length
-        ? m.languages
-        : [m.canonical_name?.split("-").pop() || "en"];
+      const langs =
+        Array.isArray(m.languages) && m.languages.length ? m.languages : [m.canonical_name?.split("-").pop() || "en"];
       for (const code of langs) {
         if (!byLang[code]) {
           byLang[code] = {
             code,
-            name: (() => { try { return langNames.of(code); } catch { return code; } })(),
+            name: (() => {
+              try {
+                return langNames.of(code);
+              } catch {
+                return code;
+              }
+            })(),
             voices: [],
           };
         }

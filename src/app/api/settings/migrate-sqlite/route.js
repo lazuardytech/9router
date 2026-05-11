@@ -21,10 +21,7 @@ export async function GET() {
       hasLegacyData: configPresent,
     });
   } catch (error) {
-    return NextResponse.json(
-      { error: error?.message || "Failed to inspect data dir" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: error?.message || "Failed to inspect data dir" }, { status: 500 });
   }
 }
 
@@ -67,9 +64,6 @@ export async function POST() {
     return NextResponse.json({ success: true, ...summary });
   } catch (error) {
     console.error("[migrate-sqlite] failed:", error);
-    return NextResponse.json(
-      { error: error?.message || "Migration failed" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: error?.message || "Migration failed" }, { status: 500 });
   }
 }

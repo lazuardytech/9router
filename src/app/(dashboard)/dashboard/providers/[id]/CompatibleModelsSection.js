@@ -4,17 +4,10 @@ import { useState } from "react";
 import PropTypes from "prop-types";
 import { Button } from "@/shared/components";
 function CompatibleModelRow({ modelId, fullModel, copied, onCopy, onDeleteAlias, onTest, testStatus, isTesting }) {
-  const borderColor = testStatus === "ok"
-    ? "border-green-500/40"
-    : testStatus === "error"
-    ? "border-red-500/40"
-    : "border-border";
+  const borderColor =
+    testStatus === "ok" ? "border-green-500/40" : testStatus === "error" ? "border-red-500/40" : "border-border";
 
-  const iconColor = testStatus === "ok"
-    ? "#22c55e"
-    : testStatus === "error"
-    ? "#ef4444"
-    : undefined;
+  const iconColor = testStatus === "ok" ? "#22c55e" : testStatus === "error" ? "#ef4444" : undefined;
 
   return (
     <div className={`flex items-center gap-3 p-3 rounded-lg border ${borderColor} hover:bg-sidebar/50`}>
@@ -48,7 +41,10 @@ function CompatibleModelRow({ modelId, fullModel, copied, onCopy, onDeleteAlias,
                 disabled={isTesting}
                 className="p-0.5 hover:bg-sidebar rounded text-text-muted hover:text-primary transition-colors"
               >
-                <span className="material-symbols-outlined text-sm" style={isTesting ? { animation: "spin 1s linear infinite" } : undefined}>
+                <span
+                  className="material-symbols-outlined text-sm"
+                  style={isTesting ? { animation: "spin 1s linear infinite" } : undefined}
+                >
                   {isTesting ? "progress_activity" : "science"}
                 </span>
               </button>
@@ -59,18 +55,24 @@ function CompatibleModelRow({ modelId, fullModel, copied, onCopy, onDeleteAlias,
           )}
         </div>
       </div>
-      <button
-        onClick={onDeleteAlias}
-        className="p-1 hover:bg-red-50 rounded text-red-500"
-        title="Remove model"
-      >
+      <button onClick={onDeleteAlias} className="p-1 hover:bg-red-50 rounded text-red-500" title="Remove model">
         <span className="material-symbols-outlined text-sm">delete</span>
       </button>
     </div>
   );
 }
 
-export default function CompatibleModelsSection({ providerStorageAlias, providerDisplayAlias, modelAliases, copied, onCopy, onSetAlias, onDeleteAlias, connections, isAnthropic }) {
+export default function CompatibleModelsSection({
+  providerStorageAlias,
+  providerDisplayAlias,
+  modelAliases,
+  copied,
+  onCopy,
+  onSetAlias,
+  onDeleteAlias,
+  connections,
+  isAnthropic,
+}) {
   const [newModel, setNewModel] = useState("");
   const [adding, setAdding] = useState(false);
   const [importing, setImporting] = useState(false);
@@ -95,8 +97,8 @@ export default function CompatibleModelsSection({ providerStorageAlias, provider
     }
   };
 
-  const providerAliases = Object.entries(modelAliases).filter(
-    ([, model]) => model.startsWith(`${providerStorageAlias}/`)
+  const providerAliases = Object.entries(modelAliases).filter(([, model]) =>
+    model.startsWith(`${providerStorageAlias}/`),
   );
 
   const allModels = providerAliases.map(([alias, fullModel]) => ({
@@ -188,7 +190,9 @@ export default function CompatibleModelsSection({ providerStorageAlias, provider
 
       <div className="flex items-end gap-2 flex-wrap">
         <div className="flex-1 min-w-[240px]">
-          <label htmlFor="new-compatible-model-input" className="text-xs text-text-muted mb-1 block">Model ID</label>
+          <label htmlFor="new-compatible-model-input" className="text-xs text-text-muted mb-1 block">
+            Model ID
+          </label>
           <input
             id="new-compatible-model-input"
             type="text"
@@ -207,11 +211,7 @@ export default function CompatibleModelsSection({ providerStorageAlias, provider
         </Button>
       </div>
 
-      {!canImport && (
-        <p className="text-xs text-text-muted">
-          Add a connection to enable importing models.
-        </p>
-      )}
+      {!canImport && <p className="text-xs text-text-muted">Add a connection to enable importing models.</p>}
 
       {allModels.length > 0 && (
         <div className="flex flex-col gap-3">
@@ -242,9 +242,11 @@ CompatibleModelsSection.propTypes = {
   onCopy: PropTypes.func.isRequired,
   onSetAlias: PropTypes.func.isRequired,
   onDeleteAlias: PropTypes.func.isRequired,
-  connections: PropTypes.arrayOf(PropTypes.shape({
-    id: PropTypes.string,
-    isActive: PropTypes.bool,
-  })).isRequired,
+  connections: PropTypes.arrayOf(
+    PropTypes.shape({
+      id: PropTypes.string,
+      isActive: PropTypes.bool,
+    }),
+  ).isRequired,
   isAnthropic: PropTypes.bool,
 };

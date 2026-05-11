@@ -26,14 +26,17 @@ function parseLsLine(line) {
   let size = 0;
   for (let i = beforeParts.length - 1; i >= 0; i--) {
     const n = Number(beforeParts[i]);
-    if (Number.isInteger(n) && String(n) === beforeParts[i]) { size = n; break; }
+    if (Number.isInteger(n) && String(n) === beforeParts[i]) {
+      size = n;
+      break;
+    }
   }
   return { fileType, size, name };
 }
 
 export function ls(input) {
   const dirs = [];
-  const files = [];      // [name, sizeStr]
+  const files = []; // [name, sizeStr]
   const byExt = new Map();
 
   for (const line of input.split("\n")) {

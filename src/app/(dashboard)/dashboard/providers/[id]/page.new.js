@@ -5,8 +5,27 @@ import PropTypes from "prop-types";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
-import { Card, Button, Badge, Input, Modal, CardSkeleton, OAuthModal, KiroOAuthWrapper, CursorAuthModal, Toggle, Select } from "@/shared/components";
-import { OAUTH_PROVIDERS, APIKEY_PROVIDERS, FREE_PROVIDERS, getProviderAlias, isOpenAICompatibleProvider, isAnthropicCompatibleProvider } from "@/shared/constants/providers";
+import {
+  Card,
+  Button,
+  Badge,
+  Input,
+  Modal,
+  CardSkeleton,
+  OAuthModal,
+  KiroOAuthWrapper,
+  CursorAuthModal,
+  Toggle,
+  Select,
+} from "@/shared/components";
+import {
+  OAUTH_PROVIDERS,
+  APIKEY_PROVIDERS,
+  FREE_PROVIDERS,
+  getProviderAlias,
+  isOpenAICompatibleProvider,
+  isAnthropicCompatibleProvider,
+} from "@/shared/constants/providers";
 import { getModelsByProviderId } from "@/shared/constants/models";
 import { useCopyToClipboard } from "@/shared/hooks/useCopyToClipboard";
 
@@ -34,15 +53,17 @@ export default function ProviderDetailPage() {
 
   const providerInfo = providerNode
     ? {
-      id: providerNode.id,
-      name: providerNode.name || (providerNode.type === "anthropic-compatible" ? "Anthropic Compatible" : "OpenAI Compatible"),
-      color: providerNode.type === "anthropic-compatible" ? "#D97757" : "#10A37F",
-      textIcon: providerNode.type === "anthropic-compatible" ? "AC" : "OC",
-      apiType: providerNode.apiType,
-      baseUrl: providerNode.baseUrl,
-      type: providerNode.type,
-    }
-    : (OAUTH_PROVIDERS[providerId] || APIKEY_PROVIDERS[providerId] || FREE_PROVIDERS[providerId]);
+        id: providerNode.id,
+        name:
+          providerNode.name ||
+          (providerNode.type === "anthropic-compatible" ? "Anthropic Compatible" : "OpenAI Compatible"),
+        color: providerNode.type === "anthropic-compatible" ? "#D97757" : "#10A37F",
+        textIcon: providerNode.type === "anthropic-compatible" ? "AC" : "OC",
+        apiType: providerNode.apiType,
+        baseUrl: providerNode.baseUrl,
+        type: providerNode.type,
+      }
+    : OAUTH_PROVIDERS[providerId] || APIKEY_PROVIDERS[providerId] || FREE_PROVIDERS[providerId];
   const isOAuth = !!OAUTH_PROVIDERS[providerId] || !!FREE_PROVIDERS[providerId];
   const models = useMemo(() => getModelsByProviderId(providerId), [providerId]);
   const providerAlias = getProviderAlias(providerId);
@@ -52,25 +73,15 @@ export default function ProviderDetailPage() {
   const isCompatible = isOpenAICompatible || isAnthropicCompatible;
 
   const providerStorageAlias = isCompatible ? providerId : providerAlias;
-  const providerDisplayAlias = isCompatible
-    ? (providerNode?.prefix || providerId)
-    : providerAlias;
+  const providerDisplayAlias = isCompatible ? providerNode?.prefix || providerId : providerAlias;
   const activeConnection = connections.find((conn) => conn.isActive !== false) || null;
   const allProviderModels = models.length > 0 ? models : remoteModels;
-  const allProviderModelIds = useMemo(
-    () => allProviderModels.map((model) => model.id),
-    [allProviderModels]
-  );
+  const allProviderModelIds = useMemo(() => allProviderModels.map((model) => model.id), [allProviderModels]);
   const savedEnabledModels = useMemo(() => {
     const enabled = activeConnection?.providerSpecificData?.enabledModels;
-    return Array.isArray(enabled)
-      ? enabled.filter((modelId) => allProviderModelIds.includes(modelId))
-      : [];
+    return Array.isArray(enabled) ? enabled.filter((modelId) => allProviderModelIds.includes(modelId)) : [];
   }, [activeConnection?.providerSpecificData?.enabledModels, allProviderModelIds]);
-  const savedEnabledModelsKey = useMemo(
-    () => savedEnabledModels.join("|"),
-    [savedEnabledModels]
-  );
+  const savedEnabledModelsKey = useMemo(() => savedEnabledModels.join("|"), [savedEnabledModels]);
 
   // Define callbacks BEFORE the useEffect that uses them
   const fetchAliases = useCallback(async () => {
@@ -94,7 +105,7 @@ export default function ProviderDetailPage() {
       const connectionsData = await connectionsRes.json();
       const nodesData = await nodesRes.json();
       if (connectionsRes.ok) {
-        const filtered = (connectionsData.connections || []).filter(c => c.provider === providerId);
+        const filtered = (connectionsData.connections || []).filter((c) => c.provider === providerId);
         setConnections(filtered);
       }
       if (nodesRes.ok) {
@@ -141,11 +152,7 @@ export default function ProviderDetailPage() {
   };
 
   const handleToggleModelSelected = (modelId) => {
-    setSelectedModelIds((prev) => (
-      prev.includes(modelId)
-        ? prev.filter((id) => id !== modelId)
-        : [...prev, modelId]
-    ));
+    setSelectedModelIds((prev) => (prev.includes(modelId) ? prev.filter((id) => id !== modelId) : [...prev, modelId]));
   };
 
   const handleSaveSelectedModels = async () => {
@@ -183,25 +190,18 @@ export default function ProviderDetailPage() {
   }, [fetchConnections, fetchAliases]);
 
   useEffect(() => {
-    const nextSelectedModelIds = (isCompatible || providerInfo?.passthroughModels)
-      ? []
-      : savedEnabledModels;
+    const nextSelectedModelIds = isCompatible || providerInfo?.passthroughModels ? [] : savedEnabledModels;
 
     setSelectedModelIds((prev) => {
       if (
-        prev.length === nextSelectedModelIds.length
-        && prev.every((modelId, index) => modelId === nextSelectedModelIds[index])
+        prev.length === nextSelectedModelIds.length &&
+        prev.every((modelId, index) => modelId === nextSelectedModelIds[index])
       ) {
         return prev;
       }
       return nextSelectedModelIds;
     });
-  }, [
-    isCompatible,
-    providerInfo?.passthroughModels,
-    activeConnection?.id,
-    savedEnabledModels
-  ]);
+  }, [isCompatible, providerInfo?.passthroughModels, activeConnection?.id, savedEnabledModels]);
 
   const fetchRemoteModels = useCallback(async () => {
     if (isCompatible || providerInfo?.passthroughModels || models.length > 0) {
@@ -232,9 +232,7 @@ export default function ProviderDetailPage() {
         })
         .filter(Boolean);
 
-      const deduped = Array.from(
-        new Map(parsed.map((item) => [item.id, item])).values()
-      );
+      const deduped = Array.from(new Map(parsed.map((item) => [item.id, item])).values());
 
       setRemoteModels(deduped);
     } catch (error) {
@@ -286,7 +284,7 @@ export default function ProviderDetailPage() {
     try {
       const res = await fetch(`/api/providers/${id}`, { method: "DELETE" });
       if (res.ok) {
-        setConnections(connections.filter(c => c.id !== id));
+        setConnections(connections.filter((c) => c.id !== id));
       }
     } catch (error) {
       console.log("Error deleting connection:", error);
@@ -338,7 +336,7 @@ export default function ProviderDetailPage() {
         body: JSON.stringify({ isActive }),
       });
       if (res.ok) {
-        setConnections(prev => prev.map(c => c.id === id ? { ...c, isActive } : c));
+        setConnections((prev) => prev.map((c) => (c.id === id ? { ...c, isActive } : c)));
       }
     } catch (error) {
       console.log("Error updating connection status:", error);
@@ -425,10 +423,9 @@ export default function ProviderDetailPage() {
       : availableModels;
     const query = modelSearchQuery.trim().toLowerCase();
     const visibleModels = query
-      ? filteredBySelection.filter((model) =>
-        model.id.toLowerCase().includes(query) ||
-        (model.name || "").toLowerCase().includes(query)
-      )
+      ? filteredBySelection.filter(
+          (model) => model.id.toLowerCase().includes(query) || (model.name || "").toLowerCase().includes(query),
+        )
       : filteredBySelection;
     const hasSelectionChanges =
       savedEnabledModels.length !== selectedModelIds.length ||
@@ -463,11 +460,7 @@ export default function ProviderDetailPage() {
           >
             Select all
           </Button>
-          <Button
-            size="sm"
-            variant="secondary"
-            onClick={() => setSelectedModelIds([])}
-          >
+          <Button size="sm" variant="secondary" onClick={() => setSelectedModelIds([])}>
             Unselect all
           </Button>
           <Button
@@ -489,9 +482,7 @@ export default function ProviderDetailPage() {
         </div>
 
         <p className="text-xs text-text-muted">
-          {selectedModelIds.length > 0
-            ? `${selectedModelIds.length} selected`
-            : "All models enabled"}
+          {selectedModelIds.length > 0 ? `${selectedModelIds.length} selected` : "All models enabled"}
         </p>
 
         {visibleModels.length === 0 ? (
@@ -502,7 +493,7 @@ export default function ProviderDetailPage() {
               const fullModel = `${providerStorageAlias}/${model.id}`;
               const oldFormatModel = `${providerId}/${model.id}`;
               const existingAlias = Object.entries(modelAliases).find(
-                ([, m]) => m === fullModel || m === oldFormatModel
+                ([, m]) => m === fullModel || m === oldFormatModel,
               )?.[0];
               return (
                 <ModelRow
@@ -601,10 +592,21 @@ export default function ProviderDetailPage() {
         <Card>
           <div className="flex items-center justify-between mb-4">
             <div>
-              <h2 className="text-lg font-semibold">{isAnthropicCompatible ? "Anthropic Compatible Details" : "OpenAI Compatible Details"}</h2>
+              <h2 className="text-lg font-semibold">
+                {isAnthropicCompatible ? "Anthropic Compatible Details" : "OpenAI Compatible Details"}
+              </h2>
               <p className="text-sm text-text-muted">
-                {isAnthropicCompatible ? "Messages API" : (providerNode.apiType === "responses" ? "Responses API" : "Chat Completions")} · {(providerNode.baseUrl || "").replace(/\/$/, "")}/
-                {isAnthropicCompatible ? "messages" : (providerNode.apiType === "responses" ? "responses" : "chat/completions")}
+                {isAnthropicCompatible
+                  ? "Messages API"
+                  : providerNode.apiType === "responses"
+                    ? "Responses API"
+                    : "Chat Completions"}{" "}
+                · {(providerNode.baseUrl || "").replace(/\/$/, "")}/
+                {isAnthropicCompatible
+                  ? "messages"
+                  : providerNode.apiType === "responses"
+                    ? "responses"
+                    : "chat/completions"}
               </p>
             </div>
             <div className="flex items-center gap-2">
@@ -616,12 +618,7 @@ export default function ProviderDetailPage() {
               >
                 Add
               </Button>
-              <Button
-                size="sm"
-                variant="secondary"
-                icon="edit"
-                onClick={() => setShowEditNodeModal(true)}
-              >
+              <Button size="sm" variant="secondary" icon="edit" onClick={() => setShowEditNodeModal(true)}>
                 Edit
               </Button>
               <Button
@@ -629,7 +626,8 @@ export default function ProviderDetailPage() {
                 variant="secondary"
                 icon="delete"
                 onClick={async () => {
-                  if (!confirm(`Delete this ${isAnthropicCompatible ? "Anthropic" : "OpenAI"} Compatible node?`)) return;
+                  if (!confirm(`Delete this ${isAnthropicCompatible ? "Anthropic" : "OpenAI"} Compatible node?`))
+                    return;
                   try {
                     const res = await fetch(`/api/provider-nodes/${providerId}`, { method: "DELETE" });
                     if (res.ok) {
@@ -660,7 +658,7 @@ export default function ProviderDetailPage() {
             <Button
               size="sm"
               icon="add"
-              onClick={() => isOAuth ? setShowOAuthModal(true) : setShowAddApiKeyModal(true)}
+              onClick={() => (isOAuth ? setShowOAuthModal(true) : setShowAddApiKeyModal(true))}
             >
               Add
             </Button>
@@ -675,7 +673,7 @@ export default function ProviderDetailPage() {
             <p className="text-text-main font-medium mb-1">No connections yet</p>
             <p className="text-sm text-text-muted mb-4">Add your first connection to get started</p>
             {!isCompatible && (
-              <Button icon="add" onClick={() => isOAuth ? setShowOAuthModal(true) : setShowAddApiKeyModal(true)}>
+              <Button icon="add" onClick={() => (isOAuth ? setShowOAuthModal(true) : setShowAddApiKeyModal(true))}>
                 Add Connection
               </Button>
             )}
@@ -711,7 +709,6 @@ export default function ProviderDetailPage() {
           {providerInfo.passthroughModels ? "Model Aliases" : "Available Models"}
         </h2>
         {renderModelsSection()}
-
       </Card>
 
       {/* Modals */}
@@ -810,9 +807,7 @@ function PassthroughModelsSection({ providerAlias, modelAliases, copied, onCopy,
   const [adding, setAdding] = useState(false);
 
   // Filter aliases for this provider - models are persisted via alias
-  const providerAliases = Object.entries(modelAliases).filter(
-    ([, model]) => model.startsWith(`${providerAlias}/`)
-  );
+  const providerAliases = Object.entries(modelAliases).filter(([, model]) => model.startsWith(`${providerAlias}/`));
 
   const allModels = providerAliases.map(([alias, fullModel]) => ({
     modelId: fullModel.replace(`${providerAlias}/`, ""),
@@ -857,7 +852,9 @@ function PassthroughModelsSection({ providerAlias, modelAliases, copied, onCopy,
       {/* Add new model */}
       <div className="flex items-end gap-2">
         <div className="flex-1">
-          <label htmlFor="new-model-input" className="text-xs text-text-muted mb-1 block">Model ID (from OpenRouter)</label>
+          <label htmlFor="new-model-input" className="text-xs text-text-muted mb-1 block">
+            Model ID (from OpenRouter)
+          </label>
           <input
             id="new-model-input"
             type="text"
@@ -924,11 +921,7 @@ function PassthroughModelRow({ modelId, fullModel, copied, onCopy, onDeleteAlias
       </div>
 
       {/* Delete button */}
-      <button
-        onClick={onDeleteAlias}
-        className="p-1 hover:bg-red-50 rounded text-red-500"
-        title="Remove model"
-      >
+      <button onClick={onDeleteAlias} className="p-1 hover:bg-red-50 rounded text-red-500" title="Remove model">
         <span className="material-symbols-outlined text-sm">delete</span>
       </button>
     </div>
@@ -943,13 +936,23 @@ PassthroughModelRow.propTypes = {
   onDeleteAlias: PropTypes.func.isRequired,
 };
 
-function CompatibleModelsSection({ providerStorageAlias, providerDisplayAlias, modelAliases, copied, onCopy, onSetAlias, onDeleteAlias, connections, isAnthropic }) {
+function CompatibleModelsSection({
+  providerStorageAlias,
+  providerDisplayAlias,
+  modelAliases,
+  copied,
+  onCopy,
+  onSetAlias,
+  onDeleteAlias,
+  connections,
+  isAnthropic,
+}) {
   const [newModel, setNewModel] = useState("");
   const [adding, setAdding] = useState(false);
   const [importing, setImporting] = useState(false);
 
-  const providerAliases = Object.entries(modelAliases).filter(
-    ([, model]) => model.startsWith(`${providerStorageAlias}/`)
+  const providerAliases = Object.entries(modelAliases).filter(([, model]) =>
+    model.startsWith(`${providerStorageAlias}/`),
   );
 
   const allModels = providerAliases.map(([alias, fullModel]) => ({
@@ -1038,7 +1041,9 @@ function CompatibleModelsSection({ providerStorageAlias, providerDisplayAlias, m
 
       <div className="flex items-end gap-2 flex-wrap">
         <div className="flex-1 min-w-[240px]">
-          <label htmlFor="new-compatible-model-input" className="text-xs text-text-muted mb-1 block">Model ID</label>
+          <label htmlFor="new-compatible-model-input" className="text-xs text-text-muted mb-1 block">
+            Model ID
+          </label>
           <input
             id="new-compatible-model-input"
             type="text"
@@ -1057,11 +1062,7 @@ function CompatibleModelsSection({ providerStorageAlias, providerDisplayAlias, m
         </Button>
       </div>
 
-      {!canImport && (
-        <p className="text-xs text-text-muted">
-          Add a connection to enable importing models.
-        </p>
-      )}
+      {!canImport && <p className="text-xs text-text-muted">Add a connection to enable importing models.</p>}
 
       {allModels.length > 0 && (
         <div className="flex flex-col gap-3">
@@ -1089,10 +1090,12 @@ CompatibleModelsSection.propTypes = {
   onCopy: PropTypes.func.isRequired,
   onSetAlias: PropTypes.func.isRequired,
   onDeleteAlias: PropTypes.func.isRequired,
-  connections: PropTypes.arrayOf(PropTypes.shape({
-    id: PropTypes.string,
-    isActive: PropTypes.bool,
-  })).isRequired,
+  connections: PropTypes.arrayOf(
+    PropTypes.shape({
+      id: PropTypes.string,
+      isActive: PropTypes.bool,
+    }),
+  ).isRequired,
   isAnthropic: PropTypes.bool,
 };
 
@@ -1125,18 +1128,24 @@ function CooldownTimer({ until }) {
 
   if (!remaining) return null;
 
-  return (
-    <span className="text-xs text-orange-500 font-mono">
-      ⏱ {remaining}
-    </span>
-  );
+  return <span className="text-xs text-orange-500 font-mono">⏱ {remaining}</span>;
 }
 
 CooldownTimer.propTypes = {
   until: PropTypes.string.isRequired,
 };
 
-function ConnectionRow({ connection, isOAuth, isFirst, isLast, onMoveUp, onMoveDown, onToggleActive, onEdit, onDelete }) {
+function ConnectionRow({
+  connection,
+  isOAuth,
+  isFirst,
+  isLast,
+  onMoveUp,
+  onMoveDown,
+  onToggleActive,
+  onEdit,
+  onDelete,
+}) {
   const displayName = isOAuth
     ? connection.name || connection.email || connection.displayName || "OAuth Account"
     : connection.name;
@@ -1144,19 +1153,21 @@ function ConnectionRow({ connection, isOAuth, isFirst, isLast, onMoveUp, onMoveD
   // Use useState + useEffect for impure Date.now() to avoid calling during render
   const [isCooldown, setIsCooldown] = useState(false);
 
-  const modelLockUntil = Object.entries(connection)
-    .filter(([k]) => k.startsWith("modelLock_"))
-    .map(([, v]) => v)
-    .filter(v => v && new Date(v).getTime() > Date.now())
-    .sort()[0] || null;
+  const modelLockUntil =
+    Object.entries(connection)
+      .filter(([k]) => k.startsWith("modelLock_"))
+      .map(([, v]) => v)
+      .filter((v) => v && new Date(v).getTime() > Date.now())
+      .sort()[0] || null;
 
   useEffect(() => {
     const checkCooldown = () => {
-      const until = Object.entries(connection)
-        .filter(([k]) => k.startsWith("modelLock_"))
-        .map(([, v]) => v)
-        .filter(v => v && new Date(v).getTime() > Date.now())
-        .sort()[0] || null;
+      const until =
+        Object.entries(connection)
+          .filter(([k]) => k.startsWith("modelLock_"))
+          .map(([, v]) => v)
+          .filter((v) => v && new Date(v).getTime() > Date.now())
+          .sort()[0] || null;
       setIsCooldown(!!until);
     };
 
@@ -1168,19 +1179,23 @@ function ConnectionRow({ connection, isOAuth, isFirst, isLast, onMoveUp, onMoveD
   }, [modelLockUntil]);
 
   // Determine effective status (override unavailable if cooldown expired)
-  const effectiveStatus = (connection.testStatus === "unavailable" && !isCooldown)
-    ? "active"  // Cooldown expired → treat as active
-    : connection.testStatus;
+  const effectiveStatus =
+    connection.testStatus === "unavailable" && !isCooldown
+      ? "active" // Cooldown expired → treat as active
+      : connection.testStatus;
 
   const getStatusVariant = () => {
     if (connection.isActive === false) return "default";
     if (effectiveStatus === "active" || effectiveStatus === "success") return "success";
-    if (effectiveStatus === "error" || effectiveStatus === "expired" || effectiveStatus === "unavailable") return "error";
+    if (effectiveStatus === "error" || effectiveStatus === "expired" || effectiveStatus === "unavailable")
+      return "error";
     return "default";
   };
 
   return (
-    <div className={`group flex items-center justify-between p-3 rounded-lg hover:bg-black/[0.02] dark:hover:bg-white/[0.02] transition-colors ${connection.isActive === false ? "opacity-60" : ""}`}>
+    <div
+      className={`group flex items-center justify-between p-3 rounded-lg hover:bg-black/[0.02] dark:hover:bg-white/[0.02] transition-colors ${connection.isActive === false ? "opacity-60" : ""}`}
+    >
       <div className="flex items-center gap-3 flex-1 min-w-0">
         {/* Priority arrows */}
         <div className="flex flex-col">
@@ -1199,14 +1214,12 @@ function ConnectionRow({ connection, isOAuth, isFirst, isLast, onMoveUp, onMoveD
             <span className="material-symbols-outlined text-sm">keyboard_arrow_down</span>
           </button>
         </div>
-        <span className="material-symbols-outlined text-base text-text-muted">
-          {isOAuth ? "lock" : "key"}
-        </span>
+        <span className="material-symbols-outlined text-base text-text-muted">{isOAuth ? "lock" : "key"}</span>
         <div className="flex-1 min-w-0">
           <p className="text-sm font-medium truncate">{displayName}</p>
           <div className="flex items-center gap-2 mt-1">
             <Badge variant={getStatusVariant()} size="sm" dot>
-              {connection.isActive === false ? "disabled" : (effectiveStatus || "Unknown")}
+              {connection.isActive === false ? "disabled" : effectiveStatus || "Unknown"}
             </Badge>
             {isCooldown && connection.isActive !== false && <CooldownTimer until={modelLockUntil} />}
             {connection.lastError && connection.isActive !== false && (
@@ -1229,7 +1242,10 @@ function ConnectionRow({ connection, isOAuth, isFirst, isLast, onMoveUp, onMoveD
           title={(connection.isActive ?? true) ? "Disable connection" : "Enable connection"}
         />
         <div className="flex gap-1 ml-1 opacity-0 group-hover:opacity-100 transition-opacity">
-          <button onClick={onEdit} className="p-2 hover:bg-black/5 dark:hover:bg-white/5 rounded text-text-muted hover:text-primary">
+          <button
+            onClick={onEdit}
+            className="p-2 hover:bg-black/5 dark:hover:bg-white/5 rounded text-text-muted hover:text-primary"
+          >
             <span className="material-symbols-outlined text-[18px]">edit</span>
           </button>
           <button onClick={onDelete} className="p-2 hover:bg-red-500/10 rounded text-red-500">
@@ -1359,8 +1375,7 @@ function AddApiKeyModal({ isOpen, provider, providerName, isCompatible, isAnthro
           <p className="text-xs text-text-muted">
             {isAnthropic
               ? `Validation checks ${providerName || "Anthropic Compatible"} by verifying the API key.`
-              : `Validation checks ${providerName || "OpenAI Compatible"} via /models on your base URL.`
-            }
+              : `Validation checks ${providerName || "OpenAI Compatible"} via /models on your base URL.`}
           </p>
         )}
         <Input
@@ -1490,7 +1505,8 @@ function EditConnectionModal({ isOpen, connection, onSave, onClose }) {
   if (!connection) return null;
 
   const isOAuth = connection.authType === "oauth";
-  const isCompatible = isOpenAICompatibleProvider(connection.provider) || isAnthropicCompatibleProvider(connection.provider);
+  const isCompatible =
+    isOpenAICompatibleProvider(connection.provider) || isAnthropicCompatibleProvider(connection.provider);
 
   return (
     <Modal isOpen={isOpen} title="Edit Connection" onClose={onClose}>
@@ -1526,7 +1542,11 @@ function EditConnectionModal({ isOpen, connection, onSave, onClose }) {
                 className="flex-1"
               />
               <div className="pt-6">
-                <Button onClick={handleValidate} disabled={!formData.apiKey || validating || saving} variant="secondary">
+                <Button
+                  onClick={handleValidate}
+                  disabled={!formData.apiKey || validating || saving}
+                  variant="secondary"
+                >
                   {validating ? "Checking..." : "Check"}
                 </Button>
               </div>
@@ -1554,8 +1574,12 @@ function EditConnectionModal({ isOpen, connection, onSave, onClose }) {
         )}
 
         <div className="flex gap-2">
-          <Button onClick={handleSubmit} fullWidth disabled={saving}>{saving ? "Saving..." : "Save"}</Button>
-          <Button onClick={onClose} variant="ghost" fullWidth>Cancel</Button>
+          <Button onClick={handleSubmit} fullWidth disabled={saving}>
+            {saving ? "Saving..." : "Save"}
+          </Button>
+          <Button onClick={onClose} variant="ghost" fullWidth>
+            Cancel
+          </Button>
         </div>
       </div>
     </Modal>
@@ -1631,7 +1655,7 @@ function EditCompatibleNodeModal({ isOpen, node, onSave, onClose, isAnthropic })
         body: JSON.stringify({
           baseUrl: formData.baseUrl,
           apiKey: checkKey,
-          type: isAnthropic ? "anthropic-compatible" : "openai-compatible"
+          type: isAnthropic ? "anthropic-compatible" : "openai-compatible",
         }),
       });
       const data = await res.json();
@@ -1686,7 +1710,11 @@ function EditCompatibleNodeModal({ isOpen, node, onSave, onClose, isAnthropic })
             className="flex-1"
           />
           <div className="pt-6">
-            <Button onClick={handleValidate} disabled={!checkKey || validating || !formData.baseUrl.trim()} variant="secondary">
+            <Button
+              onClick={handleValidate}
+              disabled={!checkKey || validating || !formData.baseUrl.trim()}
+              variant="secondary"
+            >
               {validating ? "Checking..." : "Check"}
             </Button>
           </div>
@@ -1697,7 +1725,11 @@ function EditCompatibleNodeModal({ isOpen, node, onSave, onClose, isAnthropic })
           </Badge>
         )}
         <div className="flex gap-2">
-          <Button onClick={handleSubmit} fullWidth disabled={!formData.name.trim() || !formData.prefix.trim() || !formData.baseUrl.trim() || saving}>
+          <Button
+            onClick={handleSubmit}
+            fullWidth
+            disabled={!formData.name.trim() || !formData.prefix.trim() || !formData.baseUrl.trim() || saving}
+          >
             {saving ? "Saving..." : "Save"}
           </Button>
           <Button onClick={onClose} variant="ghost" fullWidth>

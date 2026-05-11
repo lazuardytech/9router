@@ -160,9 +160,11 @@ export default function AddCustomEmbeddingModal({ isOpen, onClose, onCreated, on
             fullWidth
             disabled={!formData.name.trim() || !formData.prefix.trim() || !formData.baseUrl.trim() || submitting}
           >
-            {submitting ? (isEdit ? "Saving..." : "Creating...") : (isEdit ? "Save" : "Create")}
+            {submitting ? (isEdit ? "Saving..." : "Creating...") : isEdit ? "Save" : "Create"}
           </Button>
-          <Button onClick={onClose} variant="ghost" fullWidth>Cancel</Button>
+          <Button onClick={onClose} variant="ghost" fullWidth>
+            Cancel
+          </Button>
         </div>
       </div>
     </Modal>

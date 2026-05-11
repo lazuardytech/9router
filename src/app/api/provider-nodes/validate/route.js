@@ -4,9 +4,7 @@ import { NextResponse } from "next/server";
 const fetchWithTimeout = (url, options, timeout = 10000) => {
   return Promise.race([
     fetch(url, options),
-    new Promise((_, reject) => 
-      setTimeout(() => reject(new Error("Request timeout")), timeout)
-    )
+    new Promise((_, reject) => setTimeout(() => reject(new Error("Request timeout")), timeout)),
   ]);
 };
 
@@ -73,10 +71,10 @@ export async function POST(request) {
       const embedRes = await fetchWithTimeout(`${normalizedBase}/embeddings`, {
         method: "POST",
         headers: {
-          "Authorization": `Bearer ${apiKey}`,
-          "Content-Type": "application/json"
+          Authorization: `Bearer ${apiKey}`,
+          "Content-Type": "application/json",
         },
-        body: JSON.stringify({ model: modelId.trim(), input: "ping" })
+        body: JSON.stringify({ model: modelId.trim(), input: "ping" }),
       });
       if (embedRes.ok) {
         const data = await embedRes.json().catch(() => null);
@@ -90,7 +88,7 @@ export async function POST(request) {
       return NextResponse.json({
         valid: false,
         error: `Embeddings request failed (${embedRes.status})${errBody ? `: ${errBody.slice(0, 200)}` : ""}`,
-        method: "embeddings"
+        method: "embeddings",
       });
     }
 
@@ -107,8 +105,8 @@ export async function POST(request) {
         headers: {
           "x-api-key": apiKey,
           "anthropic-version": "2023-06-01",
-          "Authorization": `Bearer ${apiKey}`
-        }
+          Authorization: `Bearer ${apiKey}`,
+        },
       });
 
       if (res.ok) return NextResponse.json({ valid: true });
@@ -123,16 +121,16 @@ export async function POST(request) {
         const chatRes = await fetchWithTimeout(`${normalizedBase}/chat/completions`, {
           method: "POST",
           headers: {
-            "Authorization": `Bearer ${apiKey}`,
+            Authorization: `Bearer ${apiKey}`,
             "Content-Type": "application/json",
             "x-api-key": apiKey,
-            "anthropic-version": "2023-06-01"
+            "anthropic-version": "2023-06-01",
           },
           body: JSON.stringify({
             model: modelId,
             messages: [{ role: "user", content: "ping" }],
-            max_tokens: 1
-          })
+            max_tokens: 1,
+          }),
         });
         if (chatRes.ok) {
           return NextResponse.json({ valid: true, method: "chat" });
@@ -140,7 +138,7 @@ export async function POST(request) {
         return NextResponse.json({
           valid: false,
           error: getChatErrorMessage(chatRes.status),
-          method: "chat"
+          method: "chat",
         });
       }
 
@@ -150,7 +148,7 @@ export async function POST(request) {
     // OpenAI Compatible Validation (Default)
     const modelsUrl = `${baseUrl.replace(/\/$/, "")}/models`;
     const res = await fetchWithTimeout(modelsUrl, {
-      headers: { "Authorization": `Bearer ${apiKey}` },
+      headers: { Authorization: `Bearer ${apiKey}` },
     });
 
     if (res.ok) return NextResponse.json({ valid: true });
@@ -165,14 +163,14 @@ export async function POST(request) {
       const chatRes = await fetchWithTimeout(`${baseUrl.replace(/\/$/, "")}/chat/completions`, {
         method: "POST",
         headers: {
-          "Authorization": `Bearer ${apiKey}`,
-          "Content-Type": "application/json"
+          Authorization: `Bearer ${apiKey}`,
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
           model: modelId,
           messages: [{ role: "user", content: "ping" }],
-          max_tokens: 1
-        })
+          max_tokens: 1,
+        }),
       });
       if (chatRes.ok) {
         return NextResponse.json({ valid: true, method: "chat" });
@@ -180,7 +178,7 @@ export async function POST(request) {
       return NextResponse.json({
         valid: false,
         error: getChatErrorMessage(chatRes.status),
-        method: "chat"
+        method: "chat",
       });
     }
 
@@ -191,11 +189,14 @@ export async function POST(request) {
       message: error.message,
       cause: error.cause,
       code: error.cause?.code,
-      userMessage: errorMessage
+      userMessage: errorMessage,
     });
-    return NextResponse.json({ 
-      valid: false,
-      error: errorMessage 
-    }, { status: 500 });
+    return NextResponse.json(
+      {
+        valid: false,
+        error: errorMessage,
+      },
+      { status: 500 },
+    );
   }
 }

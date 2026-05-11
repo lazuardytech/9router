@@ -5,7 +5,12 @@ import Link from "next/link";
 import { useState, useEffect } from "react";
 import { Card, Badge, Button, AddCustomEmbeddingModal, NoAuthProxyCard, ProviderInfoCard } from "@/shared/components";
 import ProviderIcon from "@/shared/components/ProviderIcon";
-import { MEDIA_PROVIDER_KINDS, AI_PROVIDERS, getProviderAlias, isCustomEmbeddingProvider } from "@/shared/constants/providers";
+import {
+  MEDIA_PROVIDER_KINDS,
+  AI_PROVIDERS,
+  getProviderAlias,
+  isCustomEmbeddingProvider,
+} from "@/shared/constants/providers";
 import { getModelsByProviderId } from "@/shared/constants/models";
 import { useCopyToClipboard } from "@/shared/hooks/useCopyToClipboard";
 import ConnectionsCard from "@/app/(dashboard)/dashboard/providers/components/ConnectionsCard";
@@ -97,12 +102,36 @@ const KIND_EXAMPLE_CONFIG = {
     defaultResponse: `{\n  "data": [\n    { "url": "...", "b64_json": "..." }\n  ]\n}`,
     extraFields: [
       { key: "n", label: "n", type: "number", default: 1, min: 1, max: 4 },
-      { key: "size", label: "Size", type: "select", default: "auto", options: ["auto", "1024x1024", "1024x1536", "1536x1024", "1024x1792", "1792x1024"] },
-      { key: "quality", label: "Quality", type: "select", default: "auto", options: ["auto", "low", "medium", "high", "standard", "hd"] },
-      { key: "background", label: "Background", type: "select", default: "auto", options: ["auto", "transparent", "opaque"] },
+      {
+        key: "size",
+        label: "Size",
+        type: "select",
+        default: "auto",
+        options: ["auto", "1024x1024", "1024x1536", "1536x1024", "1024x1792", "1792x1024"],
+      },
+      {
+        key: "quality",
+        label: "Quality",
+        type: "select",
+        default: "auto",
+        options: ["auto", "low", "medium", "high", "standard", "hd"],
+      },
+      {
+        key: "background",
+        label: "Background",
+        type: "select",
+        default: "auto",
+        options: ["auto", "transparent", "opaque"],
+      },
       { key: "style", label: "Style", type: "select", default: "", options: ["", "vivid", "natural"] },
       { key: "response_format", label: "Format", type: "select", default: "", options: ["", "url", "b64_json"] },
-      { key: "image_detail", label: "Image Detail", type: "select", default: "high", options: ["auto", "low", "high", "original"] },
+      {
+        key: "image_detail",
+        label: "Image Detail",
+        type: "select",
+        default: "high",
+        options: ["auto", "low", "high", "original"],
+      },
       { key: "output_format", label: "Codec", type: "select", default: "png", options: ["png", "jpeg", "webp"] },
     ],
   },
@@ -133,7 +162,7 @@ const KIND_EXAMPLE_CONFIG = {
 // EmbeddingExampleCard
 function EmbeddingExampleCard({ providerId, customAlias }) {
   const isCustom = isCustomEmbeddingProvider(providerId);
-  const providerAlias = isCustom ? (customAlias || providerId) : getProviderAlias(providerId);
+  const providerAlias = isCustom ? customAlias || providerId : getProviderAlias(providerId);
   const embeddingModels = isCustom ? [] : getModelsByProviderId(providerId).filter((m) => m.type === "embedding");
 
   const [selectedModel, setSelectedModel] = useState(embeddingModels[0]?.id ?? "");
@@ -153,11 +182,15 @@ function EmbeddingExampleCard({ providerId, customAlias }) {
     setLocalEndpoint(window.location.origin);
     fetch("/api/keys")
       .then((r) => r.json())
-      .then((d) => { setApiKey((d.keys || []).find((k) => k.isActive !== false)?.key || ""); })
+      .then((d) => {
+        setApiKey((d.keys || []).find((k) => k.isActive !== false)?.key || "");
+      })
       .catch(() => {});
     fetch("/api/tunnel/status")
       .then((r) => r.json())
-      .then((d) => { if (d.publicUrl) setTunnelEndpoint(d.publicUrl); })
+      .then((d) => {
+        if (d.publicUrl) setTunnelEndpoint(d.publicUrl);
+      })
       .catch(() => {});
   }, []);
 
@@ -193,7 +226,10 @@ function EmbeddingExampleCard({ providerId, customAlias }) {
       });
       const latencyMs = Date.now() - start;
       const data = await res.json();
-      if (!res.ok) { setError(data?.error?.message || data?.error || `HTTP ${res.status}`); return; }
+      if (!res.ok) {
+        setError(data?.error?.message || data?.error || `HTTP ${res.status}`);
+        return;
+      }
       setResult({ data, latencyMs });
     } catch (e) {
       setError(e.message || "Network error");
@@ -208,7 +244,10 @@ function EmbeddingExampleCard({ providerId, customAlias }) {
     const clone = JSON.parse(JSON.stringify(data));
     (clone.data || []).forEach((item) => {
       if (Array.isArray(item.embedding) && item.embedding.length > 4) {
-        item.embedding = [...item.embedding.slice(0, 4).map((v) => parseFloat(v.toFixed(6))), `... (${item.embedding.length} dims)`];
+        item.embedding = [
+          ...item.embedding.slice(0, 4).map((v) => parseFloat(v.toFixed(6))),
+          `... (${item.embedding.length} dims)`,
+        ];
       }
     });
     return JSON.stringify(clone, null, 2);
@@ -237,7 +276,9 @@ function EmbeddingExampleCard({ providerId, customAlias }) {
               className="w-full px-3 py-1.5 text-sm border border-border rounded-lg bg-background focus:outline-none focus:border-primary"
             >
               {embeddingModels.map((m) => (
-                <option key={m.id} value={m.id}>{m.name || m.id}</option>
+                <option key={m.id} value={m.id}>
+                  {m.name || m.id}
+                </option>
               ))}
             </select>
           )}
@@ -248,7 +289,7 @@ function EmbeddingExampleCard({ providerId, customAlias }) {
           <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:items-center">
             <input
               value={endpoint}
-              onChange={(e) => useTunnel ? setTunnelEndpoint(e.target.value) : setLocalEndpoint(e.target.value)}
+              onChange={(e) => (useTunnel ? setTunnelEndpoint(e.target.value) : setLocalEndpoint(e.target.value))}
               className="w-full min-w-0 flex-1 px-3 py-1.5 text-sm border border-border rounded-lg bg-background focus:outline-none focus:border-primary font-mono"
               placeholder="http://localhost:3000"
             />
@@ -258,7 +299,9 @@ function EmbeddingExampleCard({ providerId, customAlias }) {
                 onClick={() => setUseTunnel((v) => !v)}
                 title={useTunnel ? "Using tunnel" : "Using local"}
                 className={`flex items-center gap-1 text-xs px-2 py-1.5 rounded-lg border shrink-0 transition-colors ${
-                  useTunnel ? "border-primary/40 bg-primary/10 text-primary" : "border-border text-text-muted hover:text-primary"
+                  useTunnel
+                    ? "border-primary/40 bg-primary/10 text-primary"
+                    : "border-border text-text-muted hover:text-primary"
                 }`}
               >
                 <span className="material-symbols-outlined text-[14px]">wifi_tethering</span>
@@ -328,14 +371,19 @@ function EmbeddingExampleCard({ providerId, customAlias }) {
                 disabled={running || !input.trim() || !modelFull}
                 className="flex w-full sm:w-auto items-center justify-center gap-1.5 px-3 py-1 rounded-lg bg-primary text-white text-xs font-medium hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                <span className="material-symbols-outlined text-[14px]" style={running ? { animation: "spin 1s linear infinite" } : undefined}>
+                <span
+                  className="material-symbols-outlined text-[14px]"
+                  style={running ? { animation: "spin 1s linear infinite" } : undefined}
+                >
                   play_arrow
                 </span>
                 {running ? "Running..." : "Run"}
               </button>
             </div>
           </div>
-          <pre className="bg-sidebar rounded-lg px-3 py-2.5 text-xs font-mono text-text-main overflow-x-auto whitespace-pre-wrap break-all">{curlSnippet}</pre>
+          <pre className="bg-sidebar rounded-lg px-3 py-2.5 text-xs font-mono text-text-main overflow-x-auto whitespace-pre-wrap break-all">
+            {curlSnippet}
+          </pre>
         </div>
 
         {/* Error */}
@@ -372,13 +420,13 @@ function TtsExampleCard({ providerId }) {
   const config = TTS_PROVIDER_CONFIG[providerId] || TTS_PROVIDER_CONFIG["edge-tts"];
 
   // Voice state
-  const [selectedVoice, setSelectedVoice]     = useState("");
+  const [selectedVoice, setSelectedVoice] = useState("");
   const [selectedVoiceName, setSelectedVoiceName] = useState("");
-  const [voiceId, setVoiceId]               = useState(""); // editable voice id (elevenlabs)
+  const [voiceId, setVoiceId] = useState(""); // editable voice id (elevenlabs)
   // Voices shown below Voice row after language selected
-  const [countryVoices, setCountryVoices]     = useState([]);
-  const [selectedLang, setSelectedLang]       = useState("");
-  const [selectedModel, setSelectedModel]     = useState(() => {
+  const [countryVoices, setCountryVoices] = useState([]);
+  const [selectedLang, setSelectedLang] = useState("");
+  const [selectedModel, setSelectedModel] = useState(() => {
     const cfgModels = AI_PROVIDERS[providerId]?.ttsConfig?.models;
     if (cfgModels?.length) return cfgModels[0].id;
     if (config.hasModelSelector && config.modelKey) {
@@ -389,49 +437,53 @@ function TtsExampleCard({ providerId }) {
   });
 
   // Form state
-  const [input, setInput]               = useState("Hello, this is a text to speech test.");
-  const [apiKey, setApiKey]             = useState("");
-  const [useTunnel, setUseTunnel]       = useState(false);
-  const [localEndpoint, setLocalEndpoint]   = useState("");
+  const [input, setInput] = useState("Hello, this is a text to speech test.");
+  const [apiKey, setApiKey] = useState("");
+  const [useTunnel, setUseTunnel] = useState(false);
+  const [localEndpoint, setLocalEndpoint] = useState("");
   const [tunnelEndpoint, setTunnelEndpoint] = useState("");
   const [responseFormat, setResponseFormat] = useState("mp3"); // mp3 | json
-  const [audioUrl, setAudioUrl]         = useState("");
+  const [audioUrl, setAudioUrl] = useState("");
   const [jsonResponse, setJsonResponse] = useState(null); // Store JSON response
-  const [running, setRunning]           = useState(false);
-  const [error, setError]               = useState("");
-  const [latency, setLatency]           = useState(null);
+  const [running, setRunning] = useState(false);
+  const [error, setError] = useState("");
+  const [latency, setLatency] = useState(null);
   const { copied: copiedCurl, copy: copyCurl } = useCopyToClipboard();
 
   // Country picker modal state
-  const [modalOpen, setModalOpen]           = useState(false);
-  const [languages, setLanguages]           = useState([]);
-  const [modalLoading, setModalLoading]     = useState(false);
-  const [modalSearch, setModalSearch]       = useState("");
-  const [modalError, setModalError]         = useState("");
-  const [byLang, setByLang]                 = useState({});
+  const [modalOpen, setModalOpen] = useState(false);
+  const [languages, setLanguages] = useState([]);
+  const [modalLoading, setModalLoading] = useState(false);
+  const [modalSearch, setModalSearch] = useState("");
+  const [modalError, setModalError] = useState("");
+  const [byLang, setByLang] = useState({});
   // Language hint (e.g. Gemini): controls the spoken language without affecting voice selection
-  const [languageHint, setLanguageHint]     = useState("");
+  const [languageHint, setLanguageHint] = useState("");
 
   useEffect(() => {
     setLocalEndpoint(window.location.origin);
     fetch("/api/keys")
       .then((r) => r.json())
-      .then((d) => { setApiKey((d.keys || []).find((k) => k.isActive !== false)?.key || ""); })
+      .then((d) => {
+        setApiKey((d.keys || []).find((k) => k.isActive !== false)?.key || "");
+      })
       .catch(() => {});
     fetch("/api/tunnel/status")
       .then((r) => r.json())
-      .then((d) => { if (d.publicUrl) setTunnelEndpoint(d.publicUrl); })
+      .then((d) => {
+        if (d.publicUrl) setTunnelEndpoint(d.publicUrl);
+      })
       .catch(() => {});
 
     // Pre-select default voice based on provider config
     if (config.voiceSource === "hardcoded") {
-      const defaultModel = config.hasModelSelector && config.modelKey
-        ? (getModelsByProviderId(config.modelKey)?.[0]?.id || "")
-        : "";
+      const defaultModel =
+        config.hasModelSelector && config.modelKey ? getModelsByProviderId(config.modelKey)?.[0]?.id || "" : "";
       // Use per-model voices if available, else flat list
-      const voices = (config.voicesPerModel && defaultModel)
-        ? (getTtsVoicesForModel(providerId, defaultModel) || [])
-        : getModelsByProviderId(config.voiceKey || providerId).filter((m) => m.type === "tts");
+      const voices =
+        config.voicesPerModel && defaultModel
+          ? getTtsVoicesForModel(providerId, defaultModel) || []
+          : getModelsByProviderId(config.voiceKey || providerId).filter((m) => m.type === "tts");
       if (voices.length) {
         if (config.hasBrowseButton) {
           // Google TTS: pre-select "en" (English) as default, show as single voice chip
@@ -489,7 +541,10 @@ function TtsExampleCard({ providerId }) {
           : `/api/media-providers/tts/voices?provider=${providerId === "local-device" ? "local-device" : "edge-tts"}`;
         const r = await fetch(url);
         const d = await r.json();
-        if (d.error) { setModalError(d.error); return; }
+        if (d.error) {
+          setModalError(d.error);
+          return;
+        }
         setLanguages(d.languages || []);
         setByLang(d.byLang || {});
       }
@@ -515,17 +570,19 @@ function TtsExampleCard({ providerId }) {
   };
 
   const filteredLanguages = modalSearch
-    ? languages.filter((c) =>
-        c.name.toLowerCase().includes(modalSearch.toLowerCase()) ||
-        c.code.toLowerCase().includes(modalSearch.toLowerCase())
+    ? languages.filter(
+        (c) =>
+          c.name.toLowerCase().includes(modalSearch.toLowerCase()) ||
+          c.code.toLowerCase().includes(modalSearch.toLowerCase()),
       )
     : languages;
 
   const endpoint = useTunnel ? tunnelEndpoint : localEndpoint;
   // For ElevenLabs/config-driven: prefer manual voiceId (if any), else fall back to selectedVoice
-  const activeVoiceId = config.hasVoiceIdInput ? (voiceId || selectedVoice) : selectedVoice;
+  const activeVoiceId = config.hasVoiceIdInput ? voiceId || selectedVoice : selectedVoice;
   const modelFull = (() => {
-    if (config.hasModelSelector && selectedModel && activeVoiceId) return `${providerAlias}/${selectedModel}/${activeVoiceId}`;
+    if (config.hasModelSelector && selectedModel && activeVoiceId)
+      return `${providerAlias}/${selectedModel}/${activeVoiceId}`;
     if (config.hasModelSelector && selectedModel) return `${providerAlias}/${selectedModel}`;
     if (activeVoiceId) return `${providerAlias}/${activeVoiceId}`;
     return "";
@@ -564,11 +621,11 @@ function TtsExampleCard({ providerId }) {
         setError(d?.error?.message || d?.error || `HTTP ${res.status}`);
         return;
       }
-      
+
       if (responseFormat === "json") {
         const data = await res.json();
         setJsonResponse(data); // Store full JSON response
-        const audioBlob = await fetch(`data:audio/mp3;base64,${data.audio}`).then(r => r.blob());
+        const audioBlob = await fetch(`data:audio/mp3;base64,${data.audio}`).then((r) => r.blob());
         setAudioUrl(URL.createObjectURL(audioBlob));
       } else {
         const blob = await res.blob();
@@ -598,7 +655,9 @@ function TtsExampleCard({ providerId }) {
                   onClick={() => setUseTunnel((v) => !v)}
                   title={useTunnel ? "Using tunnel" : "Using local"}
                   className={`flex items-center gap-1 text-xs px-2 py-1.5 rounded-lg border shrink-0 transition-colors ${
-                    useTunnel ? "border-primary/40 bg-primary/10 text-primary" : "border-border text-text-muted hover:text-primary"
+                    useTunnel
+                      ? "border-primary/40 bg-primary/10 text-primary"
+                      : "border-border text-text-muted hover:text-primary"
                   }`}
                 >
                   <span className="material-symbols-outlined text-[14px]">wifi_tethering</span>
@@ -609,7 +668,11 @@ function TtsExampleCard({ providerId }) {
           </Row>
           <Row label="API Key">
             <span className="px-3 py-1.5 text-sm font-mono text-text-main bg-sidebar rounded-lg truncate block">
-              {apiKey ? `${apiKey.slice(0, 8)}${"•".repeat(Math.min(20, apiKey.length - 8))}` : <span className="text-text-muted italic">No key configured</span>}
+              {apiKey ? (
+                `${apiKey.slice(0, 8)}${"•".repeat(Math.min(20, apiKey.length - 8))}`
+              ) : (
+                <span className="text-text-muted italic">No key configured</span>
+              )}
             </span>
           </Row>
 
@@ -621,10 +684,14 @@ function TtsExampleCard({ providerId }) {
                 onChange={(e) => setSelectedModel(e.target.value)}
                 className="w-full px-3 py-1.5 text-sm border border-border rounded-lg bg-background focus:outline-none focus:border-primary"
               >
-                {((AI_PROVIDERS[providerId]?.ttsConfig?.models?.length
-                  ? AI_PROVIDERS[providerId].ttsConfig.models
-                  : getModelsByProviderId(config.modelKey)) || []).map((m) => (
-                  <option key={m.id} value={m.id}>{m.name || m.id}</option>
+                {(
+                  (AI_PROVIDERS[providerId]?.ttsConfig?.models?.length
+                    ? AI_PROVIDERS[providerId].ttsConfig.models
+                    : getModelsByProviderId(config.modelKey)) || []
+                ).map((m) => (
+                  <option key={m.id} value={m.id}>
+                    {m.name || m.id}
+                  </option>
                 ))}
               </select>
             </Row>
@@ -640,7 +707,9 @@ function TtsExampleCard({ providerId }) {
               >
                 <option value="">Auto-detect</option>
                 {GOOGLE_TTS_LANGUAGES.map((l) => (
-                  <option key={l.id} value={l.name}>{l.name}</option>
+                  <option key={l.id} value={l.name}>
+                    {l.name}
+                  </option>
                 ))}
               </select>
             </Row>
@@ -654,9 +723,13 @@ function TtsExampleCard({ providerId }) {
                   onClick={openModal}
                   className="w-full min-w-0 flex-1 px-3 py-1.5 text-sm border border-border rounded-lg bg-background font-mono truncate text-left hover:border-primary/40 transition-colors"
                 >
-                  {selectedLang
-                    ? <span className="text-text-main">{languages.find((l) => l.code === selectedLang)?.name || selectedLang}</span>
-                    : <span className="text-text-muted">No language selected</span>}
+                  {selectedLang ? (
+                    <span className="text-text-main">
+                      {languages.find((l) => l.code === selectedLang)?.name || selectedLang}
+                    </span>
+                  ) : (
+                    <span className="text-text-muted">No language selected</span>
+                  )}
                 </button>
                 <button
                   onClick={openModal}
@@ -687,12 +760,17 @@ function TtsExampleCard({ providerId }) {
                         : "border-border text-text-muted hover:text-primary hover:border-primary/40"
                     }`}
                   >
-                    {v.name}{v.gender ? ` · ${v.gender[0].toUpperCase()}` : ""}
+                    {v.name}
+                    {v.gender ? ` · ${v.gender[0].toUpperCase()}` : ""}
                     {v.free_users_allowed === true && (
-                      <span className="ml-1.5 px-1 py-0.5 text-[9px] font-semibold rounded bg-green-500/15 text-green-600 border border-green-500/20">Free</span>
+                      <span className="ml-1.5 px-1 py-0.5 text-[9px] font-semibold rounded bg-green-500/15 text-green-600 border border-green-500/20">
+                        Free
+                      </span>
                     )}
                     {v.free_users_allowed === false && (
-                      <span className="ml-1.5 px-1 py-0.5 text-[9px] font-semibold rounded bg-amber-500/15 text-amber-600 border border-amber-500/20">Paid</span>
+                      <span className="ml-1.5 px-1 py-0.5 text-[9px] font-semibold rounded bg-amber-500/15 text-amber-600 border border-amber-500/20">
+                        Paid
+                      </span>
                     )}
                   </button>
                 ))}
@@ -717,7 +795,10 @@ function TtsExampleCard({ providerId }) {
                   {voiceId && (
                     <button
                       type="button"
-                      onClick={() => { setVoiceId(""); setSelectedVoice(""); }}
+                      onClick={() => {
+                        setVoiceId("");
+                        setSelectedVoice("");
+                      }}
                       className="absolute right-2 top-1/2 -translate-y-1/2 text-text-muted hover:text-primary transition-colors"
                     >
                       <span className="material-symbols-outlined text-[14px]">close</span>
@@ -734,15 +815,21 @@ function TtsExampleCard({ providerId }) {
               <select
                 value={selectedVoice}
                 onChange={(e) => {
-                  const m = getModelsByProviderId(providerId).filter((m) => m.type === "tts").find((m) => m.id === e.target.value);
+                  const m = getModelsByProviderId(providerId)
+                    .filter((m) => m.type === "tts")
+                    .find((m) => m.id === e.target.value);
                   setSelectedVoice(e.target.value);
                   setSelectedVoiceName(m?.name || e.target.value);
                 }}
                 className="w-full px-3 py-1.5 text-sm border border-border rounded-lg bg-background focus:outline-none focus:border-primary"
               >
-                {getModelsByProviderId(providerId).filter((m) => m.type === "tts").map((m) => (
-                  <option key={m.id} value={m.id}>{m.name || m.id}</option>
-                ))}
+                {getModelsByProviderId(providerId)
+                  .filter((m) => m.type === "tts")
+                  .map((m) => (
+                    <option key={m.id} value={m.id}>
+                      {m.name || m.id}
+                    </option>
+                  ))}
               </select>
             </Row>
           )}
@@ -796,14 +883,19 @@ function TtsExampleCard({ providerId }) {
                   disabled={running || !input.trim() || !modelFull}
                   className="flex w-full sm:w-auto items-center justify-center gap-1.5 px-3 py-1 rounded-lg bg-primary text-white text-xs font-medium hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  <span className="material-symbols-outlined text-[14px]" style={running ? { animation: "spin 1s linear infinite" } : undefined}>
+                  <span
+                    className="material-symbols-outlined text-[14px]"
+                    style={running ? { animation: "spin 1s linear infinite" } : undefined}
+                  >
                     play_arrow
                   </span>
                   {running ? "Generating..." : "Run"}
                 </button>
               </div>
             </div>
-            <pre className="bg-sidebar rounded-lg px-3 py-2.5 text-xs font-mono text-text-main overflow-x-auto whitespace-pre-wrap break-all">{curlSnippet}</pre>
+            <pre className="bg-sidebar rounded-lg px-3 py-2.5 text-xs font-mono text-text-main overflow-x-auto whitespace-pre-wrap break-all">
+              {curlSnippet}
+            </pre>
           </div>
 
           {error && <p className="text-xs text-red-500 break-words">{error}</p>}
@@ -815,33 +907,45 @@ function TtsExampleCard({ providerId }) {
                 <span className="text-xs font-semibold text-text-muted uppercase tracking-wider">
                   Response {latency && <span className="font-normal normal-case">&#9889; {latency}ms</span>}
                 </span>
-                <a href={audioUrl} download="speech.mp3" className="inline-flex items-center gap-1 text-xs text-text-muted hover:text-primary transition-colors">
+                <a
+                  href={audioUrl}
+                  download="speech.mp3"
+                  className="inline-flex items-center gap-1 text-xs text-text-muted hover:text-primary transition-colors"
+                >
                   <span className="material-symbols-outlined text-[14px]">download</span>
                   Download
                 </a>
               </div>
               <audio controls src={audioUrl} className="w-full" />
-              
+
               {/* JSON Response (if format is json) */}
               {jsonResponse && (
                 <div className="mt-3">
                   <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between mb-1.5">
-                    <span className="text-xs font-semibold text-text-muted uppercase tracking-wider">JSON Response</span>
+                    <span className="text-xs font-semibold text-text-muted uppercase tracking-wider">
+                      JSON Response
+                    </span>
                   </div>
                   <pre className="bg-sidebar rounded-lg px-3 py-2.5 text-xs font-mono text-text-main overflow-x-auto whitespace-pre-wrap break-all">
-                    {JSON.stringify({
-                      format: jsonResponse.format,
-                      audio: jsonResponse.audio ? `${jsonResponse.audio.substring(0, 100)}...` : ""
-                    }, null, 2)}
+                    {JSON.stringify(
+                      {
+                        format: jsonResponse.format,
+                        audio: jsonResponse.audio ? `${jsonResponse.audio.substring(0, 100)}...` : "",
+                      },
+                      null,
+                      2,
+                    )}
                   </pre>
                 </div>
               )}
             </div>
           ) : (
             <div>
-            <span className="text-xs font-semibold text-text-muted uppercase tracking-wider">Response</span>
-            <pre className="mt-1.5 bg-sidebar rounded-lg px-3 py-2.5 text-xs font-mono text-text-main overflow-x-auto whitespace-pre-wrap break-all opacity-50">{DEFAULT_TTS_RESPONSE_EXAMPLE}</pre>
-          </div>
+              <span className="text-xs font-semibold text-text-muted uppercase tracking-wider">Response</span>
+              <pre className="mt-1.5 bg-sidebar rounded-lg px-3 py-2.5 text-xs font-mono text-text-main overflow-x-auto whitespace-pre-wrap break-all opacity-50">
+                {DEFAULT_TTS_RESPONSE_EXAMPLE}
+              </pre>
+            </div>
           )}
         </div>
       </Card>
@@ -861,7 +965,10 @@ function TtsExampleCard({ providerId }) {
             {/* Header */}
             <div className="flex items-center justify-between px-4 py-3 border-b border-border shrink-0 rounded-t-xl">
               <h3 className="text-sm font-semibold">Select Language</h3>
-              <button onClick={() => setModalOpen(false)} className="text-text-muted hover:text-primary transition-colors">
+              <button
+                onClick={() => setModalOpen(false)}
+                className="text-text-muted hover:text-primary transition-colors"
+              >
                 <span className="material-symbols-outlined text-[20px]">close</span>
               </button>
             </div>
@@ -936,7 +1043,10 @@ function GenericExampleCard({ providerId, kind }) {
   const [refImage, setRefImage] = useState("");
   const [maskImage, setMaskImage] = useState("");
   const [extraValues, setExtraValues] = useState(() =>
-    (safeExConfig.extraFields || []).reduce((acc, f) => { acc[f.key] = f.default ?? ""; return acc; }, {})
+    (safeExConfig.extraFields || []).reduce((acc, f) => {
+      acc[f.key] = f.default ?? "";
+      return acc;
+    }, {}),
   );
   const [apiKey, setApiKey] = useState("");
   const [useTunnel, setUseTunnel] = useState(false);
@@ -958,11 +1068,15 @@ function GenericExampleCard({ providerId, kind }) {
     setLocalEndpoint(window.location.origin);
     fetch("/api/keys")
       .then((r) => r.json())
-      .then((d) => { setApiKey((d.keys || []).find((k) => k.isActive !== false)?.key || ""); })
+      .then((d) => {
+        setApiKey((d.keys || []).find((k) => k.isActive !== false)?.key || "");
+      })
       .catch(() => {});
     fetch("/api/tunnel/status")
       .then((r) => r.json())
-      .then((d) => { if (d.publicUrl) setTunnelEndpoint(d.publicUrl); })
+      .then((d) => {
+        if (d.publicUrl) setTunnelEndpoint(d.publicUrl);
+      })
       .catch(() => {});
     // Load active connections of this provider for pinning
     fetch("/api/providers/client")
@@ -982,7 +1096,11 @@ function GenericExampleCard({ providerId, kind }) {
   // webSearch/webFetch: use providerAlias only. Other kinds: append model when present.
   const modelFull = !needsModel
     ? providerAlias
-    : (selectedModel ? `${providerAlias}/${selectedModel}` : (allowManualModel ? "" : providerAlias));
+    : selectedModel
+      ? `${providerAlias}/${selectedModel}`
+      : allowManualModel
+        ? ""
+        : providerAlias;
   const imageEditDefaults = getImageEditDefaults(providerId, selectedModel);
   const effectiveRefImage = refImage.trim() || imageEditDefaults.image || "";
   const effectiveMaskImage = maskImage.trim() || imageEditDefaults.mask_image || "";
@@ -1021,7 +1139,12 @@ function GenericExampleCard({ providerId, kind }) {
     setResult(null);
     setProgress(null);
     setPartialImage(null);
-    if (binaryImageUrl) { try { URL.revokeObjectURL(binaryImageUrl); } catch {} setBinaryImageUrl(""); }
+    if (binaryImageUrl) {
+      try {
+        URL.revokeObjectURL(binaryImageUrl);
+      } catch {}
+      setBinaryImageUrl("");
+    }
     const start = Date.now();
     try {
       const headers = { "Content-Type": "application/json" };
@@ -1064,7 +1187,8 @@ function GenericExampleCard({ providerId, kind }) {
           while ((sep = buf.indexOf("\n\n")) !== -1) {
             const block = buf.slice(0, sep);
             buf = buf.slice(sep + 2);
-            let evt = null, dataStr = "";
+            let evt = null,
+              dataStr = "";
             for (const line of block.split("\n")) {
               if (line.startsWith("event:")) evt = line.slice(6).trim();
               else if (line.startsWith("data:")) dataStr += line.slice(5).trim();
@@ -1080,7 +1204,10 @@ function GenericExampleCard({ providerId, kind }) {
           }
         }
         const latencyMs = Date.now() - start;
-        if (streamErr) { setError(streamErr); return; }
+        if (streamErr) {
+          setError(streamErr);
+          return;
+        }
         if (finalData) setResult({ data: finalData, latencyMs });
       } else {
         const data = await res.json();
@@ -1100,9 +1227,7 @@ function GenericExampleCard({ providerId, kind }) {
     if (Array.isArray(obj)) return obj.map(maskB64);
     const out = {};
     for (const [k, v] of Object.entries(obj)) {
-      out[k] = (k === "b64_json" && typeof v === "string" && v.length > 100)
-        ? `<${v.length} chars base64>`
-        : maskB64(v);
+      out[k] = k === "b64_json" && typeof v === "string" && v.length > 100 ? `<${v.length} chars base64>` : maskB64(v);
     }
     return out;
   };
@@ -1121,7 +1246,9 @@ function GenericExampleCard({ providerId, kind }) {
               className="w-full px-3 py-1.5 text-sm border border-border rounded-lg bg-background focus:outline-none focus:border-primary"
             >
               {kindModels.map((m) => (
-                <option key={m.id} value={m.id}>{m.name || m.id}</option>
+                <option key={m.id} value={m.id}>
+                  {m.name || m.id}
+                </option>
               ))}
             </select>
           </Row>
@@ -1140,14 +1267,17 @@ function GenericExampleCard({ providerId, kind }) {
         <Row label="Endpoint">
           <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:items-center">
             <span className="w-full min-w-0 flex-1 px-3 py-1.5 text-sm font-mono text-text-main bg-sidebar rounded-lg truncate">
-              {endpoint}{apiPath}
+              {endpoint}
+              {apiPath}
             </span>
             {tunnelEndpoint && (
               <button
                 onClick={() => setUseTunnel((v) => !v)}
                 title={useTunnel ? "Using tunnel" : "Using local"}
                 className={`flex items-center gap-1 text-xs px-2 py-1.5 rounded-lg border shrink-0 transition-colors ${
-                  useTunnel ? "border-primary/40 bg-primary/10 text-primary" : "border-border text-text-muted hover:text-primary"
+                  useTunnel
+                    ? "border-primary/40 bg-primary/10 text-primary"
+                    : "border-border text-text-muted hover:text-primary"
                 }`}
               >
                 <span className="material-symbols-outlined text-[14px]">wifi_tethering</span>
@@ -1160,7 +1290,11 @@ function GenericExampleCard({ providerId, kind }) {
         {/* API Key */}
         <Row label="API Key">
           <span className="px-3 py-1.5 text-sm font-mono text-text-main bg-sidebar rounded-lg truncate block">
-            {apiKey ? `${apiKey.slice(0, 8)}${"\u2022".repeat(Math.min(20, apiKey.length - 8))}` : <span className="text-text-muted italic">No key configured</span>}
+            {apiKey ? (
+              `${apiKey.slice(0, 8)}${"\u2022".repeat(Math.min(20, apiKey.length - 8))}`
+            ) : (
+              <span className="text-text-muted italic">No key configured</span>
+            )}
           </span>
         </Row>
 
@@ -1178,7 +1312,8 @@ function GenericExampleCard({ providerId, kind }) {
                 const label = c.email || c.name || c.id.slice(0, 8);
                 return (
                   <option key={c.id} value={c.id}>
-                    {label}{plan ? ` [${plan}]` : ""}
+                    {label}
+                    {plan ? ` [${plan}]` : ""}
                   </option>
                 );
               })}
@@ -1233,8 +1368,12 @@ function GenericExampleCard({ providerId, kind }) {
                   src={refImagePreviewSrc}
                   alt="Reference"
                   className="max-h-40 rounded-lg border border-border object-contain bg-sidebar"
-                  onError={(e) => { e.currentTarget.style.display = "none"; }}
-                  onLoad={(e) => { e.currentTarget.style.display = "block"; }}
+                  onError={(e) => {
+                    e.currentTarget.style.display = "none";
+                  }}
+                  onLoad={(e) => {
+                    e.currentTarget.style.display = "block";
+                  }}
                 />
               )}
             </div>
@@ -1266,8 +1405,12 @@ function GenericExampleCard({ providerId, kind }) {
                   src={maskImagePreviewSrc}
                   alt="Mask"
                   className="max-h-40 rounded-lg border border-border object-contain bg-sidebar"
-                  onError={(e) => { e.currentTarget.style.display = "none"; }}
-                  onLoad={(e) => { e.currentTarget.style.display = "block"; }}
+                  onError={(e) => {
+                    e.currentTarget.style.display = "none";
+                  }}
+                  onLoad={(e) => {
+                    e.currentTarget.style.display = "block";
+                  }}
                 />
               )}
             </div>
@@ -1276,39 +1419,47 @@ function GenericExampleCard({ providerId, kind }) {
 
         {/* Extra fields — for kinds without model concept (webSearch/webFetch), show all; otherwise filter by model.params */}
         {(exConfig.extraFields || [])
-          .filter((f) => kindModels.length === 0 || (Array.isArray(selectedModelObj?.params) && selectedModelObj.params.includes(f.key)))
+          .filter(
+            (f) =>
+              kindModels.length === 0 ||
+              (Array.isArray(selectedModelObj?.params) && selectedModelObj.params.includes(f.key)),
+          )
           .map((f) => (
-          <Row key={f.key} label={f.label}>
-            {f.type === "select" ? (
-              <select
-                value={extraValues[f.key] ?? ""}
-                onChange={(e) => setExtraValues((s) => ({ ...s, [f.key]: e.target.value }))}
-                className="w-full px-3 py-1.5 text-sm border border-border rounded-lg bg-background focus:outline-none focus:border-primary"
-              >
-                {(f.options || []).map((opt) => (
-                  <option key={opt} value={opt}>{opt === "" ? "(default)" : opt}</option>
-                ))}
-              </select>
-            ) : f.type === "text" ? (
-              <input
-                type="text"
-                value={extraValues[f.key] ?? ""}
-                placeholder={f.placeholder}
-                onChange={(e) => setExtraValues((s) => ({ ...s, [f.key]: e.target.value }))}
-                className="w-full px-3 py-1.5 text-sm border border-border rounded-lg bg-background focus:outline-none focus:border-primary"
-              />
-            ) : (
-              <input
-                type="number"
-                value={extraValues[f.key] ?? ""}
-                min={f.min}
-                max={f.max}
-                onChange={(e) => setExtraValues((s) => ({ ...s, [f.key]: e.target.value === "" ? "" : Number(e.target.value) }))}
-                className="w-full px-3 py-1.5 text-sm border border-border rounded-lg bg-background focus:outline-none focus:border-primary"
-              />
-            )}
-          </Row>
-        ))}
+            <Row key={f.key} label={f.label}>
+              {f.type === "select" ? (
+                <select
+                  value={extraValues[f.key] ?? ""}
+                  onChange={(e) => setExtraValues((s) => ({ ...s, [f.key]: e.target.value }))}
+                  className="w-full px-3 py-1.5 text-sm border border-border rounded-lg bg-background focus:outline-none focus:border-primary"
+                >
+                  {(f.options || []).map((opt) => (
+                    <option key={opt} value={opt}>
+                      {opt === "" ? "(default)" : opt}
+                    </option>
+                  ))}
+                </select>
+              ) : f.type === "text" ? (
+                <input
+                  type="text"
+                  value={extraValues[f.key] ?? ""}
+                  placeholder={f.placeholder}
+                  onChange={(e) => setExtraValues((s) => ({ ...s, [f.key]: e.target.value }))}
+                  className="w-full px-3 py-1.5 text-sm border border-border rounded-lg bg-background focus:outline-none focus:border-primary"
+                />
+              ) : (
+                <input
+                  type="number"
+                  value={extraValues[f.key] ?? ""}
+                  min={f.min}
+                  max={f.max}
+                  onChange={(e) =>
+                    setExtraValues((s) => ({ ...s, [f.key]: e.target.value === "" ? "" : Number(e.target.value) }))
+                  }
+                  className="w-full px-3 py-1.5 text-sm border border-border rounded-lg bg-background focus:outline-none focus:border-primary"
+                />
+              )}
+            </Row>
+          ))}
 
         {/* Output Format toggle (image only) — last */}
         {kind === "image" && (
@@ -1336,25 +1487,33 @@ function GenericExampleCard({ providerId, kind }) {
                 <span className="material-symbols-outlined text-[14px]">{copiedCurl ? "check" : "content_copy"}</span>
                 {copiedCurl ? "Copied" : "Copy"}
               </button>
-            <button
-              onClick={handleRun}
-              disabled={running || !input.trim() || !modelFull}
-              className="flex w-full sm:w-auto items-center justify-center gap-1.5 px-3 py-1 rounded-lg bg-primary text-white text-xs font-medium hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-                <span className="material-symbols-outlined text-[14px]" style={running ? { animation: "spin 1s linear infinite" } : undefined}>
+              <button
+                onClick={handleRun}
+                disabled={running || !input.trim() || !modelFull}
+                className="flex w-full sm:w-auto items-center justify-center gap-1.5 px-3 py-1 rounded-lg bg-primary text-white text-xs font-medium hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <span
+                  className="material-symbols-outlined text-[14px]"
+                  style={running ? { animation: "spin 1s linear infinite" } : undefined}
+                >
                   play_arrow
                 </span>
                 {running ? "Running..." : "Run"}
               </button>
             </div>
           </div>
-          <pre className="bg-sidebar rounded-lg px-3 py-2.5 text-xs font-mono text-text-main overflow-x-auto whitespace-pre-wrap break-all">{curlSnippet}</pre>
+          <pre className="bg-sidebar rounded-lg px-3 py-2.5 text-xs font-mono text-text-main overflow-x-auto whitespace-pre-wrap break-all">
+            {curlSnippet}
+          </pre>
         </div>
 
         {/* Streaming progress */}
         {(running || progress) && useStreaming && (
           <div className="flex flex-col gap-2 px-3 py-2 rounded-lg bg-sidebar border border-border sm:flex-row sm:items-center sm:gap-3">
-            <span className="material-symbols-outlined text-[16px] text-primary" style={running ? { animation: "spin 1s linear infinite" } : undefined}>
+            <span
+              className="material-symbols-outlined text-[16px] text-primary"
+              style={running ? { animation: "spin 1s linear infinite" } : undefined}
+            >
               {running ? "progress_activity" : "check_circle"}
             </span>
             <span className="text-xs text-text-muted">
@@ -1402,7 +1561,12 @@ function GenericExampleCard({ providerId, kind }) {
             <div className="mt-2">
               <div className="flex items-center justify-end mb-1.5">
                 <a
-                  href={binaryImageUrl || (result?.data?.data?.[0]?.b64_json ? `data:image/png;base64,${result.data.data[0].b64_json}` : result?.data?.data?.[0]?.url || "")}
+                  href={
+                    binaryImageUrl ||
+                    (result?.data?.data?.[0]?.b64_json
+                      ? `data:image/png;base64,${result.data.data[0].b64_json}`
+                      : result?.data?.data?.[0]?.url || "")
+                  }
                   download="image.png"
                   className="inline-flex items-center gap-1 text-xs text-text-muted hover:text-primary transition-colors"
                 >
@@ -1411,7 +1575,12 @@ function GenericExampleCard({ providerId, kind }) {
                 </a>
               </div>
               <img
-                src={binaryImageUrl || (result?.data?.data?.[0]?.b64_json ? `data:image/png;base64,${result.data.data[0].b64_json}` : result?.data?.data?.[0]?.url)}
+                src={
+                  binaryImageUrl ||
+                  (result?.data?.data?.[0]?.b64_json
+                    ? `data:image/png;base64,${result.data.data[0].b64_json}`
+                    : result?.data?.data?.[0]?.url)
+                }
                 alt="Generated"
                 className="max-w-full rounded-lg border border-border"
               />
@@ -1454,11 +1623,15 @@ function SttExampleCard({ providerId }) {
     setLocalEndpoint(window.location.origin);
     fetch("/api/keys")
       .then((r) => r.json())
-      .then((d) => { setApiKey((d.keys || []).find((k) => k.isActive !== false)?.key || ""); })
+      .then((d) => {
+        setApiKey((d.keys || []).find((k) => k.isActive !== false)?.key || "");
+      })
       .catch(() => {});
     fetch("/api/tunnel/status")
       .then((r) => r.json())
-      .then((d) => { if (d.publicUrl) setTunnelEndpoint(d.publicUrl); })
+      .then((d) => {
+        if (d.publicUrl) setTunnelEndpoint(d.publicUrl);
+      })
       .catch(() => {});
     const loadCustom = () => {
       fetch("/api/models/custom", { cache: "no-store" })
@@ -1519,7 +1692,8 @@ function SttExampleCard({ providerId }) {
     }
   };
 
-  const resultStr = typeof result === "string" ? result : (result ? JSON.stringify(result, null, 2) : `{\n  "text": "Hello world..."\n}`);
+  const resultStr =
+    typeof result === "string" ? result : result ? JSON.stringify(result, null, 2) : `{\n  "text": "Hello world..."\n}`;
 
   return (
     <Card>
@@ -1534,7 +1708,9 @@ function SttExampleCard({ providerId }) {
               className="w-full px-3 py-1.5 text-sm border border-border rounded-lg bg-background focus:outline-none focus:border-primary"
             >
               {sttModels.map((m) => (
-                <option key={m.id} value={m.id}>{m.name || m.id}</option>
+                <option key={m.id} value={m.id}>
+                  {m.name || m.id}
+                </option>
               ))}
             </select>
           </Row>
@@ -1560,7 +1736,9 @@ function SttExampleCard({ providerId }) {
                 onClick={() => setUseTunnel((v) => !v)}
                 title={useTunnel ? "Using tunnel" : "Using local"}
                 className={`flex items-center gap-1 text-xs px-2 py-1.5 rounded-lg border shrink-0 transition-colors ${
-                  useTunnel ? "border-primary/40 bg-primary/10 text-primary" : "border-border text-text-muted hover:text-primary"
+                  useTunnel
+                    ? "border-primary/40 bg-primary/10 text-primary"
+                    : "border-border text-text-muted hover:text-primary"
                 }`}
               >
                 <span className="material-symbols-outlined text-[14px]">wifi_tethering</span>
@@ -1573,7 +1751,11 @@ function SttExampleCard({ providerId }) {
         {/* API Key */}
         <Row label="API Key">
           <span className="px-3 py-1.5 text-sm font-mono text-text-main bg-sidebar rounded-lg truncate block">
-            {apiKey ? `${apiKey.slice(0, 8)}${"\u2022".repeat(Math.min(20, apiKey.length - 8))}` : <span className="text-text-muted italic">No key configured</span>}
+            {apiKey ? (
+              `${apiKey.slice(0, 8)}${"\u2022".repeat(Math.min(20, apiKey.length - 8))}`
+            ) : (
+              <span className="text-text-muted italic">No key configured</span>
+            )}
           </span>
         </Row>
 
@@ -1668,14 +1850,19 @@ function SttExampleCard({ providerId }) {
                 disabled={running || !audioFile || !modelFull}
                 className="flex w-full sm:w-auto items-center justify-center gap-1.5 px-3 py-1 rounded-lg bg-primary text-white text-xs font-medium hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                <span className="material-symbols-outlined text-[14px]" style={running ? { animation: "spin 1s linear infinite" } : undefined}>
+                <span
+                  className="material-symbols-outlined text-[14px]"
+                  style={running ? { animation: "spin 1s linear infinite" } : undefined}
+                >
                   play_arrow
                 </span>
                 {running ? "Transcribing..." : "Run"}
               </button>
             </div>
           </div>
-          <pre className="bg-sidebar rounded-lg px-3 py-2.5 text-xs font-mono text-text-main overflow-x-auto whitespace-pre-wrap break-all">{curlSnippet}</pre>
+          <pre className="bg-sidebar rounded-lg px-3 py-2.5 text-xs font-mono text-text-main overflow-x-auto whitespace-pre-wrap break-all">
+            {curlSnippet}
+          </pre>
         </div>
 
         {error && <p className="text-xs text-red-500 break-words">{error}</p>}
@@ -1737,8 +1924,12 @@ export default function MediaProviderDetailPage() {
         setCustomNode((d.nodes || []).find((n) => n.id === id) || null);
         setCustomLoading(false);
       })
-      .catch(() => { if (!cancelled) setCustomLoading(false); });
-    return () => { cancelled = true; };
+      .catch(() => {
+        if (!cancelled) setCustomLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
   }, [id, isCustom]);
 
   if (!kindConfig) return notFound();
@@ -1747,7 +1938,9 @@ export default function MediaProviderDetailPage() {
 
   // For custom embedding nodes, build a synthetic provider object
   const provider = isCustom
-    ? (customNode ? { id, name: customNode.name || "Custom Embedding", color: "#6366F1", textIcon: "CE" } : null)
+    ? customNode
+      ? { id, name: customNode.name || "Custom Embedding", color: "#6366F1", textIcon: "CE" }
+      : null
     : builtInProvider;
 
   if (!isCustom && !builtInProvider) return notFound();
@@ -1773,7 +1966,10 @@ export default function MediaProviderDetailPage() {
 
         {/* Header */}
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4">
-          <div className="size-12 rounded-lg flex items-center justify-center shrink-0" style={{ backgroundColor: `${provider.color}15` }}>
+          <div
+            className="size-12 rounded-lg flex items-center justify-center shrink-0"
+            style={{ backgroundColor: `${provider.color}15` }}
+          >
             <ProviderIcon
               src={`/providers/${provider.id}.png`}
               alt={provider.name}
@@ -1799,7 +1995,11 @@ export default function MediaProviderDetailPage() {
               )}
             </div>
             <div className="flex items-center gap-1.5 mt-1 flex-wrap">
-              {isCustom && <Badge variant="default" size="sm">Custom · {customNode?.prefix}</Badge>}
+              {isCustom && (
+                <Badge variant="default" size="sm">
+                  Custom · {customNode?.prefix}
+                </Badge>
+              )}
               {kinds.map((k) => (
                 <Badge key={k} variant={k === kind ? "primary" : "default"} size="sm">
                   {k.toUpperCase()}
@@ -1832,7 +2032,9 @@ export default function MediaProviderDetailPage() {
       {!isCustom && provider.notice?.text && !provider.deprecated && (
         <div className="flex flex-col gap-2 rounded-lg border border-blue-500/30 bg-blue-500/10 px-3 py-2 sm:flex-row sm:items-center">
           <span className="material-symbols-outlined text-[16px] text-blue-500 shrink-0">info</span>
-          <p className="min-w-0 flex-1 text-xs leading-relaxed text-blue-600 dark:text-blue-400">{provider.notice.text}</p>
+          <p className="min-w-0 flex-1 text-xs leading-relaxed text-blue-600 dark:text-blue-400">
+            {provider.notice.text}
+          </p>
           {provider.notice.apiKeyUrl && (
             <a
               href={provider.notice.apiKeyUrl}
@@ -1863,24 +2065,37 @@ export default function MediaProviderDetailPage() {
       )}
 
       {/* Provider Info — config-driven, supports searchConfig, fetchConfig, ttsConfig, embeddingConfig, searchViaChat */}
-      {!isCustom && (provider.searchConfig || provider.fetchConfig || provider.ttsConfig || provider.sttConfig || provider.embeddingConfig || provider.searchViaChat) && (
-        <ProviderInfoCard
-          config={
-            kind === "webFetch" ? provider.fetchConfig
-              : kind === "tts" ? provider.ttsConfig
-              : kind === "stt" ? provider.sttConfig
-              : kind === "embedding" ? provider.embeddingConfig
-              : provider.searchConfig || { mode: "chat-completions", defaultModel: provider.searchViaChat?.defaultModel, pricingUrl: provider.searchViaChat?.pricingUrl, freeTier: provider.searchViaChat?.freeTier }
-          }
-          provider={provider}
-          title={`${kindConfig.label} Config`}
-        />
-      )}
+      {!isCustom &&
+        (provider.searchConfig ||
+          provider.fetchConfig ||
+          provider.ttsConfig ||
+          provider.sttConfig ||
+          provider.embeddingConfig ||
+          provider.searchViaChat) && (
+          <ProviderInfoCard
+            config={
+              kind === "webFetch"
+                ? provider.fetchConfig
+                : kind === "tts"
+                  ? provider.ttsConfig
+                  : kind === "stt"
+                    ? provider.sttConfig
+                    : kind === "embedding"
+                      ? provider.embeddingConfig
+                      : provider.searchConfig || {
+                          mode: "chat-completions",
+                          defaultModel: provider.searchViaChat?.defaultModel,
+                          pricingUrl: provider.searchViaChat?.pricingUrl,
+                          freeTier: provider.searchViaChat?.freeTier,
+                        }
+            }
+            provider={provider}
+            title={`${kindConfig.label} Config`}
+          />
+        )}
 
       {/* Example — per kind */}
-      {kind === "embedding" && (
-        <EmbeddingExampleCard providerId={id} customAlias={customNode?.prefix} />
-      )}
+      {kind === "embedding" && <EmbeddingExampleCard providerId={id} customAlias={customNode?.prefix} />}
       {kind === "tts" && <TtsExampleCard providerId={id} />}
       {kind === "stt" && !isCustom && <SttExampleCard providerId={id} />}
       {!isCustom && KIND_EXAMPLE_CONFIG[kind] && <GenericExampleCard providerId={id} kind={kind} />}

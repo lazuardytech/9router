@@ -9,14 +9,10 @@ function MenuItem({ icon, label, onClick, trailing, danger }) {
     <button
       onClick={onClick}
       className={`flex items-center gap-3 w-full px-4 py-2.5 text-sm transition-colors ${
-        danger
-          ? "text-red-500 hover:bg-red-500/10"
-          : "text-text-main hover:bg-black/5 dark:hover:bg-white/5"
+        danger ? "text-red-500 hover:bg-red-500/10" : "text-text-main hover:bg-black/5 dark:hover:bg-white/5"
       }`}
     >
-      <span className={`material-symbols-outlined text-[20px] ${danger ? "" : "text-text-muted"}`}>
-        {icon}
-      </span>
+      <span className={`material-symbols-outlined text-[20px] ${danger ? "" : "text-text-muted"}`}>{icon}</span>
       <span className="flex-1 text-left">{label}</span>
       {trailing && <span className="text-base">{trailing}</span>}
     </button>
@@ -65,13 +61,19 @@ export default function HeaderMenu({ onLogout }) {
           <MenuItem
             icon={isDark ? "light_mode" : "dark_mode"}
             label="Theme"
-            onClick={() => { toggleTheme(); close(); }}
+            onClick={() => {
+              toggleTheme();
+              close();
+            }}
           />
           <MenuItem
             icon="logout"
             label="Logout"
             danger
-            onClick={() => { close(); onLogout(); }}
+            onClick={() => {
+              close();
+              onLogout();
+            }}
           />
         </div>
       )}

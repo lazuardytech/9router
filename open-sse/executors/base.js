@@ -42,7 +42,7 @@ export class BaseExecutor {
   buildHeaders(credentials, stream = true) {
     const headers = {
       "Content-Type": "application/json",
-      ...this.config.headers
+      ...this.config.headers,
     };
 
     if (this.provider?.startsWith?.("anthropic-compatible-")) {
@@ -77,8 +77,14 @@ export class BaseExecutor {
   }
 
   shouldRetry(status, urlIndex) {
-    return [HTTP_STATUS.RATE_LIMITED, HTTP_STATUS.BAD_GATEWAY, HTTP_STATUS.SERVICE_UNAVAILABLE, HTTP_STATUS.GATEWAY_TIMEOUT].includes(status)
-      && urlIndex + 1 < this.getFallbackCount();
+    return (
+      [
+        HTTP_STATUS.RATE_LIMITED,
+        HTTP_STATUS.BAD_GATEWAY,
+        HTTP_STATUS.SERVICE_UNAVAILABLE,
+        HTTP_STATUS.GATEWAY_TIMEOUT,
+      ].includes(status) && urlIndex + 1 < this.getFallbackCount()
+    );
   }
 
   // Override in subclass for provider-specific refresh
@@ -111,7 +117,7 @@ export class BaseExecutor {
       if (attempts <= 0 || retryAttemptsByUrl[urlIndex] >= attempts) return false;
       retryAttemptsByUrl[urlIndex]++;
       log?.debug?.("RETRY", `${reason} retry ${retryAttemptsByUrl[urlIndex]}/${attempts} after ${delayMs / 1000}s`);
-      await new Promise(resolve => setTimeout(resolve, delayMs));
+      await new Promise((resolve) => setTimeout(resolve, delayMs));
       return true;
     };
 
@@ -123,14 +129,21 @@ export class BaseExecutor {
       if (!retryAttemptsByUrl[urlIndex]) retryAttemptsByUrl[urlIndex] = 0;
 
       try {
-        const response = await proxyAwareFetch(url, {
-          method: "POST",
-          headers,
-          body: JSON.stringify(transformedBody),
-          signal
-        }, proxyOptions);
+        const response = await proxyAwareFetch(
+          url,
+          {
+            method: "POST",
+            headers,
+            body: JSON.stringify(transformedBody),
+            signal,
+          },
+          proxyOptions,
+        );
 
-        if (await tryRetry(urlIndex, response.status, `status ${response.status}`)) { urlIndex--; continue; }
+        if (await tryRetry(urlIndex, response.status, `status ${response.status}`)) {
+          urlIndex--;
+          continue;
+        }
 
         if (this.shouldRetry(response.status, urlIndex)) {
           log?.debug?.("RETRY", `${response.status} on ${url}, trying fallback ${urlIndex + 1}`);
@@ -144,7 +157,10 @@ export class BaseExecutor {
         if (error.name === "AbortError") throw error;
 
         // Map network/fetch exceptions to 502 retry config
-        if (await tryRetry(urlIndex, HTTP_STATUS.BAD_GATEWAY, `network "${error.message}"`)) { urlIndex--; continue; }
+        if (await tryRetry(urlIndex, HTTP_STATUS.BAD_GATEWAY, `network "${error.message}"`)) {
+          urlIndex--;
+          continue;
+        }
 
         if (urlIndex + 1 < fallbackCount) {
           log?.debug?.("RETRY", `Error on ${url}, trying fallback ${urlIndex + 1}`);

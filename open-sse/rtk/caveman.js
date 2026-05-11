@@ -32,18 +32,14 @@ export function injectCaveman(body, format, level) {
 function injectMessagesSystem(body, prompt) {
   // OpenAI Responses API: top-level string field
   if (typeof body.instructions === "string") {
-    body.instructions = body.instructions
-      ? `${body.instructions}${SEP}${prompt}`
-      : prompt;
+    body.instructions = body.instructions ? `${body.instructions}${SEP}${prompt}` : prompt;
     return;
   }
 
-  const arr = Array.isArray(body.messages) ? body.messages
-    : Array.isArray(body.input) ? body.input
-    : null;
+  const arr = Array.isArray(body.messages) ? body.messages : Array.isArray(body.input) ? body.input : null;
   if (!arr) return;
 
-  const idx = arr.findIndex(m => m && (m.role === "system" || m.role === "developer"));
+  const idx = arr.findIndex((m) => m && (m.role === "system" || m.role === "developer"));
   if (idx >= 0) {
     appendToOpenAIMessage(arr[idx], prompt);
   } else {
@@ -73,7 +69,10 @@ function injectClaudeSystem(body, prompt) {
     const block = { type: "text", text: prompt };
     let lastCacheIdx = -1;
     for (let i = body.system.length - 1; i >= 0; i--) {
-      if (body.system[i]?.cache_control) { lastCacheIdx = i; break; }
+      if (body.system[i]?.cache_control) {
+        lastCacheIdx = i;
+        break;
+      }
     }
     if (lastCacheIdx >= 0) {
       body.system.splice(lastCacheIdx, 0, block);

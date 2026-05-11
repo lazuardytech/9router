@@ -57,8 +57,8 @@ describe("handleImageGenerationCore", () => {
           created: 1234567890,
           data: [{ url: "https://example.com/image.png" }],
         }),
-        { status: 200, headers: { "Content-Type": "application/json" } }
-      )
+        { status: 200, headers: { "Content-Type": "application/json" } },
+      ),
     );
 
     const result = await handleImageGenerationCore({
@@ -78,7 +78,7 @@ describe("handleImageGenerationCore", () => {
           Authorization: "Bearer test-key",
         }),
         body: expect.stringContaining('"prompt":"A cute cat"'),
-      })
+      }),
     );
 
     const responseBody = await result.response.json();
@@ -93,16 +93,13 @@ describe("handleImageGenerationCore", () => {
           candidates: [
             {
               content: {
-                parts: [
-                  { text: "Generated image" },
-                  { inlineData: { data: "base64imagedata" } },
-                ],
+                parts: [{ text: "Generated image" }, { inlineData: { data: "base64imagedata" } }],
               },
             },
           ],
         }),
-        { status: 200, headers: { "Content-Type": "application/json" } }
-      )
+        { status: 200, headers: { "Content-Type": "application/json" } },
+      ),
     );
 
     const result = await handleImageGenerationCore({
@@ -118,7 +115,7 @@ describe("handleImageGenerationCore", () => {
       expect.objectContaining({
         method: "POST",
         body: expect.stringContaining('"responseModalities":["TEXT","IMAGE"]'),
-      })
+      }),
     );
 
     const responseBody = await result.response.json();
@@ -133,8 +130,8 @@ describe("handleImageGenerationCore", () => {
           created: 1234567890,
           data: [{ url: "https://example.com/minimax.png" }],
         }),
-        { status: 200, headers: { "Content-Type": "application/json" } }
-      )
+        { status: 200, headers: { "Content-Type": "application/json" } },
+      ),
     );
 
     const result = await handleImageGenerationCore({
@@ -152,7 +149,7 @@ describe("handleImageGenerationCore", () => {
         headers: expect.objectContaining({
           Authorization: "Bearer test-key",
         }),
-      })
+      }),
     );
   });
 
@@ -160,10 +157,10 @@ describe("handleImageGenerationCore", () => {
     vi.useFakeTimers();
     global.fetch
       .mockResolvedValueOnce(
-        new Response(
-          JSON.stringify({ code: 200, data: { taskId: "task-123" } }),
-          { status: 200, headers: { "Content-Type": "application/json" } }
-        )
+        new Response(JSON.stringify({ code: 200, data: { taskId: "task-123" } }), {
+          status: 200,
+          headers: { "Content-Type": "application/json" },
+        }),
       )
       .mockResolvedValueOnce(
         new Response(
@@ -173,8 +170,8 @@ describe("handleImageGenerationCore", () => {
               response: { resultImageUrl: "https://example.com/nanobanana.png" },
             },
           }),
-          { status: 200, headers: { "Content-Type": "application/json" } }
-        )
+          { status: 200, headers: { "Content-Type": "application/json" } },
+        ),
       );
 
     const pending = handleImageGenerationCore({
@@ -200,7 +197,7 @@ describe("handleImageGenerationCore", () => {
         headers: expect.objectContaining({
           Authorization: "Bearer test-key",
         }),
-      })
+      }),
     );
 
     const responseBody = await result.response.json();
@@ -209,10 +206,10 @@ describe("handleImageGenerationCore", () => {
 
   it("generates image with SD WebUI format", async () => {
     global.fetch.mockResolvedValueOnce(
-      new Response(
-        JSON.stringify({ images: ["base64sdwebui1", "base64sdwebui2"] }),
-        { status: 200, headers: { "Content-Type": "application/json" } }
-      )
+      new Response(JSON.stringify({ images: ["base64sdwebui1", "base64sdwebui2"] }), {
+        status: 200,
+        headers: { "Content-Type": "application/json" },
+      }),
     );
 
     const result = await handleImageGenerationCore({
@@ -240,8 +237,8 @@ describe("handleImageGenerationCore", () => {
           created: 1234567890,
           data: [{ url: "https://example.com/or.png" }],
         }),
-        { status: 200, headers: { "Content-Type": "application/json" } }
-      )
+        { status: 200, headers: { "Content-Type": "application/json" } },
+      ),
     );
 
     const result = await handleImageGenerationCore({
@@ -259,7 +256,7 @@ describe("handleImageGenerationCore", () => {
           "HTTP-Referer": "https://endpoint-proxy.local",
           "X-Title": "Endpoint Proxy",
         }),
-      })
+      }),
     );
   });
 
@@ -269,7 +266,7 @@ describe("handleImageGenerationCore", () => {
       new Response(imageBuffer, {
         status: 200,
         headers: { "Content-Type": "image/png" },
-      })
+      }),
     );
 
     const result = await handleImageGenerationCore({
@@ -293,8 +290,8 @@ describe("handleImageGenerationCore", () => {
           errors: [],
           messages: [],
         }),
-        { status: 200, headers: { "Content-Type": "application/json" } }
-      )
+        { status: 200, headers: { "Content-Type": "application/json" } },
+      ),
     );
 
     const result = await handleImageGenerationCore({
@@ -316,7 +313,7 @@ describe("handleImageGenerationCore", () => {
           "Content-Type": "application/json",
           Authorization: "Bearer cf-token",
         }),
-      })
+      }),
     );
 
     const fetchCall = global.fetch.mock.calls[0];
@@ -336,8 +333,8 @@ describe("handleImageGenerationCore", () => {
           result: { image: "base64flux2" },
           success: true,
         }),
-        { status: 200, headers: { "Content-Type": "application/json" } }
-      )
+        { status: 200, headers: { "Content-Type": "application/json" } },
+      ),
     );
 
     const result = await handleImageGenerationCore({
@@ -363,13 +360,17 @@ describe("handleImageGenerationCore", () => {
 
   it("resolves Cloudflare img2img and inpainting URL inputs before sending", async () => {
     global.fetch
-      .mockResolvedValueOnce(new Response(new Uint8Array([1, 2, 3]), { status: 200, headers: { "Content-Type": "image/png" } }))
-      .mockResolvedValueOnce(new Response(new Uint8Array([4, 5, 6]), { status: 200, headers: { "Content-Type": "image/png" } }))
       .mockResolvedValueOnce(
-        new Response(
-          JSON.stringify({ result: { image: "base64inpaint" }, success: true }),
-          { status: 200, headers: { "Content-Type": "application/json" } }
-        )
+        new Response(new Uint8Array([1, 2, 3]), { status: 200, headers: { "Content-Type": "image/png" } }),
+      )
+      .mockResolvedValueOnce(
+        new Response(new Uint8Array([4, 5, 6]), { status: 200, headers: { "Content-Type": "image/png" } }),
+      )
+      .mockResolvedValueOnce(
+        new Response(JSON.stringify({ result: { image: "base64inpaint" }, success: true }), {
+          status: 200,
+          headers: { "Content-Type": "application/json" },
+        }),
       );
 
     const result = await handleImageGenerationCore({
@@ -392,7 +393,9 @@ describe("handleImageGenerationCore", () => {
     expect(global.fetch).toHaveBeenNthCalledWith(2, "https://example.com/mask.png");
 
     const providerCall = global.fetch.mock.calls[2];
-    expect(providerCall[0]).toBe("https://api.cloudflare.com/client/v4/accounts/cf-account/ai/run/@cf/runwayml/stable-diffusion-v1-5-inpainting");
+    expect(providerCall[0]).toBe(
+      "https://api.cloudflare.com/client/v4/accounts/cf-account/ai/run/@cf/runwayml/stable-diffusion-v1-5-inpainting",
+    );
     const requestBody = JSON.parse(providerCall[1].body);
     expect(requestBody.image).toEqual([1, 2, 3]);
     expect(requestBody.image_b64).toBe(Buffer.from([1, 2, 3]).toString("base64"));
@@ -403,10 +406,10 @@ describe("handleImageGenerationCore", () => {
 
   it("handles provider error responses", async () => {
     global.fetch.mockResolvedValueOnce(
-      new Response(
-        JSON.stringify({ error: { message: "Rate limit exceeded" } }),
-        { status: 429, headers: { "Content-Type": "application/json" } }
-      )
+      new Response(JSON.stringify({ error: { message: "Rate limit exceeded" } }), {
+        status: 429,
+        headers: { "Content-Type": "application/json" },
+      }),
     );
 
     const result = await handleImageGenerationCore({
@@ -443,8 +446,8 @@ describe("handleImageGenerationCore", () => {
           created: 1234567890,
           data: [{ url: "https://example.com/success.png" }],
         }),
-        { status: 200, headers: { "Content-Type": "application/json" } }
-      )
+        { status: 200, headers: { "Content-Type": "application/json" } },
+      ),
     );
 
     const onRequestSuccess = vi.fn();

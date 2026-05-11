@@ -195,7 +195,7 @@ export default function ProfilePage() {
         body: JSON.stringify({ fallbackStrategy: strategy }),
       });
       if (res.ok) {
-        setSettings(prev => ({ ...prev, fallbackStrategy: strategy }));
+        setSettings((prev) => ({ ...prev, fallbackStrategy: strategy }));
       }
     } catch (err) {
       console.error("Failed to update settings:", err);
@@ -210,7 +210,7 @@ export default function ProfilePage() {
         body: JSON.stringify({ comboStrategy: strategy }),
       });
       if (res.ok) {
-        setSettings(prev => ({ ...prev, comboStrategy: strategy }));
+        setSettings((prev) => ({ ...prev, comboStrategy: strategy }));
       }
     } catch (err) {
       console.error("Failed to update combo strategy:", err);
@@ -228,7 +228,7 @@ export default function ProfilePage() {
         body: JSON.stringify({ stickyRoundRobinLimit: numLimit }),
       });
       if (res.ok) {
-        setSettings(prev => ({ ...prev, stickyRoundRobinLimit: numLimit }));
+        setSettings((prev) => ({ ...prev, stickyRoundRobinLimit: numLimit }));
       }
     } catch (err) {
       console.error("Failed to update sticky limit:", err);
@@ -246,7 +246,7 @@ export default function ProfilePage() {
         body: JSON.stringify({ comboStickyRoundRobinLimit: numLimit }),
       });
       if (res.ok) {
-        setSettings(prev => ({ ...prev, comboStickyRoundRobinLimit: numLimit }));
+        setSettings((prev) => ({ ...prev, comboStickyRoundRobinLimit: numLimit }));
       }
     } catch (err) {
       console.error("Failed to update combo sticky limit:", err);
@@ -261,7 +261,7 @@ export default function ProfilePage() {
         body: JSON.stringify({ requireLogin }),
       });
       if (res.ok) {
-        setSettings(prev => ({ ...prev, requireLogin }));
+        setSettings((prev) => ({ ...prev, requireLogin }));
       }
     } catch (err) {
       console.error("Failed to update require login:", err);
@@ -276,7 +276,7 @@ export default function ProfilePage() {
         body: JSON.stringify({ enableObservability: enabled }),
       });
       if (res.ok) {
-        setSettings(prev => ({ ...prev, enableObservability: enabled }));
+        setSettings((prev) => ({ ...prev, enableObservability: enabled }));
       }
     } catch (err) {
       console.error("Failed to update enableObservability:", err);
@@ -360,7 +360,11 @@ export default function ProfilePage() {
   };
 
   const handleMigrateSqlite = async () => {
-    if (!confirm("Import legacy JSON files (db.json / usage.json / request-details.json) into SQLite? Originals will be renamed to .bak on success.")) {
+    if (
+      !confirm(
+        "Import legacy JSON files (db.json / usage.json / request-details.json) into SQLite? Originals will be renamed to .bak on success.",
+      )
+    ) {
       return;
     }
     setMigrateLoading(true);
@@ -371,17 +375,21 @@ export default function ProfilePage() {
       if (!res.ok) throw new Error(data.error || "Migration failed");
 
       const rows = data.imported ?? 0;
-      const files = Array.isArray(data.files) && data.files.length
-        ? ` (${data.files.map((f) => `${f.file}: ${f.rows}`).join(", ")})`
-        : "";
+      const files =
+        Array.isArray(data.files) && data.files.length
+          ? ` (${data.files.map((f) => `${f.file}: ${f.rows}`).join(", ")})`
+          : "";
       setMigrateStatus({
         type: "success",
-        message: rows > 0
-          ? `Imported ${rows} rows into SQLite${files}`
-          : (data.message || "No legacy JSON files found to migrate"),
+        message:
+          rows > 0
+            ? `Imported ${rows} rows into SQLite${files}`
+            : data.message || "No legacy JSON files found to migrate",
       });
 
-      const info = await fetch("/api/settings/migrate-sqlite").then((r) => r.json()).catch(() => null);
+      const info = await fetch("/api/settings/migrate-sqlite")
+        .then((r) => r.json())
+        .catch(() => null);
       if (info && !info.error) setLegacyInfo(info);
       if (rows > 0) await reloadSettings();
     } catch (err) {
@@ -418,7 +426,7 @@ export default function ProfilePage() {
                     "flex items-center justify-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1.5 rounded-md font-medium transition-all flex-1 sm:flex-initial",
                     theme === option
                       ? "bg-white dark:bg-white/10 text-text-main shadow-sm"
-                      : "text-text-muted hover:text-text-main"
+                      : "text-text-muted hover:text-text-main",
                   )}
                 >
                   <span className="material-symbols-outlined text-[18px]">
@@ -461,9 +469,11 @@ export default function ProfilePage() {
                 onClick={handleMigrateSqlite}
                 loading={migrateLoading}
                 disabled={!legacyInfo.hasLegacyData}
-                title={legacyInfo.hasLegacyData
-                  ? `Found: ${legacyInfo.legacyFilesFound.join(", ")}`
-                  : "No legacy JSON files detected"}
+                title={
+                  legacyInfo.hasLegacyData
+                    ? `Found: ${legacyInfo.legacyFilesFound.join(", ")}`
+                    : "No legacy JSON files detected"
+                }
               >
                 Migrate JSON → SQLite
               </Button>
@@ -481,12 +491,16 @@ export default function ProfilePage() {
               </p>
             )}
             {dbStatus.message && (
-              <p className={`text-sm ${dbStatus.type === "error" ? "text-red-500" : "text-green-600 dark:text-green-400"}`}>
+              <p
+                className={`text-sm ${dbStatus.type === "error" ? "text-red-500" : "text-green-600 dark:text-green-400"}`}
+              >
                 {dbStatus.message}
               </p>
             )}
             {migrateStatus.message && (
-              <p className={`text-sm ${migrateStatus.type === "error" ? "text-red-500" : "text-green-600 dark:text-green-400"}`}>
+              <p
+                className={`text-sm ${migrateStatus.type === "error" ? "text-red-500" : "text-green-600 dark:text-green-400"}`}
+              >
                 {migrateStatus.message}
               </p>
             )}
@@ -560,7 +574,9 @@ export default function ProfilePage() {
                 </div>
 
                 {passStatus.message && (
-                  <p className={`text-xs sm:text-sm ${passStatus.type === "error" ? "text-red-500" : "text-green-500"}`}>
+                  <p
+                    className={`text-xs sm:text-sm ${passStatus.type === "error" ? "text-red-500" : "text-green-500"}`}
+                  >
                     {passStatus.message}
                   </p>
                 )}
@@ -587,13 +603,13 @@ export default function ProfilePage() {
             <div className="flex items-start sm:items-center justify-between gap-4">
               <div className="flex-1 min-w-0">
                 <p className="font-medium text-sm sm:text-base">Round Robin</p>
-                <p className="text-xs sm:text-sm text-text-muted">
-                  Cycle through accounts to distribute load
-                </p>
+                <p className="text-xs sm:text-sm text-text-muted">Cycle through accounts to distribute load</p>
               </div>
               <Toggle
                 checked={settings.fallbackStrategy === "round-robin"}
-                onChange={() => updateFallbackStrategy(settings.fallbackStrategy === "round-robin" ? "fill-first" : "round-robin")}
+                onChange={() =>
+                  updateFallbackStrategy(settings.fallbackStrategy === "round-robin" ? "fill-first" : "round-robin")
+                }
                 disabled={loading}
               />
             </div>
@@ -603,9 +619,7 @@ export default function ProfilePage() {
               <div className="flex items-start sm:items-center justify-between gap-4 pt-2 border-t border-border/50">
                 <div className="flex-1 min-w-0">
                   <p className="font-medium text-sm sm:text-base">Sticky Limit</p>
-                  <p className="text-xs sm:text-sm text-text-muted">
-                    Calls per account before switching
-                  </p>
+                  <p className="text-xs sm:text-sm text-text-muted">Calls per account before switching</p>
                 </div>
                 <Input
                   type="number"
@@ -629,7 +643,9 @@ export default function ProfilePage() {
               </div>
               <Toggle
                 checked={settings.comboStrategy === "round-robin"}
-                onChange={() => updateComboStrategy(settings.comboStrategy === "round-robin" ? "fallback" : "round-robin")}
+                onChange={() =>
+                  updateComboStrategy(settings.comboStrategy === "round-robin" ? "fallback" : "round-robin")
+                }
                 disabled={loading}
               />
             </div>
@@ -639,9 +655,7 @@ export default function ProfilePage() {
               <div className="flex items-center justify-between pt-2 border-t border-border/50">
                 <div>
                   <p className="font-medium">Combo Sticky Limit</p>
-                  <p className="text-sm text-text-muted">
-                    Calls per combo model before switching
-                  </p>
+                  <p className="text-sm text-text-muted">Calls per combo model before switching</p>
                 </div>
                 <Input
                   type="number"
@@ -679,7 +693,9 @@ export default function ProfilePage() {
             <div className="flex items-start sm:items-center justify-between gap-4">
               <div className="flex-1 min-w-0">
                 <p className="font-medium text-sm sm:text-base">Outbound Proxy</p>
-                <p className="text-xs sm:text-sm text-text-muted">Enable proxy for OAuth + provider outbound requests.</p>
+                <p className="text-xs sm:text-sm text-text-muted">
+                  Enable proxy for OAuth + provider outbound requests.
+                </p>
               </div>
               <Toggle
                 checked={settings.outboundProxyEnabled === true}
@@ -698,7 +714,9 @@ export default function ProfilePage() {
                     onChange={(e) => setProxyForm((prev) => ({ ...prev, outboundProxyUrl: e.target.value }))}
                     disabled={loading || proxyLoading}
                   />
-                  <p className="text-xs sm:text-sm text-text-muted">Leave empty to inherit existing env proxy (if any).</p>
+                  <p className="text-xs sm:text-sm text-text-muted">
+                    Leave empty to inherit existing env proxy (if any).
+                  </p>
                 </div>
 
                 <div className="flex flex-col gap-2 pt-2 border-t border-border/50">
@@ -709,7 +727,9 @@ export default function ProfilePage() {
                     onChange={(e) => setProxyForm((prev) => ({ ...prev, outboundNoProxy: e.target.value }))}
                     disabled={loading || proxyLoading}
                   />
-                  <p className="text-xs sm:text-sm text-text-muted">Comma-separated hostnames/domains to bypass the proxy.</p>
+                  <p className="text-xs sm:text-sm text-text-muted">
+                    Comma-separated hostnames/domains to bypass the proxy.
+                  </p>
                 </div>
 
                 <div className="pt-2 border-t border-border/50 flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
@@ -731,7 +751,9 @@ export default function ProfilePage() {
             )}
 
             {proxyStatus.message && (
-              <p className={`text-xs sm:text-sm ${proxyStatus.type === "error" ? "text-red-500" : "text-green-500"} pt-2 border-t border-border/50`}>
+              <p
+                className={`text-xs sm:text-sm ${proxyStatus.type === "error" ? "text-red-500" : "text-green-500"} pt-2 border-t border-border/50`}
+              >
                 {proxyStatus.message}
               </p>
             )}
@@ -753,17 +775,15 @@ export default function ProfilePage() {
                 Record request details for inspection in the logs view
               </p>
             </div>
-            <Toggle
-              checked={observabilityEnabled}
-              onChange={updateObservabilityEnabled}
-              disabled={loading}
-            />
+            <Toggle checked={observabilityEnabled} onChange={updateObservabilityEnabled} disabled={loading} />
           </div>
         </Card>
 
         {/* App Info */}
         <div className="text-center text-xs sm:text-sm text-text-muted py-4">
-          <p>{APP_CONFIG.name} v{APP_CONFIG.displayVersion}</p>
+          <p>
+            {APP_CONFIG.name} v{APP_CONFIG.displayVersion}
+          </p>
           <p className="mt-1">Local Mode - All data stored on your machine</p>
         </div>
       </div>

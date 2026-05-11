@@ -3,14 +3,7 @@
 import { useEffect } from "react";
 import { cn } from "@/shared/utils/cn";
 
-export default function Drawer({
-  isOpen,
-  onClose,
-  title,
-  children,
-  width = "md",
-  className
-}) {
+export default function Drawer({ isOpen, onClose, title, children, width = "md", className }) {
   const widths = {
     sm: "w-[400px]",
     md: "w-[500px]",
@@ -25,7 +18,9 @@ export default function Drawer({
     } else {
       document.body.style.overflow = "";
     }
-    return () => { document.body.style.overflow = ""; };
+    return () => {
+      document.body.style.overflow = "";
+    };
   }, [isOpen]);
 
   useEffect(() => {
@@ -48,20 +43,20 @@ export default function Drawer({
       />
 
       {/* Drawer panel */}
-      <div className={cn(
-        "absolute right-0 top-0 h-full bg-surface flex flex-col",
-        "shadow-[var(--shadow-elev)]",
-        "slide-in-right",
-        "border-l border-border-subtle",
-        widths[width] || widths.md,
-        className
-      )}>
+      <div
+        className={cn(
+          "absolute right-0 top-0 h-full bg-surface flex flex-col",
+          "shadow-[var(--shadow-elev)]",
+          "slide-in-right",
+          "border-l border-border-subtle",
+          widths[width] || widths.md,
+          className,
+        )}
+      >
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-border-subtle flex-shrink-0">
           <div className="flex items-center gap-3">
-            {title && (
-              <h2 className="text-lg font-semibold text-text-main">{title}</h2>
-            )}
+            {title && <h2 className="text-lg font-semibold text-text-main">{title}</h2>}
           </div>
           <button
             type="button"
@@ -73,9 +68,7 @@ export default function Drawer({
         </div>
 
         {/* Body */}
-        <div className="flex-1 overflow-y-auto p-6 custom-scrollbar">
-          {children}
-        </div>
+        <div className="flex-1 overflow-y-auto p-6 custom-scrollbar">{children}</div>
       </div>
     </div>
   );

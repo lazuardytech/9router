@@ -9,13 +9,13 @@ const Editor = dynamic(() => import("@monaco-editor/react"), { ssr: false });
 
 // 7 steps matching requestLogger files exactly
 const STEPS = [
-  { id: 1, label: "Client Request",         file: "1_req_client.json",  lang: "json", desc: "Raw request from client" },
-  { id: 2, label: "Source Body",            file: "2_req_source.json",  lang: "json", desc: "After initial conversion" },
-  { id: 3, label: "OpenAI Intermediate",    file: "3_req_openai.json",  lang: "json", desc: "source → openai" },
-  { id: 4, label: "Target Request",         file: "4_req_target.json",  lang: "json", desc: "openai → target + URL + headers" },
-  { id: 5, label: "Provider Response",      file: "5_res_provider.txt", lang: "text", desc: "Raw SSE from provider" },
-  { id: 6, label: "OpenAI Response",        file: "6_res_openai.txt",   lang: "text", desc: "target → openai (response)" },
-  { id: 7, label: "Client Response",        file: "7_res_client.txt",   lang: "text", desc: "Final response to client" },
+  { id: 1, label: "Client Request", file: "1_req_client.json", lang: "json", desc: "Raw request from client" },
+  { id: 2, label: "Source Body", file: "2_req_source.json", lang: "json", desc: "After initial conversion" },
+  { id: 3, label: "OpenAI Intermediate", file: "3_req_openai.json", lang: "json", desc: "source → openai" },
+  { id: 4, label: "Target Request", file: "4_req_target.json", lang: "json", desc: "openai → target + URL + headers" },
+  { id: 5, label: "Provider Response", file: "5_res_provider.txt", lang: "text", desc: "Raw SSE from provider" },
+  { id: 6, label: "OpenAI Response", file: "6_res_openai.txt", lang: "text", desc: "target → openai (response)" },
+  { id: 7, label: "Client Response", file: "7_res_client.txt", lang: "text", desc: "Final response to client" },
 ];
 
 const EDITOR_OPTIONS = {
@@ -34,20 +34,23 @@ export default function TranslatorPage() {
   // Detected from step 1: { provider, model, sourceFormat, targetFormat }
   const [meta, setMeta] = useState(null);
 
-  const setLoad = (key, val) => setLoading(prev => ({ ...prev, [key]: val }));
-  const setContent = (id, val) => setContents(prev => ({ ...prev, [id]: val }));
-  const toggle = (id) => setExpanded(prev => ({ ...prev, [id]: !prev[id] }));
+  const setLoad = (key, val) => setLoading((prev) => ({ ...prev, [key]: val }));
+  const setContent = (id, val) => setContents((prev) => ({ ...prev, [id]: val }));
+  const toggle = (id) => setExpanded((prev) => ({ ...prev, [id]: !prev[id] }));
 
-  const openNext = (nextId) => setExpanded(prev => {
-    const next = {};
-    STEPS.forEach(s => { next[s.id] = false; });
-    next[nextId] = true;
-    return next;
-  });
+  const openNext = (nextId) =>
+    setExpanded((prev) => {
+      const next = {};
+      STEPS.forEach((s) => {
+        next[s.id] = false;
+      });
+      next[nextId] = true;
+      return next;
+    });
 
   // Load file from logs/translator/
   const handleLoad = async (stepId) => {
-    const step = STEPS.find(s => s.id === stepId);
+    const step = STEPS.find((s) => s.id === stepId);
     setLoad(`load-${stepId}`, true);
     try {
       const res = await fetch(`/api/translator/load?file=${step.file}`);
@@ -71,18 +74,21 @@ export default function TranslatorPage() {
       const res = await fetch("/api/translator/translate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ step: 1, body })
+        body: JSON.stringify({ step: 1, body }),
       });
       const data = await res.json();
       if (data.success) setMeta(data.result);
-    } catch { /* ignore */ }
+    } catch {
+      /* ignore */
+    }
   };
 
-  const save = (file, content) => fetch("/api/translator/save", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ file, content })
-  }).catch(() => {});
+  const save = (file, content) =>
+    fetch("/api/translator/save", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ file, content }),
+    }).catch(() => {});
 
   // Step 1 → Step 3: source → OpenAI intermediate
   const handleToOpenAI = async () => {
@@ -92,19 +98,27 @@ export default function TranslatorPage() {
       const body = JSON.parse(raw);
       // Save input: 1_req_client.json + 2_req_source.json (body only)
       save("1_req_client.json", raw);
-      save("2_req_source.json", JSON.stringify({ timestamp: new Date().toISOString(), headers: {}, body: body.body || body }, null, 2));
+      save(
+        "2_req_source.json",
+        JSON.stringify({ timestamp: new Date().toISOString(), headers: {}, body: body.body || body }, null, 2),
+      );
 
       const res = await fetch("/api/translator/translate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ step: 2, body })
+        body: JSON.stringify({ step: 2, body }),
       });
       const data = await res.json();
-      if (!data.success) { alert(data.error); return; }
+      if (!data.success) {
+        alert(data.error);
+        return;
+      }
       const str = JSON.stringify(data.result.body, null, 2);
       setContent(3, str);
       openNext(3);
-    } catch (e) { alert(e.message); }
+    } catch (e) {
+      alert(e.message);
+    }
     setLoad("toOpenAI", false);
   };
 
@@ -120,15 +134,20 @@ export default function TranslatorPage() {
       const res = await fetch("/api/translator/translate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ step: 3, body: { ...openaiBody, provider: meta?.provider, model: meta?.model } })
+        body: JSON.stringify({ step: 3, body: { ...openaiBody, provider: meta?.provider, model: meta?.model } }),
       });
       const data = await res.json();
-      if (!data.success) { alert(data.error); return; }
+      if (!data.success) {
+        alert(data.error);
+        return;
+      }
       // Embed provider + model so Send works even without meta
       const step4Content = { ...data.result, provider: meta?.provider, model: meta?.model };
       setContent(4, JSON.stringify(step4Content, null, 2));
       openNext(4);
-    } catch (e) { alert(e.message); }
+    } catch (e) {
+      alert(e.message);
+    }
     setLoad("toTarget", false);
   };
 
@@ -153,7 +172,7 @@ export default function TranslatorPage() {
       const res = await fetch("/api/translator/send", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ provider, model, body: step4.body || step4 })
+        body: JSON.stringify({ provider, model, body: step4.body || step4 }),
       });
 
       if (!res.ok) {
@@ -179,7 +198,7 @@ export default function TranslatorPage() {
       await fetch("/api/translator/save", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ file: "5_res_provider.txt", content: full })
+        body: JSON.stringify({ file: "5_res_provider.txt", content: full }),
       });
     } catch (e) {
       alert(e.message);
@@ -199,14 +218,31 @@ export default function TranslatorPage() {
     try {
       const obj = JSON.parse(contents[id]);
       setContent(id, JSON.stringify(obj, null, 2));
-    } catch { /* not JSON, skip */ }
+    } catch {
+      /* not JSON, skip */
+    }
   };
 
   // Render action button per step
   const getAction = (stepId) => {
-    if (stepId === 1) return <Button size="sm" icon="arrow_forward" loading={loading["toOpenAI"]} onClick={handleToOpenAI}>→ OpenAI</Button>;
-    if (stepId === 3) return <Button size="sm" icon="arrow_forward" loading={loading["toTarget"]} onClick={handleToTarget}>→ Target</Button>;
-    if (stepId === 4) return <Button size="sm" icon="send" loading={loading["send"]} onClick={handleSend}>Send</Button>;
+    if (stepId === 1)
+      return (
+        <Button size="sm" icon="arrow_forward" loading={loading["toOpenAI"]} onClick={handleToOpenAI}>
+          → OpenAI
+        </Button>
+      );
+    if (stepId === 3)
+      return (
+        <Button size="sm" icon="arrow_forward" loading={loading["toTarget"]} onClick={handleToTarget}>
+          → Target
+        </Button>
+      );
+    if (stepId === 4)
+      return (
+        <Button size="sm" icon="send" loading={loading["send"]} onClick={handleSend}>
+          Send
+        </Button>
+      );
     return null;
   };
 
@@ -250,7 +286,13 @@ export default function TranslatorPage() {
                 </button>
                 {!isExpanded && (
                   <div className="flex gap-1 shrink-0">
-                    <Button size="sm" variant="ghost" icon="folder_open" loading={loading[`load-${step.id}`]} onClick={() => handleLoad(step.id)} />
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      icon="folder_open"
+                      loading={loading[`load-${step.id}`]}
+                      onClick={() => handleLoad(step.id)}
+                    />
                     {action}
                   </div>
                 )}
@@ -273,9 +315,21 @@ export default function TranslatorPage() {
                     />
                   </div>
                   <div className="flex gap-2 flex-wrap">
-                    <Button size="sm" variant="outline" icon="folder_open" loading={loading[`load-${step.id}`]} onClick={() => handleLoad(step.id)}>Load</Button>
-                    <Button size="sm" variant="outline" icon="data_object" onClick={() => handleFormat(step.id)}>Format</Button>
-                    <Button size="sm" variant="outline" icon="content_copy" onClick={() => handleCopy(step.id)}>Copy</Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      icon="folder_open"
+                      loading={loading[`load-${step.id}`]}
+                      onClick={() => handleLoad(step.id)}
+                    >
+                      Load
+                    </Button>
+                    <Button size="sm" variant="outline" icon="data_object" onClick={() => handleFormat(step.id)}>
+                      Format
+                    </Button>
+                    <Button size="sm" variant="outline" icon="content_copy" onClick={() => handleCopy(step.id)}>
+                      Copy
+                    </Button>
                     {action}
                   </div>
                 </>
@@ -297,7 +351,8 @@ function MetaBadge({ label, value, color }) {
   };
   return (
     <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-mono ${colors[color]}`}>
-      <span className="text-text-muted/70 font-sans text-[10px]">{label}:</span>{value}
+      <span className="text-text-muted/70 font-sans text-[10px]">{label}:</span>
+      {value}
     </span>
   );
 }

@@ -31,9 +31,9 @@ export default function CombosPage() {
       const combosData = await combosRes.json();
       const providersData = await providersRes.json();
       const settingsData = settingsRes.ok ? await settingsRes.json() : {};
-      
+
       // Only LLM combos here — webSearch/webFetch combos belong to media-providers/web
-      if (combosRes.ok) setCombos((combosData.combos || []).filter(c => !c.kind));
+      if (combosRes.ok) setCombos((combosData.combos || []).filter((c) => !c.kind));
       if (providersRes.ok) {
         setActiveProviders(providersData.connections || []);
       }
@@ -88,7 +88,7 @@ export default function CombosPage() {
     try {
       const res = await fetch(`/api/combos/${id}`, { method: "DELETE" });
       if (res.ok) {
-        setCombos(combos.filter(c => c.id !== id));
+        setCombos(combos.filter((c) => c.id !== id));
       }
     } catch (error) {
       console.log("Error deleting combo:", error);
@@ -103,13 +103,13 @@ export default function CombosPage() {
       } else {
         delete updated[comboName];
       }
-      
+
       await fetch("/api/settings", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ comboStrategies: updated }),
       });
-      
+
       setComboStrategies(updated);
     } catch (error) {
       console.log("Error updating combo strategy:", error);
@@ -131,9 +131,7 @@ export default function CombosPage() {
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="min-w-0">
           <h1 className="text-2xl font-semibold">Combos</h1>
-          <p className="text-sm text-text-muted mt-1">
-            Create model combos with fallback support
-          </p>
+          <p className="text-sm text-text-muted mt-1">Create model combos with fallback support</p>
         </div>
         <Button icon="add" onClick={() => setShowCreateModal(true)} className="w-full sm:w-auto">
           Create Combo
@@ -208,7 +206,10 @@ function ComboCard({ combo, copied, onCopy, onEdit, onDelete, roundRobinEnabled,
                 <span className="text-xs text-text-muted italic">No models</span>
               ) : (
                 combo.models.slice(0, 3).map((model, index) => (
-                  <code key={index} className="max-w-full truncate rounded bg-black/5 px-1.5 py-0.5 font-mono text-[10px] text-text-muted dark:bg-white/5 sm:max-w-[220px]">
+                  <code
+                    key={index}
+                    className="max-w-full truncate rounded bg-black/5 px-1.5 py-0.5 font-mono text-[10px] text-text-muted dark:bg-white/5 sm:max-w-[220px]"
+                  >
                     {model}
                   </code>
                 ))
@@ -225,16 +226,15 @@ function ComboCard({ combo, copied, onCopy, onEdit, onDelete, roundRobinEnabled,
           {/* Round Robin Toggle — always visible */}
           <div className="flex items-center justify-between gap-1.5 rounded-lg bg-black/[0.02] px-2 py-1.5 dark:bg-white/[0.02] sm:justify-start sm:bg-transparent sm:px-0 sm:py-0 sm:dark:bg-transparent">
             <span className="text-xs text-text-muted font-medium">Round Robin</span>
-            <Toggle
-              size="sm"
-              checked={roundRobinEnabled}
-              onChange={onToggleRoundRobin}
-            />
+            <Toggle size="sm" checked={roundRobinEnabled} onChange={onToggleRoundRobin} />
           </div>
 
           <div className="grid grid-cols-3 gap-1 sm:flex">
             <button
-              onClick={(e) => { e.stopPropagation(); onCopy(combo.name, `combo-${combo.id}`); }}
+              onClick={(e) => {
+                e.stopPropagation();
+                onCopy(combo.name, `combo-${combo.id}`);
+              }}
               className="flex flex-col items-center rounded px-2 py-1 text-text-muted transition-colors hover:bg-black/5 hover:text-primary dark:hover:bg-white/5"
               title="Copy combo name"
             >
@@ -280,7 +280,10 @@ function ModelItem({ index, model, isFirst, isLast, onEdit, onMoveUp, onMoveDown
 
   const handleKeyDown = (e) => {
     if (e.key === "Enter") commit();
-    if (e.key === "Escape") { setDraft(model); setEditing(false); }
+    if (e.key === "Escape") {
+      setDraft(model);
+      setEditing(false);
+    }
   };
 
   return (
@@ -423,11 +426,7 @@ function ComboFormModal({ isOpen, combo, onClose, onSave, activeProviders, kindF
 
   return (
     <>
-      <Modal
-        isOpen={isOpen}
-        onClose={onClose}
-        title={isEdit ? "Edit Combo" : "Create Combo"}
-      >
+      <Modal isOpen={isOpen} onClose={onClose} title={isEdit ? "Edit Combo" : "Create Combo"}>
         <div className="flex flex-col gap-3">
           {/* Name */}
           <div>
@@ -438,9 +437,7 @@ function ComboFormModal({ isOpen, combo, onClose, onSave, activeProviders, kindF
               placeholder="my-combo"
               error={nameError}
             />
-            <p className="text-[10px] text-text-muted mt-0.5">
-              Only letters, numbers, -, _ and . allowed
-            </p>
+            <p className="text-[10px] text-text-muted mt-0.5">Only letters, numbers, -, _ and . allowed</p>
           </div>
 
           {/* Models */}
@@ -453,7 +450,7 @@ function ComboFormModal({ isOpen, combo, onClose, onSave, activeProviders, kindF
                 <p className="text-xs text-text-muted">No models added yet</p>
               </div>
             ) : (
-            <div className="flex max-h-[55vh] min-w-0 flex-col gap-1 overflow-y-auto sm:max-h-[350px]">
+              <div className="flex max-h-[55vh] min-w-0 flex-col gap-1 overflow-y-auto sm:max-h-[350px]">
                 {models.map((model, index) => (
                   <ModelItem
                     key={index}
@@ -489,12 +486,7 @@ function ComboFormModal({ isOpen, combo, onClose, onSave, activeProviders, kindF
             <Button onClick={onClose} variant="ghost" fullWidth size="sm">
               Cancel
             </Button>
-            <Button
-              onClick={handleSave}
-              fullWidth
-              size="sm"
-              disabled={!name.trim() || !!nameError || saving}
-            >
+            <Button onClick={handleSave} fullWidth size="sm" disabled={!name.trim() || !!nameError || saving}>
               {saving ? "Saving..." : isEdit ? "Save" : "Create"}
             </Button>
           </div>

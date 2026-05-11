@@ -1,7 +1,14 @@
 import crypto from "crypto";
 import { loadState, saveState, generateShortId } from "./state.js";
 import { spawnQuickTunnel, killCloudflared, isCloudflaredRunning, setUnexpectedExitHandler } from "./cloudflared.js";
-import { startFunnel, stopFunnel, isTailscaleRunning, isTailscaleLoggedIn, startLogin, startDaemonWithPassword } from "./tailscale.js";
+import {
+  startFunnel,
+  stopFunnel,
+  isTailscaleRunning,
+  isTailscaleLoggedIn,
+  startLogin,
+  startDaemonWithPassword,
+} from "./tailscale.js";
 import { getSettings, updateSettings } from "@/lib/localDb";
 import { waitForHealth, probeUrlAlive } from "./networkProbe.js";
 
@@ -25,18 +32,32 @@ const tailscaleSvc = {
   activeLocalPort: null,
 };
 
-export function getTunnelService() { return tunnelSvc; }
-export function getTailscaleService() { return tailscaleSvc; }
+export function getTunnelService() {
+  return tunnelSvc;
+}
+export function getTailscaleService() {
+  return tailscaleSvc;
+}
 
-export function isTunnelManuallyDisabled() { return tunnelSvc.cancelToken.cancelled; }
-export function isTunnelReconnecting() { return tunnelSvc.spawnInProgress; }
-export function isTailscaleReconnecting() { return tailscaleSvc.spawnInProgress; }
+export function isTunnelManuallyDisabled() {
+  return tunnelSvc.cancelToken.cancelled;
+}
+export function isTunnelReconnecting() {
+  return tunnelSvc.spawnInProgress;
+}
+export function isTailscaleReconnecting() {
+  return tailscaleSvc.spawnInProgress;
+}
 
 function getMachineId() {
   try {
     const { machineIdSync } = require("node-machine-id");
     const raw = machineIdSync();
-    return crypto.createHash("sha256").update(raw + MACHINE_ID_SALT).digest("hex").substring(0, 16);
+    return crypto
+      .createHash("sha256")
+      .update(raw + MACHINE_ID_SALT)
+      .digest("hex")
+      .substring(0, 16);
   } catch (e) {
     return crypto.randomUUID().replace(/-/g, "").substring(0, 16);
   }
@@ -48,7 +69,7 @@ async function registerTunnelUrl(shortId, tunnelUrl) {
   await fetch(`${WORKER_URL}/api/tunnel/register`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ shortId, tunnelUrl })
+    body: JSON.stringify({ shortId, tunnelUrl }),
   });
 }
 
@@ -65,9 +86,15 @@ export async function enableTunnel(localPort = 20128) {
   try {
     if (isCloudflaredRunning()) {
       const existing = loadState();
-      if (existing?.tunnelUrl && await probeUrlAlive(existing.tunnelUrl)) {
+      if (existing?.tunnelUrl && (await probeUrlAlive(existing.tunnelUrl))) {
         const publicUrl = `https://r${existing.shortId}.9router.com`;
-        return { success: true, tunnelUrl: existing.tunnelUrl, shortId: existing.shortId, publicUrl, alreadyRunning: true };
+        return {
+          success: true,
+          tunnelUrl: existing.tunnelUrl,
+          shortId: existing.shortId,
+          publicUrl,
+          alreadyRunning: true,
+        };
       }
     }
 
@@ -127,7 +154,7 @@ export async function getTunnelStatus() {
     tunnelUrl: state?.tunnelUrl || "",
     shortId,
     publicUrl,
-    running
+    running,
   };
 }
 
@@ -140,7 +167,7 @@ export async function enableTailscale(localPort = 20128) {
   const token = tailscaleSvc.cancelToken;
 
   try {
-    const sudoPass = getCachedPassword() || await loadEncryptedPassword() || "";
+    const sudoPass = getCachedPassword() || (await loadEncryptedPassword()) || "";
     await startDaemonWithPassword(sudoPass);
     throwIfCancelled(token, "tailscale");
 
@@ -192,6 +219,6 @@ export async function getTailscaleStatus() {
     enabled: settings.tailscaleEnabled === true && running,
     settingsEnabled: settings.tailscaleEnabled === true,
     tunnelUrl: settings.tailscaleUrl || "",
-    running
+    running,
   };
 }

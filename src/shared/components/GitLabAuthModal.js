@@ -52,7 +52,11 @@ export default function GitLabAuthModal({ isOpen, providerInfo, onSuccess, onClo
       return;
     }
     setError(null);
-    setOauthMeta({ baseUrl: baseUrl.trim() || GITLAB_COM, clientId: clientId.trim(), clientSecret: clientSecret.trim() });
+    setOauthMeta({
+      baseUrl: baseUrl.trim() || GITLAB_COM,
+      clientId: clientId.trim(),
+      clientSecret: clientSecret.trim(),
+    });
     setShowOAuth(true);
   };
 
@@ -90,8 +94,14 @@ export default function GitLabAuthModal({ isOpen, providerInfo, onSuccess, onClo
         provider="gitlab"
         providerInfo={providerInfo}
         oauthMeta={oauthMeta}
-        onSuccess={() => { onSuccess?.(); handleClose(); }}
-        onClose={() => { setShowOAuth(false); setOauthMeta(null); }}
+        onSuccess={() => {
+          onSuccess?.();
+          handleClose();
+        }}
+        onClose={() => {
+          setShowOAuth(false);
+          setOauthMeta(null);
+        }}
       />
     );
   }
@@ -102,9 +112,7 @@ export default function GitLabAuthModal({ isOpen, providerInfo, onSuccess, onClo
         {/* Mode selection */}
         {!mode && (
           <>
-            <p className="text-sm text-text-muted">
-              Choose how to authenticate with GitLab Duo:
-            </p>
+            <p className="text-sm text-text-muted">Choose how to authenticate with GitLab Duo:</p>
             <div className="grid grid-cols-2 gap-3">
               <button
                 onClick={() => setMode("oauth")}
@@ -135,21 +143,47 @@ export default function GitLabAuthModal({ isOpen, providerInfo, onSuccess, onClo
           <>
             <p className="text-xs text-text-muted">
               Create an OAuth app at{" "}
-              <a href={`${baseUrl.trim() || GITLAB_COM}/-/profile/applications`} target="_blank" rel="noreferrer" className="text-primary underline">
+              <a
+                href={`${baseUrl.trim() || GITLAB_COM}/-/profile/applications`}
+                target="_blank"
+                rel="noreferrer"
+                className="text-primary underline"
+              >
                 GitLab Applications
               </a>{" "}
-              with redirect URI{" "}
-              <code className="bg-sidebar px-1 rounded text-xs">{getRedirectUri()}</code>
+              with redirect URI <code className="bg-sidebar px-1 rounded text-xs">{getRedirectUri()}</code>
             </p>
-            <Input label="GitLab Base URL" value={baseUrl} onChange={(e) => setBaseUrl(e.target.value)} placeholder={GITLAB_COM} />
-            <Input label="Client ID" value={clientId} onChange={(e) => setClientId(e.target.value)} placeholder="Your OAuth application client ID" />
-            <Input label="Client Secret (optional for PKCE)" value={clientSecret} onChange={(e) => setClientSecret(e.target.value)} placeholder="Leave empty for public PKCE app" />
+            <Input
+              label="GitLab Base URL"
+              value={baseUrl}
+              onChange={(e) => setBaseUrl(e.target.value)}
+              placeholder={GITLAB_COM}
+            />
+            <Input
+              label="Client ID"
+              value={clientId}
+              onChange={(e) => setClientId(e.target.value)}
+              placeholder="Your OAuth application client ID"
+            />
+            <Input
+              label="Client Secret (optional for PKCE)"
+              value={clientSecret}
+              onChange={(e) => setClientSecret(e.target.value)}
+              placeholder="Leave empty for public PKCE app"
+            />
             {error && <p className="text-sm text-red-500">{error}</p>}
             <div className="flex gap-2">
               <Button onClick={handleOAuthStart} fullWidth disabled={!clientId.trim()}>
                 Authorize
               </Button>
-              <Button onClick={() => { setMode(null); setError(null); }} variant="ghost" fullWidth>
+              <Button
+                onClick={() => {
+                  setMode(null);
+                  setError(null);
+                }}
+                variant="ghost"
+                fullWidth
+              >
                 Back
               </Button>
             </div>
@@ -161,21 +195,44 @@ export default function GitLabAuthModal({ isOpen, providerInfo, onSuccess, onClo
           <>
             <p className="text-xs text-text-muted">
               Create a PAT at{" "}
-              <a href={`${baseUrl.trim() || GITLAB_COM}/-/user_settings/personal_access_tokens`} target="_blank" rel="noreferrer" className="text-primary underline">
+              <a
+                href={`${baseUrl.trim() || GITLAB_COM}/-/user_settings/personal_access_tokens`}
+                target="_blank"
+                rel="noreferrer"
+                className="text-primary underline"
+              >
                 GitLab Access Tokens
               </a>{" "}
               with scopes: <code className="bg-sidebar px-1 rounded text-xs">api</code>,{" "}
               <code className="bg-sidebar px-1 rounded text-xs">read_user</code>, and{" "}
               <code className="bg-sidebar px-1 rounded text-xs">ai_features</code>.
             </p>
-            <Input label="GitLab Base URL" value={baseUrl} onChange={(e) => setBaseUrl(e.target.value)} placeholder={GITLAB_COM} />
-            <Input label="Personal Access Token" value={pat} onChange={(e) => setPat(e.target.value)} placeholder="glpat-xxxxxxxxxxxxxxxxxxxx" type="password" />
+            <Input
+              label="GitLab Base URL"
+              value={baseUrl}
+              onChange={(e) => setBaseUrl(e.target.value)}
+              placeholder={GITLAB_COM}
+            />
+            <Input
+              label="Personal Access Token"
+              value={pat}
+              onChange={(e) => setPat(e.target.value)}
+              placeholder="glpat-xxxxxxxxxxxxxxxxxxxx"
+              type="password"
+            />
             {error && <p className="text-sm text-red-500">{error}</p>}
             <div className="flex gap-2">
               <Button onClick={handlePATSubmit} fullWidth disabled={!pat.trim() || loading} loading={loading}>
                 Connect
               </Button>
-              <Button onClick={() => { setMode(null); setError(null); }} variant="ghost" fullWidth>
+              <Button
+                onClick={() => {
+                  setMode(null);
+                  setError(null);
+                }}
+                variant="ghost"
+                fullWidth
+              >
                 Back
               </Button>
             </div>

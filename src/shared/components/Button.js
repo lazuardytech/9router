@@ -37,7 +37,7 @@ export default function Button({
         variants[variant],
         sizes[size],
         fullWidth && "w-full",
-        className
+        className,
       )}
       disabled={disabled || loading}
       {...props}
@@ -48,9 +48,7 @@ export default function Button({
         <span className="material-symbols-outlined text-[18px]">{icon}</span>
       ) : null}
       {children}
-      {iconRight && !loading && (
-        <span className="material-symbols-outlined text-[18px]">{iconRight}</span>
-      )}
+      {iconRight && !loading && <span className="material-symbols-outlined text-[18px]">{iconRight}</span>}
     </button>
   );
 }

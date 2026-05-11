@@ -167,10 +167,7 @@ export async function getModelInfoCore(modelStr, aliasesOrGetter) {
   }
 
   // Get aliases (from object or function)
-  const aliases =
-    typeof aliasesOrGetter === "function"
-      ? await aliasesOrGetter()
-      : aliasesOrGetter;
+  const aliases = typeof aliasesOrGetter === "function" ? await aliasesOrGetter() : aliasesOrGetter;
 
   // Resolve alias
   const resolved = resolveModelAliasFromMap(parsed.model, aliases);
@@ -195,8 +192,7 @@ function inferProviderFromModelName(modelName) {
   if (m.startsWith("claude-")) return "anthropic";
   if (m.startsWith("gemini-")) return "gemini";
   if (m.startsWith("gpt-")) return "openai";
-  if (m.startsWith("o1") || m.startsWith("o3") || m.startsWith("o4"))
-    return "openai";
+  if (m.startsWith("o1") || m.startsWith("o3") || m.startsWith("o4")) return "openai";
   if (m.startsWith("deepseek-")) return "openrouter";
   // Default fallback
   return "openai";

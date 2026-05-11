@@ -1,7 +1,4 @@
-import {
-  extractApiKey, isValidApiKey,
-  getProviderCredentials, markAccountUnavailable,
-} from "../services/auth.js";
+import { extractApiKey, isValidApiKey, getProviderCredentials, markAccountUnavailable } from "../services/auth.js";
 import { getSettings } from "@/lib/localDb";
 import { getModelInfo, getComboModels } from "../services/model.js";
 import { handleTtsCore } from "open-sse/handlers/ttsCore.js";
@@ -15,7 +12,7 @@ import * as log from "../utils/logger.js";
 const CREDENTIALED_PROVIDERS = new Set(
   Object.entries(AI_PROVIDERS)
     .filter(([, p]) => p.serviceKinds?.includes("tts") && !p.noAuth && p.ttsConfig?.authType !== "none")
-    .map(([id]) => id)
+    .map(([id]) => id),
 );
 
 export async function handleTts(request) {
@@ -30,7 +27,10 @@ export async function handleTts(request) {
   const modelStr = body.model;
   const responseFormat = url.searchParams.get("response_format") || "mp3"; // mp3 (default) | json
   const language = body.language || ""; // Optional language hint (currently used by Gemini)
-  log.request("POST", `${url.pathname} | ${modelStr} | format=${responseFormat}${language ? ` | lang=${language}` : ""}`);
+  log.request(
+    "POST",
+    `${url.pathname} | ${modelStr} | format=${responseFormat}${language ? ` | lang=${language}` : ""}`,
+  );
 
   const settings = await getSettings();
   if (settings.requireApiKey) {
@@ -49,7 +49,10 @@ export async function handleTts(request) {
     const comboStrategies = settings.comboStrategies || {};
     const comboStrategy = comboStrategies[modelStr]?.fallbackStrategy || settings.comboStrategy || "fallback";
     const comboStickyLimit = settings.comboStickyRoundRobinLimit;
-    log.info("TTS", `Combo "${modelStr}" with ${comboModels.length} models (strategy: ${comboStrategy}, sticky: ${comboStickyLimit})`);
+    log.info(
+      "TTS",
+      `Combo "${modelStr}" with ${comboModels.length} models (strategy: ${comboStrategy}, sticky: ${comboStickyLimit})`,
+    );
     return handleComboChat({
       body,
       models: comboModels,
@@ -90,9 +93,15 @@ async function handleSingleModelTts(body, modelStr, responseFormat, language) {
       if (credentials?.allRateLimited) {
         const msg = lastError || credentials.lastError || "Unavailable";
         const status = lastStatus || Number(credentials.lastErrorCode) || HTTP_STATUS.SERVICE_UNAVAILABLE;
-        return unavailableResponse(status, `[${provider}/${model}] ${msg}`, credentials.retryAfter, credentials.retryAfterHuman);
+        return unavailableResponse(
+          status,
+          `[${provider}/${model}] ${msg}`,
+          credentials.retryAfter,
+          credentials.retryAfterHuman,
+        );
       }
-      if (excludeConnectionIds.size === 0) return errorResponse(HTTP_STATUS.BAD_REQUEST, `No credentials for provider: ${provider}`);
+      if (excludeConnectionIds.size === 0)
+        return errorResponse(HTTP_STATUS.BAD_REQUEST, `No credentials for provider: ${provider}`);
       return errorResponse(lastStatus || HTTP_STATUS.SERVICE_UNAVAILABLE, lastError || "All accounts unavailable");
     }
 
@@ -102,7 +111,13 @@ async function handleSingleModelTts(body, modelStr, responseFormat, language) {
 
     if (result.success) return result.response;
 
-    const { shouldFallback } = await markAccountUnavailable(credentials.connectionId, result.status, result.error, provider, model);
+    const { shouldFallback } = await markAccountUnavailable(
+      credentials.connectionId,
+      result.status,
+      result.error,
+      provider,
+      model,
+    );
     if (shouldFallback) {
       excludeConnectionIds.add(credentials.connectionId);
       lastError = result.error;

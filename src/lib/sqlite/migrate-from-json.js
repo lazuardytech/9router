@@ -11,22 +11,30 @@ const USAGE_JSON = "usage.json";
 const REQUEST_DETAILS_JSON = "request-details.json";
 
 const STRUCTURED_CONN_FIELDS = new Set([
-  "id", "provider", "authType", "name", "priority", "isActive",
-  "createdAt", "updatedAt",
+  "id",
+  "provider",
+  "authType",
+  "name",
+  "priority",
+  "isActive",
+  "createdAt",
+  "updatedAt",
 ]);
 
 const STRUCTURED_NODE_FIELDS = new Set([
-  "id", "type", "name", "prefix", "apiType", "baseUrl",
-  "createdAt", "updatedAt",
+  "id",
+  "type",
+  "name",
+  "prefix",
+  "apiType",
+  "baseUrl",
+  "createdAt",
+  "updatedAt",
 ]);
 
-const STRUCTURED_POOL_FIELDS = new Set([
-  "id", "name", "proxyUrl", "type", "isActive", "createdAt", "updatedAt",
-]);
+const STRUCTURED_POOL_FIELDS = new Set(["id", "name", "proxyUrl", "type", "isActive", "createdAt", "updatedAt"]);
 
-const STRUCTURED_COMBO_FIELDS = new Set([
-  "id", "name", "createdAt", "updatedAt",
-]);
+const STRUCTURED_COMBO_FIELDS = new Set(["id", "name", "createdAt", "updatedAt"]);
 
 function pickExtraAsJson(obj, structured) {
   const extras = {};
@@ -158,22 +166,13 @@ function importConfigDb(db, data) {
     `);
     for (const k of data.apiKeys) {
       if (!k?.id || !k.key) continue;
-      stmt.run(
-        k.id,
-        k.name ?? null,
-        k.key,
-        k.machineId ?? null,
-        k.isActive === false ? 0 : 1,
-        k.createdAt || nowIso(),
-      );
+      stmt.run(k.id, k.name ?? null, k.key, k.machineId ?? null, k.isActive === false ? 0 : 1, k.createdAt || nowIso());
       imported++;
     }
   }
 
   if (data.modelAliases && typeof data.modelAliases === "object") {
-    const stmt = db.prepare(
-      "INSERT OR REPLACE INTO model_aliases (alias, target) VALUES (?, ?)",
-    );
+    const stmt = db.prepare("INSERT OR REPLACE INTO model_aliases (alias, target) VALUES (?, ?)");
     for (const [alias, target] of Object.entries(data.modelAliases)) {
       if (typeof target !== "string") continue;
       stmt.run(alias, target);
@@ -184,9 +183,7 @@ function importConfigDb(db, data) {
   // Removed MITM import block
 
   if (Array.isArray(data.customModels)) {
-    const stmt = db.prepare(
-      "INSERT OR IGNORE INTO custom_models (provider_alias, id, type, name) VALUES (?, ?, ?, ?)",
-    );
+    const stmt = db.prepare("INSERT OR IGNORE INTO custom_models (provider_alias, id, type, name) VALUES (?, ?, ?, ?)");
     for (const m of data.customModels) {
       if (!m?.providerAlias || !m?.id) continue;
       stmt.run(m.providerAlias, m.id, m.type || "llm", m.name || m.id);
@@ -195,9 +192,7 @@ function importConfigDb(db, data) {
   }
 
   if (data.settings && typeof data.settings === "object") {
-    const stmt = db.prepare(
-      "INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)",
-    );
+    const stmt = db.prepare("INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)");
     for (const [k, v] of Object.entries(data.settings)) {
       stmt.run(k, JSON.stringify(v));
       imported++;
@@ -205,9 +200,7 @@ function importConfigDb(db, data) {
   }
 
   if (data.pricing && typeof data.pricing === "object") {
-    const stmt = db.prepare(
-      "INSERT OR REPLACE INTO pricing (provider, model, data) VALUES (?, ?, ?)",
-    );
+    const stmt = db.prepare("INSERT OR REPLACE INTO pricing (provider, model, data) VALUES (?, ?, ?)");
     for (const [provider, models] of Object.entries(data.pricing)) {
       if (!models || typeof models !== "object") continue;
       for (const [model, priceObj] of Object.entries(models)) {
@@ -237,8 +230,19 @@ function importUsageDb(db, data) {
       const completion = t.completion_tokens ?? t.output_tokens ?? 0;
       const rest = {};
       for (const [k, v] of Object.entries(e)) {
-        if (!["timestamp", "provider", "model", "connectionId", "apiKey",
-              "endpoint", "status", "tokens", "cost"].includes(k)) {
+        if (
+          ![
+            "timestamp",
+            "provider",
+            "model",
+            "connectionId",
+            "apiKey",
+            "endpoint",
+            "status",
+            "tokens",
+            "cost",
+          ].includes(k)
+        ) {
           rest[k] = v;
         }
       }
@@ -261,9 +265,9 @@ function importUsageDb(db, data) {
   }
 
   if (typeof data.totalRequestsLifetime === "number") {
-    db.prepare(
-      "INSERT OR REPLACE INTO meta (key, value) VALUES ('totalRequestsLifetime', ?)",
-    ).run(String(data.totalRequestsLifetime));
+    db.prepare("INSERT OR REPLACE INTO meta (key, value) VALUES ('totalRequestsLifetime', ?)").run(
+      String(data.totalRequestsLifetime),
+    );
   }
 
   if (data.dailySummary && typeof data.dailySummary === "object") {
@@ -275,7 +279,9 @@ function importUsageDb(db, data) {
     for (const [dateKey, day] of Object.entries(data.dailySummary)) {
       if (!day || typeof day !== "object") continue;
       dayStmt.run(
-        dateKey, "day", "_",
+        dateKey,
+        "day",
+        "_",
         day.requests || 0,
         day.promptTokens || 0,
         day.completionTokens || 0,
@@ -288,7 +294,9 @@ function importUsageDb(db, data) {
         for (const [k, v] of Object.entries(obj)) {
           const { requests, promptTokens, completionTokens, cost, ...meta } = v || {};
           dayStmt.run(
-            dateKey, bucket, k,
+            dateKey,
+            bucket,
+            k,
             requests || 0,
             promptTokens || 0,
             completionTokens || 0,
@@ -316,9 +324,7 @@ function importRequestDetails(db, data) {
   let imported = 0;
   for (const r of data.records) {
     if (!r?.id) continue;
-    const latency = typeof r.latency === "number"
-      ? r.latency
-      : (r.latency?.total ?? r.latency?.totalMs ?? null);
+    const latency = typeof r.latency === "number" ? r.latency : (r.latency?.total ?? r.latency?.totalMs ?? null);
     const t = r.tokens || {};
     const rest = { ...r };
     delete rest.id;

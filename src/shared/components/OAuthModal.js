@@ -30,9 +30,7 @@ export default function OAuthModal({ isOpen, provider, providerInfo, onSuccess, 
   // Detect if running on localhost (client-side only)
   useEffect(() => {
     if (typeof window !== "undefined") {
-      setIsLocalhost(
-        window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1"
-      );
+      setIsLocalhost(window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1");
       setPlaceholderUrl(`${window.location.origin}/callback?code=...`);
     }
   }, []);
@@ -40,91 +38,97 @@ export default function OAuthModal({ isOpen, provider, providerInfo, onSuccess, 
   // Define all useCallback hooks BEFORE the useEffects that reference them
 
   // Exchange tokens
-  const exchangeTokens = useCallback(async (code, state) => {
-    if (!authData) return;
-    try {
-      const res = await fetch(`/api/oauth/${provider}/exchange`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          code,
-          redirectUri: authData.redirectUri,
-          codeVerifier: authData.codeVerifier,
-          state,
-          ...(oauthMeta ? { meta: oauthMeta } : {}),
-        }),
-      });
-
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error);
-
-      setStep("success");
-      onSuccess?.();
-    } catch (err) {
-      setError(err.message);
-      setStep("error");
-    }
-  }, [authData, provider, onSuccess]);
-
-  // Poll for device code token
-  const startPolling = useCallback(async (deviceCode, codeVerifier, interval, extraData) => {
-    pollingAbortRef.current = false;
-    setPolling(true);
-    const maxAttempts = 60;
-
-    for (let i = 0; i < maxAttempts; i++) {
-      // Check if polling should be aborted
-      if (pollingAbortRef.current) {
-        console.log("[OAuthModal] Polling aborted");
-        setPolling(false);
-        return;
-      }
-
-      await new Promise((r) => setTimeout(r, interval * 1000));
-
-      // Check again after sleep
-      if (pollingAbortRef.current) {
-        console.log("[OAuthModal] Polling aborted after sleep");
-        setPolling(false);
-        return;
-      }
-
+  const exchangeTokens = useCallback(
+    async (code, state) => {
+      if (!authData) return;
       try {
-        const res = await fetch(`/api/oauth/${provider}/poll`, {
+        const res = await fetch(`/api/oauth/${provider}/exchange`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ deviceCode, codeVerifier, extraData }),
+          body: JSON.stringify({
+            code,
+            redirectUri: authData.redirectUri,
+            codeVerifier: authData.codeVerifier,
+            state,
+            ...(oauthMeta ? { meta: oauthMeta } : {}),
+          }),
         });
 
         const data = await res.json();
+        if (!res.ok) throw new Error(data.error);
 
-        if (data.success) {
-          pollingAbortRef.current = true; // Stop polling immediately
-          setStep("success");
-          setPolling(false);
-          onSuccess?.();
-          return;
-        }
-
-        if (data.error === "expired_token" || data.error === "access_denied") {
-          throw new Error(data.errorDescription || data.error);
-        }
-
-        if (data.error === "slow_down") {
-          interval = Math.min(interval + 5, 30);
-        }
+        setStep("success");
+        onSuccess?.();
       } catch (err) {
         setError(err.message);
         setStep("error");
-        setPolling(false);
-        return;
       }
-    }
+    },
+    [authData, provider, onSuccess],
+  );
 
-    setError("Authorization timeout");
-    setStep("error");
-    setPolling(false);
-  }, [provider, onSuccess]);
+  // Poll for device code token
+  const startPolling = useCallback(
+    async (deviceCode, codeVerifier, interval, extraData) => {
+      pollingAbortRef.current = false;
+      setPolling(true);
+      const maxAttempts = 60;
+
+      for (let i = 0; i < maxAttempts; i++) {
+        // Check if polling should be aborted
+        if (pollingAbortRef.current) {
+          console.log("[OAuthModal] Polling aborted");
+          setPolling(false);
+          return;
+        }
+
+        await new Promise((r) => setTimeout(r, interval * 1000));
+
+        // Check again after sleep
+        if (pollingAbortRef.current) {
+          console.log("[OAuthModal] Polling aborted after sleep");
+          setPolling(false);
+          return;
+        }
+
+        try {
+          const res = await fetch(`/api/oauth/${provider}/poll`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ deviceCode, codeVerifier, extraData }),
+          });
+
+          const data = await res.json();
+
+          if (data.success) {
+            pollingAbortRef.current = true; // Stop polling immediately
+            setStep("success");
+            setPolling(false);
+            onSuccess?.();
+            return;
+          }
+
+          if (data.error === "expired_token" || data.error === "access_denied") {
+            throw new Error(data.errorDescription || data.error);
+          }
+
+          if (data.error === "slow_down") {
+            interval = Math.min(interval + 5, 30);
+          }
+        } catch (err) {
+          setError(err.message);
+          setStep("error");
+          setPolling(false);
+          return;
+        }
+      }
+
+      setError("Authorization timeout");
+      setStep("error");
+      setPolling(false);
+    },
+    [provider, onSuccess],
+  );
 
   // Start OAuth flow
   const startOAuthFlow = useCallback(async () => {
@@ -157,15 +161,16 @@ export default function OAuthModal({ isOpen, provider, providerInfo, onSuccess, 
         if (verifyUrl) window.open(verifyUrl, "_blank", "noopener,noreferrer");
 
         // Pass extraData for Kiro (contains _clientId, _clientSecret)
-        const extraData = provider === "kiro"
-          ? {
-              _clientId: data._clientId,
-              _clientSecret: data._clientSecret,
-              _region: data._region,
-              _authMethod: data._authMethod,
-              _startUrl: data._startUrl,
-            }
-          : null;
+        const extraData =
+          provider === "kiro"
+            ? {
+                _clientId: data._clientId,
+                _clientSecret: data._clientSecret,
+                _region: data._region,
+                _authMethod: data._authMethod,
+                _startUrl: data._startUrl,
+              }
+            : null;
         startPolling(data.device_code, data.codeVerifier, data.interval || 5, extraData);
         return;
       }
@@ -183,7 +188,9 @@ export default function OAuthModal({ isOpen, provider, providerInfo, onSuccess, 
       const authorizeUrl = new URL(`/api/oauth/${provider}/authorize`, window.location.origin);
       authorizeUrl.searchParams.set("redirect_uri", redirectUri);
       if (oauthMeta) {
-        Object.entries(oauthMeta).forEach(([k, v]) => { if (v) authorizeUrl.searchParams.set(k, v); });
+        Object.entries(oauthMeta).forEach(([k, v]) => {
+          if (v) authorizeUrl.searchParams.set(k, v);
+        });
       }
       const res = await fetch(authorizeUrl.toString());
       const data = await res.json();
@@ -295,7 +302,9 @@ export default function OAuthModal({ isOpen, provider, providerInfo, onSuccess, 
       setTimeout(tick, POLL_INTERVAL_MS);
     };
     setTimeout(tick, POLL_INTERVAL_MS);
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [authData, onSuccess]);
 
   // Listen for OAuth callback via multiple methods
@@ -328,7 +337,7 @@ export default function OAuthModal({ isOpen, provider, providerInfo, onSuccess, 
       const isLocalhost = event.origin.includes("localhost") || event.origin.includes("127.0.0.1");
       const isSameOrigin = event.origin === window.location.origin;
       if (!isLocalhost && !isSameOrigin) return;
-      
+
       if (event.data?.type === "oauth_callback") {
         handleCallback(event.data.data);
       }
@@ -422,9 +431,7 @@ export default function OAuthModal({ isOpen, provider, providerInfo, onSuccess, 
           <>
             {/* Option A: Auto via popup */}
             <div className="flex items-center gap-2 px-3 py-2 border border-border rounded-lg bg-sidebar/50">
-              <span className="material-symbols-outlined text-base text-primary animate-spin">
-                progress_activity
-              </span>
+              <span className="material-symbols-outlined text-base text-primary animate-spin">progress_activity</span>
               <span className="text-sm">Waiting for popup authorization…</span>
             </div>
 
@@ -441,7 +448,12 @@ export default function OAuthModal({ isOpen, provider, providerInfo, onSuccess, 
                 <p className="text-sm font-medium mb-2">Step 1: Open this URL in your browser</p>
                 <div className="flex gap-2">
                   <Input value={authData?.authUrl || ""} readOnly className="flex-1 font-mono text-xs" />
-                  <Button variant="secondary" icon={copied === "auth_url" ? "check" : "content_copy"} onClick={() => copy(authData?.authUrl, "auth_url")} disabled={!authData?.authUrl}>
+                  <Button
+                    variant="secondary"
+                    icon={copied === "auth_url" ? "check" : "content_copy"}
+                    onClick={() => copy(authData?.authUrl, "auth_url")}
+                    disabled={!authData?.authUrl}
+                  >
                     Copy
                   </Button>
                 </div>
@@ -476,9 +488,7 @@ export default function OAuthModal({ isOpen, provider, providerInfo, onSuccess, 
         {step === "waiting" && isDeviceCode && deviceData && (
           <>
             <div className="text-center py-4">
-              <p className="text-sm text-text-muted mb-4">
-                Visit the login URL below and authorize:
-              </p>
+              <p className="text-sm text-text-muted mb-4">Visit the login URL below and authorize:</p>
               <div className="bg-sidebar p-4 rounded-lg mb-4">
                 <p className="text-xs text-text-muted mb-1">Login URL</p>
                 <div className="flex items-center gap-2">
@@ -530,9 +540,7 @@ export default function OAuthModal({ isOpen, provider, providerInfo, onSuccess, 
               <span className="material-symbols-outlined text-3xl text-green-600">check_circle</span>
             </div>
             <h3 className="text-lg font-semibold mb-2">Connected Successfully!</h3>
-            <p className="text-sm text-text-muted mb-4">
-              Your {providerInfo.name} account has been connected.
-            </p>
+            <p className="text-sm text-text-muted mb-4">Your {providerInfo.name} account has been connected.</p>
             <Button onClick={handleClose} fullWidth>
               Done
             </Button>

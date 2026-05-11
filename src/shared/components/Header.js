@@ -49,8 +49,7 @@ const getPageInfo = (pathname) => {
   const providerMatch = pathname.match(/\/providers\/([^/]+)$/);
   if (providerMatch) {
     const providerId = providerMatch[1];
-    const providerInfo =
-      OAUTH_PROVIDERS[providerId] || APIKEY_PROVIDERS[providerId];
+    const providerInfo = OAUTH_PROVIDERS[providerId] || APIKEY_PROVIDERS[providerId];
     if (providerInfo) {
       return {
         title: providerInfo.name,
@@ -83,8 +82,7 @@ const getPageInfo = (pathname) => {
   if (pathname.includes("/usage"))
     return {
       title: "Usage & Analytics",
-      description:
-        "Monitor your API usage, token consumption, and request logs",
+      description: "Monitor your API usage, token consumption, and request logs",
       icon: "bar_chart",
       breadcrumbs: [],
     };
@@ -172,10 +170,7 @@ export default function Header({ onMenuClick, showMenuButton = true }) {
       {/* Mobile menu button */}
       <div className="flex items-center gap-3 lg:hidden shrink-0">
         {showMenuButton && (
-          <button
-            onClick={onMenuClick}
-            className="text-text-main hover:text-primary transition-colors"
-          >
+          <button onClick={onMenuClick} className="text-text-main hover:text-primary transition-colors">
             <span className="material-symbols-outlined">menu</span>
           </button>
         )}
@@ -186,20 +181,12 @@ export default function Header({ onMenuClick, showMenuButton = true }) {
         {breadcrumbs.length > 0 ? (
           <div className="flex items-center gap-2">
             {breadcrumbs.map((crumb, index) => (
-              <div
-                key={`${crumb.label}-${crumb.href || "current"}`}
-                className="flex items-center gap-2"
-              >
+              <div key={`${crumb.label}-${crumb.href || "current"}`} className="flex items-center gap-2">
                 {index > 0 && (
-                  <span className="material-symbols-outlined text-text-muted text-base">
-                    chevron_right
-                  </span>
+                  <span className="material-symbols-outlined text-text-muted text-base">chevron_right</span>
                 )}
                 {crumb.href ? (
-                  <Link
-                    href={crumb.href}
-                    className="text-text-muted hover:text-primary transition-colors"
-                  >
+                  <Link href={crumb.href} className="text-text-muted hover:text-primary transition-colors">
                     {crumb.label}
                   </Link>
                 ) : (
@@ -213,9 +200,9 @@ export default function Header({ onMenuClick, showMenuButton = true }) {
                         fallbackText={crumb.label.slice(0, 2).toUpperCase()}
                       />
                     )}
-              <h1 className="text-base lg:text-2xl font-semibold text-text-main tracking-tight truncate">
-                        {crumb.label}
-                      </h1>
+                    <h1 className="text-base lg:text-2xl font-semibold text-text-main tracking-tight truncate">
+                      {crumb.label}
+                    </h1>
                   </div>
                 )}
               </div>
@@ -224,20 +211,10 @@ export default function Header({ onMenuClick, showMenuButton = true }) {
         ) : title ? (
           <div>
             <div className="flex items-center gap-2">
-              {icon && (
-                <span className="material-symbols-outlined text-primary text-xl lg:text-2xl">
-                  {icon}
-                </span>
-              )}
-              <h1 className="text-base lg:text-2xl font-semibold tracking-tight truncate">
-                  {title}
-                </h1>
-              </div>
-              {description && (
-                <p className="hidden lg:block text-sm text-text-muted truncate">
-                  {description}
-                </p>
-            )}
+              {icon && <span className="material-symbols-outlined text-primary text-xl lg:text-2xl">{icon}</span>}
+              <h1 className="text-base lg:text-2xl font-semibold tracking-tight truncate">{title}</h1>
+            </div>
+            {description && <p className="hidden lg:block text-sm text-text-muted truncate">{description}</p>}
           </div>
         ) : null}
       </div>
@@ -270,7 +247,7 @@ function HeaderSearch() {
         value={query}
         onChange={(e) => setQuery(e.target.value)}
         placeholder={placeholder}
-        className="w-full h-8 pl-11 pr-7 rounded-lg border border-border bg-surface/60 text-sm focus:outline-none focus:border-primary/50 transition-colors"
+        className="w-full h-8 pl-9 pr-7 rounded-lg border border-border bg-surface/60 text-sm focus:outline-none focus:border-primary/50 transition-colors"
       />
       {query && (
         <button

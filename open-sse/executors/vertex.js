@@ -15,7 +15,7 @@ async function resolveProjectId(apiKey) {
 
   const res = await fetch(
     `https://aiplatform.googleapis.com/v1/publishers/google/models/__probe__:generateContent?key=${apiKey}`,
-    { method: "POST", headers: { "Content-Type": "application/json" }, body: "{}" }
+    { method: "POST", headers: { "Content-Type": "application/json" }, body: "{}" },
   );
   const json = await res.json().catch(() => null);
   const msg = json?.[0]?.error?.message || json?.error?.message || "";
@@ -48,7 +48,10 @@ export class VertexExecutor extends BaseExecutor {
 
     if (this.provider === "vertex-partner") {
       // Partner models require project_id in path regardless of auth method
-      if (!projectId) throw new Error("Vertex partner models require a project_id. Add it in providerSpecificData or use Service Account JSON.");
+      if (!projectId)
+        throw new Error(
+          "Vertex partner models require a project_id. Add it in providerSpecificData or use Service Account JSON.",
+        );
       const url = `https://aiplatform.googleapis.com/v1/projects/${projectId}/locations/global/endpoints/openapi/chat/completions`;
       return rawKey ? `${url}?key=${rawKey}` : url;
     }
@@ -108,7 +111,10 @@ export class VertexExecutor extends BaseExecutor {
     // vertex-partner with raw key: auto-resolve project_id if not provided
     if (this.provider === "vertex-partner" && !saJson && !credentials?.providerSpecificData?.projectId) {
       const projectId = await resolveProjectId(credentials.apiKey);
-      if (!projectId) throw new Error("Vertex: could not resolve project_id from API key. Please add it manually in provider settings.");
+      if (!projectId)
+        throw new Error(
+          "Vertex: could not resolve project_id from API key. Please add it manually in provider settings.",
+        );
       log?.debug?.("VERTEX", `Resolved project_id: ${projectId}`);
       credentials.providerSpecificData = { ...credentials.providerSpecificData, projectId };
     }
@@ -117,12 +123,16 @@ export class VertexExecutor extends BaseExecutor {
     const headers = this.buildHeaders(credentials, stream);
     const transformedBody = this.transformRequest(model, body, stream, credentials);
 
-    const response = await proxyAwareFetch(url, {
-      method: "POST",
-      headers,
-      body: JSON.stringify(transformedBody),
-      signal,
-    }, proxyOptions);
+    const response = await proxyAwareFetch(
+      url,
+      {
+        method: "POST",
+        headers,
+        body: JSON.stringify(transformedBody),
+        signal,
+      },
+      proxyOptions,
+    );
 
     return { response, url, headers, transformedBody };
   }

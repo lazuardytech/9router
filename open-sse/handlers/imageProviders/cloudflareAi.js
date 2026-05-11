@@ -8,14 +8,7 @@ const MULTIPART_MODELS = new Set([
   "@cf/black-forest-labs/flux-2-klein-9b",
 ]);
 
-const OPTIONAL_FIELDS = [
-  "negative_prompt",
-  "guidance",
-  "seed",
-  "num_steps",
-  "steps",
-  "strength",
-];
+const OPTIONAL_FIELDS = ["negative_prompt", "guidance", "seed", "num_steps", "steps", "strength"];
 
 function sizeToDimensions(size) {
   const match = /^(\d+)x(\d+)$/.exec(String(size || ""));
@@ -154,11 +147,8 @@ export default {
     return headers;
   },
 
-  buildBody: async (model, body) => (
-    MULTIPART_MODELS.has(model)
-      ? buildMultipartBody(body)
-      : await buildJsonBody(body)
-  ),
+  buildBody: async (model, body) =>
+    MULTIPART_MODELS.has(model) ? buildMultipartBody(body) : await buildJsonBody(body),
 
   async parseResponse(response) {
     const contentType = (response.headers.get("Content-Type") || "").toLowerCase();

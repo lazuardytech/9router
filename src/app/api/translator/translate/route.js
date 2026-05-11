@@ -58,9 +58,12 @@ export async function POST(request) {
 
         // Build URL + headers via executor (same as chatCore → executor.execute)
         const connections = await getProviderConnections({ provider });
-        const connection = connections.find(c => c.isActive !== false);
+        const connection = connections.find((c) => c.isActive !== false);
         if (!connection) {
-          return NextResponse.json({ success: false, error: `No active connection for provider: ${provider}` }, { status: 400 });
+          return NextResponse.json(
+            { success: false, error: `No active connection for provider: ${provider}` },
+            { status: 400 },
+          );
         }
 
         const credentials = {
@@ -69,7 +72,7 @@ export async function POST(request) {
           refreshToken: connection.refreshToken,
           copilotToken: connection.copilotToken,
           projectId: connection.projectId,
-          providerSpecificData: connection.providerSpecificData
+          providerSpecificData: connection.providerSpecificData,
         };
 
         const executor = getExecutor(provider);

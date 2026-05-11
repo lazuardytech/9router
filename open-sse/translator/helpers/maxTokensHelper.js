@@ -24,4 +24,3 @@ export function adjustMaxTokens(body) {
 
   return maxTokens;
 }
-

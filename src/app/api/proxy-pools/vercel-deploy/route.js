@@ -102,7 +102,7 @@ export async function POST(request) {
       const err = await deployRes.json().catch(() => ({}));
       return NextResponse.json(
         { error: err.error?.message || "Failed to create Vercel deployment" },
-        { status: deployRes.status }
+        { status: deployRes.status },
       );
     }
 

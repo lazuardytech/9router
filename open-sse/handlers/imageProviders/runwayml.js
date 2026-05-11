@@ -13,7 +13,7 @@ export default {
     const key = creds?.apiKey || creds?.accessToken;
     return {
       "Content-Type": "application/json",
-      "Authorization": `Bearer ${key}`,
+      Authorization: `Bearer ${key}`,
       "X-Runway-Version": "2024-11-06",
     };
   },

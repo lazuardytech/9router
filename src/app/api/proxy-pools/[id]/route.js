@@ -1,10 +1,5 @@
 import { NextResponse } from "next/server";
-import {
-  deleteProxyPool,
-  getProviderConnections,
-  getProxyPoolById,
-  updateProxyPool,
-} from "@/models";
+import { deleteProxyPool, getProviderConnections, getProxyPoolById, updateProxyPool } from "@/models";
 
 function normalizeProxyPoolUpdate(body = {}) {
   const updates = {};
@@ -110,7 +105,7 @@ export async function DELETE(request, { params }) {
           error: "Proxy pool is currently in use",
           boundConnectionCount,
         },
-        { status: 409 }
+        { status: 409 },
       );
     }
 

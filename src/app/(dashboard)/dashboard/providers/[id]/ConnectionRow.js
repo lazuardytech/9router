@@ -5,7 +5,19 @@ import PropTypes from "prop-types";
 import { Badge, Toggle } from "@/shared/components";
 import CooldownTimer from "./CooldownTimer";
 
-export default function ConnectionRow({ connection, proxyPools, isOAuth, isFirst, isLast, onMoveUp, onMoveDown, onToggleActive, onUpdateProxy, onEdit, onDelete }) {
+export default function ConnectionRow({
+  connection,
+  proxyPools,
+  isOAuth,
+  isFirst,
+  isLast,
+  onMoveUp,
+  onMoveDown,
+  onToggleActive,
+  onUpdateProxy,
+  onEdit,
+  onDelete,
+}) {
   const [showProxyDropdown, setShowProxyDropdown] = useState(false);
   const [updatingProxy, setUpdatingProxy] = useState(false);
   const proxyDropdownRef = useRef(null);
@@ -13,7 +25,9 @@ export default function ConnectionRow({ connection, proxyPools, isOAuth, isFirst
   const proxyPoolMap = new Map((proxyPools || []).map((pool) => [pool.id, pool]));
   const boundProxyPoolId = connection.providerSpecificData?.proxyPoolId || null;
   const boundProxyPool = boundProxyPoolId ? proxyPoolMap.get(boundProxyPoolId) : null;
-  const hasLegacyProxy = connection.providerSpecificData?.connectionProxyEnabled === true && !!connection.providerSpecificData?.connectionProxyUrl;
+  const hasLegacyProxy =
+    connection.providerSpecificData?.connectionProxyEnabled === true &&
+    !!connection.providerSpecificData?.connectionProxyUrl;
   const hasAnyProxy = !!boundProxyPoolId || hasLegacyProxy;
   const proxyDisplayText = boundProxyPool
     ? `Pool: ${boundProxyPool.name}`
@@ -67,26 +81,32 @@ export default function ConnectionRow({ connection, proxyPools, isOAuth, isFirst
 
   const isEmail = (v) => typeof v === "string" && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
   const displayName = isOAuth
-    ? (isEmail(connection.email) ? connection.email : (isEmail(connection.name) ? connection.name : (connection.name || connection.email || connection.displayName || "OAuth Account")))
+    ? isEmail(connection.email)
+      ? connection.email
+      : isEmail(connection.name)
+        ? connection.name
+        : connection.name || connection.email || connection.displayName || "OAuth Account"
     : connection.name;
 
   // Use useState + useEffect for impure Date.now() to avoid calling during render
   const [isCooldown, setIsCooldown] = useState(false);
 
   // Get earliest model lock timestamp (useEffect handles the Date.now() comparison)
-  const modelLockUntil = Object.entries(connection)
-    .filter(([k]) => k.startsWith("modelLock_"))
-    .map(([, v]) => v)
-    .filter(v => !!v)
-    .sort()[0] || null;
+  const modelLockUntil =
+    Object.entries(connection)
+      .filter(([k]) => k.startsWith("modelLock_"))
+      .map(([, v]) => v)
+      .filter((v) => !!v)
+      .sort()[0] || null;
 
   useEffect(() => {
     const checkCooldown = () => {
-      const until = Object.entries(connection)
-        .filter(([k]) => k.startsWith("modelLock_"))
-        .map(([, v]) => v)
-        .filter(v => v && new Date(v).getTime() > Date.now())
-        .sort()[0] || null;
+      const until =
+        Object.entries(connection)
+          .filter(([k]) => k.startsWith("modelLock_"))
+          .map(([, v]) => v)
+          .filter((v) => v && new Date(v).getTime() > Date.now())
+          .sort()[0] || null;
       setIsCooldown(!!until);
     };
 
@@ -98,19 +118,23 @@ export default function ConnectionRow({ connection, proxyPools, isOAuth, isFirst
   }, [modelLockUntil]);
 
   // Determine effective status (override unavailable if cooldown expired)
-  const effectiveStatus = (connection.testStatus === "unavailable" && !isCooldown)
-    ? "active"  // Cooldown expired u2192 treat as active
-    : connection.testStatus;
+  const effectiveStatus =
+    connection.testStatus === "unavailable" && !isCooldown
+      ? "active" // Cooldown expired u2192 treat as active
+      : connection.testStatus;
 
   const getStatusVariant = () => {
     if (connection.isActive === false) return "default";
     if (effectiveStatus === "active" || effectiveStatus === "success") return "success";
-    if (effectiveStatus === "error" || effectiveStatus === "expired" || effectiveStatus === "unavailable") return "error";
+    if (effectiveStatus === "error" || effectiveStatus === "expired" || effectiveStatus === "unavailable")
+      return "error";
     return "default";
   };
 
   return (
-    <div className={`group flex min-w-0 flex-col gap-3 rounded-lg p-2 transition-colors hover:bg-black/[0.02] dark:hover:bg-white/[0.02] sm:flex-row sm:items-center sm:justify-between ${connection.isActive === false ? "opacity-60" : ""}`}>
+    <div
+      className={`group flex min-w-0 flex-col gap-3 rounded-lg p-2 transition-colors hover:bg-black/[0.02] dark:hover:bg-white/[0.02] sm:flex-row sm:items-center sm:justify-between ${connection.isActive === false ? "opacity-60" : ""}`}
+    >
       <div className="flex min-w-0 flex-1 items-start gap-2 sm:items-center sm:gap-3">
         {/* Priority arrows */}
         <div className="flex shrink-0 flex-col">
@@ -129,14 +153,12 @@ export default function ConnectionRow({ connection, proxyPools, isOAuth, isFirst
             <span className="material-symbols-outlined text-sm">keyboard_arrow_down</span>
           </button>
         </div>
-        <span className="material-symbols-outlined shrink-0 text-base text-text-muted">
-          {isOAuth ? "lock" : "key"}
-        </span>
+        <span className="material-symbols-outlined shrink-0 text-base text-text-muted">{isOAuth ? "lock" : "key"}</span>
         <div className="flex-1 min-w-0">
           <p className="text-sm font-medium truncate">{displayName}</p>
           <div className="mt-1 flex min-w-0 flex-wrap items-center gap-1.5 sm:gap-2">
             <Badge variant={getStatusVariant()} size="sm" dot>
-              {connection.isActive === false ? "disabled" : (effectiveStatus || "Unknown")}
+              {connection.isActive === false ? "disabled" : effectiveStatus || "Unknown"}
             </Badge>
             {hasAnyProxy && (
               <Badge variant={proxyBadgeVariant} size="sm">
@@ -156,7 +178,10 @@ export default function ConnectionRow({ connection, proxyPools, isOAuth, isFirst
           </div>
           {hasAnyProxy && (
             <div className="mt-1 flex items-center gap-2 flex-wrap">
-              <span className="max-w-full truncate text-[11px] text-text-muted sm:max-w-[420px]" title={proxyDisplayText}>
+              <span
+                className="max-w-full truncate text-[11px] text-text-muted sm:max-w-[420px]"
+                title={proxyDisplayText}
+              >
                 {proxyDisplayText}
               </span>
               {maskedProxyUrl && (
@@ -209,11 +234,17 @@ export default function ConnectionRow({ connection, proxyPools, isOAuth, isFirst
               )}
             </div>
           )}
-          <button onClick={onEdit} className="flex flex-col items-center rounded px-2 py-1 text-text-muted hover:bg-black/5 hover:text-primary dark:hover:bg-white/5">
+          <button
+            onClick={onEdit}
+            className="flex flex-col items-center rounded px-2 py-1 text-text-muted hover:bg-black/5 hover:text-primary dark:hover:bg-white/5"
+          >
             <span className="material-symbols-outlined text-[18px]">edit</span>
             <span className="text-[10px] leading-tight">Edit</span>
           </button>
-          <button onClick={onDelete} className="flex flex-col items-center rounded px-2 py-1 text-red-500 hover:bg-red-500/10">
+          <button
+            onClick={onDelete}
+            className="flex flex-col items-center rounded px-2 py-1 text-red-500 hover:bg-red-500/10"
+          >
             <span className="material-symbols-outlined text-[18px]">delete</span>
             <span className="text-[10px] leading-tight">Delete</span>
           </button>
@@ -242,13 +273,15 @@ ConnectionRow.propTypes = {
     priority: PropTypes.number,
     globalPriority: PropTypes.number,
   }).isRequired,
-  proxyPools: PropTypes.arrayOf(PropTypes.shape({
-    id: PropTypes.string,
-    name: PropTypes.string,
-    proxyUrl: PropTypes.string,
-    noProxy: PropTypes.string,
-    isActive: PropTypes.bool,
-  })),
+  proxyPools: PropTypes.arrayOf(
+    PropTypes.shape({
+      id: PropTypes.string,
+      name: PropTypes.string,
+      proxyUrl: PropTypes.string,
+      noProxy: PropTypes.string,
+      isActive: PropTypes.bool,
+    }),
+  ),
   isOAuth: PropTypes.bool.isRequired,
   isFirst: PropTypes.bool.isRequired,
   isLast: PropTypes.bool.isRequired,
@@ -259,4 +292,3 @@ ConnectionRow.propTypes = {
   onEdit: PropTypes.func.isRequired,
   onDelete: PropTypes.func.isRequired,
 };
-

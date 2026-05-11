@@ -28,9 +28,7 @@ function UsageContent() {
   const [period, setPeriod] = useState("7d");
 
   const tabFromUrl = searchParams.get("tab");
-  const activeTab = tabFromUrl && ["overview", "logs", "details"].includes(tabFromUrl)
-    ? tabFromUrl
-    : "overview";
+  const activeTab = tabFromUrl && ["overview", "logs", "details"].includes(tabFromUrl) ? tabFromUrl : "overview";
 
   const handleTabChange = (value) => {
     if (value === activeTab) return;

@@ -107,7 +107,6 @@ export async function GET(request, { params }) {
   try {
     const { connectionId } = await params;
 
-
     // Get connection from database
     connection = await getProviderConnectionById(connectionId);
     if (!connection) {
@@ -116,9 +115,7 @@ export async function GET(request, { params }) {
 
     // Allow OAuth connections, plus whitelisted apikey providers (glm/minimax/...)
     const isOAuth = connection.authType === "oauth";
-    const isApikeyEligible =
-      connection.authType === "apikey" &&
-      USAGE_APIKEY_PROVIDERS.includes(connection.provider);
+    const isApikeyEligible = connection.authType === "apikey" && USAGE_APIKEY_PROVIDERS.includes(connection.provider);
 
     if (!isOAuth && !isApikeyEligible) {
       return Response.json({ message: "Usage not available for this connection" });
@@ -141,9 +138,12 @@ export async function GET(request, { params }) {
         connection = result.connection;
       } catch (refreshError) {
         console.error("[Usage API] Credential refresh failed:", refreshError);
-        return Response.json({
-          error: `Credential refresh failed: ${refreshError.message}`
-        }, { status: 401 });
+        return Response.json(
+          {
+            error: `Credential refresh failed: ${refreshError.message}`,
+          },
+          { status: 401 },
+        );
       }
     }
 

@@ -4,7 +4,7 @@ const LOG_LEVELS = {
   DEBUG: 0,
   INFO: 1,
   WARN: 2,
-  ERROR: 3
+  ERROR: 3,
 };
 
 // Configurable log level (default: INFO; set LOG_LEVEL=debug for verbose dev mode).
@@ -80,4 +80,3 @@ export function maskKey(key) {
   if (!key || key.length < 8) return "***";
   return `${key.slice(0, 4)}...${key.slice(-4)}`;
 }
-

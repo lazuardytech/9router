@@ -14,11 +14,7 @@ export function readNumbered(input) {
   const tail = lines.slice(lines.length - SMART_TRUNCATE_TAIL);
   const cut = lines.length - head.length - tail.length;
 
-  return [
-    ...head,
-    `... +${cut} lines truncated (file continues)`,
-    ...tail
-  ].join("\n");
+  return [...head, `... +${cut} lines truncated (file continues)`, ...tail].join("\n");
 }
 
 readNumbered.filterName = "read-numbered";

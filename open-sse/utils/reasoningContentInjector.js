@@ -6,13 +6,13 @@ const PLACEHOLDER = " ";
 
 // Provider-level rules: keyed by executor.provider
 const PROVIDER_RULES = {
-  deepseek: { scope: "all" }
+  deepseek: { scope: "all" },
 };
 
 // Model-level rules: matched by predicate against model id
 const MODEL_RULES = [
-  { match: m => m?.startsWith?.("kimi-"), scope: "toolCalls" },
-  { match: m => m?.startsWith?.("deepseek-"), scope: "all" }
+  { match: (m) => m?.startsWith?.("kimi-"), scope: "toolCalls" },
+  { match: (m) => m?.startsWith?.("deepseek-"), scope: "all" },
 ];
 
 function shouldInject(message, scope) {
@@ -25,15 +25,15 @@ function shouldInject(message, scope) {
 
 function applyRule(body, rule) {
   if (!rule || !body?.messages) return body;
-  const messages = body.messages.map(m =>
-    shouldInject(m, rule.scope) ? { ...m, reasoning_content: PLACEHOLDER } : m
+  const messages = body.messages.map((m) =>
+    shouldInject(m, rule.scope) ? { ...m, reasoning_content: PLACEHOLDER } : m,
   );
   return { ...body, messages };
 }
 
 export function injectReasoningContent({ provider, model, body }) {
   const providerRule = PROVIDER_RULES[provider];
-  const modelRule = MODEL_RULES.find(r => r.match(model));
+  const modelRule = MODEL_RULES.find((r) => r.match(model));
   const rule = providerRule || modelRule;
   return applyRule(body, rule);
 }

@@ -17,22 +17,27 @@ let cachedConfig = null;
 let cachedConfigTs = 0;
 
 async function getObservabilityConfig() {
-  if (cachedConfig && (Date.now() - cachedConfigTs) < CONFIG_CACHE_TTL_MS) {
+  if (cachedConfig && Date.now() - cachedConfigTs < CONFIG_CACHE_TTL_MS) {
     return cachedConfig;
   }
   try {
     const { getSettings } = await import("@/lib/localDb");
     const settings = await getSettings();
     const envEnabled = process.env.OBSERVABILITY_ENABLED !== "false";
-    const enabled = typeof settings.enableObservability === "boolean"
-      ? settings.enableObservability
-      : envEnabled;
+    const enabled = typeof settings.enableObservability === "boolean" ? settings.enableObservability : envEnabled;
     cachedConfig = {
       enabled,
-      maxRecords: settings.observabilityMaxRecords || parseInt(process.env.OBSERVABILITY_MAX_RECORDS || String(DEFAULT_MAX_RECORDS), 10),
-      batchSize: settings.observabilityBatchSize || parseInt(process.env.OBSERVABILITY_BATCH_SIZE || String(DEFAULT_BATCH_SIZE), 10),
-      flushIntervalMs: settings.observabilityFlushIntervalMs || parseInt(process.env.OBSERVABILITY_FLUSH_INTERVAL_MS || String(DEFAULT_FLUSH_INTERVAL_MS), 10),
-      maxJsonSize: (settings.observabilityMaxJsonSize || parseInt(process.env.OBSERVABILITY_MAX_JSON_SIZE || "5", 10)) * 1024,
+      maxRecords:
+        settings.observabilityMaxRecords ||
+        parseInt(process.env.OBSERVABILITY_MAX_RECORDS || String(DEFAULT_MAX_RECORDS), 10),
+      batchSize:
+        settings.observabilityBatchSize ||
+        parseInt(process.env.OBSERVABILITY_BATCH_SIZE || String(DEFAULT_BATCH_SIZE), 10),
+      flushIntervalMs:
+        settings.observabilityFlushIntervalMs ||
+        parseInt(process.env.OBSERVABILITY_FLUSH_INTERVAL_MS || String(DEFAULT_FLUSH_INTERVAL_MS), 10),
+      maxJsonSize:
+        (settings.observabilityMaxJsonSize || parseInt(process.env.OBSERVABILITY_MAX_JSON_SIZE || "5", 10)) * 1024,
     };
   } catch {
     cachedConfig = {
@@ -58,7 +63,7 @@ function sanitizeHeaders(headers) {
   const sensitiveKeys = ["authorization", "x-api-key", "cookie", "token", "api-key"];
   const sanitized = { ...headers };
   for (const key of Object.keys(sanitized)) {
-    if (sensitiveKeys.some(s => key.toLowerCase().includes(s))) {
+    if (sensitiveKeys.some((s) => key.toLowerCase().includes(s))) {
       delete sanitized[key];
     }
   }
@@ -95,9 +100,8 @@ function prepareRecord(item, maxSize) {
     response: truncateIfLarge(item.response || {}, maxSize),
   };
 
-  const latency = typeof item.latency === "number"
-    ? item.latency
-    : (item.latency?.total ?? item.latency?.totalMs ?? null);
+  const latency =
+    typeof item.latency === "number" ? item.latency : (item.latency?.total ?? item.latency?.totalMs ?? null);
   const t = item.tokens || {};
   return {
     id: item.id,
@@ -133,8 +137,16 @@ async function flushToDatabase() {
       for (const item of items) {
         const r = prepareRecord(item, config.maxJsonSize);
         insert.run(
-          r.id, r.timestamp, r.provider, r.model, r.connectionId, r.status,
-          r.latency_ms, r.prompt_tokens, r.completion_tokens, r.data,
+          r.id,
+          r.timestamp,
+          r.provider,
+          r.model,
+          r.connectionId,
+          r.status,
+          r.latency_ms,
+          r.prompt_tokens,
+          r.completion_tokens,
+          r.data,
         );
       }
       // Trim to maxRecords (keep newest).
@@ -164,7 +176,10 @@ export async function saveRequestDetail(detail) {
 
   if (writeBuffer.length >= config.batchSize) {
     await flushToDatabase();
-    if (flushTimer) { clearTimeout(flushTimer); flushTimer = null; }
+    if (flushTimer) {
+      clearTimeout(flushTimer);
+      flushTimer = null;
+    }
   } else if (!flushTimer) {
     flushTimer = setTimeout(() => {
       flushToDatabase().catch(() => {});
@@ -175,7 +190,9 @@ export async function saveRequestDetail(detail) {
 
 function rowToDetail(r) {
   let payload = {};
-  try { payload = JSON.parse(r.data || "{}"); } catch {}
+  try {
+    payload = JSON.parse(r.data || "{}");
+  } catch {}
   return {
     id: r.id,
     timestamp: r.timestamp,
@@ -197,18 +214,39 @@ function rowToDetail(r) {
 
 export async function getRequestDetails(filter = {}) {
   if (isCloud) {
-    return { details: [], pagination: { page: 1, pageSize: 50, totalItems: 0, totalPages: 0, hasNext: false, hasPrev: false } };
+    return {
+      details: [],
+      pagination: { page: 1, pageSize: 50, totalItems: 0, totalPages: 0, hasNext: false, hasPrev: false },
+    };
   }
   const db = getDatabase();
 
   const clauses = [];
   const params = [];
-  if (filter.provider) { clauses.push("provider = ?"); params.push(filter.provider); }
-  if (filter.model) { clauses.push("model = ?"); params.push(filter.model); }
-  if (filter.connectionId) { clauses.push("connection_id = ?"); params.push(filter.connectionId); }
-  if (filter.status) { clauses.push("status = ?"); params.push(filter.status); }
-  if (filter.startDate) { clauses.push("timestamp >= ?"); params.push(new Date(filter.startDate).toISOString()); }
-  if (filter.endDate) { clauses.push("timestamp <= ?"); params.push(new Date(filter.endDate).toISOString()); }
+  if (filter.provider) {
+    clauses.push("provider = ?");
+    params.push(filter.provider);
+  }
+  if (filter.model) {
+    clauses.push("model = ?");
+    params.push(filter.model);
+  }
+  if (filter.connectionId) {
+    clauses.push("connection_id = ?");
+    params.push(filter.connectionId);
+  }
+  if (filter.status) {
+    clauses.push("status = ?");
+    params.push(filter.status);
+  }
+  if (filter.startDate) {
+    clauses.push("timestamp >= ?");
+    params.push(new Date(filter.startDate).toISOString());
+  }
+  if (filter.endDate) {
+    clauses.push("timestamp <= ?");
+    params.push(new Date(filter.endDate).toISOString());
+  }
   const where = clauses.length ? `WHERE ${clauses.join(" AND ")}` : "";
 
   const countRow = db.prepare(`SELECT COUNT(*) AS c FROM request_details ${where}`).get(...params);
@@ -218,11 +256,13 @@ export async function getRequestDetails(filter = {}) {
   const pageSize = filter.pageSize || 50;
   const totalPages = Math.ceil(totalItems / pageSize);
 
-  const rows = db.prepare(`
+  const rows = db
+    .prepare(`
     SELECT * FROM request_details ${where}
     ORDER BY timestamp DESC
     LIMIT ? OFFSET ?
-  `).all(...params, pageSize, (page - 1) * pageSize);
+  `)
+    .all(...params, pageSize, (page - 1) * pageSize);
 
   return {
     details: rows.map(rowToDetail),
@@ -239,7 +279,10 @@ export async function getRequestDetailById(id) {
 
 // Graceful shutdown — flush pending buffer before exit.
 const _shutdownHandler = async () => {
-  if (flushTimer) { clearTimeout(flushTimer); flushTimer = null; }
+  if (flushTimer) {
+    clearTimeout(flushTimer);
+    flushTimer = null;
+  }
   if (writeBuffer.length > 0) await flushToDatabase();
 };
 

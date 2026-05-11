@@ -98,7 +98,7 @@ export async function PUT(request, { params }) {
       testStatus,
       lastError,
       lastErrorAt,
-      providerSpecificData
+      providerSpecificData,
     } = body;
 
     const existing = await getProviderConnectionById(id);
@@ -132,7 +132,7 @@ export async function PUT(request, { params }) {
         existing.providerSpecificData,
         providerSpecificData,
         proxyConfig.hasAnyProxyField,
-        proxyPoolResult.hasProxyPoolField
+        proxyPoolResult.hasProxyPoolField,
       )
     ) {
       updateData.providerSpecificData = {

@@ -55,7 +55,10 @@ export async function GET(request) {
       statsEmitter.on("pending", state.sendPending);
 
       state.keepalive = setInterval(() => {
-        if (state.closed) { clearInterval(state.keepalive); return; }
+        if (state.closed) {
+          clearInterval(state.keepalive);
+          return;
+        }
         try {
           controller.enqueue(encoder.encode(": ping\n\n"));
         } catch {

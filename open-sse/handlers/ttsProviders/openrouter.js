@@ -24,7 +24,7 @@ export default {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "Authorization": `Bearer ${credentials.apiKey}`,
+        Authorization: `Bearer ${credentials.apiKey}`,
         "HTTP-Referer": "https://endpoint-proxy.local",
         "X-Title": "Endpoint Proxy",
       },

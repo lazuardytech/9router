@@ -38,7 +38,7 @@ function sanitizeHeaders(headers) {
 function jsonResponse(payload, status = 200) {
   return new Response(JSON.stringify(payload), {
     status,
-    headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" }
+    headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },
   });
 }
 
@@ -48,7 +48,7 @@ function errorResult(status, error) {
     success: false,
     status,
     error,
-    response: jsonResponse({ error: { message: error, code: status } }, status)
+    response: jsonResponse({ error: { message: error, code: status } }, status),
   };
 }
 
@@ -71,8 +71,11 @@ async function tryDedicatedProvider({ provider, providerConfig, body, credential
 
   const params = {
     query: body.query,
-    searchType: body.search_type || (providerConfig.searchTypes?.[0] || "web"),
-    maxResults: Math.min(body.max_results || providerConfig.defaultMaxResults || 5, providerConfig.maxMaxResults || 100),
+    searchType: body.search_type || providerConfig.searchTypes?.[0] || "web",
+    maxResults: Math.min(
+      body.max_results || providerConfig.defaultMaxResults || 5,
+      providerConfig.maxMaxResults || 100,
+    ),
     token,
     country: body.country,
     language: body.language,
@@ -81,7 +84,7 @@ async function tryDedicatedProvider({ provider, providerConfig, body, credential
     domainFilter: body.domain_filter,
     contentOptions: body.content_options,
     providerOptions: body.provider_options,
-    providerSpecificData: credentials?.providerSpecificData
+    providerSpecificData: credentials?.providerSpecificData,
   };
 
   let url, init;
@@ -105,7 +108,11 @@ async function tryDedicatedProvider({ provider, providerConfig, body, credential
     if (!resp.ok) {
       const errText = await resp.text().catch(() => "");
       log?.error?.("SEARCH", `${provider.id} ${resp.status}: ${errText.slice(0, 200)}`);
-      return { success: false, status: resp.status, error: `${provider.id} returned ${resp.status}: ${errText.slice(0, 200)}` };
+      return {
+        success: false,
+        status: resp.status,
+        error: `${provider.id} returned ${resp.status}: ${errText.slice(0, 200)}`,
+      };
     }
     const data = await resp.json();
     const normalized = normalizeSearchResponse(provider.id, data, params.query, params.searchType);
@@ -120,9 +127,13 @@ async function tryDedicatedProvider({ provider, providerConfig, body, credential
         results,
         answer: null,
         usage: { queries_used: 1, search_cost_usd: providerConfig.costPerQuery || 0 },
-        metrics: { response_time_ms: duration, upstream_latency_ms: duration, total_results_available: normalized.totalResults },
-        errors: []
-      }
+        metrics: {
+          response_time_ms: duration,
+          upstream_latency_ms: duration,
+          total_results_available: normalized.totalResults,
+        },
+        errors: [],
+      },
     };
   } catch (err) {
     clearTimeout(timer);
@@ -161,7 +172,7 @@ export async function handleSearchCore({ body, provider, providerConfig, credent
       body: normalizedBody,
       credentials,
       log,
-      globalStartTime
+      globalStartTime,
     });
   } else if (provider.searchViaChat) {
     result = await handleChatSearch({
@@ -170,7 +181,7 @@ export async function handleSearchCore({ body, provider, providerConfig, credent
       maxResults: normalizedBody.max_results,
       model: provider.searchViaChat.defaultModel,
       credentials,
-      log
+      log,
     });
   } else {
     return errorResult(400, `Provider ${provider.id} does not support web search`);
@@ -192,7 +203,7 @@ export async function handleSearchCore({ body, provider, providerConfig, credent
       maxResults: normalizedBody.max_results,
       model: provider.searchViaChat.defaultModel,
       credentials,
-      log
+      log,
     });
     if (fallback.success) return successResult(fallback.data);
   }

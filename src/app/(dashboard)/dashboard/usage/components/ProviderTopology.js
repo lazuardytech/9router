@@ -2,12 +2,7 @@
 
 import { useMemo, useState, useEffect, useCallback, useRef } from "react";
 import PropTypes from "prop-types";
-import {
-  ReactFlow,
-  Handle,
-  Position,
-  Controls,
-} from "@xyflow/react";
+import { ReactFlow, Handle, Position, Controls } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 import { AI_PROVIDERS } from "@/shared/constants/providers";
 
@@ -48,24 +43,31 @@ function ProviderNode({ data }) {
         style={{ backgroundColor: `${color}15` }}
       >
         {!imgError ? (
-          <img src={imageUrl} alt={label} className="w-6 h-6 rounded-sm object-contain" onError={() => setImgError(true)} />
+          <img
+            src={imageUrl}
+            alt={label}
+            className="w-6 h-6 rounded-sm object-contain"
+            onError={() => setImgError(true)}
+          />
         ) : (
-          <span className="text-sm font-bold" style={{ color }}>{textIcon}</span>
+          <span className="text-sm font-bold" style={{ color }}>
+            {textIcon}
+          </span>
         )}
       </div>
 
       {/* Provider name */}
-      <span
-        className="text-base font-medium truncate"
-        style={{ color: active ? color : "var(--color-text)" }}
-      >
+      <span className="text-base font-medium truncate" style={{ color: active ? color : "var(--color-text)" }}>
         {label}
       </span>
 
       {/* Active indicator */}
       {active && (
         <span className="relative flex h-2 w-2 shrink-0">
-          <span className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75" style={{ backgroundColor: color }} />
+          <span
+            className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75"
+            style={{ backgroundColor: color }}
+          />
           <span className="relative inline-flex rounded-full h-2 w-2" style={{ backgroundColor: color }} />
         </span>
       )}
@@ -163,14 +165,18 @@ function buildLayout(providers, activeSet, lastSet, errorSet) {
 
     // Pick router handle closest to the node direction
     let sourceHandle, targetHandle;
-    if (Math.abs(angle + Math.PI / 2) < Math.PI / 4 || Math.abs(angle - 3 * Math.PI / 2) < Math.PI / 4) {
-      sourceHandle = "top"; targetHandle = "bottom";
+    if (Math.abs(angle + Math.PI / 2) < Math.PI / 4 || Math.abs(angle - (3 * Math.PI) / 2) < Math.PI / 4) {
+      sourceHandle = "top";
+      targetHandle = "bottom";
     } else if (Math.abs(angle - Math.PI / 2) < Math.PI / 4) {
-      sourceHandle = "bottom"; targetHandle = "top";
+      sourceHandle = "bottom";
+      targetHandle = "top";
     } else if (cx > 0) {
-      sourceHandle = "right"; targetHandle = "left";
+      sourceHandle = "right";
+      targetHandle = "left";
     } else {
-      sourceHandle = "left"; targetHandle = "right";
+      sourceHandle = "left";
+      targetHandle = "right";
     }
 
     nodes.push({
@@ -195,11 +201,21 @@ function buildLayout(providers, activeSet, lastSet, errorSet) {
   return { nodes, edges };
 }
 
-export default function ProviderTopology({ providers = [], activeRequests = [], lastProvider = "", errorProvider = "" }) {
+export default function ProviderTopology({
+  providers = [],
+  activeRequests = [],
+  lastProvider = "",
+  errorProvider = "",
+}) {
   // Serialize to stable string keys so useMemo only re-runs when values actually change
   const activeKey = useMemo(
-    () => activeRequests.map((r) => r.provider?.toLowerCase()).filter(Boolean).sort().join(","),
-    [activeRequests]
+    () =>
+      activeRequests
+        .map((r) => r.provider?.toLowerCase())
+        .filter(Boolean)
+        .sort()
+        .join(","),
+    [activeRequests],
   );
   const lastKey = lastProvider?.toLowerCase() || "";
   const errorKey = errorProvider?.toLowerCase() || "";
@@ -241,13 +257,17 @@ export default function ProviderTopology({ providers = [], activeRequests = [], 
 
   const { nodes, edges } = useMemo(
     () => buildLayout(providers, activeSet, lastSet, errorSet),
-    [providers, activeSet, lastKey, errorKey]
+    [providers, activeSet, lastKey, errorKey],
   );
 
   // Stable key — only remount when provider list changes
   const providersKey = useMemo(
-    () => providers.map((p) => p.provider).sort().join(","),
-    [providers]
+    () =>
+      providers
+        .map((p) => p.provider)
+        .sort()
+        .join(","),
+    [providers],
   );
 
   const rfInstance = useRef(null);
@@ -278,11 +298,12 @@ export default function ProviderTopology({ providers = [], activeRequests = [], 
   }, [nodes.length]);
 
   return (
-    <div ref={containerRef} className="h-[320px] w-full min-w-0 rounded-lg border border-border bg-bg-subtle/30 sm:h-[480px]">
+    <div
+      ref={containerRef}
+      className="h-[320px] w-full min-w-0 rounded-lg border border-border bg-bg-subtle/30 sm:h-[480px]"
+    >
       {providers.length === 0 ? (
-        <div className="h-full flex items-center justify-center text-text-muted text-sm">
-          No providers connected
-        </div>
+        <div className="h-full flex items-center justify-center text-text-muted text-sm">No providers connected</div>
       ) : (
         <ReactFlow
           key={providersKey}
@@ -312,16 +333,20 @@ export default function ProviderTopology({ providers = [], activeRequests = [], 
 }
 
 ProviderTopology.propTypes = {
-  providers: PropTypes.arrayOf(PropTypes.shape({
-    id: PropTypes.string,
-    provider: PropTypes.string,
-    name: PropTypes.string,
-  })),
-  activeRequests: PropTypes.arrayOf(PropTypes.shape({
-    provider: PropTypes.string,
-    model: PropTypes.string,
-    account: PropTypes.string,
-  })),
+  providers: PropTypes.arrayOf(
+    PropTypes.shape({
+      id: PropTypes.string,
+      provider: PropTypes.string,
+      name: PropTypes.string,
+    }),
+  ),
+  activeRequests: PropTypes.arrayOf(
+    PropTypes.shape({
+      provider: PropTypes.string,
+      model: PropTypes.string,
+      account: PropTypes.string,
+    }),
+  ),
   lastProvider: PropTypes.string,
   errorProvider: PropTypes.string,
 };

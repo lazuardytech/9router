@@ -52,7 +52,10 @@ export async function handleImageGeneration(request) {
     const comboStrategies = settings.comboStrategies || {};
     const comboStrategy = comboStrategies[modelStr]?.fallbackStrategy || settings.comboStrategy || "fallback";
     const comboStickyLimit = settings.comboStickyRoundRobinLimit;
-    log.info("IMAGE", `Combo "${modelStr}" with ${comboModels.length} models (strategy: ${comboStrategy}, sticky: ${comboStickyLimit})`);
+    log.info(
+      "IMAGE",
+      `Combo "${modelStr}" with ${comboModels.length} models (strategy: ${comboStrategy}, sticky: ${comboStickyLimit})`,
+    );
     return handleComboChat({
       body,
       models: comboModels,
@@ -97,7 +100,12 @@ async function handleSingleModelImage(body, modelStr, { wantsStream, binaryOutpu
       if (credentials?.allRateLimited) {
         const errorMsg = lastError || credentials.lastError || "Unavailable";
         const status = lastStatus || Number(credentials.lastErrorCode) || HTTP_STATUS.SERVICE_UNAVAILABLE;
-        return unavailableResponse(status, `[${provider}/${model}] ${errorMsg}`, credentials.retryAfter, credentials.retryAfterHuman);
+        return unavailableResponse(
+          status,
+          `[${provider}/${model}] ${errorMsg}`,
+          credentials.retryAfter,
+          credentials.retryAfterHuman,
+        );
       }
       if (excludeConnectionIds.size === 0) {
         return errorResponse(HTTP_STATUS.BAD_REQUEST, `No credentials for provider: ${provider}`);
@@ -118,17 +126,23 @@ async function handleSingleModelImage(body, modelStr, { wantsStream, binaryOutpu
           accessToken: newCreds.accessToken,
           refreshToken: newCreds.refreshToken,
           providerSpecificData: newCreds.providerSpecificData,
-          testStatus: "active"
+          testStatus: "active",
         });
       },
       onRequestSuccess: async () => {
         await clearAccountError(credentials.connectionId, credentials, model);
-      }
+      },
     });
 
     if (result.success) return result.response;
 
-    const { shouldFallback } = await markAccountUnavailable(credentials.connectionId, result.status, result.error, provider, model);
+    const { shouldFallback } = await markAccountUnavailable(
+      credentials.connectionId,
+      result.status,
+      result.error,
+      provider,
+      model,
+    );
 
     if (shouldFallback) {
       excludeConnectionIds.add(credentials.connectionId);

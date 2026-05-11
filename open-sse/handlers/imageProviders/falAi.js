@@ -8,7 +8,7 @@ export default {
   buildUrl: (model) => `${BASE_URL}/${model}`,
   buildHeaders: (creds) => {
     const key = creds?.apiKey || creds?.accessToken;
-    return { "Content-Type": "application/json", "Authorization": `Key ${key}` };
+    return { "Content-Type": "application/json", Authorization: `Key ${key}` };
   },
   buildBody: (_model, body) => {
     const req = { prompt: body.prompt, num_images: body.n || 1 };
@@ -35,7 +35,9 @@ export default {
   normalize: (responseBody) => {
     const images = Array.isArray(responseBody.images)
       ? responseBody.images
-      : (responseBody.image ? [responseBody.image] : []);
+      : responseBody.image
+        ? [responseBody.image]
+        : [];
     return { created: nowSec(), data: images.map((img) => ({ url: img.url || img })) };
   },
 };

@@ -30,11 +30,7 @@ export default function CooldownTimer({ until }) {
 
   if (!remaining) return null;
 
-  return (
-    <span className="text-xs text-orange-500 font-mono">
-      ⏱ {remaining}
-    </span>
-  );
+  return <span className="text-xs text-orange-500 font-mono">⏱ {remaining}</span>;
 }
 
 CooldownTimer.propTypes = {

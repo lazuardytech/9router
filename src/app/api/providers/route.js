@@ -7,7 +7,14 @@ import {
   getProxyPoolById,
 } from "@/models";
 import { APIKEY_PROVIDERS } from "@/shared/constants/config";
-import { AI_PROVIDERS, FREE_TIER_PROVIDERS, WEB_COOKIE_PROVIDERS, isOpenAICompatibleProvider, isAnthropicCompatibleProvider, isCustomEmbeddingProvider } from "@/shared/constants/providers";
+import {
+  AI_PROVIDERS,
+  FREE_TIER_PROVIDERS,
+  WEB_COOKIE_PROVIDERS,
+  isOpenAICompatibleProvider,
+  isAnthropicCompatibleProvider,
+  isCustomEmbeddingProvider,
+} from "@/shared/constants/providers";
 import { normalizeProviderId, normalizeProviderSpecificData } from "@/lib/providerNormalization";
 
 export const dynamic = "force-dynamic";
@@ -58,14 +65,12 @@ export async function GET() {
       for (const node of nodes) {
         if (node.id && node.name) nodeNameMap[node.id] = node.name;
       }
-    } catch { }
+    } catch {}
 
     // Hide sensitive fields, enrich name for compatible providers
-    const safeConnections = connections.map(c => {
+    const safeConnections = connections.map((c) => {
       const isCompatible = isOpenAICompatibleProvider(c.provider) || isAnthropicCompatibleProvider(c.provider);
-      const name = isCompatible
-        ? (nodeNameMap[c.provider] || c.providerSpecificData?.nodeName || c.provider)
-        : c.name;
+      const name = isCompatible ? nodeNameMap[c.provider] || c.providerSpecificData?.nodeName || c.provider : c.name;
       return {
         ...c,
         name,
@@ -102,7 +107,8 @@ export async function POST(request) {
 
     // Validation
     const isWebCookieProvider = !!WEB_COOKIE_PROVIDERS[provider];
-    const isValidProvider = APIKEY_PROVIDERS[provider] ||
+    const isValidProvider =
+      APIKEY_PROVIDERS[provider] ||
       FREE_TIER_PROVIDERS[provider] ||
       isWebCookieProvider ||
       isOpenAICompatibleProvider(provider) ||
@@ -113,7 +119,10 @@ export async function POST(request) {
       return NextResponse.json({ error: "Invalid provider" }, { status: 400 });
     }
     if (!apiKey && provider !== "ollama-local") {
-      return NextResponse.json({ error: `${isWebCookieProvider ? "Cookie value" : "API Key"} is required` }, { status: 400 });
+      return NextResponse.json(
+        { error: `${isWebCookieProvider ? "Cookie value" : "API Key"} is required` },
+        { status: 400 },
+      );
     }
     const connectionName = name || displayName || AI_PROVIDERS[provider]?.name;
     if (!connectionName) {
@@ -130,7 +139,10 @@ export async function POST(request) {
 
       const existingConnections = await getProviderConnections({ provider });
       if (existingConnections.length > 0) {
-        return NextResponse.json({ error: "Only one connection is allowed for this OpenAI Compatible node" }, { status: 400 });
+        return NextResponse.json(
+          { error: "Only one connection is allowed for this OpenAI Compatible node" },
+          { status: 400 },
+        );
       }
 
       providerSpecificData = {
@@ -147,7 +159,10 @@ export async function POST(request) {
 
       const existingConnections = await getProviderConnections({ provider });
       if (existingConnections.length > 0) {
-        return NextResponse.json({ error: "Only one connection is allowed for this Anthropic Compatible node" }, { status: 400 });
+        return NextResponse.json(
+          { error: "Only one connection is allowed for this Anthropic Compatible node" },
+          { status: 400 },
+        );
       }
 
       providerSpecificData = {
@@ -163,7 +178,10 @@ export async function POST(request) {
 
       const existingConnections = await getProviderConnections({ provider });
       if (existingConnections.length > 0) {
-        return NextResponse.json({ error: "Only one connection is allowed for this Custom Embedding node" }, { status: 400 });
+        return NextResponse.json(
+          { error: "Only one connection is allowed for this Custom Embedding node" },
+          { status: 400 },
+        );
       }
 
       providerSpecificData = {

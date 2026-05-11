@@ -47,8 +47,8 @@ function makeBigDiff(fileCount = 2, linesPerFile = 60) {
 async function sendChat(body) {
   return fetch(`${BASE}/v1/chat/completions`, {
     method: "POST",
-    headers: { "content-type": "application/json", "authorization": `Bearer ${API_KEY}` },
-    body: JSON.stringify(body)
+    headers: { "content-type": "application/json", authorization: `Bearer ${API_KEY}` },
+    body: JSON.stringify(body),
   });
 }
 
@@ -59,17 +59,17 @@ async function waitForRtkLine({ minBytes, filterName, timeoutMs = 5000 }) {
   while (Date.now() - start < timeoutMs) {
     const text = readLogSince(startOffset);
     const matches = [...text.matchAll(/\[RTK\] saved (\d+)B \/ (\d+)B \(([\d.]+)%\) via \[([\w,-]+)\] hits=(\d+)/g)];
-    const mine = matches.find(m => Number(m[2]) >= minBytes && m[4].includes(filterName));
+    const mine = matches.find((m) => Number(m[2]) >= minBytes && m[4].includes(filterName));
     if (mine) {
       return {
         saved: Number(mine[1]),
         total: Number(mine[2]),
         pct: Number(mine[3]),
         filters: mine[4],
-        hits: Number(mine[5])
+        hits: Number(mine[5]),
       };
     }
-    await new Promise(r => setTimeout(r, 200));
+    await new Promise((r) => setTimeout(r, 200));
   }
   return null;
 }
@@ -85,31 +85,37 @@ function chatBodyWithDiff(model, diff) {
       {
         role: "assistant",
         content: null,
-        tool_calls: [{ id: "call_1", type: "function", function: { name: "Bash", arguments: JSON.stringify({ command: "git diff" }) } }]
+        tool_calls: [
+          {
+            id: "call_1",
+            type: "function",
+            function: { name: "Bash", arguments: JSON.stringify({ command: "git diff" }) },
+          },
+        ],
       },
       { role: "tool", tool_call_id: "call_1", content: diff },
-      { role: "user", content: "ok" }
-    ]
+      { role: "user", content: "ok" },
+    ],
   };
 }
 
 // Matrix of routes to cover — one entry per translator target format.
 const ROUTES = [
-  { name: "claude (cc/* → openai→claude)",        model: "cc/claude-opus-4-7" },
+  { name: "claude (cc/* → openai→claude)", model: "cc/claude-opus-4-7" },
   { name: "codex (cx/* → openai→openai-responses)", model: "cx/gpt-5.4" },
   { name: "antigravity (ag/* → openai→antigravity)", model: "ag/gemini-3-flash" },
-  { name: "cursor (cu/* → openai→cursor)",         model: "cu/claude-4.5-sonnet" },
-  { name: "kiro (kr/* → openai→kiro)",             model: "kr/claude-sonnet-4.5" },
-  { name: "gemini (gemini/* → openai→gemini)",     model: "gemini/gemini-2.5-flash" },
+  { name: "cursor (cu/* → openai→cursor)", model: "cu/claude-4.5-sonnet" },
+  { name: "kiro (kr/* → openai→kiro)", model: "kr/claude-sonnet-4.5" },
+  { name: "gemini (gemini/* → openai→gemini)", model: "gemini/gemini-2.5-flash" },
   { name: "deepseek (deepseek/* → openai, passthrough)", model: "deepseek/deepseek-chat" },
-  { name: "ollama (ollama/* → openai→ollama)",     model: "ollama/gpt-oss:120b" },
+  { name: "ollama (ollama/* → openai→ollama)", model: "ollama/gpt-oss:120b" },
 ];
 
 maybe("RTK multi-provider E2E", () => {
   it("server reachable and rtkEnabled=true", async () => {
     const health = await fetch(`${BASE}/api/health`);
     expect(health.ok).toBe(true);
-    const settings = await fetch(`${BASE}/api/settings`).then(r => r.json());
+    const settings = await fetch(`${BASE}/api/settings`).then((r) => r.json());
     expect(settings.rtkEnabled).toBe(true);
   });
 

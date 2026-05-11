@@ -23,7 +23,7 @@ export function searchList(input) {
   const byDir = new Map();
   for (const p of paths) {
     const slash = p.lastIndexOf("/");
-    const dir = slash === -1 ? "." : (p.slice(0, slash) || "/");
+    const dir = slash === -1 ? "." : p.slice(0, slash) || "/";
     const name = slash === -1 ? p : p.slice(slash + 1);
     if (!byDir.has(dir)) byDir.set(dir, []);
     byDir.get(dir).push(name);

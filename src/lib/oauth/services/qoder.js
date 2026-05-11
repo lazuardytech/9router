@@ -32,9 +32,7 @@ export class QoderService {
    * Exchange authorization code for tokens
    */
   async exchangeCode(code, redirectUri) {
-    const basicAuth = Buffer.from(
-      `${this.config.clientId}:${this.config.clientSecret}`
-    ).toString("base64");
+    const basicAuth = Buffer.from(`${this.config.clientId}:${this.config.clientSecret}`).toString("base64");
 
     const response = await fetch(this.config.tokenUrl, {
       method: "POST",
@@ -64,9 +62,7 @@ export class QoderService {
    * Refresh access token using refresh token
    */
   async refreshToken(refreshToken) {
-    const basicAuth = Buffer.from(
-      `${this.config.clientId}:${this.config.clientSecret}`
-    ).toString("base64");
+    const basicAuth = Buffer.from(`${this.config.clientId}:${this.config.clientSecret}`).toString("base64");
 
     const response = await fetch(this.config.tokenUrl, {
       method: "POST",
@@ -95,10 +91,9 @@ export class QoderService {
    * Get user info from Qoder
    */
   async getUserInfo(accessToken) {
-    const response = await fetch(
-      `${this.config.userInfoUrl}?accessToken=${encodeURIComponent(accessToken)}`,
-      { headers: { Accept: "application/json" } }
-    );
+    const response = await fetch(`${this.config.userInfoUrl}?accessToken=${encodeURIComponent(accessToken)}`, {
+      headers: { Accept: "application/json" },
+    });
 
     if (!response.ok) {
       const error = await response.text();

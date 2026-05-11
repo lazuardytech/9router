@@ -1,7 +1,4 @@
-import {
-  extractApiKey, isValidApiKey,
-  getProviderCredentials, markAccountUnavailable,
-} from "../services/auth.js";
+import { extractApiKey, isValidApiKey, getProviderCredentials, markAccountUnavailable } from "../services/auth.js";
 import { getSettings } from "@/lib/localDb";
 import { getModelInfo } from "../services/model.js";
 import { handleSttCore } from "open-sse/handlers/sttCore.js";
@@ -14,7 +11,7 @@ import * as log from "../utils/logger.js";
 const CREDENTIALED_PROVIDERS = new Set(
   Object.entries(AI_PROVIDERS)
     .filter(([, p]) => p.serviceKinds?.includes("stt") && !p.noAuth && p.sttConfig?.authType !== "none")
-    .map(([id]) => id)
+    .map(([id]) => id),
 );
 
 export async function handleStt(request) {
@@ -64,9 +61,15 @@ export async function handleStt(request) {
       if (credentials?.allRateLimited) {
         const msg = lastError || credentials.lastError || "Unavailable";
         const status = lastStatus || Number(credentials.lastErrorCode) || HTTP_STATUS.SERVICE_UNAVAILABLE;
-        return unavailableResponse(status, `[${provider}/${model}] ${msg}`, credentials.retryAfter, credentials.retryAfterHuman);
+        return unavailableResponse(
+          status,
+          `[${provider}/${model}] ${msg}`,
+          credentials.retryAfter,
+          credentials.retryAfterHuman,
+        );
       }
-      if (excludeConnectionIds.size === 0) return errorResponse(HTTP_STATUS.BAD_REQUEST, `No credentials for provider: ${provider}`);
+      if (excludeConnectionIds.size === 0)
+        return errorResponse(HTTP_STATUS.BAD_REQUEST, `No credentials for provider: ${provider}`);
       return errorResponse(lastStatus || HTTP_STATUS.SERVICE_UNAVAILABLE, lastError || "All accounts unavailable");
     }
 
@@ -76,7 +79,13 @@ export async function handleStt(request) {
 
     if (result.success) return result.response;
 
-    const { shouldFallback } = await markAccountUnavailable(credentials.connectionId, result.status, result.error, provider, model);
+    const { shouldFallback } = await markAccountUnavailable(
+      credentials.connectionId,
+      result.status,
+      result.error,
+      provider,
+      model,
+    );
     if (shouldFallback) {
       excludeConnectionIds.add(credentials.connectionId);
       lastError = result.error;

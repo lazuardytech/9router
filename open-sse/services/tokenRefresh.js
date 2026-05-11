@@ -122,13 +122,23 @@ export async function refreshClaudeOAuthToken(refreshToken, log) {
 
     if (!response.ok) {
       const errorText = await response.text();
-      log?.error?.("TOKEN_REFRESH", "Failed to refresh Claude OAuth token", { status: response.status, error: errorText });
+      log?.error?.("TOKEN_REFRESH", "Failed to refresh Claude OAuth token", {
+        status: response.status,
+        error: errorText,
+      });
       return null;
     }
 
     const tokens = await response.json();
-    log?.info?.("TOKEN_REFRESH", "Successfully refreshed Claude OAuth token", { hasNewAccessToken: !!tokens.access_token, expiresIn: tokens.expires_in });
-    return { accessToken: tokens.access_token, refreshToken: tokens.refresh_token || refreshToken, expiresIn: tokens.expires_in };
+    log?.info?.("TOKEN_REFRESH", "Successfully refreshed Claude OAuth token", {
+      hasNewAccessToken: !!tokens.access_token,
+      expiresIn: tokens.expires_in,
+    });
+    return {
+      accessToken: tokens.access_token,
+      refreshToken: tokens.refresh_token || refreshToken,
+      expiresIn: tokens.expires_in,
+    };
   } catch (error) {
     log?.error?.("TOKEN_REFRESH", `Network error refreshing Claude token: ${error.message}`);
     return null;
@@ -161,8 +171,15 @@ export async function refreshGoogleToken(refreshToken, clientId, clientSecret, l
     }
 
     const tokens = await response.json();
-    log?.info?.("TOKEN_REFRESH", "Successfully refreshed Google token", { hasNewAccessToken: !!tokens.access_token, expiresIn: tokens.expires_in });
-    return { accessToken: tokens.access_token, refreshToken: tokens.refresh_token || refreshToken, expiresIn: tokens.expires_in };
+    log?.info?.("TOKEN_REFRESH", "Successfully refreshed Google token", {
+      hasNewAccessToken: !!tokens.access_token,
+      expiresIn: tokens.expires_in,
+    });
+    return {
+      accessToken: tokens.access_token,
+      refreshToken: tokens.refresh_token || refreshToken,
+      expiresIn: tokens.expires_in,
+    };
   } catch (error) {
     log?.error?.("TOKEN_REFRESH", `Network error refreshing Google token: ${error.message}`);
     return null;
@@ -202,9 +219,7 @@ export async function refreshQwenToken(refreshToken, log) {
         accessToken: tokens.access_token,
         refreshToken: tokens.refresh_token || refreshToken,
         expiresIn: tokens.expires_in,
-        providerSpecificData: tokens.resource_url
-          ? { resourceUrl: tokens.resource_url }
-          : undefined,
+        providerSpecificData: tokens.resource_url ? { resourceUrl: tokens.resource_url } : undefined,
       };
     } else {
       const errorText = await response.text().catch(() => "");
@@ -231,63 +246,63 @@ export async function refreshQwenToken(refreshToken, log) {
  */
 export async function refreshCodexToken(refreshToken, log) {
   try {
-  const response = await fetch(OAUTH_ENDPOINTS.openai.token, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/x-www-form-urlencoded",
-      Accept: "application/json",
-    },
-    body: new URLSearchParams({
-      grant_type: "refresh_token",
-      refresh_token: refreshToken,
-      client_id: PROVIDERS.codex.clientId,
-      scope: "openid profile email offline_access",
-    }),
-  });
+    const response = await fetch(OAUTH_ENDPOINTS.openai.token, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded",
+        Accept: "application/json",
+      },
+      body: new URLSearchParams({
+        grant_type: "refresh_token",
+        refresh_token: refreshToken,
+        client_id: PROVIDERS.codex.clientId,
+        scope: "openid profile email offline_access",
+      }),
+    });
 
-  if (!response.ok) {
-    const errorText = await response.text();
+    if (!response.ok) {
+      const errorText = await response.text();
 
-    // Detect unrecoverable errors (token reused/expired) — Auth0 revokes whole family on retry
-    let errorCode = null;
-    try {
-      const parsed = JSON.parse(errorText);
-      errorCode = parsed?.error?.code || (typeof parsed?.error === "string" ? parsed.error : null);
-    } catch {}
+      // Detect unrecoverable errors (token reused/expired) — Auth0 revokes whole family on retry
+      let errorCode = null;
+      try {
+        const parsed = JSON.parse(errorText);
+        errorCode = parsed?.error?.code || (typeof parsed?.error === "string" ? parsed.error : null);
+      } catch {}
 
-    if (
-      errorCode === "refresh_token_reused" ||
-      errorCode === "invalid_grant" ||
-      errorCode === "token_expired" ||
-      errorCode === "invalid_token"
-    ) {
-      log?.error?.("TOKEN_REFRESH", "Codex refresh token already used or invalid. Re-auth required.", {
+      if (
+        errorCode === "refresh_token_reused" ||
+        errorCode === "invalid_grant" ||
+        errorCode === "token_expired" ||
+        errorCode === "invalid_token"
+      ) {
+        log?.error?.("TOKEN_REFRESH", "Codex refresh token already used or invalid. Re-auth required.", {
+          status: response.status,
+          errorCode,
+        });
+        return { error: "unrecoverable_refresh_error", code: errorCode };
+      }
+
+      log?.error?.("TOKEN_REFRESH", "Failed to refresh Codex token", {
         status: response.status,
-        errorCode,
+        error: errorText,
       });
-      return { error: "unrecoverable_refresh_error", code: errorCode };
+      return null;
     }
 
-    log?.error?.("TOKEN_REFRESH", "Failed to refresh Codex token", {
-      status: response.status,
-      error: errorText,
+    const tokens = await response.json();
+
+    log?.info?.("TOKEN_REFRESH", "Successfully refreshed Codex token", {
+      hasNewAccessToken: !!tokens.access_token,
+      hasNewRefreshToken: !!tokens.refresh_token,
+      expiresIn: tokens.expires_in,
     });
-    return null;
-  }
 
-  const tokens = await response.json();
-
-  log?.info?.("TOKEN_REFRESH", "Successfully refreshed Codex token", {
-    hasNewAccessToken: !!tokens.access_token,
-    hasNewRefreshToken: !!tokens.refresh_token,
-    expiresIn: tokens.expires_in,
-  });
-
-  return {
-    accessToken: tokens.access_token,
-    refreshToken: tokens.refresh_token || refreshToken,
-    expiresIn: tokens.expires_in,
-  };
+    return {
+      accessToken: tokens.access_token,
+      refreshToken: tokens.refresh_token || refreshToken,
+      expiresIn: tokens.expires_in,
+    };
   } catch (error) {
     log?.error?.("TOKEN_REFRESH", `Network error refreshing Codex token: ${error.message}`);
     return null;
@@ -308,23 +323,26 @@ export async function refreshKiroToken(refreshToken, providerSpecificData, log, 
   // If clientId and clientSecret exist, assume AWS SSO OIDC (default to builder-id if authMethod not specified)
   if (clientId && clientSecret) {
     const isIDC = authMethod === "idc";
-    const endpoint = isIDC && region
-      ? `https://oidc.${region}.amazonaws.com/token`
-      : "https://oidc.us-east-1.amazonaws.com/token";
+    const endpoint =
+      isIDC && region ? `https://oidc.${region}.amazonaws.com/token` : "https://oidc.us-east-1.amazonaws.com/token";
 
-    const response = await proxyAwareFetch(endpoint, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Accept: "application/json",
+    const response = await proxyAwareFetch(
+      endpoint,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+        body: JSON.stringify({
+          clientId: clientId,
+          clientSecret: clientSecret,
+          refreshToken: refreshToken,
+          grantType: "refresh_token",
+        }),
       },
-      body: JSON.stringify({
-        clientId: clientId,
-        clientSecret: clientSecret,
-        refreshToken: refreshToken,
-        grantType: "refresh_token",
-      }),
-    }, proxyOptions);
+      proxyOptions,
+    );
 
     if (!response.ok) {
       const errorText = await response.text();
@@ -350,17 +368,21 @@ export async function refreshKiroToken(refreshToken, providerSpecificData, log, 
   }
 
   // Social Auth (Google/GitHub) - use Kiro's refresh endpoint
-  const response = await proxyAwareFetch(PROVIDERS.kiro.tokenUrl, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Accept: "application/json",
-      "User-Agent": "kiro-cli/1.0.0",
+  const response = await proxyAwareFetch(
+    PROVIDERS.kiro.tokenUrl,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+        "User-Agent": "kiro-cli/1.0.0",
+      },
+      body: JSON.stringify({
+        refreshToken: refreshToken,
+      }),
     },
-    body: JSON.stringify({
-      refreshToken: refreshToken,
-    }),
-  }, proxyOptions);
+    proxyOptions,
+  );
 
   if (!response.ok) {
     const errorText = await response.text();
@@ -483,20 +505,20 @@ export async function refreshCopilotToken(githubAccessToken, log) {
   try {
     const response = await fetch("https://api.github.com/copilot_internal/v2/token", {
       headers: {
-        "Authorization": `token ${githubAccessToken}`,
+        Authorization: `token ${githubAccessToken}`,
         "User-Agent": GITHUB_COPILOT.USER_AGENT,
         "Editor-Version": `vscode/${GITHUB_COPILOT.VSCODE_VERSION}`,
         "Editor-Plugin-Version": `copilot-chat/${GITHUB_COPILOT.COPILOT_CHAT_VERSION}`,
-        "Accept": "application/json",
-        "x-github-api-version": GITHUB_COPILOT.API_VERSION
-      }
+        Accept: "application/json",
+        "x-github-api-version": GITHUB_COPILOT.API_VERSION,
+      },
     });
 
     if (!response.ok) {
       const errorText = await response.text();
       log?.error?.("TOKEN_REFRESH", "Failed to refresh Copilot token", {
         status: response.status,
-        error: errorText
+        error: errorText,
       });
       return null;
     }
@@ -505,16 +527,16 @@ export async function refreshCopilotToken(githubAccessToken, log) {
 
     log?.info?.("TOKEN_REFRESH", "Successfully refreshed Copilot token", {
       hasToken: !!data.token,
-      expiresAt: data.expires_at
+      expiresAt: data.expires_at,
     });
 
     return {
       token: data.token,
-      expiresAt: data.expires_at
+      expiresAt: data.expires_at,
     };
   } catch (error) {
     log?.error?.("TOKEN_REFRESH", "Error refreshing Copilot token", {
-      error: error.message
+      error: error.message,
     });
     return null;
   }
@@ -559,7 +581,7 @@ async function _getAccessTokenInternal(provider, credentials, log) {
         credentials.refreshToken,
         PROVIDERS[provider].clientId,
         PROVIDERS[provider].clientSecret,
-        log
+        log,
       );
 
     case "claude":
@@ -578,11 +600,7 @@ async function _getAccessTokenInternal(provider, credentials, log) {
       return await refreshGitHubToken(credentials.refreshToken, log);
 
     case "kiro":
-      return await refreshKiroToken(
-        credentials.refreshToken,
-        credentials.providerSpecificData,
-        log
-      );
+      return await refreshKiroToken(credentials.refreshToken, credentials.providerSpecificData, log);
 
     case "vertex":
     case "vertex-partner": {
@@ -610,7 +628,7 @@ export async function refreshTokenByProvider(provider, credentials, log) {
         credentials.refreshToken,
         PROVIDERS[provider].clientId,
         PROVIDERS[provider].clientSecret,
-        log
+        log,
       );
     case "claude":
       return refreshClaudeOAuthToken(credentials.refreshToken, log);
@@ -623,11 +641,7 @@ export async function refreshTokenByProvider(provider, credentials, log) {
     case "github":
       return refreshGitHubToken(credentials.refreshToken, log);
     case "kiro":
-      return refreshKiroToken(
-        credentials.refreshToken,
-        credentials.providerSpecificData,
-        log
-      );
+      return refreshKiroToken(credentials.refreshToken, credentials.providerSpecificData, log);
     case "vertex":
     case "vertex-partner": {
       const saJson = parseVertexSaJson(credentials.apiKey);
@@ -654,13 +668,13 @@ export function formatProviderCredentials(provider, credentials, log) {
       return {
         apiKey: credentials.apiKey,
         accessToken: credentials.accessToken,
-        projectId: credentials.projectId
+        projectId: credentials.projectId,
       };
 
     case "claude":
       return {
         apiKey: credentials.apiKey,
-        accessToken: credentials.accessToken
+        accessToken: credentials.accessToken,
       };
 
     case "codex":
@@ -670,7 +684,7 @@ export function formatProviderCredentials(provider, credentials, log) {
     case "openrouter":
       return {
         apiKey: credentials.apiKey,
-        accessToken: credentials.accessToken
+        accessToken: credentials.accessToken,
       };
 
     case "antigravity":
@@ -678,14 +692,14 @@ export function formatProviderCredentials(provider, credentials, log) {
       return {
         accessToken: credentials.accessToken,
         refreshToken: credentials.refreshToken,
-        projectId: credentials.projectId
+        projectId: credentials.projectId,
       };
 
     default:
       return {
         apiKey: credentials.apiKey,
         accessToken: credentials.accessToken,
-        refreshToken: credentials.refreshToken
+        refreshToken: credentials.refreshToken,
       };
   }
 }
@@ -699,9 +713,13 @@ export async function getAllAccessTokens(userInfo, log) {
   if (userInfo.connections && Array.isArray(userInfo.connections)) {
     for (const connection of userInfo.connections) {
       if (connection.isActive && connection.provider) {
-        const token = await getAccessToken(connection.provider, {
-          refreshToken: connection.refreshToken
-        }, log);
+        const token = await getAccessToken(
+          connection.provider,
+          {
+            refreshToken: connection.refreshToken,
+          },
+          log,
+        );
 
         if (token) {
           results[connection.provider] = token;
@@ -801,7 +819,7 @@ export async function refreshWithRetry(refreshFn, maxRetries = 3, log = null) {
     if (attempt > 0) {
       const delay = attempt * 1000;
       log?.debug?.("TOKEN_REFRESH", `Retry ${attempt}/${maxRetries} after ${delay}ms`);
-      await new Promise(r => setTimeout(r, delay));
+      await new Promise((r) => setTimeout(r, delay));
     }
 
     try {
@@ -815,4 +833,3 @@ export async function refreshWithRetry(refreshFn, maxRetries = 3, log = null) {
   log?.error?.("TOKEN_REFRESH", `All ${maxRetries} retry attempts failed`);
   return null;
 }
-

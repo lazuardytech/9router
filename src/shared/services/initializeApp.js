@@ -4,17 +4,23 @@ import { dirname, join } from "path";
 import { existsSync } from "fs";
 import { cleanupProviderConnections, getSettings, updateSettings, getApiKeys } from "@/lib/localDb";
 import {
-  enableTunnel, enableTailscale,
-  isTunnelManuallyDisabled, isTunnelReconnecting, isTailscaleReconnecting,
-  getTunnelService, getTailscaleService,
+  enableTunnel,
+  enableTailscale,
+  isTunnelManuallyDisabled,
+  isTunnelReconnecting,
+  isTailscaleReconnecting,
+  getTunnelService,
+  getTailscaleService,
 } from "@/lib/tunnel/tunnelManager";
 import { killCloudflared, isCloudflaredRunning, ensureCloudflared } from "@/lib/tunnel/cloudflared";
 import { isTailscaleRunning } from "@/lib/tunnel/tailscale";
 import { loadState } from "@/lib/tunnel/state";
 import { checkInternet, probeUrlAlive } from "@/lib/tunnel/networkProbe";
 import {
-  RESTART_COOLDOWN_MS, NETWORK_SETTLE_MS,
-  WATCHDOG_INTERVAL_MS, NETWORK_CHECK_INTERVAL_MS,
+  RESTART_COOLDOWN_MS,
+  NETWORK_SETTLE_MS,
+  WATCHDOG_INTERVAL_MS,
+  NETWORK_CHECK_INTERVAL_MS,
 } from "@/lib/tunnel/tunnelConfig";
 
 // Removed MITM bootstrap block
@@ -22,13 +28,13 @@ import {
 process.setMaxListeners(20);
 
 // Survive Next.js hot reload
-const g = global.__appSingleton ??= {
+const g = (global.__appSingleton ??= {
   signalHandlersRegistered: false,
   watchdogInterval: null,
   networkMonitorInterval: null,
   lastNetworkFingerprint: null,
   lastWatchdogTick: Date.now(),
-};
+});
 
 export async function initializeApp() {
   try {
@@ -49,13 +55,23 @@ export async function initializeApp() {
 
     if (!g.signalHandlersRegistered) {
       const cleanup = () => {
-        try { removeAllDNSEntriesSync(); } catch { /* best effort */ }
+        try {
+          removeAllDNSEntriesSync();
+        } catch {
+          /* best effort */
+        }
         killCloudflared();
         process.exit();
       };
       process.on("SIGINT", cleanup);
       process.on("SIGTERM", cleanup);
-      process.on("exit", () => { try { removeAllDNSEntriesSync(); } catch { /* ignore */ } });
+      process.on("exit", () => {
+        try {
+          removeAllDNSEntriesSync();
+        } catch {
+          /* ignore */
+        }
+      });
       g.signalHandlersRegistered = true;
     }
 
@@ -71,7 +87,6 @@ export async function initializeApp() {
 
 // Removed bootstrap block
 
-
 // ─── Safe restart (4 guards: spawn / cooldown / alive / internet) ────────────
 
 async function safeRestartTunnel(reason) {
@@ -86,10 +101,10 @@ async function safeRestartTunnel(reason) {
   if (isCloudflaredRunning()) {
     const state = loadState();
     const publicUrl = state?.shortId ? `https://r${state.shortId}.9router.com` : null;
-    if (publicUrl && await probeUrlAlive(publicUrl)) return;
+    if (publicUrl && (await probeUrlAlive(publicUrl))) return;
   }
 
-  if (!await checkInternet()) return;
+  if (!(await checkInternet())) return;
 
   console.log(`[Tunnel] safeRestart (${reason})`);
   try {
@@ -113,7 +128,7 @@ async function safeRestartTailscale(reason) {
     if (await probeUrlAlive(settings.tailscaleUrl)) return;
   }
 
-  if (!await checkInternet()) return;
+  if (!(await checkInternet())) return;
 
   console.log(`[Tailscale] safeRestart (${reason})`);
   try {
@@ -174,8 +189,7 @@ function startNetworkMonitor() {
       // Wait for DHCP/DNS to settle before probing
       await new Promise((r) => setTimeout(r, NETWORK_SETTLE_MS));
 
-      const reason = wasSleep && networkChanged ? "sleep+netchange"
-        : wasSleep ? "sleep" : "netchange";
+      const reason = wasSleep && networkChanged ? "sleep+netchange" : wasSleep ? "sleep" : "netchange";
       safeRestartTunnel(reason).catch(() => {});
       safeRestartTailscale(reason).catch(() => {});
     } catch (err) {

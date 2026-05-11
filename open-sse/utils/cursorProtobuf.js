@@ -170,7 +170,7 @@ const FIELD = {
   THINKING: 25,
 
   // Thinking
-  THINKING_TEXT: 1
+  THINKING_TEXT: 1,
 };
 
 // Known response field numbers — used to detect unknown fields from protocol updates
@@ -183,7 +183,7 @@ const KNOWN_RESPONSE_FIELDS = new Set([
   FIELD.TOOL_IS_LAST,
   FIELD.TOOL_MCP_PARAMS,
   FIELD.RESPONSE_TEXT,
-  FIELD.THINKING
+  FIELD.THINKING,
 ]);
 
 // ==================== PRIMITIVE ENCODING ====================
@@ -191,10 +191,10 @@ const KNOWN_RESPONSE_FIELDS = new Set([
 export function encodeVarint(value) {
   const bytes = [];
   while (value >= 0x80) {
-    bytes.push((value & 0x7F) | 0x80);
+    bytes.push((value & 0x7f) | 0x80);
     value >>>= 7;
   }
-  bytes.push(value & 0x7F);
+  bytes.push(value & 0x7f);
   return new Uint8Array(bytes);
 }
 
@@ -208,12 +208,15 @@ export function encodeField(fieldNum, wireType, value) {
   }
 
   if (wireType === WIRE_TYPE.LEN) {
-    const dataBytes = typeof value === "string" 
-      ? new TextEncoder().encode(value)
-      : value instanceof Uint8Array ? value
-      : Buffer.isBuffer(value) ? new Uint8Array(value)
-      : new Uint8Array(0);
-    
+    const dataBytes =
+      typeof value === "string"
+        ? new TextEncoder().encode(value)
+        : value instanceof Uint8Array
+          ? value
+          : Buffer.isBuffer(value)
+            ? new Uint8Array(value)
+            : new Uint8Array(0);
+
     const lengthBytes = encodeVarint(dataBytes.length);
     return concatArrays(tagBytes, lengthBytes, dataBytes);
   }
@@ -272,7 +275,7 @@ function parseToolName(formattedName) {
 
   return {
     serverName: tail.slice(0, splitIdx) || "custom",
-    selectedTool: tail.slice(splitIdx + 1) || "tool"
+    selectedTool: tail.slice(splitIdx + 1) || "tool",
   };
 }
 
@@ -295,7 +298,7 @@ function parseToolId(id) {
 function encodeMcpResult(selectedTool, resultContent) {
   return concatArrays(
     encodeField(FIELD.MCPR_SELECTED_TOOL, WIRE_TYPE.LEN, selectedTool),
-    encodeField(FIELD.MCPR_RESULT, WIRE_TYPE.LEN, resultContent)
+    encodeField(FIELD.MCPR_RESULT, WIRE_TYPE.LEN, resultContent),
   );
 }
 
@@ -309,7 +312,7 @@ function encodeClientSideToolV2Result(toolCallId, modelCallId, selectedTool, res
     encodeField(FIELD.CV2R_MCP_RESULT, WIRE_TYPE.LEN, encodeMcpResult(selectedTool, resultContent)),
     encodeField(FIELD.CV2R_CALL_ID, WIRE_TYPE.LEN, toolCallId),
     ...(modelCallId ? [encodeField(FIELD.CV2R_MODEL_CALL_ID, WIRE_TYPE.LEN, modelCallId)] : []),
-    encodeField(FIELD.CV2R_TOOL_INDEX, WIRE_TYPE.VARINT, toolIndex > 0 ? toolIndex : 1)
+    encodeField(FIELD.CV2R_TOOL_INDEX, WIRE_TYPE.VARINT, toolIndex > 0 ? toolIndex : 1),
   );
 }
 
@@ -320,7 +323,7 @@ function encodeMcpParamsForCall(toolName, rawArgs, serverName) {
   const tool = concatArrays(
     encodeField(FIELD.MCP_TOOL_NAME, WIRE_TYPE.LEN, toolName),
     encodeField(FIELD.MCP_TOOL_PARAMS, WIRE_TYPE.LEN, rawArgs),
-    encodeField(FIELD.MCP_TOOL_SERVER, WIRE_TYPE.LEN, serverName)
+    encodeField(FIELD.MCP_TOOL_SERVER, WIRE_TYPE.LEN, serverName),
   );
   return encodeField(FIELD.MCP_TOOLS_LIST, WIRE_TYPE.LEN, tool);
 }
@@ -329,7 +332,15 @@ function encodeMcpParamsForCall(toolName, rawArgs, serverName) {
  * Encode ClientSideToolV2Call proto: { tool, mcp_params, call_id, name, raw_args, tool_index, model_call_id }
  * Represents a tool call definition
  */
-function encodeClientSideToolV2Call(toolCallId, toolName, selectedTool, serverName, rawArgs, modelCallId, toolIndex = 1) {
+function encodeClientSideToolV2Call(
+  toolCallId,
+  toolName,
+  selectedTool,
+  serverName,
+  rawArgs,
+  modelCallId,
+  toolIndex = 1,
+) {
   return concatArrays(
     encodeField(FIELD.CV2C_TOOL, WIRE_TYPE.VARINT, CLIENT_SIDE_TOOL_V2_MCP),
     encodeField(FIELD.CV2C_MCP_PARAMS, WIRE_TYPE.LEN, encodeMcpParamsForCall(selectedTool, rawArgs, serverName)),
@@ -337,7 +348,7 @@ function encodeClientSideToolV2Call(toolCallId, toolName, selectedTool, serverNa
     encodeField(FIELD.CV2C_NAME, WIRE_TYPE.LEN, toolName),
     encodeField(FIELD.CV2C_RAW_ARGS, WIRE_TYPE.LEN, rawArgs),
     encodeField(FIELD.CV2C_TOOL_INDEX, WIRE_TYPE.VARINT, toolIndex > 0 ? toolIndex : 1),
-    ...(modelCallId ? [encodeField(FIELD.CV2C_MODEL_CALL_ID, WIRE_TYPE.LEN, modelCallId)] : [])
+    ...(modelCallId ? [encodeField(FIELD.CV2C_MODEL_CALL_ID, WIRE_TYPE.LEN, modelCallId)] : []),
   );
 }
 
@@ -362,16 +373,29 @@ export function encodeToolResult(toolResult) {
     encodeField(FIELD.TOOL_RESULT_INDEX, WIRE_TYPE.VARINT, toolIndex > 0 ? toolIndex : 1),
     ...(modelCallId ? [encodeField(FIELD.TOOL_RESULT_MODEL_CALL_ID, WIRE_TYPE.LEN, modelCallId)] : []),
     encodeField(FIELD.TOOL_RESULT_RAW_ARGS, WIRE_TYPE.LEN, rawArgs),
-    encodeField(FIELD.TOOL_RESULT_RESULT, WIRE_TYPE.LEN,
-      encodeClientSideToolV2Result(toolCallId, modelCallId, selectedTool, resultContent, toolIndex)
+    encodeField(
+      FIELD.TOOL_RESULT_RESULT,
+      WIRE_TYPE.LEN,
+      encodeClientSideToolV2Result(toolCallId, modelCallId, selectedTool, resultContent, toolIndex),
     ),
-    encodeField(FIELD.TOOL_RESULT_TOOL_CALL, WIRE_TYPE.LEN,
-      encodeClientSideToolV2Call(toolCallId, toolName, selectedTool, serverName, rawArgs, modelCallId, toolIndex)
-    )
+    encodeField(
+      FIELD.TOOL_RESULT_TOOL_CALL,
+      WIRE_TYPE.LEN,
+      encodeClientSideToolV2Call(toolCallId, toolName, selectedTool, serverName, rawArgs, modelCallId, toolIndex),
+    ),
   );
 }
 
-export function encodeMessage(content, role, messageId, chatModeEnum = null, isLast = false, hasTools = false, toolResults = [], serverBubbleId = null) {
+export function encodeMessage(
+  content,
+  role,
+  messageId,
+  chatModeEnum = null,
+  isLast = false,
+  hasTools = false,
+  toolResults = [],
+  serverBubbleId = null,
+) {
   const hasToolResults = toolResults.length > 0;
   return concatArrays(
     encodeField(FIELD.MSG_CONTENT, WIRE_TYPE.LEN, content),
@@ -379,12 +403,12 @@ export function encodeMessage(content, role, messageId, chatModeEnum = null, isL
     encodeField(FIELD.MSG_ID, WIRE_TYPE.LEN, messageId),
     // Only include server_bubble_id if explicitly provided (last assistant message only)
     ...(serverBubbleId ? [encodeField(FIELD.MSG_SERVER_BUBBLE_ID, WIRE_TYPE.LEN, serverBubbleId)] : []),
-    ...(hasToolResults ? toolResults.map(tr =>
-      encodeField(FIELD.MSG_TOOL_RESULTS, WIRE_TYPE.LEN, encodeToolResult(tr))
-    ) : []),
+    ...(hasToolResults
+      ? toolResults.map((tr) => encodeField(FIELD.MSG_TOOL_RESULTS, WIRE_TYPE.LEN, encodeToolResult(tr)))
+      : []),
     encodeField(FIELD.MSG_IS_AGENTIC, WIRE_TYPE.VARINT, hasTools ? 1 : 0),
     encodeField(FIELD.MSG_UNIFIED_MODE, WIRE_TYPE.VARINT, hasTools ? UNIFIED_MODE.AGENT : UNIFIED_MODE.CHAT),
-    ...(isLast && hasTools ? [encodeField(FIELD.MSG_SUPPORTED_TOOLS, WIRE_TYPE.LEN, encodeVarint(1))] : [])
+    ...(isLast && hasTools ? [encodeField(FIELD.MSG_SUPPORTED_TOOLS, WIRE_TYPE.LEN, encodeVarint(1))] : []),
   );
 }
 
@@ -395,14 +419,14 @@ export function encodeInstruction(text) {
 export function encodeModel(modelName) {
   return concatArrays(
     encodeField(FIELD.MODEL_NAME, WIRE_TYPE.LEN, modelName),
-    encodeField(FIELD.MODEL_EMPTY, WIRE_TYPE.LEN, new Uint8Array(0))
+    encodeField(FIELD.MODEL_EMPTY, WIRE_TYPE.LEN, new Uint8Array(0)),
   );
 }
 
 export function encodeCursorSetting() {
   const unknown6 = concatArrays(
     encodeField(FIELD.SETTING6_FIELD_1, WIRE_TYPE.LEN, new Uint8Array(0)),
-    encodeField(FIELD.SETTING6_FIELD_2, WIRE_TYPE.LEN, new Uint8Array(0))
+    encodeField(FIELD.SETTING6_FIELD_2, WIRE_TYPE.LEN, new Uint8Array(0)),
   );
 
   return concatArrays(
@@ -410,7 +434,7 @@ export function encodeCursorSetting() {
     encodeField(FIELD.SETTING_UNKNOWN_3, WIRE_TYPE.LEN, new Uint8Array(0)),
     encodeField(FIELD.SETTING_UNKNOWN_6, WIRE_TYPE.LEN, unknown6),
     encodeField(FIELD.SETTING_UNKNOWN_8, WIRE_TYPE.VARINT, 1),
-    encodeField(FIELD.SETTING_UNKNOWN_9, WIRE_TYPE.VARINT, 1)
+    encodeField(FIELD.SETTING_UNKNOWN_9, WIRE_TYPE.VARINT, 1),
   );
 }
 
@@ -420,7 +444,7 @@ export function encodeMetadata() {
     encodeField(FIELD.META_ARCH, WIRE_TYPE.LEN, process.arch || "x64"),
     encodeField(FIELD.META_VERSION, WIRE_TYPE.LEN, process.version || "v20.0.0"),
     encodeField(FIELD.META_CWD, WIRE_TYPE.LEN, process.cwd?.() || "/"),
-    encodeField(FIELD.META_TIMESTAMP, WIRE_TYPE.LEN, new Date().toISOString())
+    encodeField(FIELD.META_TIMESTAMP, WIRE_TYPE.LEN, new Date().toISOString()),
   );
 }
 
@@ -428,7 +452,7 @@ export function encodeMessageId(messageId, role, summaryId = null) {
   return concatArrays(
     encodeField(FIELD.MSGID_ID, WIRE_TYPE.LEN, messageId),
     ...(summaryId ? [encodeField(FIELD.MSGID_SUMMARY, WIRE_TYPE.LEN, summaryId)] : []),
-    encodeField(FIELD.MSGID_ROLE, WIRE_TYPE.VARINT, role)
+    encodeField(FIELD.MSGID_ROLE, WIRE_TYPE.VARINT, role),
   );
 }
 
@@ -440,8 +464,10 @@ export function encodeMcpTool(tool) {
   return concatArrays(
     ...(toolName ? [encodeField(FIELD.MCP_TOOL_NAME, WIRE_TYPE.LEN, toolName)] : []),
     ...(toolDesc ? [encodeField(FIELD.MCP_TOOL_DESC, WIRE_TYPE.LEN, toolDesc)] : []),
-    ...(Object.keys(inputSchema).length > 0 ? [encodeField(FIELD.MCP_TOOL_PARAMS, WIRE_TYPE.LEN, JSON.stringify(inputSchema))] : []),
-    encodeField(FIELD.MCP_TOOL_SERVER, WIRE_TYPE.LEN, "custom")
+    ...(Object.keys(inputSchema).length > 0
+      ? [encodeField(FIELD.MCP_TOOL_PARAMS, WIRE_TYPE.LEN, JSON.stringify(inputSchema))]
+      : []),
+    encodeField(FIELD.MCP_TOOL_SERVER, WIRE_TYPE.LEN, "custom"),
   );
 }
 
@@ -464,28 +490,22 @@ export function encodeRequest(messages, modelName, tools = [], reasoningEffort =
     if (msg?.role === "assistant" && hasToolCalls && hasToolResults) {
       log(
         "ENCODE",
-        `normalizing mixed assistant tool payload at msg[${i}] (calls=${msg.tool_calls.length}, results=${msg.tool_results.length})`
+        `normalizing mixed assistant tool payload at msg[${i}] (calls=${msg.tool_calls.length}, results=${msg.tool_results.length})`,
       );
 
       // Keep assistant tool call message without embedded results
       normalizedMessages.push({
         ...msg,
-        tool_results: []
+        tool_results: [],
       });
 
       // Avoid inserting duplicate assistant tool-result message if next one already matches
       const nextMsg = messages[i + 1];
       const nextHasToolResults =
-        nextMsg?.role === "assistant" &&
-        Array.isArray(nextMsg?.tool_results) &&
-        nextMsg.tool_results.length > 0;
-      const currentIds = new Set(
-        msg.tool_results.map(tr => tr?.tool_call_id).filter(id => typeof id === "string")
-      );
+        nextMsg?.role === "assistant" && Array.isArray(nextMsg?.tool_results) && nextMsg.tool_results.length > 0;
+      const currentIds = new Set(msg.tool_results.map((tr) => tr?.tool_call_id).filter((id) => typeof id === "string"));
       const nextIds = new Set(
-        (nextMsg?.tool_results || [])
-          .map(tr => tr?.tool_call_id)
-          .filter(id => typeof id === "string")
+        (nextMsg?.tool_results || []).map((tr) => tr?.tool_call_id).filter((id) => typeof id === "string"),
       );
       let sameIds = currentIds.size > 0 && currentIds.size === nextIds.size;
       if (sameIds) {
@@ -501,7 +521,7 @@ export function encodeRequest(messages, modelName, tools = [], reasoningEffort =
         normalizedMessages.push({
           role: "assistant",
           content: "",
-          tool_results: msg.tool_results
+          tool_results: msg.tool_results,
         });
       }
 
@@ -524,7 +544,7 @@ export function encodeRequest(messages, modelName, tools = [], reasoningEffort =
       messageId: msgId,
       isLast,
       hasTools,
-      toolResults: msg.tool_results || []
+      toolResults: msg.tool_results || [],
     });
 
     messageIds.push({ messageId: msgId, role });
@@ -538,12 +558,14 @@ export function encodeRequest(messages, modelName, tools = [], reasoningEffort =
   // Build request
   return concatArrays(
     // Messages
-    ...formattedMessages.map(fm => 
-      encodeField(FIELD.MESSAGES, WIRE_TYPE.LEN, 
-        encodeMessage(fm.content, fm.role, fm.messageId, null, fm.isLast, fm.hasTools, fm.toolResults)
-      )
+    ...formattedMessages.map((fm) =>
+      encodeField(
+        FIELD.MESSAGES,
+        WIRE_TYPE.LEN,
+        encodeMessage(fm.content, fm.role, fm.messageId, null, fm.isLast, fm.hasTools, fm.toolResults),
+      ),
     ),
-    
+
     // Static fields
     encodeField(FIELD.UNKNOWN_2, WIRE_TYPE.VARINT, 1),
     encodeField(FIELD.INSTRUCTION, WIRE_TYPE.LEN, encodeInstruction("")),
@@ -559,16 +581,12 @@ export function encodeRequest(messages, modelName, tools = [], reasoningEffort =
     // Tool-related fields
     encodeField(FIELD.IS_AGENTIC, WIRE_TYPE.VARINT, isAgentic ? 1 : 0),
     ...(isAgentic ? [encodeField(FIELD.SUPPORTED_TOOLS, WIRE_TYPE.LEN, encodeVarint(1))] : []),
-    
+
     // Message IDs
-    ...messageIds.map(mid => 
-      encodeField(FIELD.MESSAGE_IDS, WIRE_TYPE.LEN, encodeMessageId(mid.messageId, mid.role))
-    ),
+    ...messageIds.map((mid) => encodeField(FIELD.MESSAGE_IDS, WIRE_TYPE.LEN, encodeMessageId(mid.messageId, mid.role))),
 
     // MCP Tools
-    ...(tools?.length > 0 ? tools.map(tool => 
-      encodeField(FIELD.MCP_TOOLS, WIRE_TYPE.LEN, encodeMcpTool(tool))
-    ) : []),
+    ...(tools?.length > 0 ? tools.map((tool) => encodeField(FIELD.MCP_TOOLS, WIRE_TYPE.LEN, encodeMcpTool(tool))) : []),
 
     // Mode fields
     encodeField(FIELD.LARGE_CONTEXT, WIRE_TYPE.VARINT, 0),
@@ -579,12 +597,16 @@ export function encodeRequest(messages, modelName, tools = [], reasoningEffort =
     encodeField(FIELD.THINKING_LEVEL, WIRE_TYPE.VARINT, thinkingLevel),
     encodeField(FIELD.UNKNOWN_51, WIRE_TYPE.VARINT, 0),
     encodeField(FIELD.UNKNOWN_53, WIRE_TYPE.VARINT, 1),
-    encodeField(FIELD.UNIFIED_MODE_NAME, WIRE_TYPE.LEN, isAgentic ? "Agent" : "Ask")
+    encodeField(FIELD.UNIFIED_MODE_NAME, WIRE_TYPE.LEN, isAgentic ? "Agent" : "Ask"),
   );
 }
 
 export function buildChatRequest(messages, modelName, tools = [], reasoningEffort = null, forceAgentMode = false) {
-  return encodeField(FIELD.REQUEST, WIRE_TYPE.LEN, encodeRequest(messages, modelName, tools, reasoningEffort, forceAgentMode));
+  return encodeField(
+    FIELD.REQUEST,
+    WIRE_TYPE.LEN,
+    encodeRequest(messages, modelName, tools, reasoningEffort, forceAgentMode),
+  );
 }
 
 /**
@@ -605,8 +627,8 @@ export function buildToolResultRequest(toolResult) {
   const selectedTool = rawName.startsWith("mcp_custom_")
     ? rawName.slice("mcp_custom_".length)
     : rawName.startsWith("mcp_")
-    ? rawName.slice(4)
-    : rawName;
+      ? rawName.slice(4)
+      : rawName;
 
   // ClientSideToolV2Result per proto:
   //   field 1 (tool): varint = 19 (MCP)
@@ -618,7 +640,7 @@ export function buildToolResultRequest(toolResult) {
     encodeField(FIELD.CV2R_TOOL, WIRE_TYPE.VARINT, CLIENT_SIDE_TOOL_V2_MCP),
     encodeField(FIELD.CV2R_MCP_RESULT, WIRE_TYPE.LEN, encodeMcpResult(selectedTool, resultContent)),
     encodeField(FIELD.CV2R_CALL_ID, WIRE_TYPE.LEN, toolCallId),
-    ...(modelCallId ? [encodeField(FIELD.CV2R_MODEL_CALL_ID, WIRE_TYPE.LEN, modelCallId)] : [])
+    ...(modelCallId ? [encodeField(FIELD.CV2R_MODEL_CALL_ID, WIRE_TYPE.LEN, modelCallId)] : []),
     // tool_index intentionally omitted (None per Rust source)
   );
 
@@ -637,21 +659,24 @@ export function wrapConnectRPCFrame(payload, compress = false) {
 
   const frame = new Uint8Array(5 + finalPayload.length);
   frame[0] = flags;
-  frame[1] = (finalPayload.length >> 24) & 0xFF;
-  frame[2] = (finalPayload.length >> 16) & 0xFF;
-  frame[3] = (finalPayload.length >> 8) & 0xFF;
-  frame[4] = finalPayload.length & 0xFF;
+  frame[1] = (finalPayload.length >> 24) & 0xff;
+  frame[2] = (finalPayload.length >> 16) & 0xff;
+  frame[3] = (finalPayload.length >> 8) & 0xff;
+  frame[4] = finalPayload.length & 0xff;
   frame.set(finalPayload, 5);
 
   return frame;
 }
 
 export function generateCursorBody(messages, modelName, tools = [], reasoningEffort = null, forceAgentMode = false) {
-  log("BODY", `Generating: ${messages.length} msgs, model=${modelName}, tools=${tools.length}, reasoning=${reasoningEffort || "none"}, forceAgentMode=${forceAgentMode}`);
-  
+  log(
+    "BODY",
+    `Generating: ${messages.length} msgs, model=${modelName}, tools=${tools.length}, reasoning=${reasoningEffort || "none"}, forceAgentMode=${forceAgentMode}`,
+  );
+
   const protobuf = buildChatRequest(messages, modelName, tools, reasoningEffort, forceAgentMode);
   const framed = wrapConnectRPCFrame(protobuf, false); // Cursor doesn't support compressed requests
-  
+
   log("BODY", `Protobuf=${protobuf.length}B, Framed=${framed.length}B`);
   return framed;
 }
@@ -674,7 +699,7 @@ export function decodeVarint(buffer, offset) {
 
   while (pos < buffer.length) {
     const b = buffer[pos];
-    result |= (b & 0x7F) << shift;
+    result |= (b & 0x7f) << shift;
     pos++;
     if (!(b & 0x80)) break;
     shift += 7;
@@ -779,14 +804,14 @@ function extractToolCall(toolCallData) {
   if (toolCall.has(FIELD.TOOL_MCP_PARAMS)) {
     try {
       const mcpParams = decodeMessage(toolCall.get(FIELD.TOOL_MCP_PARAMS)[0].value);
-      
+
       if (mcpParams.has(FIELD.MCP_TOOLS_LIST)) {
         const tool = decodeMessage(mcpParams.get(FIELD.MCP_TOOLS_LIST)[0].value);
-        
+
         if (tool.has(FIELD.MCP_NESTED_NAME)) {
           toolName = new TextDecoder().decode(tool.get(FIELD.MCP_NESTED_NAME)[0].value);
         }
-        
+
         if (tool.has(FIELD.MCP_NESTED_PARAMS)) {
           rawArgs = new TextDecoder().decode(tool.get(FIELD.MCP_NESTED_PARAMS)[0].value);
         }
@@ -807,9 +832,9 @@ function extractToolCall(toolCallData) {
       type: "function",
       function: {
         name: toolName,
-        arguments: rawArgs || "{}"
+        arguments: rawArgs || "{}",
       },
-      isLast
+      isLast,
     };
   }
 
@@ -850,7 +875,7 @@ export function extractTextFromResponse(payload) {
       if (!KNOWN_RESPONSE_FIELDS.has(fieldNum)) {
         log(
           "SCHEMA",
-          `Unknown response field #${fieldNum} detected. Schema v${PROTOBUF_SCHEMA_VERSION} may be outdated.`
+          `Unknown response field #${fieldNum} detected. Schema v${PROTOBUF_SCHEMA_VERSION} may be outdated.`,
         );
       }
     }
@@ -882,7 +907,7 @@ export function extractTextFromResponse(payload) {
       toolCall: null,
       thinking: null,
       raw: Buffer.from(payload).toString("base64"),
-      decodeError: err.message
+      decodeError: err.message,
     };
   }
 }
@@ -900,5 +925,5 @@ export default {
   decodeField,
   decodeMessage,
   parseConnectRPCFrame,
-  extractTextFromResponse
+  extractTextFromResponse,
 };

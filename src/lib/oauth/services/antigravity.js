@@ -82,7 +82,7 @@ export class AntigravityService {
    */
   getApiHeaders(accessToken) {
     return {
-      "Authorization": `Bearer ${accessToken}`,
+      Authorization: `Bearer ${accessToken}`,
       "Content-Type": "application/json",
       "User-Agent": this.config.loadCodeAssistUserAgent,
       "X-Goog-Api-Client": this.config.loadCodeAssistApiClient,
@@ -121,7 +121,7 @@ export class AntigravityService {
 
     // Extract project ID
     let projectId = data.cloudaicompanionProject;
-    if (typeof projectId === 'object' && projectId !== null && projectId.id) {
+    if (typeof projectId === "object" && projectId !== null && projectId.id) {
       projectId = projectId.id;
     }
 
@@ -169,7 +169,7 @@ export class AntigravityService {
         let finalProjectId = projectId;
         if (result.response?.cloudaicompanionProject) {
           const respProject = result.response.cloudaicompanionProject;
-          if (typeof respProject === 'string') {
+          if (typeof respProject === "string") {
             finalProjectId = respProject.trim();
           } else if (respProject.id) {
             finalProjectId = respProject.id.trim();
@@ -179,7 +179,7 @@ export class AntigravityService {
       }
 
       // Wait 5 seconds before retry
-      await new Promise(resolve => setTimeout(resolve, 5000));
+      await new Promise((resolve) => setTimeout(resolve, 5000));
     }
 
     throw new Error("Onboarding timeout - please try again");
@@ -300,7 +300,9 @@ export class AntigravityService {
       const { projectId, tierId } = await this.loadCodeAssist(tokens.access_token);
 
       if (!projectId) {
-        throw new Error("No Google Cloud Project found. Please ensure you have a GCP project with Gemini Code Assist enabled.");
+        throw new Error(
+          "No Google Cloud Project found. Please ensure you have a GCP project with Gemini Code Assist enabled.",
+        );
       }
 
       spinner.text = "Onboarding to Gemini Code Assist...";
@@ -322,4 +324,3 @@ export class AntigravityService {
     }
   }
 }
-

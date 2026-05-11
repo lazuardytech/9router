@@ -136,7 +136,7 @@ function buildSseResponse(providerResponse, log, onSuccess) {
     headers: {
       "Content-Type": "text/event-stream",
       "Cache-Control": "no-cache, no-transform",
-      "Connection": "keep-alive",
+      Connection: "keep-alive",
       "X-Accel-Buffering": "no",
       "Access-Control-Allow-Origin": "*",
     },
@@ -149,20 +149,24 @@ export default {
   buildHeaders: (creds) => {
     const accountId = creds?.providerSpecificData?.chatgptAccountId || decodeAccountId(creds?.idToken);
     return {
-      "accept": "text/event-stream, application/json",
-      "authorization": `Bearer ${creds?.accessToken || ""}`,
+      accept: "text/event-stream, application/json",
+      authorization: `Bearer ${creds?.accessToken || ""}`,
       "chatgpt-account-id": accountId || "",
       "content-type": "application/json",
-      "originator": CODEX_ORIGINATOR,
-      "session_id": randomUUID(),
+      originator: CODEX_ORIGINATOR,
+      session_id: randomUUID(),
       "user-agent": CODEX_USER_AGENT,
-      "version": CODEX_VERSION,
+      version: CODEX_VERSION,
       "x-client-request-id": randomUUID(),
     };
   },
   buildBody: (model, body) => {
     const refs = [];
-    if (Array.isArray(body.images)) body.images.forEach((i) => { const u = toDataUrl(i); if (u) refs.push(u); });
+    if (Array.isArray(body.images))
+      body.images.forEach((i) => {
+        const u = toDataUrl(i);
+        if (u) refs.push(u);
+      });
     const single = toDataUrl(body.image);
     if (single) refs.push(single);
     const detail = body.image_detail || CODEX_REF_DETAIL;

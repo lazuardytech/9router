@@ -61,14 +61,18 @@ function buildData({ provider, url, title, format, text, costUsd, responseMs, up
     content: { format, text: text || "", length: (text || "").length },
     metadata: { author: null, published_at: null, language: null },
     usage: { fetch_cost_usd: costUsd ?? null },
-    metrics: { response_time_ms: responseMs, upstream_latency_ms: upstreamMs }
+    metrics: { response_time_ms: responseMs, upstream_latency_ms: upstreamMs },
   };
 }
 
 async function readJsonOrText(res) {
   const ct = res.headers.get("content-type") || "";
   if (ct.includes("application/json")) {
-    try { return { json: await res.json() }; } catch { return { text: "" }; }
+    try {
+      return { json: await res.json() };
+    } catch {
+      return { text: "" };
+    }
   }
   return { text: await res.text() };
 }
@@ -121,14 +125,18 @@ export async function handleFetchCore({ url, format, maxCharacters, provider, pr
 
 async function runFirecrawl({ url, fmt, timeoutMs, apiKey, maxCharacters, costPerQuery, startedAt }) {
   const upstreamStart = Date.now();
-  const r = await tryFetch("https://api.firecrawl.dev/v1/scrape", {
-    method: "POST",
-    headers: {
-      "content-type": "application/json",
-      ...(apiKey ? { authorization: `Bearer ${apiKey}` } : {})
+  const r = await tryFetch(
+    "https://api.firecrawl.dev/v1/scrape",
+    {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        ...(apiKey ? { authorization: `Bearer ${apiKey}` } : {}),
+      },
+      body: JSON.stringify({ url, formats: [fmt] }),
     },
-    body: JSON.stringify({ url, formats: [fmt] })
-  }, timeoutMs);
+    timeoutMs,
+  );
 
   if (!r.ok) {
     return { success: false, status: r.timeout ? 504 : 502, error: r.error };
@@ -144,19 +152,29 @@ async function runFirecrawl({ url, fmt, timeoutMs, apiKey, maxCharacters, costPe
   return {
     success: true,
     data: buildData({
-      provider: "firecrawl", url, title, format: fmt, text,
-      costUsd: costPerQuery, responseMs: Date.now() - startedAt, upstreamMs
-    })
+      provider: "firecrawl",
+      url,
+      title,
+      format: fmt,
+      text,
+      costUsd: costPerQuery,
+      responseMs: Date.now() - startedAt,
+      upstreamMs,
+    }),
   };
 }
 
 async function runJina({ url, fmt, timeoutMs, apiKey, maxCharacters, costPerQuery, startedAt }) {
   const target = `https://r.jina.ai/${encodeURIComponent(url)}`;
   const upstreamStart = Date.now();
-  const r = await tryFetch(target, {
-    method: "GET",
-    headers: apiKey ? { authorization: `Bearer ${apiKey}` } : {}
-  }, timeoutMs);
+  const r = await tryFetch(
+    target,
+    {
+      method: "GET",
+      headers: apiKey ? { authorization: `Bearer ${apiKey}` } : {},
+    },
+    timeoutMs,
+  );
 
   if (!r.ok) {
     return { success: false, status: r.timeout ? 504 : 502, error: r.error };
@@ -170,22 +188,32 @@ async function runJina({ url, fmt, timeoutMs, apiKey, maxCharacters, costPerQuer
   return {
     success: true,
     data: buildData({
-      provider: "jina-reader", url, title: parseJinaTitle(body), format: fmt, text,
-      costUsd: costPerQuery, responseMs: Date.now() - startedAt, upstreamMs
-    })
+      provider: "jina-reader",
+      url,
+      title: parseJinaTitle(body),
+      format: fmt,
+      text,
+      costUsd: costPerQuery,
+      responseMs: Date.now() - startedAt,
+      upstreamMs,
+    }),
   };
 }
 
 async function runTavily({ url, fmt, timeoutMs, apiKey, maxCharacters, costPerQuery, startedAt }) {
   const upstreamStart = Date.now();
-  const r = await tryFetch("https://api.tavily.com/extract", {
-    method: "POST",
-    headers: {
-      "content-type": "application/json",
-      ...(apiKey ? { authorization: `Bearer ${apiKey}` } : {})
+  const r = await tryFetch(
+    "https://api.tavily.com/extract",
+    {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        ...(apiKey ? { authorization: `Bearer ${apiKey}` } : {}),
+      },
+      body: JSON.stringify({ urls: [url], extract_depth: "basic" }),
     },
-    body: JSON.stringify({ urls: [url], extract_depth: "basic" })
-  }, timeoutMs);
+    timeoutMs,
+  );
 
   if (!r.ok) {
     return { success: false, status: r.timeout ? 504 : 502, error: r.error };
@@ -200,22 +228,32 @@ async function runTavily({ url, fmt, timeoutMs, apiKey, maxCharacters, costPerQu
   return {
     success: true,
     data: buildData({
-      provider: "tavily", url, title: null, format: fmt, text,
-      costUsd: costPerQuery, responseMs: Date.now() - startedAt, upstreamMs
-    })
+      provider: "tavily",
+      url,
+      title: null,
+      format: fmt,
+      text,
+      costUsd: costPerQuery,
+      responseMs: Date.now() - startedAt,
+      upstreamMs,
+    }),
   };
 }
 
 async function runExa({ url, fmt, timeoutMs, apiKey, maxCharacters, costPerQuery, startedAt }) {
   const upstreamStart = Date.now();
-  const r = await tryFetch("https://api.exa.ai/contents", {
-    method: "POST",
-    headers: {
-      "content-type": "application/json",
-      ...(apiKey ? { "x-api-key": apiKey } : {})
+  const r = await tryFetch(
+    "https://api.exa.ai/contents",
+    {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        ...(apiKey ? { "x-api-key": apiKey } : {}),
+      },
+      body: JSON.stringify({ ids: [url], text: true }),
     },
-    body: JSON.stringify({ ids: [url], text: true })
-  }, timeoutMs);
+    timeoutMs,
+  );
 
   if (!r.ok) {
     return { success: false, status: r.timeout ? 504 : 502, error: r.error };
@@ -230,8 +268,14 @@ async function runExa({ url, fmt, timeoutMs, apiKey, maxCharacters, costPerQuery
   return {
     success: true,
     data: buildData({
-      provider: "exa", url, title: first.title || null, format: fmt, text,
-      costUsd: costPerQuery, responseMs: Date.now() - startedAt, upstreamMs
-    })
+      provider: "exa",
+      url,
+      title: first.title || null,
+      format: fmt,
+      text,
+      costUsd: costPerQuery,
+      responseMs: Date.now() - startedAt,
+      upstreamMs,
+    }),
   };
 }

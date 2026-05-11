@@ -19,7 +19,7 @@ function getAuthGroup(providerId, connection = null) {
     }
     return connection.authType;
   }
-  
+
   // Fallback to constants
   if (FREE_PROVIDERS[providerId]) return "free";
   if (OAUTH_PROVIDERS[providerId]) return "oauth";
@@ -67,7 +67,7 @@ export async function POST(request) {
     } else {
       return NextResponse.json(
         { error: "Invalid mode. Use: provider, oauth, free, apikey, compatible, all" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 

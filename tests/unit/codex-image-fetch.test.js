@@ -92,7 +92,9 @@ describe("CodexExecutor image handling", () => {
   });
 
   it("falls back to original URL when remote fetch fails", async () => {
-    global.fetch = vi.fn(async () => { throw new Error("network down"); });
+    global.fetch = vi.fn(async () => {
+      throw new Error("network down");
+    });
 
     const executor = new CodexExecutor();
     const body = {

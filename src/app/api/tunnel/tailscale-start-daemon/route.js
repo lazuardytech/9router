@@ -10,7 +10,7 @@ export async function POST(request) {
   try {
     const body = await request.json().catch(() => ({}));
     // Use provided password, or fall back to cached/stored MITM password
-    const password = body.sudoPassword || getCachedPassword() || await loadEncryptedPassword() || "";
+    const password = body.sudoPassword || getCachedPassword() || (await loadEncryptedPassword()) || "";
     await startDaemonWithPassword(password);
     return NextResponse.json({ success: true });
   } catch (error) {

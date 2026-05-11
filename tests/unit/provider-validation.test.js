@@ -39,9 +39,12 @@ describe("Provider Validation API", () => {
       });
 
       expect(res.ok).toBe(true);
-      expect(fetch).toHaveBeenCalledWith(modelsUrl, expect.objectContaining({
-        headers: { Authorization: `Bearer ${apiKey}` },
-      }));
+      expect(fetch).toHaveBeenCalledWith(
+        modelsUrl,
+        expect.objectContaining({
+          headers: { Authorization: `Bearer ${apiKey}` },
+        }),
+      );
     });
 
     it("should fallback to chat/completions when /models fails and modelId provided", async () => {
@@ -113,12 +116,15 @@ describe("Provider Validation API", () => {
         },
       });
 
-      expect(fetch).toHaveBeenCalledWith(expect.any(String), expect.objectContaining({
-        headers: expect.objectContaining({
-          "x-api-key": apiKey,
-          "anthropic-version": "2023-06-01",
+      expect(fetch).toHaveBeenCalledWith(
+        expect.any(String),
+        expect.objectContaining({
+          headers: expect.objectContaining({
+            "x-api-key": apiKey,
+            "anthropic-version": "2023-06-01",
+          }),
         }),
-      }));
+      );
     });
   });
 
@@ -262,7 +268,7 @@ describe("Provider Validation API", () => {
       const response = {
         valid: false,
         error: "API key unauthorized or model unavailable",
-        method: "chat"
+        method: "chat",
       };
       expect(response.valid).toBe(false);
       expect(response.error).toBeDefined();

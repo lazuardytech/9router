@@ -11,7 +11,7 @@ export const FORMATS = {
   ANTIGRAVITY: "antigravity",
   KIRO: "kiro",
   CURSOR: "cursor",
-  OLLAMA: "ollama"
+  OLLAMA: "ollama",
 };
 
 /**
@@ -32,4 +32,3 @@ export function detectFormatByEndpoint(pathname, body) {
 
   return null;
 }
-

@@ -1,8 +1,5 @@
 import { NextResponse } from "next/server";
-import {
-  getProviderConnections,
-  updateProviderConnection,
-} from "@/lib/localDb";
+import { getProviderConnections, updateProviderConnection } from "@/lib/localDb";
 
 const MODEL_LOCK_PREFIX = "modelLock_";
 
@@ -56,10 +53,7 @@ export async function GET() {
     });
   } catch (error) {
     console.error("[API] Failed to get model availability:", error);
-    return NextResponse.json(
-      { error: "Failed to fetch model availability" },
-      { status: 500 },
-    );
+    return NextResponse.json({ error: "Failed to fetch model availability" }, { status: 500 });
   }
 }
 
@@ -95,9 +89,6 @@ export async function POST(request) {
     return NextResponse.json({ ok: true });
   } catch (error) {
     console.error("[API] Failed to clear model cooldown:", error);
-    return NextResponse.json(
-      { error: "Failed to clear cooldown" },
-      { status: 500 },
-    );
+    return NextResponse.json({ error: "Failed to clear cooldown" }, { status: 500 });
   }
 }

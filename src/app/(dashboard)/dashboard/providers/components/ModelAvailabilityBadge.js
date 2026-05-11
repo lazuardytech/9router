@@ -132,9 +132,7 @@ export default function ModelAvailabilityBadge() {
 
           <div className="px-4 py-3 max-h-60 overflow-y-auto">
             {isHealthy ? (
-              <p className="text-sm text-text-muted text-center py-2">
-                All models are responding normally.
-              </p>
+              <p className="text-sm text-text-muted text-center py-2">All models are responding normally.</p>
             ) : (
               <div className="flex flex-col gap-2.5">
                 {Object.entries(byProvider).map(([provider, provModels]) => (

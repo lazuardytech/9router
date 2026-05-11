@@ -1,6 +1,12 @@
 import { getProviderConnections, validateApiKey, updateProviderConnection, getSettings } from "@/lib/localDb";
 import { resolveConnectionProxyConfig } from "@/lib/network/connectionProxy";
-import { formatRetryAfter, checkFallbackError, isModelLockActive, buildModelLockUpdate, getEarliestModelLockUntil } from "open-sse/services/accountFallback.js";
+import {
+  formatRetryAfter,
+  checkFallbackError,
+  isModelLockActive,
+  buildModelLockUpdate,
+  getEarliestModelLockUntil,
+} from "open-sse/services/accountFallback.js";
 import { MAX_RATE_LIMIT_COOLDOWN_MS } from "open-sse/config/errorConfig.js";
 import { resolveProviderId, FREE_PROVIDERS } from "@/shared/constants/providers.js";
 import * as log from "../utils/logger.js";
@@ -28,7 +34,7 @@ export function invalidateConnectionsCache(providerId) {
 async function getCachedActiveConnections(providerId) {
   const entry = connectionsCache.get(providerId);
   const now = Date.now();
-  if (entry && (now - entry.fetchedAt) < CONNECTIONS_CACHE_TTL_MS) {
+  if (entry && now - entry.fetchedAt < CONNECTIONS_CACHE_TTL_MS) {
     return entry.connections;
   }
   const connections = await getProviderConnections({ provider: providerId, isActive: true });
@@ -63,9 +69,12 @@ const MAX_CREDENTIALS_CACHE_SIZE = 500;
  * @param {string|null} model - Model name for per-model rate limit filtering
  */
 export async function getProviderCredentials(provider, excludeConnectionIds = null, model = null, options = {}) {
-  const excludeSet = excludeConnectionIds instanceof Set
-    ? excludeConnectionIds
-    : (excludeConnectionIds ? new Set([excludeConnectionIds]) : new Set());
+  const excludeSet =
+    excludeConnectionIds instanceof Set
+      ? excludeConnectionIds
+      : excludeConnectionIds
+        ? new Set([excludeConnectionIds])
+        : new Set();
   const preferredConnectionId = options?.preferredConnectionId || null;
 
   try {
@@ -93,7 +102,10 @@ export async function getProviderCredentials(provider, excludeConnectionIds = nu
     }
 
     const connections = await getCachedActiveConnections(providerId);
-    log.debug("AUTH", `${provider} | total connections: ${connections.length}, excludeIds: ${excludeSet.size > 0 ? [...excludeSet].join(",") : "none"}, model: ${model || "any"}`);
+    log.debug(
+      "AUTH",
+      `${provider} | total connections: ${connections.length}, excludeIds: ${excludeSet.size > 0 ? [...excludeSet].join(",") : "none"}, model: ${model || "any"}`,
+    );
 
     if (connections.length === 0) {
       log.warn("AUTH", `No credentials for ${provider}`);
@@ -101,36 +113,42 @@ export async function getProviderCredentials(provider, excludeConnectionIds = nu
     }
 
     // Filter out model-locked and excluded connections
-    const availableConnections = connections.filter(c => {
+    const availableConnections = connections.filter((c) => {
       if (excludeSet.has(c.id)) return false;
       if (isModelLockActive(c, model)) return false;
       return true;
     });
 
     log.debug("AUTH", `${provider} | available: ${availableConnections.length}/${connections.length}`);
-    connections.forEach(c => {
+    connections.forEach((c) => {
       const excluded = excludeSet.has(c.id);
       const locked = isModelLockActive(c, model);
       if (excluded || locked) {
         const lockUntil = getEarliestModelLockUntil(c);
-        log.debug("AUTH", `  → ${c.id?.slice(0, 8)} | ${excluded ? "excluded" : ""} ${locked ? `modelLocked(${model}) until ${lockUntil}` : ""}`);
+        log.debug(
+          "AUTH",
+          `  → ${c.id?.slice(0, 8)} | ${excluded ? "excluded" : ""} ${locked ? `modelLocked(${model}) until ${lockUntil}` : ""}`,
+        );
       }
     });
 
     if (availableConnections.length === 0) {
       // Find earliest lock expiry across all connections for retry timing
-      const lockedConns = connections.filter(c => isModelLockActive(c, model));
-      const expiries = lockedConns.map(c => getEarliestModelLockUntil(c)).filter(Boolean);
+      const lockedConns = connections.filter((c) => isModelLockActive(c, model));
+      const expiries = lockedConns.map((c) => getEarliestModelLockUntil(c)).filter(Boolean);
       const earliest = expiries.sort()[0] || null;
       if (earliest) {
         const earliestConn = lockedConns[0];
-        log.warn("AUTH", `${provider} | all ${connections.length} accounts locked for ${model || "all"} (${formatRetryAfter(earliest)}) | lastError=${earliestConn?.lastError?.slice(0, 50)}`);
+        log.warn(
+          "AUTH",
+          `${provider} | all ${connections.length} accounts locked for ${model || "all"} (${formatRetryAfter(earliest)}) | lastError=${earliestConn?.lastError?.slice(0, 50)}`,
+        );
         return {
           allRateLimited: true,
           retryAfter: earliest,
           retryAfterHuman: formatRetryAfter(earliest),
           lastError: earliestConn?.lastError || null,
-          lastErrorCode: earliestConn?.errorCode || null
+          lastErrorCode: earliestConn?.errorCode || null,
         };
       }
       log.warn("AUTH", `${provider} | all ${connections.length} accounts unavailable`);
@@ -147,7 +165,10 @@ export async function getProviderCredentials(provider, excludeConnectionIds = nu
     if (preferredConnectionId) {
       connection = availableConnections.find((c) => c.id === preferredConnectionId);
       if (connection) {
-        log.info("AUTH", `${provider} | pinned to ${connection.id?.slice(0, 8)} (${connection.name || connection.email || "unnamed"})`);
+        log.info(
+          "AUTH",
+          `${provider} | pinned to ${connection.id?.slice(0, 8)} (${connection.name || connection.email || "unnamed"})`,
+        );
       }
     }
     if (connection) {
@@ -158,7 +179,7 @@ export async function getProviderCredentials(provider, excludeConnectionIds = nu
       // Use in-memory rotation state for hot path (no DB read/write).
       // Falls back to DB lastUsedAt only when memory state is empty (cold start).
       let state = rotationState.get(providerId);
-      let current = state ? availableConnections.find(c => c.id === state.lastConnectionId) : null;
+      let current = state ? availableConnections.find((c) => c.id === state.lastConnectionId) : null;
 
       if (!current) {
         // Cold start: pick by DB lastUsedAt (most recent) so rotation continues across restarts
@@ -221,7 +242,7 @@ export async function getProviderCredentials(provider, excludeConnectionIds = nu
       testStatus: connection.testStatus,
       lastError: connection.lastError,
       // Pass full connection for clearAccountError to read modelLock_* keys
-      _connection: connection
+      _connection: connection,
     };
   } catch (err) {
     log.error("AUTH", `getProviderCredentials failed: ${err?.message || err}`);
@@ -239,10 +260,17 @@ export async function getProviderCredentials(provider, excludeConnectionIds = nu
  * @param {string|null} model - The specific model that triggered the error
  * @returns {{ shouldFallback: boolean, cooldownMs: number }}
  */
-export async function markAccountUnavailable(connectionId, status, errorText, provider = null, model = null, resetsAtMs = null) {
+export async function markAccountUnavailable(
+  connectionId,
+  status,
+  errorText,
+  provider = null,
+  model = null,
+  resetsAtMs = null,
+) {
   if (!connectionId || connectionId === "noauth") return { shouldFallback: false, cooldownMs: 0 };
   const connections = await getProviderConnections({ provider });
-  const conn = connections.find(c => c.id === connectionId);
+  const conn = connections.find((c) => c.id === connectionId);
   const backoffLevel = conn?.backoffLevel || 0;
 
   // Provider-specific precise cooldown (e.g. codex usage_limit_reached resets_at) overrides backoff
@@ -265,7 +293,7 @@ export async function markAccountUnavailable(connectionId, status, errorText, pr
     lastError: reason,
     errorCode: status,
     lastErrorAt: new Date().toISOString(),
-    backoffLevel: newBackoffLevel ?? backoffLevel
+    backoffLevel: newBackoffLevel ?? backoffLevel,
   });
   if (provider) invalidateConnectionsCache(resolveProviderId(provider));
 
@@ -293,28 +321,28 @@ export async function clearAccountError(connectionId, currentConnection, model =
   if (!connectionId || connectionId === "noauth") return;
   const conn = currentConnection._connection || currentConnection;
   const now = Date.now();
-  const allLockKeys = Object.keys(conn).filter(k => k.startsWith("modelLock_"));
+  const allLockKeys = Object.keys(conn).filter((k) => k.startsWith("modelLock_"));
 
   if (!conn.testStatus && !conn.lastError && allLockKeys.length === 0) return;
 
   // Keys to clear: current model's lock + all expired locks
-  const keysToClear = allLockKeys.filter(k => {
+  const keysToClear = allLockKeys.filter((k) => {
     if (model && k === `modelLock_${model}`) return true; // succeeded model
-    if (model && k === "modelLock___all") return true;    // account-level lock
+    if (model && k === "modelLock___all") return true; // account-level lock
     const expiry = conn[k];
-    return expiry && new Date(expiry).getTime() <= now;   // expired
+    return expiry && new Date(expiry).getTime() <= now; // expired
   });
 
   if (keysToClear.length === 0 && conn.testStatus !== "unavailable" && !conn.lastError) return;
 
   // Check if any active locks remain after clearing
-  const remainingActiveLocks = allLockKeys.filter(k => {
+  const remainingActiveLocks = allLockKeys.filter((k) => {
     if (keysToClear.includes(k)) return false;
     const expiry = conn[k];
     return expiry && new Date(expiry).getTime() > now;
   });
 
-  const clearObj = Object.fromEntries(keysToClear.map(k => [k, null]));
+  const clearObj = Object.fromEntries(keysToClear.map((k) => [k, null]));
 
   // Only reset error state if no active locks remain
   if (remainingActiveLocks.length === 0) {

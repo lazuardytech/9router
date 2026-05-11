@@ -1,0 +1,30 @@
+{
+  "$schema": "https://biomejs.dev/schemas/2.4.15/schema.json",
+  "files": {
+    "includes": [
+      "src/**",
+      "open-sse/**",
+      "tests/**",
+      "*.js",
+      "*.mjs",
+      "*.json",
+      "*.jsonc",
+      "*.css",
+      "!node_modules/**",
+      "!.next/**",
+      "!cloud/**",
+      "!public/**"
+    ]
+  },
+  "formatter": {
+    "enabled": true,
+    "indentStyle": "space",
+    "indentWidth": 2,
+    "lineWidth": 120
+  },
+  "css": {
+    "parser": {
+      "tailwindDirectives": true
+    }
+  }
+}

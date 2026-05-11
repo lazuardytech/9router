@@ -18,24 +18,24 @@ const GITHUB_BASE_URL = "https://github.com/cloudflare/cloudflared/releases/late
 const PLATFORM_MAPPINGS = {
   darwin: {
     x64: "cloudflared-darwin-amd64.tgz",
-    arm64: "cloudflared-darwin-arm64.tgz"
+    arm64: "cloudflared-darwin-arm64.tgz",
   },
   win32: {
     x64: "cloudflared-windows-amd64.exe",
     ia32: "cloudflared-windows-386.exe",
-    arm64: "cloudflared-windows-386.exe"
+    arm64: "cloudflared-windows-386.exe",
   },
   linux: {
     x64: "cloudflared-linux-amd64",
-    arm64: "cloudflared-linux-arm64"
-  }
+    arm64: "cloudflared-linux-arm64",
+  },
 };
 
 // Fallback order: prefer smallest/most-compatible binary per platform
 const PLATFORM_FALLBACK = {
   darwin: "cloudflared-darwin-amd64.tgz",
   win32: "cloudflared-windows-386.exe",
-  linux: "cloudflared-linux-amd64"
+  linux: "cloudflared-linux-amd64",
 };
 
 function getDownloadUrl() {
@@ -62,53 +62,55 @@ function downloadFile(url, dest) {
   return new Promise((resolve, reject) => {
     const file = fs.createWriteStream(dest);
 
-    https.get(url, (response) => {
-      if ([301, 302, 303, 307, 308].includes(response.statusCode)) {
-        file.close();
-        fs.unlinkSync(dest);
-        downloadFile(response.headers.location, dest).then(resolve).catch(reject);
-        return;
-      }
+    https
+      .get(url, (response) => {
+        if ([301, 302, 303, 307, 308].includes(response.statusCode)) {
+          file.close();
+          fs.unlinkSync(dest);
+          downloadFile(response.headers.location, dest).then(resolve).catch(reject);
+          return;
+        }
 
-      if (response.statusCode !== 200) {
-        file.close();
-        fs.unlinkSync(dest);
-        reject(new Error(`Download failed with status ${response.statusCode}`));
-        return;
-      }
+        if (response.statusCode !== 200) {
+          file.close();
+          fs.unlinkSync(dest);
+          reject(new Error(`Download failed with status ${response.statusCode}`));
+          return;
+        }
 
-      const totalBytes = parseInt(response.headers["content-length"], 10) || 0;
-      let receivedBytes = 0;
-      dlState.downloading = true;
-      dlState.progress = 0;
+        const totalBytes = parseInt(response.headers["content-length"], 10) || 0;
+        let receivedBytes = 0;
+        dlState.downloading = true;
+        dlState.progress = 0;
 
-      response.on("data", (chunk) => {
-        receivedBytes += chunk.length;
-        if (totalBytes > 0) dlState.progress = Math.round((receivedBytes / totalBytes) * 100);
-      });
+        response.on("data", (chunk) => {
+          receivedBytes += chunk.length;
+          if (totalBytes > 0) dlState.progress = Math.round((receivedBytes / totalBytes) * 100);
+        });
 
-      response.pipe(file);
+        response.pipe(file);
 
-      file.on("finish", () => {
-        dlState.downloading = false;
-        dlState.progress = 100;
-        file.close(() => resolve(dest));
-      });
+        file.on("finish", () => {
+          dlState.downloading = false;
+          dlState.progress = 100;
+          file.close(() => resolve(dest));
+        });
 
-      file.on("error", (err) => {
+        file.on("error", (err) => {
+          dlState.downloading = false;
+          dlState.progress = 0;
+          file.close();
+          fs.unlinkSync(dest);
+          reject(err);
+        });
+      })
+      .on("error", (err) => {
         dlState.downloading = false;
         dlState.progress = 0;
         file.close();
-        fs.unlinkSync(dest);
+        if (fs.existsSync(dest)) fs.unlinkSync(dest);
         reject(err);
       });
-    }).on("error", (err) => {
-      dlState.downloading = false;
-      dlState.progress = 0;
-      file.close();
-      if (fs.existsSync(dest)) fs.unlinkSync(dest);
-      reject(err);
-    });
   });
 }
 
@@ -136,7 +138,9 @@ let downloadPromise = null;
 
 export async function ensureCloudflared() {
   if (downloadPromise) return downloadPromise;
-  downloadPromise = _ensureCloudflared().finally(() => { downloadPromise = null; });
+  downloadPromise = _ensureCloudflared().finally(() => {
+    downloadPromise = null;
+  });
   return downloadPromise;
 }
 
@@ -148,7 +152,11 @@ async function _ensureCloudflared() {
   // Clean up incomplete downloads from previous runs
   const tmpPath = `${BIN_PATH}.tmp`;
   if (fs.existsSync(tmpPath)) {
-    try { fs.unlinkSync(tmpPath); } catch { /* ignore */ }
+    try {
+      fs.unlinkSync(tmpPath);
+    } catch {
+      /* ignore */
+    }
   }
 
   if (fs.existsSync(BIN_PATH)) {
@@ -195,7 +203,7 @@ export async function spawnCloudflared(tunnelToken) {
   const child = spawn(binaryPath, ["tunnel", "run", "--dns-resolver-addrs", "1.1.1.1:53", "--token", tunnelToken], {
     detached: false,
     windowsHide: true,
-    stdio: ["ignore", "pipe", "pipe"]
+    stdio: ["ignore", "pipe", "pipe"],
   });
 
   cloudflaredProcess = child;
@@ -249,9 +257,15 @@ export async function spawnCloudflared(tunnelToken) {
         }
         if (code === 1) {
           // Common exit code 1 issues: invalid token, auth failure, network issues
-          reject(new Error(`cloudflared exited with code ${code}${stderrOutput} Ensure your tunnel token is valid and network is reachable.`));
+          reject(
+            new Error(
+              `cloudflared exited with code ${code}${stderrOutput} Ensure your tunnel token is valid and network is reachable.`,
+            ),
+          );
         } else if (code === 2) {
-          reject(new Error(`cloudflared exited with code ${code}${stderrOutput} Check if required arguments are correct.`));
+          reject(
+            new Error(`cloudflared exited with code ${code}${stderrOutput} Check if required arguments are correct.`),
+          );
         } else {
           reject(new Error(`cloudflared exited with code ${code}${stderrOutput}`));
         }
@@ -281,14 +295,20 @@ export async function spawnQuickTunnel(localPort, onUrlUpdate) {
     isCleaned = true;
     try {
       fs.rmSync(configDir, { recursive: true, force: true });
-    } catch (e) { /* ignore */ }
+    } catch (e) {
+      /* ignore */
+    }
   };
 
-  const child = spawn(binaryPath, ["tunnel", "--url", `http://localhost:${localPort}`, "--config", configPath, "--no-autoupdate"], {
-    detached: false,
-    windowsHide: true,
-    stdio: ["ignore", "pipe", "pipe"]
-  });
+  const child = spawn(
+    binaryPath,
+    ["tunnel", "--url", `http://localhost:${localPort}`, "--config", configPath, "--no-autoupdate"],
+    {
+      detached: false,
+      windowsHide: true,
+      stdio: ["ignore", "pipe", "pipe"],
+    },
+  );
 
   cloudflaredProcess = child;
   savePid(child.pid);
@@ -363,7 +383,11 @@ export async function spawnQuickTunnel(localPort, onUrlUpdate) {
         cleanup();
         // Provide more helpful error messages for common exit codes
         if (code === 1) {
-          reject(new Error(`cloudflared exited with code ${code}. This often means: (1) the tunnel token is invalid or expired, (2) network connectivity issues, or (3) cloudflared cannot reach the local server.`));
+          reject(
+            new Error(
+              `cloudflared exited with code ${code}. This often means: (1) the tunnel token is invalid or expired, (2) network connectivity issues, or (3) cloudflared cannot reach the local server.`,
+            ),
+          );
         } else if (code === 2) {
           reject(new Error(`cloudflared exited with code ${code}. Check that arguments are correct.`));
         } else {
@@ -386,16 +410,23 @@ function killCloudflaredByPort(port) {
       const psCmd = `Get-CimInstance Win32_Process -Filter \\"Name='cloudflared.exe'\\" | Where-Object { $_.CommandLine -match ':${port}(\\D|$)' } | ForEach-Object { Stop-Process -Id $_.ProcessId -Force }`;
       execSync(`${POWERSHELL_HIDDEN_COMMAND} "${psCmd}"`, { stdio: "ignore", windowsHide: true });
     } else {
-      execSync(`pkill -f "cloudflared.*:${port}([^0-9]|$)" 2>/dev/null || true`, { stdio: "ignore", windowsHide: true });
+      execSync(`pkill -f "cloudflared.*:${port}([^0-9]|$)" 2>/dev/null || true`, {
+        stdio: "ignore",
+        windowsHide: true,
+      });
     }
-  } catch (e) { /* ignore */ }
+  } catch (e) {
+    /* ignore */
+  }
 }
 
 export function killCloudflared(localPort) {
   if (cloudflaredProcess) {
     try {
       cloudflaredProcess.kill();
-    } catch (e) { /* ignore */ }
+    } catch (e) {
+      /* ignore */
+    }
     cloudflaredProcess = null;
   }
 
@@ -403,7 +434,9 @@ export function killCloudflared(localPort) {
   if (pid) {
     try {
       process.kill(pid);
-    } catch (e) { /* ignore */ }
+    } catch (e) {
+      /* ignore */
+    }
     clearPid();
   }
 

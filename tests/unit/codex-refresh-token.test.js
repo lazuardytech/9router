@@ -24,11 +24,12 @@ describe("Codex Refresh Token", () => {
     it("should return new refresh_token when server provides one (token rotation)", async () => {
       global.fetch = vi.fn().mockResolvedValue({
         ok: true,
-        json: () => Promise.resolve({
-          access_token: "new-access",
-          refresh_token: "rotated-refresh-token",
-          expires_in: 3600,
-        }),
+        json: () =>
+          Promise.resolve({
+            access_token: "new-access",
+            refresh_token: "rotated-refresh-token",
+            expires_in: 3600,
+          }),
       });
 
       const { refreshCodexToken } = await import("../../open-sse/services/tokenRefresh.js");
@@ -41,10 +42,11 @@ describe("Codex Refresh Token", () => {
     it("should keep old refresh_token when server does not return new one", async () => {
       global.fetch = vi.fn().mockResolvedValue({
         ok: true,
-        json: () => Promise.resolve({
-          access_token: "new-access",
-          expires_in: 3600,
-        }),
+        json: () =>
+          Promise.resolve({
+            access_token: "new-access",
+            expires_in: 3600,
+          }),
       });
 
       const { refreshCodexToken } = await import("../../open-sse/services/tokenRefresh.js");
@@ -59,12 +61,12 @@ describe("Codex Refresh Token", () => {
       const { getRefreshLeadMs } = await import("../../open-sse/services/tokenRefresh.js");
 
       // Synced with CLIProxyAPI refresh_registry
-      expect(getRefreshLeadMs("codex")).toBe(5 * 24 * 60 * 60 * 1000);   // 5 days
-      expect(getRefreshLeadMs("claude")).toBe(4 * 60 * 60 * 1000);       // 4 hours
-      expect(getRefreshLeadMs("iflow")).toBe(24 * 60 * 60 * 1000);       // 24 hours
-      expect(getRefreshLeadMs("qwen")).toBe(20 * 60 * 1000);             // 20 minutes
-      expect(getRefreshLeadMs("kimi-coding")).toBe(5 * 60 * 1000);       // 5 minutes
-      expect(getRefreshLeadMs("antigravity")).toBe(5 * 60 * 1000);       // 5 minutes
+      expect(getRefreshLeadMs("codex")).toBe(5 * 24 * 60 * 60 * 1000); // 5 days
+      expect(getRefreshLeadMs("claude")).toBe(4 * 60 * 60 * 1000); // 4 hours
+      expect(getRefreshLeadMs("iflow")).toBe(24 * 60 * 60 * 1000); // 24 hours
+      expect(getRefreshLeadMs("qwen")).toBe(20 * 60 * 1000); // 20 minutes
+      expect(getRefreshLeadMs("kimi-coding")).toBe(5 * 60 * 1000); // 5 minutes
+      expect(getRefreshLeadMs("antigravity")).toBe(5 * 60 * 1000); // 5 minutes
     });
 
     it("should fallback to default buffer for unknown providers", async () => {

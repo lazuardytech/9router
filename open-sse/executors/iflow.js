@@ -60,7 +60,7 @@ export class IFlowExecutor extends BaseExecutor {
       ...this.config.headers,
       "session-id": sessionID,
       "x-iflow-timestamp": timestamp.toString(),
-      "x-iflow-signature": signature
+      "x-iflow-signature": signature,
     };
 
     // Add authorization

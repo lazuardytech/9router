@@ -6,7 +6,12 @@ import { isTailscaleInstalled, isTailscaleLoggedIn, TAILSCALE_SOCKET } from "@/l
 const EXTENDED_PATH = `/usr/local/bin:/opt/homebrew/bin:/usr/bin:/bin:${process.env.PATH || ""}`;
 
 function hasBrew() {
-  try { execSync("which brew", { stdio: "ignore", windowsHide: true, env: { ...process.env, PATH: EXTENDED_PATH } }); return true; } catch { return false; }
+  try {
+    execSync("which brew", { stdio: "ignore", windowsHide: true, env: { ...process.env, PATH: EXTENDED_PATH } });
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 function isDaemonRunning() {
@@ -16,7 +21,7 @@ function isDaemonRunning() {
       stdio: "ignore",
       windowsHide: true,
       env: { ...process.env, PATH: EXTENDED_PATH },
-      timeout: 3000
+      timeout: 3000,
     });
     return true;
   } catch {
@@ -24,7 +29,9 @@ function isDaemonRunning() {
     try {
       execSync("pgrep -x tailscaled", { stdio: "ignore", windowsHide: true, timeout: 2000 });
       return true;
-    } catch { return false; }
+    } catch {
+      return false;
+    }
   }
 }
 

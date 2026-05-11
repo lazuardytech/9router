@@ -55,7 +55,7 @@ export default function EditConnectionModal({ isOpen, connection, proxyPools, on
   const isAzure = connection?.provider === "azure";
   const isCloudflareAi = connection?.provider === "cloudflare-ai";
   const isCompatible = connection
-    ? (isOpenAICompatibleProvider(connection.provider) || isAnthropicCompatibleProvider(connection.provider))
+    ? isOpenAICompatibleProvider(connection.provider) || isAnthropicCompatibleProvider(connection.provider)
     : false;
 
   const handleTest = async () => {
@@ -137,7 +137,7 @@ export default function EditConnectionModal({ isOpen, connection, proxyPools, on
           updates.lastErrorAt = null;
         }
       }
-      
+
       // Add Azure-specific data if this is an Azure connection
       if (isAzure) {
         updates.providerSpecificData = {
@@ -150,7 +150,7 @@ export default function EditConnectionModal({ isOpen, connection, proxyPools, on
       if (isCloudflareAi) {
         updates.providerSpecificData = { accountId: cloudflareData.accountId };
       }
-      
+
       await onSave(updates);
     } finally {
       setSaving(false);
@@ -194,7 +194,11 @@ export default function EditConnectionModal({ isOpen, connection, proxyPools, on
                 className="flex-1"
               />
               <div className="pt-6">
-                <Button onClick={handleValidate} disabled={!formData.apiKey || validating || saving} variant="secondary">
+                <Button
+                  onClick={handleValidate}
+                  disabled={!formData.apiKey || validating || saving}
+                  variant="secondary"
+                >
                   {validating ? "Checking..." : "Check"}
                 </Button>
               </div>
@@ -257,8 +261,12 @@ export default function EditConnectionModal({ isOpen, connection, proxyPools, on
         )}
 
         <div className="flex gap-2">
-          <Button onClick={handleSubmit} fullWidth disabled={saving}>{saving ? "Saving..." : "Save"}</Button>
-          <Button onClick={onClose} variant="ghost" fullWidth>Cancel</Button>
+          <Button onClick={handleSubmit} fullWidth disabled={saving}>
+            {saving ? "Saving..." : "Save"}
+          </Button>
+          <Button onClick={onClose} variant="ghost" fullWidth>
+            Cancel
+          </Button>
         </div>
       </div>
     </Modal>
@@ -276,11 +284,12 @@ EditConnectionModal.propTypes = {
     provider: PropTypes.string,
     providerSpecificData: PropTypes.object,
   }),
-  proxyPools: PropTypes.arrayOf(PropTypes.shape({
-    id: PropTypes.string,
-    name: PropTypes.string,
-  })),
+  proxyPools: PropTypes.arrayOf(
+    PropTypes.shape({
+      id: PropTypes.string,
+      name: PropTypes.string,
+    }),
+  ),
   onSave: PropTypes.func.isRequired,
   onClose: PropTypes.func.isRequired,
 };
-

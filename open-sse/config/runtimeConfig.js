@@ -11,7 +11,7 @@ export const HTTP_STATUS = {
   SERVER_ERROR: 500,
   BAD_GATEWAY: 502,
   SERVICE_UNAVAILABLE: 503,
-  GATEWAY_TIMEOUT: 504
+  GATEWAY_TIMEOUT: 504,
 };
 
 // Re-export error config (backward compat)
@@ -19,8 +19,8 @@ export { ERROR_TYPES, DEFAULT_ERROR_MESSAGES, BACKOFF_CONFIG, COOLDOWN_MS } from
 
 // Cache TTLs (seconds)
 export const CACHE_TTL = {
-  userInfo: 300,    // 5 minutes
-  modelAlias: 3600  // 1 hour
+  userInfo: 300, // 5 minutes
+  modelAlias: 3600, // 1 hour
 };
 
 // Memory management config
@@ -38,7 +38,7 @@ export const DEFAULT_MIN_TOKENS = 32000;
 // Retry config for 429 responses (legacy - kept for backward compatibility)
 export const RETRY_CONFIG = {
   maxAttempts: 2,
-  delayMs: 2000
+  delayMs: 2000,
 };
 
 // Default retry config by status code: { attempts, delayMs }
@@ -47,7 +47,7 @@ export const DEFAULT_RETRY_CONFIG = {
   429: { attempts: 0, delayMs: 0 },
   502: { attempts: 2, delayMs: 1500 },
   503: { attempts: 2, delayMs: 1500 },
-  504: { attempts: 0, delayMs: 0 }
+  504: { attempts: 0, delayMs: 0 },
 };
 
 export const LOCAL_UPSTREAM_TIMEOUT_MS = 45000;
@@ -58,11 +58,9 @@ export function resolveRetryEntry(entry) {
   if (typeof entry === "number") return { attempts: entry, delayMs: RETRY_CONFIG.delayMs };
   return {
     attempts: entry.attempts || 0,
-    delayMs: entry.delayMs != null ? entry.delayMs : RETRY_CONFIG.delayMs
+    delayMs: entry.delayMs != null ? entry.delayMs : RETRY_CONFIG.delayMs,
   };
 }
 
 // Requests containing these texts will bypass provider
-export const SKIP_PATTERNS = [
-  "Please write a 5-10 word title for the following conversation:"
-];
+export const SKIP_PATTERNS = ["Please write a 5-10 word title for the following conversation:"];

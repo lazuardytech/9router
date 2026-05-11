@@ -41,9 +41,10 @@ export function getRotatedModels(models, comboName, strategy, stickyLimit = 1) {
   const rotationKey = comboName || "__default__";
   const normalizedStickyLimit = normalizeStickyLimit(stickyLimit);
   const existingState = comboRotationState.get(rotationKey);
-  const state = typeof existingState === "number"
-    ? { index: existingState, consecutiveUseCount: 0 }
-    : (existingState || { index: 0, consecutiveUseCount: 0 });
+  const state =
+    typeof existingState === "number"
+      ? { index: existingState, consecutiveUseCount: 0 }
+      : existingState || { index: 0, consecutiveUseCount: 0 };
 
   const currentIndex = state.index % models.length;
   const rotatedModels = rotateModelsFromIndex(models, currentIndex);
@@ -82,11 +83,11 @@ export function resetComboRotation(comboName) {
 export function getComboModelsFromData(modelStr, combosData) {
   // Don't check if it's in provider/model format
   if (modelStr.includes("/")) return null;
-  
+
   // Handle both array and object formats
-  const combos = Array.isArray(combosData) ? combosData : (combosData?.combos || []);
-  
-  const combo = combos.find(c => c.name === modelStr);
+  const combos = Array.isArray(combosData) ? combosData : combosData?.combos || [];
+
+  const combo = combos.find((c) => c.name === modelStr);
   if (combo && combo.models && combo.models.length > 0) {
     return combo.models;
   }
@@ -105,10 +106,18 @@ export function getComboModelsFromData(modelStr, combosData) {
  * @param {number|string} [options.comboStickyLimit=1] - Requests per combo model before switching
  * @returns {Promise<Response>}
  */
-export async function handleComboChat({ body, models, handleSingleModel, log, comboName, comboStrategy, comboStickyLimit = 1 }) {
+export async function handleComboChat({
+  body,
+  models,
+  handleSingleModel,
+  log,
+  comboName,
+  comboStrategy,
+  comboStickyLimit = 1,
+}) {
   // Apply rotation strategy if enabled
   const rotatedModels = getRotatedModels(models, comboName, comboStrategy, comboStickyLimit);
-  
+
   let lastError = null;
   let earliestRetryAfter = null;
   let lastStatus = null;
@@ -119,7 +128,7 @@ export async function handleComboChat({ body, models, handleSingleModel, log, co
 
     try {
       const result = await handleSingleModel(body, modelStr);
-      
+
       // Success (2xx) - return response
       if (result.ok) {
         log.info("COMBO", `Model ${modelStr} succeeded`);
@@ -144,7 +153,11 @@ export async function handleComboChat({ body, models, handleSingleModel, log, co
 
       // Normalize error text to string (Worker-safe)
       if (typeof errorText !== "string") {
-        try { errorText = JSON.stringify(errorText); } catch { errorText = String(errorText); }
+        try {
+          errorText = JSON.stringify(errorText);
+        } catch {
+          errorText = String(errorText);
+        }
       }
 
       // Check if should fallback to next model
@@ -158,10 +171,14 @@ export async function handleComboChat({ body, models, handleSingleModel, log, co
       // For transient errors (503/502/504), wait for cooldown before falling through
       // so a briefly-overloaded provider gets a chance to recover rather than being
       // skipped immediately (fixes: combo falls through on transient 503)
-      if (cooldownMs && cooldownMs > 0 && cooldownMs <= 5000 &&
-          (result.status === 503 || result.status === 502 || result.status === 504)) {
+      if (
+        cooldownMs &&
+        cooldownMs > 0 &&
+        cooldownMs <= 5000 &&
+        (result.status === 503 || result.status === 502 || result.status === 504)
+      ) {
         log.info("COMBO", `Model ${modelStr} transient ${result.status}, waiting ${cooldownMs}ms before next`);
-        await new Promise(r => setTimeout(r, cooldownMs));
+        await new Promise((r) => setTimeout(r, cooldownMs));
       }
 
       // Fallback to next model
@@ -181,7 +198,7 @@ export async function handleComboChat({ body, models, handleSingleModel, log, co
   // the request itself is invalid, but here the providers are simply unavailable
   // or have no active credentials. 503 is more accurate and retryable by clients.
   const allDisabled = lastError && lastError.toLowerCase().includes("no credentials");
-  const status = allDisabled ? 503 : (lastStatus || 503);
+  const status = allDisabled ? 503 : lastStatus || 503;
   const msg = lastError || "All combo models unavailable";
 
   if (earliestRetryAfter) {
@@ -191,8 +208,8 @@ export async function handleComboChat({ body, models, handleSingleModel, log, co
   }
 
   log.warn("COMBO", `All models failed | ${msg}`);
-  return new Response(
-    JSON.stringify({ error: { message: msg } }),
-    { status, headers: { "Content-Type": "application/json" } }
-  );
+  return new Response(JSON.stringify({ error: { message: msg } }), {
+    status,
+    headers: { "Content-Type": "application/json" },
+  });
 }

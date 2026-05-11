@@ -7,14 +7,14 @@ import { formatResetTime, calculatePercentage } from "./utils";
  */
 function formatResetTimeDisplay(resetTime) {
   if (!resetTime) return null;
-  
+
   try {
     const date = new Date(resetTime);
     const now = new Date();
     const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
     const tomorrow = new Date(today);
     tomorrow.setDate(tomorrow.getDate() + 1);
-    
+
     let dayStr = "";
     if (date >= today && date < tomorrow) {
       dayStr = "Today";
@@ -23,13 +23,13 @@ function formatResetTimeDisplay(resetTime) {
     } else {
       dayStr = date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
     }
-    
-    const timeStr = date.toLocaleTimeString("en-US", { 
-      hour: "numeric", 
+
+    const timeStr = date.toLocaleTimeString("en-US", {
+      hour: "numeric",
       minute: "2-digit",
-      hour12: true 
+      hour12: true,
     });
-    
+
     return `${dayStr}, ${timeStr}`;
   } catch {
     return null;
@@ -45,25 +45,25 @@ function getColorClasses(remainingPercentage) {
       text: "text-green-600 dark:text-green-400",
       bg: "bg-green-500",
       bgLight: "bg-green-500/10",
-      emoji: "🟢"
+      emoji: "🟢",
     };
   }
-  
+
   if (remainingPercentage >= 30) {
     return {
       text: "text-yellow-600 dark:text-yellow-400",
       bg: "bg-yellow-500",
       bgLight: "bg-yellow-500/10",
-      emoji: "🟡"
+      emoji: "🟡",
     };
   }
-  
+
   // 0-29% including 0% (out of quota) - show red
   return {
     text: "text-red-600 dark:text-red-400",
     bg: "bg-red-500",
     bgLight: "bg-red-500/10",
-    emoji: "🔴"
+    emoji: "🔴",
   };
 }
 
@@ -85,16 +85,17 @@ export default function QuotaTable({ quotas = [], compact = false }) {
       <table className="w-full table-fixed text-left">
         <tbody>
           {quotas.map((quota, index) => {
-            const remaining = quota.remainingPercentage !== undefined
-              ? Math.round(quota.remainingPercentage)
-              : calculatePercentage(quota.used, quota.total);
-            
+            const remaining =
+              quota.remainingPercentage !== undefined
+                ? Math.round(quota.remainingPercentage)
+                : calculatePercentage(quota.used, quota.total);
+
             const colors = getColorClasses(remaining);
             const countdown = formatResetTime(quota.resetAt);
             const resetDisplay = formatResetTimeDisplay(quota.resetAt);
 
             return (
-              <tr 
+              <tr
                 key={index}
                 className="border-b border-black/5 dark:border-white/5 hover:bg-black/[0.02] dark:hover:bg-white/[0.02] transition-colors"
               >
@@ -102,9 +103,7 @@ export default function QuotaTable({ quotas = [], compact = false }) {
                 <td className={`${cellPad} w-[30%]`}>
                   <div className="flex items-center gap-1.5 min-w-0">
                     <span className="text-[10px] shrink-0">{colors.emoji}</span>
-                    <span className={`${nameText} font-medium text-text-primary truncate`}>
-                      {quota.name}
-                    </span>
+                    <span className={`${nameText} font-medium text-text-primary truncate`}>{quota.name}</span>
                   </div>
                 </td>
 
@@ -112,23 +111,23 @@ export default function QuotaTable({ quotas = [], compact = false }) {
                 <td className={`${cellPad} w-[45%]`}>
                   <div className={compact ? "space-y-1" : "space-y-1.5"}>
                     {/* Progress bar - always show with border for visibility */}
-                    <div className={`${compact ? "h-1" : "h-1.5"} rounded-full overflow-hidden border ${colors.bgLight} ${
-                      remaining === 0 ? 'border-black/10 dark:border-white/10' : 'border-transparent'
-                    }`}>
+                    <div
+                      className={`${compact ? "h-1" : "h-1.5"} rounded-full overflow-hidden border ${colors.bgLight} ${
+                        remaining === 0 ? "border-black/10 dark:border-white/10" : "border-transparent"
+                      }`}
+                    >
                       <div
                         className={`h-full transition-all duration-300 ${colors.bg}`}
                         style={{ width: `${Math.min(remaining, 100)}%` }}
                       />
                     </div>
-                    
+
                     {/* Numbers */}
                     <div className={`flex items-center justify-between ${compact ? "text-[10px]" : "text-xs"}`}>
                       <span className="text-text-muted">
                         {quota.used.toLocaleString()} / {quota.total > 0 ? quota.total.toLocaleString() : "∞"}
                       </span>
-                      <span className={`font-medium ${colors.text}`}>
-                        {remaining}%
-                      </span>
+                      <span className={`font-medium ${colors.text}`}>{remaining}%</span>
                     </div>
                   </div>
                 </td>
@@ -146,15 +145,9 @@ export default function QuotaTable({ quotas = [], compact = false }) {
                     ) : (
                       <div className="space-y-0.5">
                         {countdown !== "-" && (
-                          <div className={`${resetPrimary} text-text-primary font-medium`}>
-                            in {countdown}
-                          </div>
+                          <div className={`${resetPrimary} text-text-primary font-medium`}>in {countdown}</div>
                         )}
-                        {resetDisplay && (
-                          <div className={`${resetSecondary} text-text-muted`}>
-                            {resetDisplay}
-                          </div>
-                        )}
+                        {resetDisplay && <div className={`${resetSecondary} text-text-muted`}>{resetDisplay}</div>}
                       </div>
                     )
                   ) : (

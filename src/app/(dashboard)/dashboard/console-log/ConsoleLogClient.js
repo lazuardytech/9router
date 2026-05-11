@@ -66,15 +66,12 @@ export default function ConsoleLogClient() {
   return (
     <div className="">
       <Card>
-        <div className="flex items-center justify-end px-4 pt-3 pb-2">
+        <div className="flex items-center justify-end pb-4">
           <Button size="sm" variant="outline" icon="delete" onClick={handleClear}>
             Clear
           </Button>
         </div>
-        <div
-          ref={logRef}
-          className="bg-black rounded-b-lg p-4 text-xs font-mono h-[calc(100vh-220px)] overflow-y-auto"
-        >
+        <div ref={logRef} className="bg-black rounded-b-lg p-4 text-xs font-mono h-[calc(100vh-220px)] overflow-y-auto">
           {logs.length === 0 ? (
             <span className="text-text-muted">No console logs yet.</span>
           ) : (

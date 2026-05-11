@@ -2,16 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import PropTypes from "prop-types";
-import {
-  AreaChart,
-  Area,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  Legend,
-} from "recharts";
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts";
 import Card from "@/shared/components/Card";
 
 const fmtTokens = (n) => {
@@ -104,9 +95,7 @@ export default function UsageChart({ period = "7d" }) {
                 borderRadius: "8px",
                 fontSize: "12px",
               }}
-              formatter={(value, name) =>
-                name === "tokens" ? [fmtTokens(value), "Tokens"] : [fmtCost(value), "Cost"]
-              }
+              formatter={(value, name) => (name === "tokens" ? [fmtTokens(value), "Tokens"] : [fmtCost(value), "Cost"])}
             />
             {viewMode === "tokens" ? (
               <Area

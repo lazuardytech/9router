@@ -21,10 +21,7 @@ function getDataDir() {
 
   const homeDir = os.homedir();
   if (process.platform === "win32") {
-    return path.join(
-      process.env.APPDATA || path.join(homeDir, "AppData", "Roaming"),
-      APP_NAME,
-    );
+    return path.join(process.env.APPDATA || path.join(homeDir, "AppData", "Roaming"), APP_NAME);
   }
   return path.join(homeDir, `.${APP_NAME}`);
 }
@@ -37,17 +34,15 @@ let schemaReady = false;
 
 function applyPragmas(db) {
   // bun:sqlite has no `.pragma()` shorthand — fall back to exec.
-  const setPragma = typeof db.pragma === "function"
-    ? (s) => db.pragma(s)
-    : (s) => db.exec(`PRAGMA ${s}`);
+  const setPragma = typeof db.pragma === "function" ? (s) => db.pragma(s) : (s) => db.exec(`PRAGMA ${s}`);
   setPragma("journal_mode = WAL");
   setPragma("synchronous = NORMAL");
   setPragma("foreign_keys = ON");
   setPragma("busy_timeout = 5000");
   // Concurrency tuning: bigger page cache, mmap reads, in-memory temp tables,
   // and a sane WAL checkpoint cadence to avoid long pauses under load.
-  setPragma("cache_size = -64000");        // ~64 MB
-  setPragma("mmap_size = 268435456");      // 256 MB
+  setPragma("cache_size = -64000"); // ~64 MB
+  setPragma("mmap_size = 268435456"); // 256 MB
   setPragma("temp_store = MEMORY");
   setPragma("wal_autocheckpoint = 1000");
 }
@@ -64,9 +59,10 @@ function readMeta(db, key) {
 }
 
 function writeMeta(db, key, value) {
-  db.prepare(
-    "INSERT INTO meta(key, value) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value",
-  ).run(key, String(value));
+  db.prepare("INSERT INTO meta(key, value) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value").run(
+    key,
+    String(value),
+  );
 }
 
 function runInitialMigration(db) {
@@ -90,9 +86,7 @@ export function getDatabase() {
   // built-in `bun:sqlite` instead. Both modules are kept external in
   // next.config.mjs so webpack leaves the require calls untouched and
   // they're resolved by the runtime's createRequire at call time.
-  const Database = typeof Bun !== "undefined"
-    ? require("bun:sqlite").Database
-    : require("better-sqlite3");
+  const Database = typeof Bun !== "undefined" ? require("bun:sqlite").Database : require("better-sqlite3");
   const db = new Database(SQLITE_FILE);
   applyPragmas(db);
   ensureSchema(db);
@@ -104,7 +98,9 @@ export function getDatabase() {
 
 export function closeDatabase() {
   if (dbInstance) {
-    try { dbInstance.close(); } catch {}
+    try {
+      dbInstance.close();
+    } catch {}
     dbInstance = null;
     schemaReady = false;
   }

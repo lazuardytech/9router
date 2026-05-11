@@ -233,20 +233,17 @@ const PROVIDERS = {
       // Fetch project ID
       let projectId = "";
       try {
-        const projectRes = await fetch(
-          "https://cloudcode-pa.googleapis.com/v1internal:loadCodeAssist",
-          {
-            method: "POST",
-            headers: {
-              Authorization: `Bearer ${tokens.access_token}`,
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-              metadata: getOAuthClientMetadata(),
-              mode: 1,
-            }),
-          }
-        );
+        const projectRes = await fetch("https://cloudcode-pa.googleapis.com/v1internal:loadCodeAssist", {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${tokens.access_token}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            metadata: getOAuthClientMetadata(),
+            mode: 1,
+          }),
+        });
         if (projectRes.ok) {
           const data = await projectRes.json();
           projectId = data.cloudaicompanionProject?.id || data.cloudaicompanionProject || "";
@@ -308,7 +305,7 @@ const PROVIDERS = {
     postExchange: async (tokens) => {
       // Matches CLIProxyAPI Go source: string enum, no mode field
       const loadHeaders = {
-        "Authorization": `Bearer ${tokens.access_token}`,
+        Authorization: `Bearer ${tokens.access_token}`,
         "Content-Type": "application/json",
         "User-Agent": ANTIGRAVITY_CONFIG.loadCodeAssistUserAgent,
         "X-Goog-Api-Client": ANTIGRAVITY_CONFIG.loadCodeAssistApiClient,
@@ -368,7 +365,7 @@ const PROVIDERS = {
             } catch (e) {
               break;
             }
-            await new Promise(resolve => setTimeout(resolve, 5000));
+            await new Promise((resolve) => setTimeout(resolve, 5000));
           }
         };
         doOnboard().catch(() => {});
@@ -401,9 +398,7 @@ const PROVIDERS = {
     },
     exchangeToken: async (config, code, redirectUri) => {
       // Create Basic Auth header
-      const basicAuth = Buffer.from(
-        `${config.clientId}:${config.clientSecret}`
-      ).toString("base64");
+      const basicAuth = Buffer.from(`${config.clientId}:${config.clientSecret}`).toString("base64");
 
       const response = await fetch(config.tokenUrl, {
         method: "POST",
@@ -436,32 +431,32 @@ const PROVIDERS = {
           headers: {
             Accept: "application/json",
           },
-        }
+        },
       );
-      
+
       if (!userInfoRes.ok) {
         const errorText = await userInfoRes.text();
         throw new Error(`Failed to fetch user info: ${errorText}`);
       }
-      
+
       const result = await userInfoRes.json();
       if (!result.success) {
-        throw new Error(`User info request failed: ${result.message || 'Unknown error'}`);
+        throw new Error(`User info request failed: ${result.message || "Unknown error"}`);
       }
-      
+
       const userInfo = result.data || {};
-      
+
       // Validate API key (critical for iFlow)
       if (!userInfo.apiKey || userInfo.apiKey.trim() === "") {
         throw new Error("Empty API key returned from iFlow");
       }
-      
+
       // Validate email/phone
       const email = userInfo.email?.trim() || userInfo.phone?.trim();
       if (!email) {
         throw new Error("Missing account email/phone in user info");
       }
-      
+
       return { userInfo };
     },
     mapTokens: (tokens, extra) => ({
@@ -516,7 +511,7 @@ const PROVIDERS = {
       // Fetch user info (MUST succeed to get API key)
       const userInfoRes = await fetch(
         `${QODER_CONFIG.userInfoUrl}?accessToken=${encodeURIComponent(tokens.access_token)}`,
-        { headers: { Accept: "application/json" } }
+        { headers: { Accept: "application/json" } },
       );
 
       if (!userInfoRes.ok) {
@@ -877,8 +872,7 @@ const PROVIDERS = {
         user_code: data.user_code,
         verification_uri: data.verification_uri || "https://www.kimi.com/code/authorize_device",
         verification_uri_complete:
-          data.verification_uri_complete ||
-          `https://www.kimi.com/code/authorize_device?user_code=${data.user_code}`,
+          data.verification_uri_complete || `https://www.kimi.com/code/authorize_device?user_code=${data.user_code}`,
         expires_in: data.expires_in,
         interval: data.interval || 5,
       };
@@ -937,16 +931,19 @@ const PROVIDERS = {
     pollToken: async (config, deviceCode) => {
       const response = await fetch(`${config.pollUrlBase}/${deviceCode}`);
       if (response.status === 202) return { ok: false, data: { error: "authorization_pending" } };
-      if (response.status === 403) return { ok: false, data: { error: "access_denied", error_description: "Authorization denied by user" } };
-      if (response.status === 410) return { ok: false, data: { error: "expired_token", error_description: "Authorization code expired" } };
-      if (!response.ok) return { ok: false, data: { error: "poll_failed", error_description: `Poll failed: ${response.status}` } };
+      if (response.status === 403)
+        return { ok: false, data: { error: "access_denied", error_description: "Authorization denied by user" } };
+      if (response.status === 410)
+        return { ok: false, data: { error: "expired_token", error_description: "Authorization code expired" } };
+      if (!response.ok)
+        return { ok: false, data: { error: "poll_failed", error_description: `Poll failed: ${response.status}` } };
       const data = await response.json();
       if (data.status === "approved" && data.token) {
         // Fetch profile to get orgId for X-Kilocode-OrganizationID header
         let orgId = null;
         try {
           const profileRes = await fetch(`${config.apiBaseUrl}/api/profile`, {
-            headers: { "Authorization": `Bearer ${data.token}` }
+            headers: { Authorization: `Bearer ${data.token}` },
           });
           if (profileRes.ok) {
             const profile = await profileRes.json();
@@ -999,7 +996,12 @@ const PROVIDERS = {
         const response = await fetch(config.tokenExchangeUrl, {
           method: "POST",
           headers: { "Content-Type": "application/json", Accept: "application/json" },
-          body: JSON.stringify({ grant_type: "authorization_code", code, client_type: "extension", redirect_uri: redirectUri }),
+          body: JSON.stringify({
+            grant_type: "authorization_code",
+            code,
+            client_type: "extension",
+            redirect_uri: redirectUri,
+          }),
         });
         if (!response.ok) {
           const error = await response.text();
@@ -1017,9 +1019,7 @@ const PROVIDERS = {
     mapTokens: (tokens) => ({
       accessToken: tokens.access_token,
       refreshToken: tokens.refresh_token,
-      expiresIn: tokens.expires_at
-        ? Math.floor((new Date(tokens.expires_at).getTime() - Date.now()) / 1000)
-        : 3600,
+      expiresIn: tokens.expires_at ? Math.floor((new Date(tokens.expires_at).getTime() - Date.now()) / 1000) : 3600,
       email: tokens.email,
       providerSpecificData: { firstName: tokens.firstName, lastName: tokens.lastName },
     }),
@@ -1262,20 +1262,20 @@ export async function pollForToken(providerName, deviceCode, codeVerifier, extra
       return { success: true, tokens: provider.mapTokens(result.data, extra) };
     } else {
       // Check if it's still pending authorization
-      if (result.data.error === 'authorization_pending' || result.data.error === 'slow_down') {
+      if (result.data.error === "authorization_pending" || result.data.error === "slow_down") {
         // This is not a failure, just still waiting
         return {
           success: false,
           error: result.data.error,
           errorDescription: result.data.error_description || result.data.message,
-          pending: result.data.error === 'authorization_pending'
+          pending: result.data.error === "authorization_pending",
         };
       } else {
         // Actual error
         return {
           success: false,
-          error: result.data.error || 'no_access_token',
-          errorDescription: result.data.error_description || result.data.message || 'No access token received'
+          error: result.data.error || "no_access_token",
+          errorDescription: result.data.error_description || result.data.message || "No access token received",
         };
       }
     }

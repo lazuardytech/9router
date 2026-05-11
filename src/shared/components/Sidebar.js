@@ -13,7 +13,12 @@ import { ConfirmModal } from "./Modal";
 // const VISIBLE_MEDIA_KINDS = ["embedding", "image", "imageToText", "tts", "stt", "webSearch", "webFetch", "video", "music"];
 const VISIBLE_MEDIA_KINDS = ["embedding", "image", "tts", "stt"];
 // Combined entry: webSearch + webFetch share one page at /dashboard/media-providers/web
-const COMBINED_WEB_ITEM = { id: "web", label: "Web Fetch & Search", icon: "travel_explore", href: "/dashboard/media-providers/web" };
+const COMBINED_WEB_ITEM = {
+  id: "web",
+  label: "Web Fetch & Search",
+  icon: "travel_explore",
+  href: "/dashboard/media-providers/web",
+};
 
 const navItems = [
   { href: "/dashboard/endpoint", label: "Endpoint", icon: "api" },
@@ -29,9 +34,7 @@ const debugItems = [
   { href: "/dashboard/translator", label: "Translator", icon: "translate" },
 ];
 
-const systemItems = [
-  { href: "/dashboard/proxy-pools", label: "Proxy Pools", icon: "lan" },
-];
+const systemItems = [{ href: "/dashboard/proxy-pools", label: "Proxy Pools", icon: "lan" }];
 
 export default function Sidebar({ onClose }) {
   const pathname = usePathname();
@@ -44,8 +47,10 @@ export default function Sidebar({ onClose }) {
 
   useEffect(() => {
     fetch("/api/settings")
-      .then(res => res.json())
-      .then(data => { if (data.enableTranslator) setEnableTranslator(true); })
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.enableTranslator) setEnableTranslator(true);
+      })
       .catch(() => {});
   }, []);
 
@@ -84,9 +89,7 @@ export default function Sidebar({ onClose }) {
               <span className="material-symbols-outlined text-white text-[20px]">hub</span>
             </div>
             <div className="flex flex-col">
-              <h1 className="text-lg font-semibold tracking-tight text-text-main">
-                {APP_CONFIG.name}
-              </h1>
+              <h1 className="text-lg font-semibold tracking-tight text-text-main">{APP_CONFIG.name}</h1>
               <span className="text-xs text-text-muted">v{APP_CONFIG.displayVersion}</span>
             </div>
           </Link>
@@ -103,13 +106,13 @@ export default function Sidebar({ onClose }) {
                 "flex items-center gap-3 px-3 py-1 rounded-lg transition-all group",
                 isActive(item.href)
                   ? "bg-primary/10 text-primary"
-                  : "text-text-muted hover:bg-surface-2 hover:text-text-main"
+                  : "text-text-muted hover:bg-surface-2 hover:text-text-main",
               )}
             >
               <span
                 className={cn(
                   "material-symbols-outlined text-[18px]",
-                  isActive(item.href) ? "fill-1" : "group-hover:text-primary transition-colors"
+                  isActive(item.href) ? "fill-1" : "group-hover:text-primary transition-colors",
                 )}
               >
                 {item.icon}
@@ -120,9 +123,7 @@ export default function Sidebar({ onClose }) {
 
           {/* System section */}
           <div className="pt-3 mt-2 space-y-0.5">
-            <p className="px-4 text-xs font-semibold text-text-muted/60 uppercase tracking-wider mb-2">
-              System
-            </p>
+            <p className="px-4 text-xs font-semibold text-text-muted/60 uppercase tracking-wider mb-2">System</p>
 
             {/* Media Providers accordion */}
             <button
@@ -131,12 +132,15 @@ export default function Sidebar({ onClose }) {
                 "w-full flex items-center gap-3 px-3 py-1 rounded-lg transition-all group",
                 pathname.startsWith("/dashboard/media-providers")
                   ? "bg-primary/10 text-primary"
-                  : "text-text-muted hover:bg-surface-2 hover:text-text-main"
+                  : "text-text-muted hover:bg-surface-2 hover:text-text-main",
               )}
             >
               <span className="material-symbols-outlined text-[18px]">perm_media</span>
               <span className="text-[13px] font-medium flex-1 text-left">Media Providers</span>
-              <span className="material-symbols-outlined text-[14px] transition-transform" style={{ transform: mediaOpen ? "rotate(180deg)" : "rotate(0deg)" }}>
+              <span
+                className="material-symbols-outlined text-[14px] transition-transform"
+                style={{ transform: mediaOpen ? "rotate(180deg)" : "rotate(0deg)" }}
+              >
                 expand_more
               </span>
             </button>
@@ -151,7 +155,7 @@ export default function Sidebar({ onClose }) {
                       "flex items-center gap-3 px-4 py-1 rounded-lg transition-all group",
                       pathname.startsWith(`/dashboard/media-providers/${kind.id}`)
                         ? "bg-primary/10 text-primary"
-                        : "text-text-muted hover:bg-surface-2 hover:text-text-main"
+                        : "text-text-muted hover:bg-surface-2 hover:text-text-main",
                     )}
                   >
                     <span className="material-symbols-outlined text-[16px]">{kind.icon}</span>
@@ -166,7 +170,7 @@ export default function Sidebar({ onClose }) {
                     "flex items-center gap-3 px-4 py-1 rounded-lg transition-all group",
                     pathname.startsWith(COMBINED_WEB_ITEM.href)
                       ? "bg-primary/10 text-primary"
-                      : "text-text-muted hover:bg-surface-2 hover:text-text-main"
+                      : "text-text-muted hover:bg-surface-2 hover:text-text-main",
                   )}
                 >
                   <span className="material-symbols-outlined text-[16px]">{COMBINED_WEB_ITEM.icon}</span>
@@ -184,13 +188,13 @@ export default function Sidebar({ onClose }) {
                   "flex items-center gap-3 px-3 py-1 rounded-lg transition-all group",
                   isActive(item.href)
                     ? "bg-primary/10 text-primary"
-                    : "text-text-muted hover:bg-surface-2 hover:text-text-main"
+                    : "text-text-muted hover:bg-surface-2 hover:text-text-main",
                 )}
               >
                 <span
                   className={cn(
                     "material-symbols-outlined text-[18px]",
-                    isActive(item.href) ? "fill-1" : "group-hover:text-primary transition-colors"
+                    isActive(item.href) ? "fill-1" : "group-hover:text-primary transition-colors",
                   )}
                 >
                   {item.icon}
@@ -211,13 +215,13 @@ export default function Sidebar({ onClose }) {
                     "flex items-center gap-3 px-3 py-1 rounded-lg transition-all group",
                     isActive(item.href)
                       ? "bg-primary/10 text-primary"
-                      : "text-text-muted hover:bg-surface-2 hover:text-text-main"
+                      : "text-text-muted hover:bg-surface-2 hover:text-text-main",
                   )}
                 >
                   <span
                     className={cn(
                       "material-symbols-outlined text-[18px]",
-                      isActive(item.href) ? "fill-1" : "group-hover:text-primary transition-colors"
+                      isActive(item.href) ? "fill-1" : "group-hover:text-primary transition-colors",
                     )}
                   >
                     {item.icon}
@@ -235,13 +239,13 @@ export default function Sidebar({ onClose }) {
                 "flex items-center gap-3 px-3 py-1 rounded-lg transition-all group",
                 isActive("/dashboard/profile")
                   ? "bg-primary/10 text-primary"
-                  : "text-text-muted hover:bg-surface-2 hover:text-text-main"
+                  : "text-text-muted hover:bg-surface-2 hover:text-text-main",
               )}
             >
               <span
                 className={cn(
                   "material-symbols-outlined text-[18px]",
-                  isActive("/dashboard/profile") ? "fill-1" : "group-hover:text-primary transition-colors"
+                  isActive("/dashboard/profile") ? "fill-1" : "group-hover:text-primary transition-colors",
                 )}
               >
                 settings

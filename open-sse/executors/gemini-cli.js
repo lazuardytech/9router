@@ -15,10 +15,10 @@ export class GeminiCLIExecutor extends BaseExecutor {
   buildHeaders(credentials, stream = true) {
     return {
       "Content-Type": "application/json",
-      "Authorization": `Bearer ${credentials.accessToken}`,
+      Authorization: `Bearer ${credentials.accessToken}`,
       "User-Agent": geminiCLIUserAgent(this._currentModel),
       "X-Goog-Api-Client": GEMINI_CLI_API_CLIENT,
-      "Accept": stream ? "text/event-stream" : "application/json"
+      Accept: stream ? "text/event-stream" : "application/json",
     };
   }
 
@@ -37,13 +37,13 @@ export class GeminiCLIExecutor extends BaseExecutor {
     try {
       const response = await fetch(OAUTH_ENDPOINTS.google.token, {
         method: "POST",
-        headers: { "Content-Type": "application/x-www-form-urlencoded", "Accept": "application/json" },
+        headers: { "Content-Type": "application/x-www-form-urlencoded", Accept: "application/json" },
         body: new URLSearchParams({
           grant_type: "refresh_token",
           refresh_token: credentials.refreshToken,
           client_id: this.config.clientId,
-          client_secret: this.config.clientSecret
-        })
+          client_secret: this.config.clientSecret,
+        }),
       });
 
       if (!response.ok) return null;
@@ -55,7 +55,7 @@ export class GeminiCLIExecutor extends BaseExecutor {
         accessToken: tokens.access_token,
         refreshToken: tokens.refresh_token || credentials.refreshToken,
         expiresIn: tokens.expires_in,
-        projectId: credentials.projectId
+        projectId: credentials.projectId,
       };
     } catch (error) {
       log?.error?.("TOKEN", `Gemini CLI refresh error: ${error.message}`);

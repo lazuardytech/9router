@@ -7,8 +7,12 @@ export async function POST(request) {
     const { model, kind } = await request.json();
     if (!model) return NextResponse.json({ error: "Model required" }, { status: 400 });
 
-    const baseUrl = process.env.BASE_URL ||
-      (() => { const u = new URL(request.url); return `${u.protocol}//${u.host}`; })();
+    const baseUrl =
+      process.env.BASE_URL ||
+      (() => {
+        const u = new URL(request.url);
+        return `${u.protocol}//${u.host}`;
+      })();
 
     // Get an active internal API key for auth (if requireApiKey is enabled)
     let apiKey = null;
@@ -33,15 +37,28 @@ export async function POST(request) {
       const latencyMs = Date.now() - start;
       const rawText = await res.text().catch(() => "");
       let parsed = null;
-      try { parsed = rawText ? JSON.parse(rawText) : null; } catch {}
+      try {
+        parsed = rawText ? JSON.parse(rawText) : null;
+      } catch {}
 
       if (!res.ok) {
         const detail = parsed?.error?.message || parsed?.error || rawText;
-        return NextResponse.json({ ok: false, latencyMs, error: `HTTP ${res.status}${detail ? `: ${String(detail).slice(0, 240)}` : ""}`, status: res.status });
+        return NextResponse.json({
+          ok: false,
+          latencyMs,
+          error: `HTTP ${res.status}${detail ? `: ${String(detail).slice(0, 240)}` : ""}`,
+          status: res.status,
+        });
       }
-      const hasEmbedding = Array.isArray(parsed?.data) && parsed.data.length > 0 && Array.isArray(parsed.data[0]?.embedding);
+      const hasEmbedding =
+        Array.isArray(parsed?.data) && parsed.data.length > 0 && Array.isArray(parsed.data[0]?.embedding);
       if (!hasEmbedding) {
-        return NextResponse.json({ ok: false, latencyMs, status: res.status, error: "Provider returned no embedding data" });
+        return NextResponse.json({
+          ok: false,
+          latencyMs,
+          status: res.status,
+          error: "Provider returned no embedding data",
+        });
       }
       return NextResponse.json({ ok: true, latencyMs, error: null, status: res.status });
     }
@@ -75,10 +92,11 @@ export async function POST(request) {
     // Some providers may return HTTP 200 but not a real completion for invalid models.
     const providerStatus = parsed?.status;
     const providerMsg = parsed?.msg || parsed?.message;
-    const hasProviderErrorStatus = providerStatus !== undefined
-      && providerStatus !== null
-      && String(providerStatus) !== "200"
-      && String(providerStatus) !== "0";
+    const hasProviderErrorStatus =
+      providerStatus !== undefined &&
+      providerStatus !== null &&
+      String(providerStatus) !== "200" &&
+      String(providerStatus) !== "0";
     if (hasProviderErrorStatus && providerMsg) {
       return NextResponse.json({
         ok: false,

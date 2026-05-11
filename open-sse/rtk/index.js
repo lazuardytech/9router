@@ -9,9 +9,7 @@ export function compressMessages(body, enabled) {
   if (!enabled) return null;
   if (!body) return null;
   // Support both OpenAI/Claude "messages" and OpenAI Responses "input"
-  const items = Array.isArray(body.messages) ? body.messages
-    : Array.isArray(body.input) ? body.input
-    : null;
+  const items = Array.isArray(body.messages) ? body.messages : Array.isArray(body.input) ? body.input : null;
   if (!items) return null;
 
   const stats = { bytesBefore: 0, bytesAfter: 0, hits: [] };
@@ -114,6 +112,6 @@ export function formatRtkLog(stats) {
   if (!stats || !stats.hits || stats.hits.length === 0) return null;
   const saved = stats.bytesBefore - stats.bytesAfter;
   const pct = stats.bytesBefore > 0 ? ((saved / stats.bytesBefore) * 100).toFixed(1) : "0";
-  const filters = Array.from(new Set(stats.hits.map(h => h.filter))).join(",");
+  const filters = Array.from(new Set(stats.hits.map((h) => h.filter))).join(",");
   return `[RTK] saved ${saved}B / ${stats.bytesBefore}B (${pct}%) via [${filters}] hits=${stats.hits.length}`;
 }

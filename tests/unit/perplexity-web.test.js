@@ -57,7 +57,13 @@ describe("parseOpenAIMessages", () => {
 
   it("handles multi-part content (array of text blocks)", () => {
     const parsed = parseOpenAIMessages([
-      { role: "user", content: [{ type: "text", text: "part1" }, { type: "text", text: "part2" }] },
+      {
+        role: "user",
+        content: [
+          { type: "text", text: "part1" },
+          { type: "text", text: "part2" },
+        ],
+      },
     ]);
     expect(parsed.currentMsg).toBe("part1 part2");
   });
@@ -84,7 +90,10 @@ describe("buildQuery", () => {
   it("follow-up (with backendUuid): returns plain currentMsg, no JSON", () => {
     const parsed = {
       systemMsg: "Be helpful",
-      history: [{ role: "user", content: "Q1" }, { role: "assistant", content: "A1" }],
+      history: [
+        { role: "user", content: "Q1" },
+        { role: "assistant", content: "A1" },
+      ],
       currentMsg: "Follow up",
     };
     const q = buildQuery(parsed, "uuid-abc-123");

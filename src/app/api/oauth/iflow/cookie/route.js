@@ -29,12 +29,13 @@ export async function POST(request) {
     const getResponse = await fetch("https://platform.iflow.cn/api/openapi/apikey", {
       method: "GET",
       headers: {
-        "Cookie": normalizedCookie,
-        "Accept": "application/json, text/plain, */*",
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
+        Cookie: normalizedCookie,
+        Accept: "application/json, text/plain, */*",
+        "User-Agent":
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
         "Accept-Language": "zh-CN,zh;q=0.9,en;q=0.8",
         "Accept-Encoding": "gzip, deflate, br",
-        "Connection": "keep-alive",
+        Connection: "keep-alive",
         "Sec-Fetch-Dest": "empty",
         "Sec-Fetch-Mode": "cors",
         "Sec-Fetch-Site": "same-origin",
@@ -43,18 +44,12 @@ export async function POST(request) {
 
     if (!getResponse.ok) {
       const errorText = await getResponse.text();
-      return NextResponse.json(
-        { error: `Failed to fetch API key info: ${errorText}` },
-        { status: getResponse.status }
-      );
+      return NextResponse.json({ error: `Failed to fetch API key info: ${errorText}` }, { status: getResponse.status });
     }
 
     const getResult = await getResponse.json();
     if (!getResult.success) {
-      return NextResponse.json(
-        { error: `API key fetch failed: ${getResult.message}` },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: `API key fetch failed: ${getResult.message}` }, { status: 400 });
     }
 
     const keyData = getResult.data;
@@ -66,33 +61,28 @@ export async function POST(request) {
     const postResponse = await fetch("https://platform.iflow.cn/api/openapi/apikey", {
       method: "POST",
       headers: {
-        "Cookie": normalizedCookie,
+        Cookie: normalizedCookie,
         "Content-Type": "application/json",
-        "Accept": "application/json, text/plain, */*",
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
+        Accept: "application/json, text/plain, */*",
+        "User-Agent":
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
         "Accept-Language": "zh-CN,zh;q=0.9,en;q=0.8",
         "Accept-Encoding": "gzip, deflate, br",
-        "Connection": "keep-alive",
-        "Origin": "https://platform.iflow.cn",
-        "Referer": "https://platform.iflow.cn/",
+        Connection: "keep-alive",
+        Origin: "https://platform.iflow.cn",
+        Referer: "https://platform.iflow.cn/",
       },
       body: JSON.stringify({ name: keyData.name }),
     });
 
     if (!postResponse.ok) {
       const errorText = await postResponse.text();
-      return NextResponse.json(
-        { error: `Failed to refresh API key: ${errorText}` },
-        { status: postResponse.status }
-      );
+      return NextResponse.json({ error: `Failed to refresh API key: ${errorText}` }, { status: postResponse.status });
     }
 
     const postResult = await postResponse.json();
     if (!postResult.success) {
-      return NextResponse.json(
-        { error: `API key refresh failed: ${postResult.message}` },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: `API key refresh failed: ${postResult.message}` }, { status: 400 });
     }
 
     const refreshedKey = postResult.data;

@@ -36,7 +36,7 @@ export default function Select({
             "transition-all duration-150 disabled:opacity-50 disabled:cursor-not-allowed",
             "text-[16px] sm:text-sm",
             error && "ring-1 ring-red-500 focus:ring-2 focus:ring-red-500/40 border-red-500/40",
-            selectClassName
+            selectClassName,
           )}
           {...props}
         >
@@ -59,9 +59,7 @@ export default function Select({
           {error}
         </p>
       )}
-      {hint && !error && (
-        <p className="text-xs text-text-muted">{hint}</p>
-      )}
+      {hint && !error && <p className="text-xs text-text-muted">{hint}</p>}
     </div>
   );
 }

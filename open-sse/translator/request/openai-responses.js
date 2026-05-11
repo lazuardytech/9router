@@ -1,6 +1,6 @@
 /**
  * Translator: OpenAI Responses API → OpenAI Chat Completions
- * 
+ *
  * Responses API uses: { input: [...], instructions: "..." }
  * Chat API uses: { messages: [...] }
  */
@@ -10,7 +10,8 @@ import { normalizeResponsesInput } from "../helpers/responsesApiHelper.js";
 
 // Responses API enforces max 64 chars on call_id (#393)
 const MAX_CALL_ID_LEN = 64;
-const clampCallId = (id) => (typeof id === "string" && id.length > MAX_CALL_ID_LEN ? id.substring(0, MAX_CALL_ID_LEN) : id);
+const clampCallId = (id) =>
+  typeof id === "string" && id.length > MAX_CALL_ID_LEN ? id.substring(0, MAX_CALL_ID_LEN) : id;
 
 /**
  * Convert OpenAI Responses API request to OpenAI Chat Completions format
@@ -54,25 +55,24 @@ export function openaiResponsesToOpenAIRequest(model, body, stream, credentials)
 
       // Convert content: input_text → text, output_text → text, input_image → image_url
       const content = Array.isArray(item.content)
-        ? item.content.map(c => {
-          if (c.type === "input_text") return { type: "text", text: c.text };
-          if (c.type === "output_text") return { type: "text", text: c.text };
-          if (c.type === "input_image") {
-            const url = c.image_url || c.file_id || "";
-            return { type: "image_url", image_url: { url, detail: c.detail || "auto" } };
-          }
-          return c;
-        })
+        ? item.content.map((c) => {
+            if (c.type === "input_text") return { type: "text", text: c.text };
+            if (c.type === "output_text") return { type: "text", text: c.text };
+            if (c.type === "input_image") {
+              const url = c.image_url || c.file_id || "";
+              return { type: "image_url", image_url: { url, detail: c.detail || "auto" } };
+            }
+            return c;
+          })
         : item.content;
       result.messages.push({ role: item.role, content });
-    }
-    else if (itemType === "function_call") {
+    } else if (itemType === "function_call") {
       // Start or append to assistant message with tool_calls
       if (!currentAssistantMsg) {
         currentAssistantMsg = {
           role: "assistant",
           content: null,
-          tool_calls: []
+          tool_calls: [],
         };
       }
       // Skip items with empty/missing name — Codex/OpenAI reject nameless tool calls (#444)
@@ -82,11 +82,10 @@ export function openaiResponsesToOpenAIRequest(model, body, stream, credentials)
         type: "function",
         function: {
           name: item.name,
-          arguments: item.arguments
-        }
+          arguments: item.arguments,
+        },
       });
-    }
-    else if (itemType === "function_call_output") {
+    } else if (itemType === "function_call_output") {
       // Flush assistant message first if exists
       if (currentAssistantMsg) {
         result.messages.push(currentAssistantMsg);
@@ -103,10 +102,9 @@ export function openaiResponsesToOpenAIRequest(model, body, stream, credentials)
       result.messages.push({
         role: "tool",
         tool_call_id: item.call_id,
-        content: typeof item.output === "string" ? item.output : JSON.stringify(item.output)
+        content: typeof item.output === "string" ? item.output : JSON.stringify(item.output),
       });
-    }
-    else if (itemType === "reasoning") {
+    } else if (itemType === "reasoning") {
       // Skip reasoning items - they are for display only
       continue;
     }
@@ -129,7 +127,7 @@ export function openaiResponsesToOpenAIRequest(model, body, stream, credentials)
   // such as Gemini, which strictly validates function names.
   if (body.tools && Array.isArray(body.tools)) {
     result.tools = body.tools
-      .map(tool => {
+      .map((tool) => {
         // Already in Chat Completions format: { type: "function", function: { name, ... } }
         if (tool.function) return tool;
         // Responses API function tool: { type: "function", name, description, parameters }
@@ -142,8 +140,8 @@ export function openaiResponsesToOpenAIRequest(model, body, stream, credentials)
             name,
             description: String(tool.description || ""),
             parameters: normalizeToolParameters(tool.parameters),
-            strict: tool.strict
-          }
+            strict: tool.strict,
+          },
         };
       })
       .filter(Boolean);
@@ -180,7 +178,7 @@ export function openaiToOpenAIResponsesRequest(model, body, stream, credentials)
     model,
     input: [],
     stream: true,
-    store: false
+    store: false,
   };
 
   // Extract system message as instructions
@@ -200,24 +198,25 @@ export function openaiToOpenAIResponsesRequest(model, body, stream, credentials)
     // Convert user/assistant messages to input items
     if (msg.role === "user" || msg.role === "assistant") {
       const contentType = msg.role === "user" ? "input_text" : "output_text";
-      const content = typeof msg.content === "string"
-        ? [{ type: contentType, text: msg.content }]
-        : Array.isArray(msg.content)
-          ? msg.content.map(c => {
-            if (c.type === "text") return { type: contentType, text: c.text };
-            // Convert Chat Completions image_url → Responses API input_image
-            // Responses API expects: { type: "input_image", image_url: "<url string>" }
-            // Chat Completions sends: { type: "image_url", image_url: { url: "...", detail: "..." } }
-            if (c.type === "image_url") {
-              const url = typeof c.image_url === "string" ? c.image_url : c.image_url?.url;
-              return { type: "input_image", image_url: url, detail: c.image_url?.detail || "auto" };
-            }
-            if (c.type === "input_image") return c;
-            // Serialize any unknown type (tool_use, tool_result, thinking, etc.) as text
-            const text = c.text || c.content || JSON.stringify(c);
-            return { type: contentType, text: typeof text === "string" ? text : JSON.stringify(text) };
-          })
-          : [];
+      const content =
+        typeof msg.content === "string"
+          ? [{ type: contentType, text: msg.content }]
+          : Array.isArray(msg.content)
+            ? msg.content.map((c) => {
+                if (c.type === "text") return { type: contentType, text: c.text };
+                // Convert Chat Completions image_url → Responses API input_image
+                // Responses API expects: { type: "input_image", image_url: "<url string>" }
+                // Chat Completions sends: { type: "image_url", image_url: { url: "...", detail: "..." } }
+                if (c.type === "image_url") {
+                  const url = typeof c.image_url === "string" ? c.image_url : c.image_url?.url;
+                  return { type: "input_image", image_url: url, detail: c.image_url?.detail || "auto" };
+                }
+                if (c.type === "input_image") return c;
+                // Serialize any unknown type (tool_use, tool_result, thinking, etc.) as text
+                const text = c.text || c.content || JSON.stringify(c);
+                return { type: contentType, text: typeof text === "string" ? text : JSON.stringify(text) };
+              })
+            : [];
 
       // Only push a message block if content is non-empty.
       // Assistant messages with only tool_calls have content: null — skip the
@@ -226,7 +225,7 @@ export function openaiToOpenAIResponsesRequest(model, body, stream, credentials)
         result.input.push({
           type: "message",
           role: msg.role,
-          content
+          content,
         });
       }
     }
@@ -238,22 +237,23 @@ export function openaiToOpenAIResponsesRequest(model, body, stream, credentials)
           type: "function_call",
           call_id: clampCallId(tc.id),
           name: tc.function?.name || "_unknown",
-          arguments: tc.function?.arguments || "{}"
+          arguments: tc.function?.arguments || "{}",
         });
       }
     }
 
     // Convert tool results - output must be a string for Responses API
     if (msg.role === "tool") {
-      const output = typeof msg.content === "string"
-        ? msg.content
-        : Array.isArray(msg.content)
-          ? msg.content.map(c => c.text || JSON.stringify(c)).join("")
-          : JSON.stringify(msg.content);
+      const output =
+        typeof msg.content === "string"
+          ? msg.content
+          : Array.isArray(msg.content)
+            ? msg.content.map((c) => c.text || JSON.stringify(c)).join("")
+            : JSON.stringify(msg.content);
       result.input.push({
         type: "function_call_output",
         call_id: clampCallId(msg.tool_call_id),
-        output
+        output,
       });
     }
   }
@@ -265,14 +265,14 @@ export function openaiToOpenAIResponsesRequest(model, body, stream, credentials)
 
   // Convert tools format
   if (body.tools && Array.isArray(body.tools)) {
-    result.tools = body.tools.map(tool => {
+    result.tools = body.tools.map((tool) => {
       if (tool.type === "function") {
         return {
           type: "function",
           name: tool.function.name,
           description: String(tool.function.description || ""),
           parameters: normalizeToolParameters(tool.function.parameters),
-          strict: tool.function.strict
+          strict: tool.function.strict,
         };
       }
       return tool;

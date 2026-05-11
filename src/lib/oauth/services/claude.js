@@ -112,7 +112,7 @@ export class ClaudeService extends OAuthService {
       // Authenticate and get authorization code
       const { code, state, codeVerifier, redirectUri } = await this.authenticate(
         "Claude",
-        this.buildClaudeAuthUrl.bind(this)
+        this.buildClaudeAuthUrl.bind(this),
       );
 
       spinner.start("Exchanging code for tokens...");
@@ -133,4 +133,3 @@ export class ClaudeService extends OAuthService {
     }
   }
 }
-

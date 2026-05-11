@@ -10,6 +10,7 @@
     "dev:bun": "bun --bun next dev --webpack --port 20128",
     "build:bun": "NODE_ENV=production bun --bun next build --webpack",
     "start:bun": "NODE_ENV=production bun ./.next/standalone/server.js",
+    "format": "biome format --write .",
     "test:run": "vitest run --reporter=verbose"
   },
   "dependencies": {
@@ -43,6 +44,7 @@
     "zustand": "^5.0.10"
   },
   "devDependencies": {
+    "@biomejs/biome": "^2.4.15",
     "@tailwindcss/postcss": "^4.2.4",
     "better-sqlite3": "^12.6.2",
     "eslint": "^9.39.4",

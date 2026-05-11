@@ -136,7 +136,7 @@ export function fixMissingToolResponses(body) {
         newMessages.push({
           role: "tool",
           tool_call_id: id,
-          content: ""
+          content: "",
         });
       }
     }
@@ -145,4 +145,3 @@ export function fixMissingToolResponses(body) {
   body.messages = newMessages;
   return body;
 }
-

@@ -27,7 +27,7 @@ export async function POST(request) {
     }
 
     const logsDir = path.join(process.cwd(), "logs", "translator");
-    
+
     // Create directory if not exists
     if (!fs.existsSync(logsDir)) {
       fs.mkdirSync(logsDir, { recursive: true });

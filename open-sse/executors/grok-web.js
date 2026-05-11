@@ -2,7 +2,8 @@ import { BaseExecutor } from "./base.js";
 import { PROVIDERS } from "../config/providers.js";
 
 const GROK_CHAT_API = PROVIDERS["grok-web"].baseUrl;
-const GROK_USER_AGENT = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/136.0.0.0 Safari/537.36";
+const GROK_USER_AGENT =
+  "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/136.0.0.0 Safari/537.36";
 
 const MODEL_MAP = {
   "grok-3": { grokModel: "grok-3", modelMode: "MODEL_MODE_GROK_3", isThinking: false },
@@ -12,10 +13,18 @@ const MODEL_MAP = {
   "grok-4-mini": { grokModel: "grok-4-mini", modelMode: "MODEL_MODE_GROK_4_MINI_THINKING", isThinking: true },
   "grok-4-thinking": { grokModel: "grok-4", modelMode: "MODEL_MODE_GROK_4_THINKING", isThinking: true },
   "grok-4-heavy": { grokModel: "grok-4", modelMode: "MODEL_MODE_HEAVY", isThinking: true },
-  "grok-4.1-mini": { grokModel: "grok-4-1-thinking-1129", modelMode: "MODEL_MODE_GROK_4_1_MINI_THINKING", isThinking: true },
+  "grok-4.1-mini": {
+    grokModel: "grok-4-1-thinking-1129",
+    modelMode: "MODEL_MODE_GROK_4_1_MINI_THINKING",
+    isThinking: true,
+  },
   "grok-4.1-fast": { grokModel: "grok-4-1-thinking-1129", modelMode: "MODEL_MODE_FAST", isThinking: false },
   "grok-4.1-expert": { grokModel: "grok-4-1-thinking-1129", modelMode: "MODEL_MODE_EXPERT", isThinking: true },
-  "grok-4.1-thinking": { grokModel: "grok-4-1-thinking-1129", modelMode: "MODEL_MODE_GROK_4_1_THINKING", isThinking: true },
+  "grok-4.1-thinking": {
+    grokModel: "grok-4-1-thinking-1129",
+    modelMode: "MODEL_MODE_GROK_4_1_THINKING",
+    isThinking: true,
+  },
   "grok-4.2": { grokModel: "grok-420", modelMode: "MODEL_MODE_GROK_420", isThinking: false },
   "grok-4.20": { grokModel: "grok-420", modelMode: "MODEL_MODE_GROK_420", isThinking: false },
   "grok-4.20-beta": { grokModel: "grok-420", modelMode: "MODEL_MODE_GROK_420", isThinking: false },
@@ -29,9 +38,10 @@ function randomString(length, alphanumeric = false) {
 }
 
 function generateStatsigId() {
-  const msg = Math.random() < 0.5
-    ? `e:TypeError: Cannot read properties of null (reading 'children["${randomString(5, true)}"]')`
-    : `e:TypeError: Cannot read properties of undefined (reading '${randomString(10)}')`;
+  const msg =
+    Math.random() < 0.5
+      ? `e:TypeError: Cannot read properties of null (reading 'children["${randomString(5, true)}"]')`
+      : `e:TypeError: Cannot read properties of undefined (reading '${randomString(10)}')`;
   return btoa(msg);
 }
 
@@ -50,7 +60,10 @@ function parseOpenAIMessages(messages) {
     if (typeof msg.content === "string") {
       content = msg.content;
     } else if (Array.isArray(msg.content)) {
-      content = msg.content.filter((c) => c.type === "text").map((c) => String(c.text || "")).join(" ");
+      content = msg.content
+        .filter((c) => c.type === "text")
+        .map((c) => String(c.text || ""))
+        .join(" ");
     }
     if (!content.trim()) continue;
     extracted.push({ role, text: content });
@@ -58,7 +71,10 @@ function parseOpenAIMessages(messages) {
 
   let lastUserIdx = -1;
   for (let i = extracted.length - 1; i >= 0; i--) {
-    if (extracted[i].role === "user") { lastUserIdx = i; break; }
+    if (extracted[i].role === "user") {
+      lastUserIdx = i;
+      break;
+    }
   }
 
   const parts = [];
@@ -85,13 +101,21 @@ async function* readGrokNdjsonEvents(body, signal) {
         const line = buffer.slice(0, idx).trim();
         buffer = buffer.slice(idx + 1);
         if (!line) continue;
-        try { yield JSON.parse(line); } catch { /* skip */ }
+        try {
+          yield JSON.parse(line);
+        } catch {
+          /* skip */
+        }
       }
     }
     buffer += decoder.decode();
     const remaining = buffer.trim();
     if (remaining) {
-      try { yield JSON.parse(remaining); } catch { /* skip */ }
+      try {
+        yield JSON.parse(remaining);
+      } catch {
+        /* skip */
+      }
     }
   } finally {
     reader.releaseLock();
@@ -139,48 +163,107 @@ function buildStreamingResponse(eventStream, model, cid, created, isThinkingMode
   return new ReadableStream({
     async start(controller) {
       try {
-        controller.enqueue(encoder.encode(sseChunk({
-          id: cid, object: "chat.completion.chunk", created, model, system_fingerprint: null,
-          choices: [{ index: 0, delta: { role: "assistant" }, finish_reason: null, logprobs: null }],
-        })));
+        controller.enqueue(
+          encoder.encode(
+            sseChunk({
+              id: cid,
+              object: "chat.completion.chunk",
+              created,
+              model,
+              system_fingerprint: null,
+              choices: [{ index: 0, delta: { role: "assistant" }, finish_reason: null, logprobs: null }],
+            }),
+          ),
+        );
 
         let fp = "";
         for await (const chunk of extractContent(eventStream, isThinkingModel, signal)) {
           if (chunk.fingerprint) fp = chunk.fingerprint;
 
           if (chunk.error) {
-            controller.enqueue(encoder.encode(sseChunk({
-              id: cid, object: "chat.completion.chunk", created, model, system_fingerprint: fp || null,
-              choices: [{ index: 0, delta: { content: `[Error: ${chunk.error}]` }, finish_reason: null, logprobs: null }],
-            })));
+            controller.enqueue(
+              encoder.encode(
+                sseChunk({
+                  id: cid,
+                  object: "chat.completion.chunk",
+                  created,
+                  model,
+                  system_fingerprint: fp || null,
+                  choices: [
+                    { index: 0, delta: { content: `[Error: ${chunk.error}]` }, finish_reason: null, logprobs: null },
+                  ],
+                }),
+              ),
+            );
             break;
           }
           if (chunk.thinking) {
-            controller.enqueue(encoder.encode(sseChunk({
-              id: cid, object: "chat.completion.chunk", created, model, system_fingerprint: fp || null,
-              choices: [{ index: 0, delta: { reasoning_content: chunk.thinking }, finish_reason: null, logprobs: null }],
-            })));
+            controller.enqueue(
+              encoder.encode(
+                sseChunk({
+                  id: cid,
+                  object: "chat.completion.chunk",
+                  created,
+                  model,
+                  system_fingerprint: fp || null,
+                  choices: [
+                    { index: 0, delta: { reasoning_content: chunk.thinking }, finish_reason: null, logprobs: null },
+                  ],
+                }),
+              ),
+            );
             continue;
           }
           if (chunk.done) break;
           if (chunk.delta) {
-            controller.enqueue(encoder.encode(sseChunk({
-              id: cid, object: "chat.completion.chunk", created, model, system_fingerprint: fp || null,
-              choices: [{ index: 0, delta: { content: chunk.delta }, finish_reason: null, logprobs: null }],
-            })));
+            controller.enqueue(
+              encoder.encode(
+                sseChunk({
+                  id: cid,
+                  object: "chat.completion.chunk",
+                  created,
+                  model,
+                  system_fingerprint: fp || null,
+                  choices: [{ index: 0, delta: { content: chunk.delta }, finish_reason: null, logprobs: null }],
+                }),
+              ),
+            );
           }
         }
 
-        controller.enqueue(encoder.encode(sseChunk({
-          id: cid, object: "chat.completion.chunk", created, model, system_fingerprint: fp || null,
-          choices: [{ index: 0, delta: {}, finish_reason: "stop", logprobs: null }],
-        })));
+        controller.enqueue(
+          encoder.encode(
+            sseChunk({
+              id: cid,
+              object: "chat.completion.chunk",
+              created,
+              model,
+              system_fingerprint: fp || null,
+              choices: [{ index: 0, delta: {}, finish_reason: "stop", logprobs: null }],
+            }),
+          ),
+        );
         controller.enqueue(encoder.encode("data: [DONE]\n\n"));
       } catch (err) {
-        controller.enqueue(encoder.encode(sseChunk({
-          id: cid, object: "chat.completion.chunk", created, model, system_fingerprint: null,
-          choices: [{ index: 0, delta: { content: `[Stream error: ${err.message || String(err)}]` }, finish_reason: "stop", logprobs: null }],
-        })));
+        controller.enqueue(
+          encoder.encode(
+            sseChunk({
+              id: cid,
+              object: "chat.completion.chunk",
+              created,
+              model,
+              system_fingerprint: null,
+              choices: [
+                {
+                  index: 0,
+                  delta: { content: `[Stream error: ${err.message || String(err)}]` },
+                  finish_reason: "stop",
+                  logprobs: null,
+                },
+              ],
+            }),
+          ),
+        );
         controller.enqueue(encoder.encode("data: [DONE]\n\n"));
       } finally {
         controller.close();
@@ -197,11 +280,17 @@ async function buildNonStreamingResponse(eventStream, model, cid, created, isThi
   for await (const chunk of extractContent(eventStream, isThinkingModel, signal)) {
     if (chunk.fingerprint) fingerprint = chunk.fingerprint;
     if (chunk.error) {
-      return new Response(JSON.stringify({
-        error: { message: chunk.error, type: "upstream_error", code: "GROK_ERROR" },
-      }), { status: 502, headers: { "Content-Type": "application/json" } });
+      return new Response(
+        JSON.stringify({
+          error: { message: chunk.error, type: "upstream_error", code: "GROK_ERROR" },
+        }),
+        { status: 502, headers: { "Content-Type": "application/json" } },
+      );
     }
-    if (chunk.thinking) { thinkingParts.push(chunk.thinking); continue; }
+    if (chunk.thinking) {
+      thinkingParts.push(chunk.thinking);
+      continue;
+    }
     if (chunk.done) break;
     if (chunk.fullMessage) fullContent = chunk.fullMessage;
     else if (chunk.delta) fullContent += chunk.delta;
@@ -213,11 +302,22 @@ async function buildNonStreamingResponse(eventStream, model, cid, created, isThi
   const promptTokens = Math.ceil(fullContent.length / 4);
   const completionTokens = Math.ceil(fullContent.length / 4);
 
-  return new Response(JSON.stringify({
-    id: cid, object: "chat.completion", created, model, system_fingerprint: fingerprint || null,
-    choices: [{ index: 0, message: msg, finish_reason: "stop", logprobs: null }],
-    usage: { prompt_tokens: promptTokens, completion_tokens: completionTokens, total_tokens: promptTokens + completionTokens },
-  }), { status: 200, headers: { "Content-Type": "application/json" } });
+  return new Response(
+    JSON.stringify({
+      id: cid,
+      object: "chat.completion",
+      created,
+      model,
+      system_fingerprint: fingerprint || null,
+      choices: [{ index: 0, message: msg, finish_reason: "stop", logprobs: null }],
+      usage: {
+        prompt_tokens: promptTokens,
+        completion_tokens: completionTokens,
+        total_tokens: promptTokens + completionTokens,
+      },
+    }),
+    { status: 200, headers: { "Content-Type": "application/json" } },
+  );
 }
 
 export class GrokWebExecutor extends BaseExecutor {
@@ -228,9 +328,12 @@ export class GrokWebExecutor extends BaseExecutor {
   async execute({ model, body, stream, credentials, signal, log }) {
     const messages = body?.messages;
     if (!messages || !Array.isArray(messages) || messages.length === 0) {
-      const errResp = new Response(JSON.stringify({
-        error: { message: "Missing or empty messages array", type: "invalid_request" },
-      }), { status: 400, headers: { "Content-Type": "application/json" } });
+      const errResp = new Response(
+        JSON.stringify({
+          error: { message: "Missing or empty messages array", type: "invalid_request" },
+        }),
+        { status: 400, headers: { "Content-Type": "application/json" } },
+      );
       return { response: errResp, url: GROK_CHAT_API, headers: {}, transformedBody: body };
     }
 
@@ -240,23 +343,45 @@ export class GrokWebExecutor extends BaseExecutor {
 
     const message = parseOpenAIMessages(messages);
     if (!message.trim()) {
-      const errResp = new Response(JSON.stringify({
-        error: { message: "Empty query after processing", type: "invalid_request" },
-      }), { status: 400, headers: { "Content-Type": "application/json" } });
+      const errResp = new Response(
+        JSON.stringify({
+          error: { message: "Empty query after processing", type: "invalid_request" },
+        }),
+        { status: 400, headers: { "Content-Type": "application/json" } },
+      );
       return { response: errResp, url: GROK_CHAT_API, headers: {}, transformedBody: body };
     }
 
     const grokPayload = {
-      temporary: true, modelName: grokModel, modelMode, message,
-      fileAttachments: [], imageAttachments: [],
-      disableSearch: false, enableImageGeneration: false, returnImageBytes: false,
-      returnRawGrokInXaiRequest: false, enableImageStreaming: false, imageGenerationCount: 0,
-      forceConcise: false, toolOverrides: {}, enableSideBySide: true, sendFinalMetadata: true,
-      isReasoning: false, disableTextFollowUps: false, disableMemory: true,
-      forceSideBySide: false, isAsyncChat: false, disableSelfHarmShortCircuit: false,
+      temporary: true,
+      modelName: grokModel,
+      modelMode,
+      message,
+      fileAttachments: [],
+      imageAttachments: [],
+      disableSearch: false,
+      enableImageGeneration: false,
+      returnImageBytes: false,
+      returnRawGrokInXaiRequest: false,
+      enableImageStreaming: false,
+      imageGenerationCount: 0,
+      forceConcise: false,
+      toolOverrides: {},
+      enableSideBySide: true,
+      sendFinalMetadata: true,
+      isReasoning: false,
+      disableTextFollowUps: false,
+      disableMemory: true,
+      forceSideBySide: false,
+      isAsyncChat: false,
+      disableSelfHarmShortCircuit: false,
       deviceEnvInfo: {
-        darkModeEnabled: false, devicePixelRatio: 2,
-        screenWidth: 2056, screenHeight: 1329, viewportWidth: 2056, viewportHeight: 1083,
+        darkModeEnabled: false,
+        devicePixelRatio: 2,
+        screenWidth: 2056,
+        screenHeight: 1329,
+        viewportWidth: 2056,
+        viewportHeight: 1083,
       },
     };
 
@@ -266,7 +391,8 @@ export class GrokWebExecutor extends BaseExecutor {
       Accept: "*/*",
       "Accept-Encoding": "gzip, deflate, br, zstd",
       "Accept-Language": "en-US,en;q=0.9",
-      Baggage: "sentry-environment=production,sentry-release=d6add6fb0460641fd482d767a335ef72b9b6abb8,sentry-public_key=b311e0f2690c81f25e2c4cf6d4f7ce1c",
+      Baggage:
+        "sentry-environment=production,sentry-release=d6add6fb0460641fd482d767a335ef72b9b6abb8,sentry-public_key=b311e0f2690c81f25e2c4cf6d4f7ce1c",
       "Cache-Control": "no-cache",
       "Content-Type": "application/json",
       Origin: "https://grok.com",
@@ -296,32 +422,45 @@ export class GrokWebExecutor extends BaseExecutor {
     let response;
     try {
       response = await fetch(GROK_CHAT_API, {
-        method: "POST", headers, body: JSON.stringify(grokPayload), signal,
+        method: "POST",
+        headers,
+        body: JSON.stringify(grokPayload),
+        signal,
       });
     } catch (err) {
       log?.error?.("GROK-WEB", `Fetch failed: ${err.message || String(err)}`);
-      const errResp = new Response(JSON.stringify({
-        error: { message: `Grok connection failed: ${err.message || String(err)}`, type: "upstream_error" },
-      }), { status: 502, headers: { "Content-Type": "application/json" } });
+      const errResp = new Response(
+        JSON.stringify({
+          error: { message: `Grok connection failed: ${err.message || String(err)}`, type: "upstream_error" },
+        }),
+        { status: 502, headers: { "Content-Type": "application/json" } },
+      );
       return { response: errResp, url: GROK_CHAT_API, headers, transformedBody: grokPayload };
     }
 
     if (!response.ok) {
       const status = response.status;
       let errMsg = `Grok returned HTTP ${status}`;
-      if (status === 401 || status === 403) errMsg = "Grok auth failed — SSO cookie may be expired. Re-paste your sso cookie value from grok.com.";
+      if (status === 401 || status === 403)
+        errMsg = "Grok auth failed — SSO cookie may be expired. Re-paste your sso cookie value from grok.com.";
       else if (status === 429) errMsg = "Grok rate limited. Wait a moment and retry, or rotate cookies.";
       log?.warn?.("GROK-WEB", errMsg);
-      const errResp = new Response(JSON.stringify({
-        error: { message: errMsg, type: "upstream_error", code: `HTTP_${status}` },
-      }), { status, headers: { "Content-Type": "application/json" } });
+      const errResp = new Response(
+        JSON.stringify({
+          error: { message: errMsg, type: "upstream_error", code: `HTTP_${status}` },
+        }),
+        { status, headers: { "Content-Type": "application/json" } },
+      );
       return { response: errResp, url: GROK_CHAT_API, headers, transformedBody: grokPayload };
     }
 
     if (!response.body) {
-      const errResp = new Response(JSON.stringify({
-        error: { message: "Grok returned empty response body", type: "upstream_error" },
-      }), { status: 502, headers: { "Content-Type": "application/json" } });
+      const errResp = new Response(
+        JSON.stringify({
+          error: { message: "Grok returned empty response body", type: "upstream_error" },
+        }),
+        { status: 502, headers: { "Content-Type": "application/json" } },
+      );
       return { response: errResp, url: GROK_CHAT_API, headers, transformedBody: grokPayload };
     }
 

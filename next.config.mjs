@@ -3,7 +3,7 @@ const nextConfig = {
   output: "standalone",
   serverExternalPackages: ["better-sqlite3"],
   images: {
-    unoptimized: true
+    unoptimized: true,
   },
   env: {},
   webpack: (config, { isServer }) => {
@@ -28,30 +28,52 @@ const nextConfig = {
     config.watchOptions = { ...config.watchOptions, ignored: /[\\/](logs|\.next)[\\/]/ };
     return config;
   },
+  async headers() {
+    return [
+      {
+        source: "/:path*.(png|jpg|jpeg|gif|webp|avif|svg|ico)",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "public, max-age=2678400, stale-while-revalidate=2678400",
+          },
+        ],
+      },
+      {
+        source: "/sw.js",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "public, max-age=0, must-revalidate",
+          },
+        ],
+      },
+    ];
+  },
   async rewrites() {
     return [
       {
         source: "/v1/v1/:path*",
-        destination: "/api/v1/:path*"
+        destination: "/api/v1/:path*",
       },
       {
         source: "/v1/v1",
-        destination: "/api/v1"
+        destination: "/api/v1",
       },
       {
         source: "/codex/:path*",
-        destination: "/api/v1/responses"
+        destination: "/api/v1/responses",
       },
       {
         source: "/v1/:path*",
-        destination: "/api/v1/:path*"
+        destination: "/api/v1/:path*",
       },
       {
         source: "/v1",
-        destination: "/api/v1"
-      }
+        destination: "/api/v1",
+      },
     ];
-  }
+  },
 };
 
 export default nextConfig;

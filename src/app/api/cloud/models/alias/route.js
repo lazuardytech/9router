@@ -27,19 +27,22 @@ export async function PUT(request) {
     const aliases = await getModelAliases();
     const existingModel = aliases[alias];
     if (existingModel && existingModel !== model) {
-      return NextResponse.json({ 
-        error: `Alias '${alias}' already in use for model '${existingModel}'` 
-      }, { status: 400 });
+      return NextResponse.json(
+        {
+          error: `Alias '${alias}' already in use for model '${existingModel}'`,
+        },
+        { status: 400 },
+      );
     }
 
     // Update alias
     await setModelAlias(alias, model);
 
-    return NextResponse.json({ 
-      success: true, 
-      model, 
+    return NextResponse.json({
+      success: true,
+      model,
       alias,
-      message: `Alias '${alias}' set for model '${model}'`
+      message: `Alias '${alias}' set for model '${model}'`,
     });
   } catch (error) {
     console.log("Error updating alias:", error);

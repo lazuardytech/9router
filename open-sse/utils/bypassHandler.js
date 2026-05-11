@@ -16,7 +16,10 @@ export function handleBypassRequest(body, model, userAgent = "", ccFilterNaming 
   const getText = (content) => {
     if (typeof content === "string") return content;
     if (Array.isArray(content)) {
-      return content.filter(c => c.type === "text").map(c => c.text).join(" ");
+      return content
+        .filter((c) => c.type === "text")
+        .map((c) => c.text)
+        .join(" ");
     }
     return "";
   };
@@ -48,9 +51,9 @@ export function handleBypassRequest(body, model, userAgent = "", ccFilterNaming 
 
   // Pattern 4: Skip patterns
   if (!shouldBypass && SKIP_PATTERNS?.length) {
-    const userMessages = messages.filter(m => m.role === "user");
-    const userText = userMessages.map(m => getText(m.content)).join(" ");
-    if (SKIP_PATTERNS.some(p => userText.includes(p))) {
+    const userMessages = messages.filter((m) => m.role === "user");
+    const userText = userMessages.map((m) => getText(m.content)).join(" ");
+    if (SKIP_PATTERNS.some((p) => userText.includes(p))) {
       shouldBypass = true;
     }
   }
@@ -58,11 +61,16 @@ export function handleBypassRequest(body, model, userAgent = "", ccFilterNaming 
   // Pattern 5: CC naming request (topic title extraction by Claude Code CLI)
   // Claude format: system is top-level body.system field, not inside messages
   if (!shouldBypass && ccFilterNaming) {
-    const systemMsg = messages.find(m => m.role === "system");
+    const systemMsg = messages.find((m) => m.role === "system");
     const systemFromMessages = getText(systemMsg?.content);
     const systemFromBody = Array.isArray(body.system)
-      ? body.system.filter(s => s.type === "text").map(s => s.text).join(" ")
-      : (typeof body.system === "string" ? body.system : "");
+      ? body.system
+          .filter((s) => s.type === "text")
+          .map((s) => s.text)
+          .join(" ")
+      : typeof body.system === "string"
+        ? body.system
+        : "";
     const systemText = systemFromMessages || systemFromBody;
     if (systemText.includes("isNewTopic")) {
       shouldBypass = true;
@@ -77,7 +85,7 @@ export function handleBypassRequest(body, model, userAgent = "", ccFilterNaming 
 
   // For naming bypass, generate title from user message
   if (namingBypass) {
-    const userMsg = messages.find(m => m.role === "user");
+    const userMsg = messages.find((m) => m.role === "user");
     const userText = getText(userMsg?.content);
     const title = userText.trim().split(/\s+/).slice(0, 3).join(" ");
     const namingText = JSON.stringify({ isNewTopic: true, title });
@@ -86,9 +94,7 @@ export function handleBypassRequest(body, model, userAgent = "", ccFilterNaming 
       : createNonStreamingResponse(sourceFormat, model, namingText);
   }
 
-  return stream 
-    ? createStreamingResponse(sourceFormat, model)
-    : createNonStreamingResponse(sourceFormat, model);
+  return stream ? createStreamingResponse(sourceFormat, model) : createNonStreamingResponse(sourceFormat, model);
 }
 
 const DEFAULT_BYPASS_TEXT = "CLI Command Execution: Clear Terminal";
@@ -105,19 +111,21 @@ function createOpenAIResponse(model, text = DEFAULT_BYPASS_TEXT) {
     object: "chat.completion",
     created,
     model,
-    choices: [{
-      index: 0,
-      message: {
-        role: "assistant",
-        content: text
+    choices: [
+      {
+        index: 0,
+        message: {
+          role: "assistant",
+          content: text,
+        },
+        finish_reason: "stop",
       },
-      finish_reason: "stop"
-    }],
+    ],
     usage: {
       prompt_tokens: 1,
       completion_tokens: 1,
-      total_tokens: 2
-    }
+      total_tokens: 2,
+    },
   };
 }
 
@@ -135,9 +143,9 @@ function createNonStreamingResponse(sourceFormat, model, text) {
       response: new Response(JSON.stringify(openaiResponse), {
         headers: {
           "Content-Type": "application/json",
-          "Access-Control-Allow-Origin": "*"
-        }
-      })
+          "Access-Control-Allow-Origin": "*",
+        },
+      }),
     };
   }
 
@@ -169,9 +177,9 @@ function createNonStreamingResponse(sourceFormat, model, text) {
     response: new Response(JSON.stringify(finalResponse), {
       headers: {
         "Content-Type": "application/json",
-        "Access-Control-Allow-Origin": "*"
-      }
-    })
+        "Access-Control-Allow-Origin": "*",
+      },
+    }),
   };
 }
 
@@ -216,10 +224,10 @@ function createStreamingResponse(sourceFormat, model, text) {
       headers: {
         "Content-Type": "text/event-stream",
         "Cache-Control": "no-cache",
-        "Connection": "keep-alive",
-        "Access-Control-Allow-Origin": "*"
-      }
-    })
+        Connection: "keep-alive",
+        "Access-Control-Allow-Origin": "*",
+      },
+    }),
   };
 }
 
@@ -238,12 +246,12 @@ function mergeChunksToResponse(chunks, sourceFormat) {
 
   // For Claude format, find the message_stop or final message
   if (sourceFormat === FORMATS.CLAUDE) {
-    const messageStop = chunks.find(c => c.type === "message_stop");
+    const messageStop = chunks.find((c) => c.type === "message_stop");
     if (messageStop) {
       // Reconstruct complete message from chunks
-      const contentDelta = chunks.find(c => c.type === "content_block_delta");
-      const messageDelta = chunks.find(c => c.type === "message_delta");
-      const messageStart = chunks.find(c => c.type === "message_start");
+      const contentDelta = chunks.find((c) => c.type === "content_block_delta");
+      const messageDelta = chunks.find((c) => c.type === "message_delta");
+      const messageStart = chunks.find((c) => c.type === "message_start");
 
       if (messageStart?.message) {
         finalChunk = messageStart.message;
@@ -272,14 +280,16 @@ function createOpenAIStreamingChunks(completeResponse) {
       object: "chat.completion.chunk",
       created,
       model,
-      choices: [{
-        index: 0,
-        delta: {
-          role: "assistant",
-          content
+      choices: [
+        {
+          index: 0,
+          delta: {
+            role: "assistant",
+            content,
+          },
+          finish_reason: null,
         },
-        finish_reason: null
-      }]
+      ],
     },
     // Final chunk with finish_reason
     {
@@ -287,12 +297,14 @@ function createOpenAIStreamingChunks(completeResponse) {
       object: "chat.completion.chunk",
       created,
       model,
-      choices: [{
-        index: 0,
-        delta: {},
-        finish_reason: "stop"
-      }],
-      usage: completeResponse.usage
-    }
+      choices: [
+        {
+          index: 0,
+          delta: {},
+          finish_reason: "stop",
+        },
+      ],
+      usage: completeResponse.usage,
+    },
   ];
 }

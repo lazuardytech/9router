@@ -16,14 +16,20 @@ export function translateNonStreamingResponse(responseBody, targetFormat, source
   if (targetFormat === sourceFormat || targetFormat === FORMATS.OPENAI) return responseBody;
 
   // Gemini / Antigravity
-  if (targetFormat === FORMATS.GEMINI || targetFormat === FORMATS.ANTIGRAVITY || targetFormat === FORMATS.GEMINI_CLI || targetFormat === FORMATS.VERTEX) {
+  if (
+    targetFormat === FORMATS.GEMINI ||
+    targetFormat === FORMATS.ANTIGRAVITY ||
+    targetFormat === FORMATS.GEMINI_CLI ||
+    targetFormat === FORMATS.VERTEX
+  ) {
     const response = responseBody.response || responseBody;
     if (!response?.candidates?.[0]) return responseBody;
 
     const candidate = response.candidates[0];
     const content = candidate.content;
     const usage = response.usageMetadata || responseBody.usageMetadata;
-    let textContent = "", reasoningContent = "";
+    let textContent = "",
+      reasoningContent = "";
     const toolCalls = [];
 
     if (content?.parts) {
@@ -34,7 +40,7 @@ export function translateNonStreamingResponse(responseBody, targetFormat, source
           toolCalls.push({
             id: `call_${part.functionCall.name}_${Date.now()}_${toolCalls.length}`,
             type: "function",
-            function: { name: part.functionCall.name, arguments: JSON.stringify(part.functionCall.args || {}) }
+            function: { name: part.functionCall.name, arguments: JSON.stringify(part.functionCall.args || {}) },
           });
         }
       }
@@ -54,14 +60,14 @@ export function translateNonStreamingResponse(responseBody, targetFormat, source
       object: "chat.completion",
       created: Math.floor(new Date(response.createTime || Date.now()).getTime() / 1000),
       model: response.modelVersion || "gemini",
-      choices: [{ index: 0, message, finish_reason: finishReason }]
+      choices: [{ index: 0, message, finish_reason: finishReason }],
     };
 
     if (usage) {
       result.usage = {
         prompt_tokens: (usage.promptTokenCount || 0) + (usage.thoughtsTokenCount || 0),
         completion_tokens: usage.candidatesTokenCount || 0,
-        total_tokens: usage.totalTokenCount || 0
+        total_tokens: usage.totalTokenCount || 0,
       };
       if (usage.thoughtsTokenCount > 0) {
         result.usage.completion_tokens_details = { reasoning_tokens: usage.thoughtsTokenCount };
@@ -74,7 +80,8 @@ export function translateNonStreamingResponse(responseBody, targetFormat, source
   if (targetFormat === FORMATS.CLAUDE) {
     if (!responseBody.content) return responseBody;
 
-    let textContent = "", thinkingContent = "";
+    let textContent = "",
+      thinkingContent = "";
     const toolCalls = [];
 
     for (const block of responseBody.content) {
@@ -85,7 +92,11 @@ export function translateNonStreamingResponse(responseBody, targetFormat, source
         textContent += text;
       } else if (block.type === "thinking") thinkingContent += block.thinking || "";
       else if (block.type === "tool_use") {
-        toolCalls.push({ id: block.id, type: "function", function: { name: block.name, arguments: JSON.stringify(block.input || {}) } });
+        toolCalls.push({
+          id: block.id,
+          type: "function",
+          function: { name: block.name, arguments: JSON.stringify(block.input || {}) },
+        });
       }
     }
 
@@ -104,14 +115,14 @@ export function translateNonStreamingResponse(responseBody, targetFormat, source
       object: "chat.completion",
       created: Math.floor(Date.now() / 1000),
       model: responseBody.model || "claude",
-      choices: [{ index: 0, message, finish_reason: finishReason }]
+      choices: [{ index: 0, message, finish_reason: finishReason }],
     };
 
     if (responseBody.usage) {
       result.usage = {
         prompt_tokens: responseBody.usage.input_tokens || 0,
         completion_tokens: responseBody.usage.output_tokens || 0,
-        total_tokens: (responseBody.usage.input_tokens || 0) + (responseBody.usage.output_tokens || 0)
+        total_tokens: (responseBody.usage.input_tokens || 0) + (responseBody.usage.output_tokens || 0),
       };
     }
     return result;
@@ -128,7 +139,26 @@ export function translateNonStreamingResponse(responseBody, targetFormat, source
 /**
  * Handle non-streaming response from provider.
  */
-export async function handleNonStreamingResponse({ providerResponse, provider, model, sourceFormat, targetFormat, body, stream, translatedBody, finalBody, requestStartTime, connectionId, apiKey, clientRawRequest, onRequestSuccess, reqLogger, toolNameMap, trackDone, appendLog }) {
+export async function handleNonStreamingResponse({
+  providerResponse,
+  provider,
+  model,
+  sourceFormat,
+  targetFormat,
+  body,
+  stream,
+  translatedBody,
+  finalBody,
+  requestStartTime,
+  connectionId,
+  apiKey,
+  clientRawRequest,
+  onRequestSuccess,
+  reqLogger,
+  toolNameMap,
+  trackDone,
+  appendLog,
+}) {
   trackDone();
   const contentType = providerResponse.headers.get("content-type") || "";
   let responseBody;
@@ -151,7 +181,12 @@ export async function handleNonStreamingResponse({ providerResponse, provider, m
     }
   }
 
-  reqLogger.logProviderResponse(providerResponse.status, providerResponse.statusText, providerResponse.headers, responseBody);
+  reqLogger.logProviderResponse(
+    providerResponse.status,
+    providerResponse.statusText,
+    providerResponse.headers,
+    responseBody,
+  );
   if (onRequestSuccess) await onRequestSuccess();
 
   // Decloak tool_use names once on raw Claude body, before any translation (INPUT side)
@@ -200,27 +235,37 @@ export async function handleNonStreamingResponse({ providerResponse, provider, m
   reqLogger.logConvertedResponse(translatedResponse);
 
   const totalLatency = Date.now() - requestStartTime;
-  saveRequestDetail(buildRequestDetail({
-    provider, model, connectionId,
-    latency: { ttft: totalLatency, total: totalLatency },
-    tokens: usage || { prompt_tokens: 0, completion_tokens: 0 },
-    request: extractRequestConfig(body, stream),
-    providerRequest: finalBody || translatedBody || null,
-    providerResponse: responseBody || null,
-    response: {
-      content: translatedResponse?.choices?.[0]?.message?.content || translatedResponse?.content || null,
-      thinking: translatedResponse?.choices?.[0]?.message?.reasoning_content || translatedResponse?.reasoning_content || null,
-      finish_reason: translatedResponse?.choices?.[0]?.finish_reason || "unknown"
-    },
-    status: "success"
-  }, { endpoint: clientRawRequest?.endpoint || null })).catch(err => {
+  saveRequestDetail(
+    buildRequestDetail(
+      {
+        provider,
+        model,
+        connectionId,
+        latency: { ttft: totalLatency, total: totalLatency },
+        tokens: usage || { prompt_tokens: 0, completion_tokens: 0 },
+        request: extractRequestConfig(body, stream),
+        providerRequest: finalBody || translatedBody || null,
+        providerResponse: responseBody || null,
+        response: {
+          content: translatedResponse?.choices?.[0]?.message?.content || translatedResponse?.content || null,
+          thinking:
+            translatedResponse?.choices?.[0]?.message?.reasoning_content ||
+            translatedResponse?.reasoning_content ||
+            null,
+          finish_reason: translatedResponse?.choices?.[0]?.finish_reason || "unknown",
+        },
+        status: "success",
+      },
+      { endpoint: clientRawRequest?.endpoint || null },
+    ),
+  ).catch((err) => {
     console.error("[RequestDetail] Failed to save:", err.message);
   });
 
   return {
     success: true,
     response: new Response(JSON.stringify(translatedResponse), {
-      headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" }
-    })
+      headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },
+    }),
   };
 }

@@ -61,14 +61,14 @@ vi.mock("child_process", () => ({
   execFile: vi.fn((file, args, opts, cb) => {
     const sql = args[1] || "";
     let stdout = "";
-    
+
     for (const [key, value] of Object.entries(cliMockResults)) {
       if (sql.includes(`'${key}'`)) {
         stdout = value;
         break;
       }
     }
-    
+
     if (typeof cb === "function") {
       cb(null, { stdout });
     }

@@ -64,7 +64,6 @@ export async function POST(request, { params }) {
 
     let models = getProviderModels(alias);
 
-
     // Compatible providers: fetch live model list
     if (isCompatible && models.length === 0) {
       try {
@@ -73,7 +72,9 @@ export async function POST(request, { params }) {
           const data = await modelsRes.json();
           models = (data.models || []).map((m) => ({ id: m.id || m.name, name: m.name || m.id }));
         }
-      } catch { /* fallback to empty */ }
+      } catch {
+        /* fallback to empty */
+      }
     }
 
     if (models.length === 0) {
@@ -94,7 +95,7 @@ export async function POST(request, { params }) {
         rest.map(async (model) => {
           const result = await pingModel(`${alias}/${model.id}`, baseUrl, apiKey);
           return { modelId: model.id, name: model.name || model.id, ...result };
-        })
+        }),
       );
       results.push(...restResults);
     }

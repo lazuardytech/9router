@@ -134,7 +134,9 @@ afterAll(async () => {
   closeDatabase();
   if (originalDataDir === undefined) delete process.env.DATA_DIR;
   else process.env.DATA_DIR = originalDataDir;
-  try { fs.rmSync(tempDir, { recursive: true, force: true }); } catch {}
+  try {
+    fs.rmSync(tempDir, { recursive: true, force: true });
+  } catch {}
 });
 
 describe("SQLite migration from legacy JSON", () => {

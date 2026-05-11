@@ -13,15 +13,22 @@ export function checkInternet() {
     const finish = (ok) => {
       if (done) return;
       done = true;
-      try { socket.destroy(); } catch { /* ignore */ }
+      try {
+        socket.destroy();
+      } catch {
+        /* ignore */
+      }
       resolve(ok);
     };
     socket.setTimeout(INTERNET_CHECK.timeoutMs);
     socket.once("connect", () => finish(true));
     socket.once("timeout", () => finish(false));
     socket.once("error", () => finish(false));
-    try { socket.connect(INTERNET_CHECK.port, INTERNET_CHECK.host); }
-    catch { finish(false); }
+    try {
+      socket.connect(INTERNET_CHECK.port, INTERNET_CHECK.host);
+    } catch {
+      finish(false);
+    }
   });
 }
 
@@ -41,9 +48,13 @@ async function resolveDns(hostname, timeoutMs) {
 export async function probeUrlAlive(url) {
   if (!url) return false;
   let hostname;
-  try { hostname = new URL(url).hostname; } catch { return false; }
+  try {
+    hostname = new URL(url).hostname;
+  } catch {
+    return false;
+  }
 
-  if (!await resolveDns(hostname, HEALTH_CHECK.dnsTimeoutMs)) return false;
+  if (!(await resolveDns(hostname, HEALTH_CHECK.dnsTimeoutMs))) return false;
 
   try {
     const res = await fetch(`${url}/api/health`, {

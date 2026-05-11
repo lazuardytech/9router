@@ -1,11 +1,5 @@
 import { NextResponse } from "next/server";
-import { 
-  getProvider, 
-  generateAuthData, 
-  exchangeTokens, 
-  requestDeviceCode, 
-  pollForToken 
-} from "@/lib/oauth/providers";
+import { getProvider, generateAuthData, exchangeTokens, requestDeviceCode, pollForToken } from "@/lib/oauth/providers";
 import { createProviderConnection } from "@/models";
 import {
   startCodexProxy,
@@ -32,7 +26,9 @@ export async function GET(request, { params }) {
       // Collect provider-specific meta params (e.g. gitlab passes baseUrl, clientId, clientSecret)
       const reservedParams = new Set(["redirect_uri"]);
       const meta = {};
-      searchParams.forEach((value, key) => { if (!reservedParams.has(key)) meta[key] = value; });
+      searchParams.forEach((value, key) => {
+        if (!reservedParams.has(key)) meta[key] = value;
+      });
       const authData = generateAuthData(provider, redirectUri, Object.keys(meta).length ? meta : undefined);
       return NextResponse.json(authData);
     }
@@ -93,14 +89,15 @@ export async function GET(request, { params }) {
       const startUrl = searchParams.get("start_url");
       const region = searchParams.get("region");
       const authMethod = searchParams.get("auth_method");
-      const deviceOptions = provider === "kiro"
-        ? {
-            ...(startUrl ? { startUrl } : {}),
-            ...(region ? { region } : {}),
-            ...(authMethod ? { authMethod } : {}),
-          }
-        : undefined;
-      
+      const deviceOptions =
+        provider === "kiro"
+          ? {
+              ...(startUrl ? { startUrl } : {}),
+              ...(region ? { region } : {}),
+              ...(authMethod ? { authMethod } : {}),
+            }
+          : undefined;
+
       // Providers that don't use PKCE for device code
       const noPkceDeviceProviders = ["github", "kiro", "kimi-coding", "kilocode", "codebuddy"];
       let deviceData;
@@ -153,20 +150,18 @@ export async function POST(request, { params }) {
         provider,
         authType: "oauth",
         ...tokenData,
-        expiresAt: tokenData.expiresIn 
-          ? new Date(Date.now() + tokenData.expiresIn * 1000).toISOString() 
-          : null,
+        expiresAt: tokenData.expiresIn ? new Date(Date.now() + tokenData.expiresIn * 1000).toISOString() : null,
         testStatus: "active",
       });
 
-      return NextResponse.json({ 
-        success: true, 
+      return NextResponse.json({
+        success: true,
         connection: {
           id: connection.id,
           provider: connection.provider,
           email: connection.email,
           displayName: connection.displayName,
-        }
+        },
       });
     }
 
@@ -199,24 +194,24 @@ export async function POST(request, { params }) {
           provider,
           authType: "oauth",
           ...result.tokens,
-          expiresAt: result.tokens.expiresIn 
-            ? new Date(Date.now() + result.tokens.expiresIn * 1000).toISOString() 
+          expiresAt: result.tokens.expiresIn
+            ? new Date(Date.now() + result.tokens.expiresIn * 1000).toISOString()
             : null,
           testStatus: "active",
         });
 
-        return NextResponse.json({ 
-          success: true, 
+        return NextResponse.json({
+          success: true,
           connection: {
             id: connection.id,
             provider: connection.provider,
-          }
+          },
         });
       }
 
       // Still pending or error - don't create connection for pending states
       const isPending = result.pending || result.error === "authorization_pending" || result.error === "slow_down";
-      
+
       return NextResponse.json({
         success: false,
         error: result.error,

@@ -8,10 +8,9 @@ import { deriveSessionId } from "../../utils/sessionManager.js";
 export function hasValidContent(msg) {
   if (typeof msg.content === "string" && msg.content.trim()) return true;
   if (Array.isArray(msg.content)) {
-    return msg.content.some(block =>
-      (block.type === "text" && block.text?.trim()) ||
-      block.type === "tool_use" ||
-      block.type === "tool_result"
+    return msg.content.some(
+      (block) =>
+        (block.type === "text" && block.text?.trim()) || block.type === "tool_use" || block.type === "tool_result",
     );
   }
   return false;
@@ -26,7 +25,7 @@ export function fixToolUseOrdering(messages) {
   // Pass 1: Fix assistant messages with tool_use - remove text after tool_use
   for (const msg of messages) {
     if (msg.role === "assistant" && Array.isArray(msg.content)) {
-      const hasToolUse = msg.content.some(b => b.type === "tool_use");
+      const hasToolUse = msg.content.some((b) => b.type === "tool_use");
       if (hasToolUse) {
         // Keep only: thinking blocks + tool_use blocks (remove text blocks after tool_use)
         const newContent = [];
@@ -62,8 +61,14 @@ export function fixToolUseOrdering(messages) {
       const msgContent = Array.isArray(msg.content) ? msg.content : [{ type: "text", text: msg.content }];
 
       // Put tool_result first, then other content
-      const toolResults = [...lastContent.filter(b => b.type === "tool_result"), ...msgContent.filter(b => b.type === "tool_result")];
-      const otherContent = [...lastContent.filter(b => b.type !== "tool_result"), ...msgContent.filter(b => b.type !== "tool_result")];
+      const toolResults = [
+        ...lastContent.filter((b) => b.type === "tool_result"),
+        ...msgContent.filter((b) => b.type === "tool_result"),
+      ];
+      const otherContent = [
+        ...lastContent.filter((b) => b.type !== "tool_result"),
+        ...msgContent.filter((b) => b.type !== "tool_result"),
+      ];
 
       last.content = [...toolResults, ...otherContent];
     } else {
@@ -174,7 +179,7 @@ export function prepareClaudeRequest(body, provider = null, apiKey = null, conne
             msg.content.unshift({
               type: "thinking",
               thinking: ".",
-              signature: DEFAULT_THINKING_CLAUDE_SIGNATURE
+              signature: DEFAULT_THINKING_CLAUDE_SIGNATURE,
             });
           }
         }
@@ -186,7 +191,7 @@ export function prepareClaudeRequest(body, provider = null, apiKey = null, conne
   if (body.tools && Array.isArray(body.tools)) {
     // Strip built-in tools (e.g. web_search_20250305) for providers that don't support them
     if (provider !== "claude") {
-      body.tools = body.tools.filter(tool => !tool.type || tool.type === "function");
+      body.tools = body.tools.filter((tool) => !tool.type || tool.type === "function");
     }
 
     body.tools = body.tools.map((tool, i) => {
@@ -213,4 +218,3 @@ export function prepareClaudeRequest(body, provider = null, apiKey = null, conne
 
   return body;
 }
-

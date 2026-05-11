@@ -55,7 +55,10 @@ export async function GET(request) {
 
       // Keepalive ping every 25s
       state.keepalive = setInterval(() => {
-        if (state.closed) { clearInterval(state.keepalive); return; }
+        if (state.closed) {
+          clearInterval(state.keepalive);
+          return;
+        }
         try {
           controller.enqueue(encoder.encode(": ping\n\n"));
         } catch {
@@ -73,7 +76,7 @@ export async function GET(request) {
     headers: {
       "Content-Type": "text/event-stream",
       "Cache-Control": "no-cache",
-      "Connection": "keep-alive",
+      Connection: "keep-alive",
     },
   });
 }

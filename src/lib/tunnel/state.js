@@ -18,7 +18,9 @@ export function loadState() {
     if (fs.existsSync(STATE_FILE)) {
       return JSON.parse(fs.readFileSync(STATE_FILE, "utf8"));
     }
-  } catch (e) { /* ignore corrupt state */ }
+  } catch (e) {
+    /* ignore corrupt state */
+  }
   return null;
 }
 
@@ -30,7 +32,9 @@ export function saveState(state) {
 export function clearState() {
   try {
     if (fs.existsSync(STATE_FILE)) fs.unlinkSync(STATE_FILE);
-  } catch (e) { /* ignore */ }
+  } catch (e) {
+    /* ignore */
+  }
 }
 
 // Cloudflare-specific PID
@@ -44,14 +48,18 @@ export function loadPid() {
     if (fs.existsSync(CLOUDFLARED_PID_FILE)) {
       return parseInt(fs.readFileSync(CLOUDFLARED_PID_FILE, "utf8"));
     }
-  } catch (e) { /* ignore */ }
+  } catch (e) {
+    /* ignore */
+  }
   return null;
 }
 
 export function clearPid() {
   try {
     if (fs.existsSync(CLOUDFLARED_PID_FILE)) fs.unlinkSync(CLOUDFLARED_PID_FILE);
-  } catch (e) { /* ignore */ }
+  } catch (e) {
+    /* ignore */
+  }
 }
 
 // Tailscale-specific PID
@@ -65,14 +73,18 @@ export function loadTailscalePid() {
     if (fs.existsSync(TAILSCALE_PID_FILE)) {
       return parseInt(fs.readFileSync(TAILSCALE_PID_FILE, "utf8"));
     }
-  } catch (e) { /* ignore */ }
+  } catch (e) {
+    /* ignore */
+  }
   return null;
 }
 
 export function clearTailscalePid() {
   try {
     if (fs.existsSync(TAILSCALE_PID_FILE)) fs.unlinkSync(TAILSCALE_PID_FILE);
-  } catch (e) { /* ignore */ }
+  } catch (e) {
+    /* ignore */
+  }
 }
 
 const SHORT_ID_LENGTH = 6;

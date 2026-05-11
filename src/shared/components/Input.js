@@ -46,7 +46,7 @@ export default function Input({
             "text-[16px] sm:text-sm",
             icon && "pl-10",
             error && "ring-1 ring-red-500 focus:ring-2 focus:ring-red-500/40 border-red-500/40",
-            inputClassName
+            inputClassName,
           )}
           {...props}
         />
@@ -57,9 +57,7 @@ export default function Input({
           {error}
         </p>
       )}
-      {hint && !error && (
-        <p className="text-xs text-text-muted">{hint}</p>
-      )}
+      {hint && !error && <p className="text-xs text-text-muted">{hint}</p>}
     </div>
   );
 }

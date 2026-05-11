@@ -10,20 +10,18 @@ export async function GET() {
     const modelAliases = await getModelAliases();
     const disabled = await getDisabledModels();
 
-    const models = AI_MODELS
-      .filter((m) => {
-        const alias = getProviderAlias(m.provider) || m.provider;
-        const list = disabled[alias] || disabled[m.provider] || [];
-        return !list.includes(m.model);
-      })
-      .map((m) => {
-        const fullModel = `${m.provider}/${m.model}`;
-        return {
-          ...m,
-          fullModel,
-          alias: modelAliases[fullModel] || m.model,
-        };
-      });
+    const models = AI_MODELS.filter((m) => {
+      const alias = getProviderAlias(m.provider) || m.provider;
+      const list = disabled[alias] || disabled[m.provider] || [];
+      return !list.includes(m.model);
+    }).map((m) => {
+      const fullModel = `${m.provider}/${m.model}`;
+      return {
+        ...m,
+        fullModel,
+        alias: modelAliases[fullModel] || m.model,
+      };
+    });
 
     return NextResponse.json({ models });
   } catch (error) {
@@ -45,9 +43,7 @@ export async function PUT(request) {
     const modelAliases = await getModelAliases();
 
     // Check if alias already exists for different model
-    const existingModel = Object.entries(modelAliases).find(
-      ([key, val]) => val === alias && key !== model
-    );
+    const existingModel = Object.entries(modelAliases).find(([key, val]) => val === alias && key !== model);
 
     if (existingModel) {
       return NextResponse.json({ error: "Alias already in use" }, { status: 400 });

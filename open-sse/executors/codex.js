@@ -13,7 +13,9 @@ const assistantSessionMap = new Map();
 
 // Cache machine ID at module level (resolved once)
 let cachedMachineId = null;
-getConsistentMachineId().then(id => { cachedMachineId = id; });
+getConsistentMachineId().then((id) => {
+  cachedMachineId = id;
+});
 
 function hashContent(text) {
   return createHash("sha256").update(text).digest("hex").slice(0, 16);
@@ -28,7 +30,10 @@ function extractItemText(item) {
   if (!item) return "";
   if (typeof item.content === "string") return item.content;
   if (Array.isArray(item.content)) {
-    return item.content.map(c => c.text || c.output || "").filter(Boolean).join("");
+    return item.content
+      .map((c) => c.text || c.output || "")
+      .filter(Boolean)
+      .join("");
   }
   return "";
 }
@@ -55,19 +60,21 @@ function resolveConversationSessionId(input, machineId) {
     return entry.sessionId;
   }
 
-
   const sessionId = generateSessionId();
   assistantSessionMap.set(hash, { sessionId, lastUsed: Date.now() });
   return sessionId;
 }
 
 // Cleanup expired entries periodically
-setInterval(() => {
-  const now = Date.now();
-  for (const [key, entry] of assistantSessionMap) {
-    if (now - entry.lastUsed > SESSION_TTL_MS) assistantSessionMap.delete(key);
-  }
-}, 10 * 60 * 1000);
+setInterval(
+  () => {
+    const now = Date.now();
+    for (const [key, entry] of assistantSessionMap) {
+      if (now - entry.lastUsed > SESSION_TTL_MS) assistantSessionMap.delete(key);
+    }
+  },
+  10 * 60 * 1000,
+);
 
 /**
  * Codex Executor - handles OpenAI Codex API (Responses API format)
@@ -142,7 +149,9 @@ export class CodexExecutor extends BaseExecutor {
             return { status: 429, message: err.message || bodyText, resetsAtMs };
           }
         }
-      } catch { /* fall through to default */ }
+      } catch {
+        /* fall through to default */
+      }
     }
     return super.parseError(response, bodyText);
   }
@@ -181,20 +190,20 @@ export class CodexExecutor extends BaseExecutor {
 
     // Extract thinking level from model name suffix
     // e.g., gpt-5.3-codex-high → high, gpt-5.3-codex → medium (default)
-    const effortLevels = ['none', 'low', 'medium', 'high', 'xhigh'];
+    const effortLevels = ["none", "low", "medium", "high", "xhigh"];
     let modelEffort = null;
     for (const level of effortLevels) {
       if (body.model.endsWith(`-${level}`)) {
         modelEffort = level;
         // Strip suffix from model name for actual API call
-        body.model = body.model.replace(`-${level}`, '');
+        body.model = body.model.replace(`-${level}`, "");
         break;
       }
     }
 
     // Priority: explicit reasoning.effort > reasoning_effort param > model suffix > default (medium)
     if (!body.reasoning) {
-      const effort = body.reasoning_effort || modelEffort || 'low';
+      const effort = body.reasoning_effort || modelEffort || "low";
       body.reasoning = { effort, summary: "auto" };
     } else if (!body.reasoning.summary) {
       body.reasoning.summary = "auto";
@@ -202,7 +211,7 @@ export class CodexExecutor extends BaseExecutor {
     delete body.reasoning_effort;
 
     // Include reasoning encrypted content (required by Codex backend for reasoning models)
-    if (body.reasoning && body.reasoning.effort && body.reasoning.effort !== 'none') {
+    if (body.reasoning && body.reasoning.effort && body.reasoning.effort !== "none") {
       body.include = ["reasoning.encrypted_content"];
     }
 

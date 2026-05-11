@@ -15,9 +15,7 @@ export class OpenCodeGoExecutor extends BaseExecutor {
   // buildUrl runs before buildHeaders in BaseExecutor.execute, cache model here
   buildUrl(model) {
     this._lastModel = model;
-    return CLAUDE_FORMAT_MODELS.has(model)
-      ? `${BASE}/messages`
-      : `${BASE}/chat/completions`;
+    return CLAUDE_FORMAT_MODELS.has(model) ? `${BASE}/messages` : `${BASE}/chat/completions`;
   }
 
   buildHeaders(credentials, stream = true) {

@@ -33,6 +33,7 @@ function getToastStyle(type) {
 
 export default function DashboardLayout({ children }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const pathname = usePathname();
   const notifications = useNotificationStore((state) => state.notifications);
   const removeNotification = useNotificationStore((state) => state.removeNotification);
@@ -43,10 +44,7 @@ export default function DashboardLayout({ children }) {
         {notifications.map((n) => {
           const style = getToastStyle(n.type);
           return (
-            <div
-              key={n.id}
-              className={`rounded-lg border px-3 py-2 shadow-lg backdrop-blur-sm ${style.wrapper}`}
-            >
+            <div key={n.id} className={`rounded-lg border px-3 py-2 shadow-lg backdrop-blur-sm ${style.wrapper}`}>
               <div className="flex items-start gap-2">
                 <span className="material-symbols-outlined text-[18px] leading-5">{style.icon}</span>
                 <div className="min-w-0 flex-1">
@@ -70,16 +68,26 @@ export default function DashboardLayout({ children }) {
       </div>
       {/* Mobile sidebar overlay */}
       {sidebarOpen && (
-        <div
-          className="fixed inset-0 z-40 bg-black/20 lg:hidden"
-          onClick={() => setSidebarOpen(false)}
-        />
+        <div className="fixed inset-0 z-40 bg-black/20 lg:hidden" onClick={() => setSidebarOpen(false)} />
       )}
 
       {/* Sidebar - Desktop */}
-      <div className="hidden lg:flex">
+      <div
+        className={`hidden lg:flex transition-all duration-300 ${sidebarCollapsed ? "w-0 overflow-hidden" : "w-72"}`}
+      >
         <Sidebar />
       </div>
+      <button
+        type="button"
+        onClick={() => setSidebarCollapsed((v) => !v)}
+        className="hidden lg:flex fixed left-3 top-3 z-50 size-8 items-center justify-center rounded-lg border border-border bg-surface text-text-muted shadow-sm transition-colors hover:border-primary/40 hover:text-primary"
+        aria-label={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+        title={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+      >
+        <span className="material-symbols-outlined text-[18px]">
+          {sidebarCollapsed ? "left_panel_open" : "left_panel_close"}
+        </span>
+      </button>
 
       {/* Sidebar - Mobile */}
       <div
@@ -93,8 +101,14 @@ export default function DashboardLayout({ children }) {
       {/* Main content */}
       <main className="flex flex-col flex-1 h-full min-w-0 relative transition-colors duration-300 isolate">
         <Header key={pathname} onMenuClick={() => setSidebarOpen(true)} />
-        <div className={`flex-1 overflow-y-auto custom-scrollbar ${pathname === "/dashboard/basic-chat" ? "" : "p-6 lg:p-10"} ${pathname === "/dashboard/basic-chat" ? "flex flex-col overflow-hidden" : ""}`}>
-          <div className={`${pathname === "/dashboard/basic-chat" ? "flex-1 w-full h-full flex flex-col" : "max-w-7xl mx-auto"}`}>{children}</div>
+        <div
+          className={`flex-1 overflow-y-auto custom-scrollbar ${pathname === "/dashboard/basic-chat" ? "" : "p-6 lg:p-10"} ${pathname === "/dashboard/basic-chat" ? "flex flex-col overflow-hidden" : ""}`}
+        >
+          <div
+            className={`${pathname === "/dashboard/basic-chat" ? "flex-1 w-full h-full flex flex-col" : "max-w-7xl mx-auto"}`}
+          >
+            {children}
+          </div>
         </div>
       </main>
     </div>

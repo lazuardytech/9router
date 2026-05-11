@@ -73,14 +73,9 @@ export default function ProviderLimitCard({
           </div>
 
           <div>
-            <h3 className="font-semibold text-text-primary">
-              {name || provider}
-            </h3>
+            <h3 className="font-semibold text-text-primary">{name || provider}</h3>
             {plan && (
-              <Badge
-                variant={planVariants[plan?.toLowerCase()] || "default"}
-                size="xs"
-              >
+              <Badge variant={planVariants[plan?.toLowerCase()] || "default"} size="xs">
                 {plan}
               </Badge>
             )}
@@ -122,9 +117,7 @@ export default function ProviderLimitCard({
       {!loading && error && (
         <div className="p-4 rounded-lg bg-red-500/10 border border-red-500/20">
           <div className="flex items-start gap-2">
-            <span className="material-symbols-outlined text-red-500 text-[20px]">
-              error
-            </span>
+            <span className="material-symbols-outlined text-red-500 text-[20px]">error</span>
             <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
           </div>
         </div>
@@ -134,12 +127,8 @@ export default function ProviderLimitCard({
       {!loading && !error && message && (
         <div className="p-4 rounded-lg bg-blue-500/10 border border-blue-500/20">
           <div className="flex items-start gap-2">
-            <span className="material-symbols-outlined text-blue-500 text-[20px]">
-              info
-            </span>
-            <p className="text-sm text-blue-600 dark:text-blue-400">
-              {message}
-            </p>
+            <span className="material-symbols-outlined text-blue-500 text-[20px]">info</span>
+            <p className="text-sm text-blue-600 dark:text-blue-400">{message}</p>
           </div>
         </div>
       )}
@@ -173,9 +162,7 @@ export default function ProviderLimitCard({
       {/* Empty State */}
       {!loading && !error && !message && quotas?.length === 0 && (
         <div className="text-center py-8 text-text-muted">
-          <span className="material-symbols-outlined text-[48px] opacity-20">
-            data_usage
-          </span>
+          <span className="material-symbols-outlined text-[48px] opacity-20">data_usage</span>
           <p className="text-sm mt-2">No quota data available</p>
         </div>
       )}

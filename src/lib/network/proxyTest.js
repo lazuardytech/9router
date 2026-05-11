@@ -34,9 +34,7 @@ export async function testProxyUrl({ proxyUrl, testUrl, timeoutMs } = {}) {
   const normalizedTestUrl = normalizeString(testUrl) || DEFAULT_TEST_URL;
   const timeoutMsRaw = Number(timeoutMs);
   const normalizedTimeoutMs =
-    Number.isFinite(timeoutMsRaw) && timeoutMsRaw > 0
-      ? Math.min(timeoutMsRaw, 30000)
-      : DEFAULT_TIMEOUT_MS;
+    Number.isFinite(timeoutMsRaw) && timeoutMsRaw > 0 ? Math.min(timeoutMsRaw, 30000) : DEFAULT_TIMEOUT_MS;
 
   let dispatcher;
 
@@ -73,10 +71,7 @@ export async function testProxyUrl({ proxyUrl, testUrl, timeoutMs } = {}) {
         elapsedMs: Date.now() - startedAt,
       };
     } catch (err) {
-      const message =
-        err?.name === "AbortError"
-          ? "Proxy test timed out"
-          : getErrorMessage(err);
+      const message = err?.name === "AbortError" ? "Proxy test timed out" : getErrorMessage(err);
       return { ok: false, status: 500, error: message };
     } finally {
       clearTimeout(timer);

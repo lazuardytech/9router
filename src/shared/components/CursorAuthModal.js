@@ -95,14 +95,10 @@ export default function CursorAuthModal({ isOpen, onSuccess, onClose }) {
         {autoDetecting && (
           <div className="text-center py-6">
             <div className="size-16 mx-auto mb-4 rounded-full bg-primary/10 flex items-center justify-center">
-              <span className="material-symbols-outlined text-3xl text-primary animate-spin">
-                progress_activity
-              </span>
+              <span className="material-symbols-outlined text-3xl text-primary animate-spin">progress_activity</span>
             </div>
             <h3 className="text-lg font-semibold mb-2">Auto-detecting tokens...</h3>
-            <p className="text-sm text-text-muted">
-              Reading from Cursor IDE database
-            </p>
+            <p className="text-sm text-text-muted">Reading from Cursor IDE database</p>
           </div>
         )}
 
@@ -131,7 +127,8 @@ export default function CursorAuthModal({ isOpen, onSuccess, onClose }) {
                   </p>
                 </div>
                 <p className="text-xs text-amber-700 dark:text-amber-300">
-                  Make sure Cursor IDE has been opened at least once, then click <strong>Retry</strong>. If the problem persists, paste your tokens manually below.
+                  Make sure Cursor IDE has been opened at least once, then click <strong>Retry</strong>. If the problem
+                  persists, paste your tokens manually below.
                 </p>
                 <Button onClick={runAutoDetect} variant="outline" fullWidth>
                   Retry

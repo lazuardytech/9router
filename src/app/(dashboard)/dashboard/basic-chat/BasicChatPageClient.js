@@ -42,10 +42,12 @@ function textValue(value) {
 }
 
 function humanize(value = "") {
-  return String(value)
-    .replace(/[-_]/g, " ")
-    .replace(/\b\w/g, (char) => char.toUpperCase())
-    .trim() || "Unknown";
+  return (
+    String(value)
+      .replace(/[-_]/g, " ")
+      .replace(/\b\w/g, (char) => char.toUpperCase())
+      .trim() || "Unknown"
+  );
 }
 
 function formatRelativeTime(value) {
@@ -129,12 +131,11 @@ function normalizeLiveModel(model, connection) {
   const rawId = typeof model === "string" ? model : model?.id || model?.name || model?.model || "";
   if (!rawId) return null;
 
-  const displayName = typeof model === "string"
-    ? model
-    : model?.name || model?.displayName || rawId;
+  const displayName = typeof model === "string" ? model : model?.name || model?.displayName || rawId;
 
   let requestModel = rawId;
-  const isCompatible = isOpenAICompatibleProvider(connection.provider) || isAnthropicCompatibleProvider(connection.provider);
+  const isCompatible =
+    isOpenAICompatibleProvider(connection.provider) || isAnthropicCompatibleProvider(connection.provider);
   if (isCompatible && !rawId.includes("/")) {
     requestModel = `${connection.provider}/${rawId}`;
   }
@@ -191,10 +192,14 @@ export default function BasicChatPageClient() {
   useEffect(() => {
     try {
       const savedSessions = safeParse(globalThis.localStorage.getItem(STORAGE_KEYS.sessions), []);
-      setSessions(Array.isArray(savedSessions) ? savedSessions.map((session) => ({
-        ...session,
-        messages: Array.isArray(session.messages) ? session.messages : [],
-      })) : []);
+      setSessions(
+        Array.isArray(savedSessions)
+          ? savedSessions.map((session) => ({
+              ...session,
+              messages: Array.isArray(session.messages) ? session.messages : [],
+            }))
+          : [],
+      );
       setActiveSessionId(globalThis.localStorage.getItem(STORAGE_KEYS.activeSessionId) || "");
       setActiveProviderId(globalThis.localStorage.getItem(STORAGE_KEYS.activeProviderId) || "");
       setDraft(globalThis.localStorage.getItem(STORAGE_KEYS.draft) || "");
@@ -272,7 +277,7 @@ export default function BasicChatPageClient() {
             } catch {
               return { connection, models: [] };
             }
-          })
+          }),
         );
 
         for (const result of liveResults) {
@@ -353,9 +358,15 @@ export default function BasicChatPageClient() {
     return activeProviderGroup?.models?.[0] || null;
   }, [activeModelId, modelIndex, activeProviderGroup, sessions, activeSessionId]);
 
-  const currentSession = useMemo(() => sessions.find((session) => session.id === activeSessionId) || null, [sessions, activeSessionId]);
+  const currentSession = useMemo(
+    () => sessions.find((session) => session.id === activeSessionId) || null,
+    [sessions, activeSessionId],
+  );
   const currentMessages = currentSession?.messages || [];
-  const sessionItems = useMemo(() => [...sessions].sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()), [sessions]);
+  const sessionItems = useMemo(
+    () => [...sessions].sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()),
+    [sessions],
+  );
   const canSend = !isSending && !!activeModel && (draft.trim().length > 0 || attachments.length > 0);
 
   useEffect(() => {
@@ -375,15 +386,13 @@ export default function BasicChatPageClient() {
     if (providerGroups.length === 0) return;
 
     const savedProvider = providerGroups.find((group) => group.providerId === activeProviderId) || providerGroups[0];
-    const savedModel = activeModelId && modelIndex.has(activeModelId)
-      ? modelIndex.get(activeModelId)
-      : savedProvider.models[0];
+    const savedModel =
+      activeModelId && modelIndex.has(activeModelId) ? modelIndex.get(activeModelId) : savedProvider.models[0];
 
     if (sessions.length > 0) {
       const session = sessions.find((item) => item.id === activeSessionId) || sessions[0];
-      const sessionModel = session?.modelId && modelIndex.has(session.modelId)
-        ? modelIndex.get(session.modelId)
-        : savedModel;
+      const sessionModel =
+        session?.modelId && modelIndex.has(session.modelId) ? modelIndex.get(session.modelId) : savedModel;
       initializedRef.current = true;
       setActiveSessionId(session.id);
       setActiveProviderId(sessionModel?.providerId || savedProvider.providerId);
@@ -480,13 +489,19 @@ export default function BasicChatPageClient() {
       setSessions((prev) => [session, ...prev]);
       setActiveSessionId(session.id);
     } else if (current) {
-      setSessions((prev) => prev.map((item) => (item.id === current.id ? {
-        ...item,
-        providerId: group.providerId,
-        providerName: group.providerName,
-        modelId: nextModel.id,
-        modelName: nextModel.name,
-      } : item)));
+      setSessions((prev) =>
+        prev.map((item) =>
+          item.id === current.id
+            ? {
+                ...item,
+                providerId: group.providerId,
+                providerName: group.providerName,
+                modelId: nextModel.id,
+                modelName: nextModel.name,
+              }
+            : item,
+        ),
+      );
       setActiveSessionId(current.id);
     }
 
@@ -506,13 +521,19 @@ export default function BasicChatPageClient() {
       setSessions((prev) => [session, ...prev]);
       setActiveSessionId(session.id);
     } else if (current) {
-      setSessions((prev) => prev.map((item) => (item.id === current.id ? {
-        ...item,
-        providerId: model.providerId,
-        providerName: model.providerName,
-        modelId: model.id,
-        modelName: model.name,
-      } : item)));
+      setSessions((prev) =>
+        prev.map((item) =>
+          item.id === current.id
+            ? {
+                ...item,
+                providerId: model.providerId,
+                providerName: model.providerName,
+                modelId: model.id,
+                modelName: model.name,
+              }
+            : item,
+        ),
+      );
       setActiveSessionId(current.id);
     } else {
       const session = ensureSessionForModel(model);
@@ -536,13 +557,15 @@ export default function BasicChatPageClient() {
       return;
     }
 
-    const converted = await Promise.all(images.map(async (file) => ({
-      id: createId(),
-      name: file.name,
-      type: file.type,
-      size: file.size,
-      dataUrl: await fileToDataUrl(file),
-    })));
+    const converted = await Promise.all(
+      images.map(async (file) => ({
+        id: createId(),
+        name: file.name,
+        type: file.type,
+        size: file.size,
+        dataUrl: await fileToDataUrl(file),
+      })),
+    );
 
     setAttachments((prev) => [...prev, ...converted]);
     event.target.value = "";
@@ -605,16 +628,22 @@ export default function BasicChatPageClient() {
     };
 
     const nextMessages = [...(session.messages || []), userMessage, assistantMessage];
-    setSessions((prev) => prev.map((item) => (item.id === sessionId ? {
-      ...item,
-      providerId: model.providerId,
-      providerName: model.providerName,
-      modelId: model.id,
-      modelName: model.name,
-      messages: nextMessages,
-      updatedAt: new Date().toISOString(),
-      title: item.title === "New chat" ? makeSessionTitle(userText) : item.title,
-    } : item)));
+    setSessions((prev) =>
+      prev.map((item) =>
+        item.id === sessionId
+          ? {
+              ...item,
+              providerId: model.providerId,
+              providerName: model.providerName,
+              modelId: model.id,
+              modelName: model.name,
+              messages: nextMessages,
+              updatedAt: new Date().toISOString(),
+              title: item.title === "New chat" ? makeSessionTitle(userText) : item.title,
+            }
+          : item,
+      ),
+    );
     setDraft("");
     setAttachments([]);
     setIsSending(true);
@@ -653,10 +682,14 @@ export default function BasicChatPageClient() {
       const reader = response.body?.getReader();
       if (!reader) {
         const data = await response.json().catch(() => ({}));
-        const fallbackText = textValue(data?.choices?.[0]?.message?.content || data?.output_text || data?.error || data?.message || "");
+        const fallbackText = textValue(
+          data?.choices?.[0]?.message?.content || data?.output_text || data?.error || data?.message || "",
+        );
         updateSession(sessionId, (currentSession) => ({
           ...currentSession,
-          messages: currentSession.messages.map((message) => (message.id === assistantMessageId ? { ...message, content: fallbackText, status: "done" } : message)),
+          messages: currentSession.messages.map((message) =>
+            message.id === assistantMessageId ? { ...message, content: fallbackText, status: "done" } : message,
+          ),
           updatedAt: new Date().toISOString(),
         }));
         return;
@@ -690,7 +723,11 @@ export default function BasicChatPageClient() {
             setStreamingText(assistantText);
             updateSession(sessionId, (currentSession) => ({
               ...currentSession,
-              messages: currentSession.messages.map((message) => (message.id === assistantMessageId ? { ...message, content: assistantText, status: "streaming" } : message)),
+              messages: currentSession.messages.map((message) =>
+                message.id === assistantMessageId
+                  ? { ...message, content: assistantText, status: "streaming" }
+                  : message,
+              ),
               updatedAt: new Date().toISOString(),
             }));
           } catch {
@@ -701,7 +738,11 @@ export default function BasicChatPageClient() {
 
       updateSession(sessionId, (currentSession) => ({
         ...currentSession,
-        messages: currentSession.messages.map((message) => (message.id === assistantMessageId ? { ...message, content: assistantText || message.content, status: "done" } : message)),
+        messages: currentSession.messages.map((message) =>
+          message.id === assistantMessageId
+            ? { ...message, content: assistantText || message.content, status: "done" }
+            : message,
+        ),
         updatedAt: new Date().toISOString(),
       }));
       finalizeSessionTitle(sessionId, userText);
@@ -710,7 +751,11 @@ export default function BasicChatPageClient() {
         const errorText = textValue(error?.message || error);
         updateSession(sessionId, (currentSession) => ({
           ...currentSession,
-          messages: currentSession.messages.map((message) => (message.id === assistantMessageId ? { ...message, content: message.content || `Error: ${errorText}`, status: "error" } : message)),
+          messages: currentSession.messages.map((message) =>
+            message.id === assistantMessageId
+              ? { ...message, content: message.content || `Error: ${errorText}`, status: "error" }
+              : message,
+          ),
           updatedAt: new Date().toISOString(),
         }));
         setLoadError(errorText || "Không thể gửi tin nhắn.");
@@ -763,7 +808,9 @@ export default function BasicChatPageClient() {
                     <div key={group.providerId} className="mb-2 rounded-[16px] border border-white/10 bg-black/20 p-2">
                       <div className="flex items-center justify-between px-2 py-2">
                         <p className="text-sm font-semibold text-white">{group.providerName}</p>
-                        <Badge size="sm" variant="default">{group.models.length}</Badge>
+                        <Badge size="sm" variant="default">
+                          {group.models.length}
+                        </Badge>
                       </div>
                       <div className="grid gap-2 sm:grid-cols-2">
                         {group.models.map((model) => {
@@ -780,7 +827,11 @@ export default function BasicChatPageClient() {
                                   <p className="truncate text-sm font-medium text-white">{model.name}</p>
                                   <p className="truncate text-[11px] text-white/45">{model.requestModel}</p>
                                 </div>
-                                {isActive ? <span className="material-symbols-outlined text-[18px] text-blue-300">check_circle</span> : null}
+                                {isActive ? (
+                                  <span className="material-symbols-outlined text-[18px] text-blue-300">
+                                    check_circle
+                                  </span>
+                                ) : null}
                               </div>
                             </button>
                           );
@@ -801,14 +852,23 @@ export default function BasicChatPageClient() {
             >
               History
             </button>
-            <Button variant="ghost" size="sm" icon="delete" onClick={handleDeleteCurrentChat} disabled={!activeSessionId || sessions.length === 0}>
+            <Button
+              variant="ghost"
+              size="sm"
+              icon="delete"
+              onClick={handleDeleteCurrentChat}
+              disabled={!activeSessionId || sessions.length === 0}
+            >
               Clear
             </Button>
           </div>
         </div>
 
         {historyOpen ? (
-          <div ref={historyMenuRef} className="absolute right-4 top-[72px] z-20 w-[min(360px,calc(100vw-2rem))] rounded-[20px] border border-white/10 bg-[#262626] p-2 shadow-2xl shadow-black/50 lg:right-6">
+          <div
+            ref={historyMenuRef}
+            className="absolute right-4 top-[72px] z-20 w-[min(360px,calc(100vw-2rem))] rounded-[20px] border border-white/10 bg-[#262626] p-2 shadow-2xl shadow-black/50 lg:right-6"
+          >
             <div className="px-3 py-2">
               <p className="text-xs uppercase tracking-[0.22em] text-white/45">Recent chats</p>
             </div>
@@ -817,26 +877,34 @@ export default function BasicChatPageClient() {
                 <div className="rounded-[16px] border border-dashed border-white/10 bg-white/5 p-4 text-sm text-white/55">
                   Chưa có cuộc trò chuyện nào.
                 </div>
-              ) : sessionItems.map((session) => {
-                const isActive = session.id === activeSessionId;
-                const latestMessage = [...(session.messages || [])].reverse().find((message) => message.role === "user") || session.messages?.[0];
-                return (
-                  <button
-                    key={session.id}
-                    type="button"
-                    onClick={() => handleSelectSession(session.id)}
-                    className={`w-full rounded-[16px] border px-3 py-3 text-left transition ${isActive ? "border-blue-400/40 bg-blue-500/15" : "border-white/10 bg-white/5 hover:bg-white/8"}`}
-                  >
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="min-w-0 flex-1">
-                        <p className="truncate text-sm font-medium text-white">{session.title}</p>
-                        <p className="mt-1 truncate text-xs text-white/50">{textValue(latestMessage?.content) || "Empty chat"}</p>
+              ) : (
+                sessionItems.map((session) => {
+                  const isActive = session.id === activeSessionId;
+                  const latestMessage =
+                    [...(session.messages || [])].reverse().find((message) => message.role === "user") ||
+                    session.messages?.[0];
+                  return (
+                    <button
+                      key={session.id}
+                      type="button"
+                      onClick={() => handleSelectSession(session.id)}
+                      className={`w-full rounded-[16px] border px-3 py-3 text-left transition ${isActive ? "border-blue-400/40 bg-blue-500/15" : "border-white/10 bg-white/5 hover:bg-white/8"}`}
+                    >
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="min-w-0 flex-1">
+                          <p className="truncate text-sm font-medium text-white">{session.title}</p>
+                          <p className="mt-1 truncate text-xs text-white/50">
+                            {textValue(latestMessage?.content) || "Empty chat"}
+                          </p>
+                        </div>
+                        <span className="text-[10px] text-white/40 shrink-0">
+                          {formatRelativeTime(session.updatedAt)}
+                        </span>
                       </div>
-                      <span className="text-[10px] text-white/40 shrink-0">{formatRelativeTime(session.updatedAt)}</span>
-                    </div>
-                  </button>
-                );
-              })}
+                    </button>
+                  );
+                })
+              )}
             </div>
           </div>
         ) : null}
@@ -861,7 +929,8 @@ export default function BasicChatPageClient() {
                   <div className="space-y-2">
                     <h2 className="text-2xl font-semibold text-white">Start a conversation</h2>
                     <p className="text-sm leading-6 text-white/60">
-                      Simple chat interface to interact with any AI model from connected providers. Select a model and start chatting!
+                      Simple chat interface to interact with any AI model from connected providers. Select a model and
+                      start chatting!
                     </p>
                   </div>
                 </div>
@@ -877,16 +946,30 @@ export default function BasicChatPageClient() {
 
                 return (
                   <div key={message.id} className={`flex w-full ${isUser ? "justify-end" : "justify-start"} mb-6`}>
-                    <div className={`max-w-[min(88%,42rem)] ${isUser ? "rounded-3xl bg-[#2f2f2f] px-5 py-3.5 text-white" : "text-white/90"}`}>
+                    <div
+                      className={`max-w-[min(88%,42rem)] ${isUser ? "rounded-3xl bg-[#2f2f2f] px-5 py-3.5 text-white" : "text-white/90"}`}
+                    >
                       <div className="mb-1 flex items-center justify-between gap-3">
-                        <span className="text-xs font-semibold">{isUser ? "You" : activeModel?.name || "Assistant"}</span>
+                        <span className="text-xs font-semibold">
+                          {isUser ? "You" : activeModel?.name || "Assistant"}
+                        </span>
                       </div>
 
                       {message.attachments?.length ? (
                         <div className="mb-3 grid grid-cols-2 gap-2 sm:grid-cols-3 mt-2">
                           {message.attachments.map((attachment) => (
-                            <a key={attachment.id} href={attachment.dataUrl} target="_blank" rel="noreferrer" className="overflow-hidden rounded-[18px] border border-white/10 bg-black/20">
-                              <img src={attachment.dataUrl} alt={attachment.name} className="h-28 w-full object-cover" />
+                            <a
+                              key={attachment.id}
+                              href={attachment.dataUrl}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="overflow-hidden rounded-[18px] border border-white/10 bg-black/20"
+                            >
+                              <img
+                                src={attachment.dataUrl}
+                                alt={attachment.name}
+                                className="h-28 w-full object-cover"
+                              />
                             </a>
                           ))}
                         </div>
@@ -894,7 +977,9 @@ export default function BasicChatPageClient() {
 
                       <div className="whitespace-pre-wrap break-words text-[15px] leading-7">
                         {content}
-                        {isAssistant && isStreaming && !streamingText ? <span className="inline-block animate-pulse">▋</span> : null}
+                        {isAssistant && isStreaming && !streamingText ? (
+                          <span className="inline-block animate-pulse">▋</span>
+                        ) : null}
                       </div>
                     </div>
                   </div>
@@ -907,9 +992,17 @@ export default function BasicChatPageClient() {
             {attachments.length > 0 ? (
               <div className="mx-auto mb-3 flex w-full max-w-3xl flex-wrap gap-2 px-4">
                 {attachments.map((attachment) => (
-                  <div key={attachment.id} className="flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-2">
+                  <div
+                    key={attachment.id}
+                    className="flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-2"
+                  >
                     <span className="text-xs text-white/80 max-w-[12rem] truncate">{attachment.name}</span>
-                    <button type="button" onClick={() => removeAttachment(attachment.id)} className="text-white/55 hover:text-white" aria-label="Remove attachment">
+                    <button
+                      type="button"
+                      onClick={() => removeAttachment(attachment.id)}
+                      className="text-white/55 hover:text-white"
+                      aria-label="Remove attachment"
+                    >
                       <span className="material-symbols-outlined text-[18px]">close</span>
                     </button>
                   </div>
@@ -930,20 +1023,42 @@ export default function BasicChatPageClient() {
 
                 <div className="mt-2 flex items-center justify-between gap-3">
                   <div className="flex items-center gap-2">
-                    <button type="button" onClick={() => fileInputRef.current?.click()} disabled={!activeModel || loadingData} className="p-2 text-white/50 hover:text-white transition rounded-full hover:bg-white/5">
+                    <button
+                      type="button"
+                      onClick={() => fileInputRef.current?.click()}
+                      disabled={!activeModel || loadingData}
+                      className="p-2 text-white/50 hover:text-white transition rounded-full hover:bg-white/5"
+                    >
                       <span className="material-symbols-outlined text-[20px]">attach_file</span>
                     </button>
-                    <input ref={fileInputRef} type="file" accept="image/*" multiple className="hidden" onChange={handleAttachFiles} />
-                    <span className="text-xs font-medium text-white/30 truncate max-w-[120px]">{activeModel ? activeModel.name : "No model"}</span>
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept="image/*"
+                      multiple
+                      className="hidden"
+                      onChange={handleAttachFiles}
+                    />
+                    <span className="text-xs font-medium text-white/30 truncate max-w-[120px]">
+                      {activeModel ? activeModel.name : "No model"}
+                    </span>
                   </div>
 
                   <div className="flex items-center gap-2">
                     {isSending ? (
-                      <button type="button" onClick={handleStop} className="p-2 text-white bg-white/10 hover:bg-white/20 transition rounded-full h-8 w-8 flex items-center justify-center">
+                      <button
+                        type="button"
+                        onClick={handleStop}
+                        className="p-2 text-white bg-white/10 hover:bg-white/20 transition rounded-full h-8 w-8 flex items-center justify-center"
+                      >
                         <span className="material-symbols-outlined text-[16px]">stop</span>
                       </button>
                     ) : null}
-                    <button onClick={sendMessage} disabled={!canSend} className={`h-8 w-8 rounded-full flex items-center justify-center transition ${canSend ? 'bg-white text-black hover:opacity-90' : 'bg-white/10 text-white/30 cursor-not-allowed'}`}>
+                    <button
+                      onClick={sendMessage}
+                      disabled={!canSend}
+                      className={`h-8 w-8 rounded-full flex items-center justify-center transition ${canSend ? "bg-white text-black hover:opacity-90" : "bg-white/10 text-white/30 cursor-not-allowed"}`}
+                    >
                       <span className="material-symbols-outlined text-[16px]">arrow_upward</span>
                     </button>
                   </div>

@@ -44,10 +44,7 @@ export async function handleImageGenerationCore({
 
   const adapter = getImageAdapter(provider);
   if (!adapter) {
-    return createErrorResult(
-      HTTP_STATUS.BAD_REQUEST,
-      `Provider '${provider}' does not support image generation`
-    );
+    return createErrorResult(HTTP_STATUS.BAD_REQUEST, `Provider '${provider}' does not support image generation`);
   }
 
   let url;
@@ -82,14 +79,9 @@ export async function handleImageGenerationCore({
   if (
     !executor?.noAuth &&
     !adapter.noAuth &&
-    (providerResponse.status === HTTP_STATUS.UNAUTHORIZED ||
-      providerResponse.status === HTTP_STATUS.FORBIDDEN)
+    (providerResponse.status === HTTP_STATUS.UNAUTHORIZED || providerResponse.status === HTTP_STATUS.FORBIDDEN)
   ) {
-    const newCredentials = await refreshWithRetry(
-      () => executor.refreshCredentials(credentials, log),
-      3,
-      log
-    );
+    const newCredentials = await refreshWithRetry(() => executor.refreshCredentials(credentials, log), 3, log);
 
     if (newCredentials?.accessToken || newCredentials?.apiKey) {
       log?.info?.("TOKEN", `${provider.toUpperCase()} | refreshed for image generation`);
@@ -151,14 +143,16 @@ export async function handleImageGenerationCore({
   const normalized = adapter.normalize(parsed, body.prompt);
 
   // Already in OpenAI shape? skip re-normalize
-  const finalBody = (normalized.created && Array.isArray(normalized.data)) ? normalized : parsed;
+  const finalBody = normalized.created && Array.isArray(normalized.data) ? normalized : parsed;
 
   // Binary output: decode first b64_json (or fetch url) into raw bytes
   if (binaryOutput) {
     const first = finalBody.data?.[0];
     let b64 = first?.b64_json;
     if (!b64 && first?.url) {
-      try { b64 = await urlToBase64(first.url); } catch {}
+      try {
+        b64 = await urlToBase64(first.url);
+      } catch {}
     }
     if (b64) {
       const buf = Buffer.from(b64, "base64");

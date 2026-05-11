@@ -36,24 +36,25 @@ const parseGeminiCliModels = (data) => {
   return [];
 };
 
-const appendCodexReviewModels = (models) => models.flatMap((model) => {
-  const id = model?.id || model?.slug || model?.model || model?.name;
-  if (!id) return [];
-  const name = model?.display_name || model?.displayName || model?.name || id;
-  const normalized = { ...model, id, name };
-  const isChatModel = (model?.type || "llm") !== "image" && !id.toLowerCase().includes("embed");
-  if (!isChatModel || id.endsWith("-review")) return [normalized];
-  return [
-    normalized,
-    {
-      ...normalized,
-      id: `${id}-review`,
-      name: `${name} Review`,
-      upstreamModelId: id,
-      quotaFamily: "review",
-    },
-  ];
-});
+const appendCodexReviewModels = (models) =>
+  models.flatMap((model) => {
+    const id = model?.id || model?.slug || model?.model || model?.name;
+    if (!id) return [];
+    const name = model?.display_name || model?.displayName || model?.name || id;
+    const normalized = { ...model, id, name };
+    const isChatModel = (model?.type || "llm") !== "image" && !id.toLowerCase().includes("embed");
+    if (!isChatModel || id.endsWith("-review")) return [normalized];
+    return [
+      normalized,
+      {
+        ...normalized,
+        id: `${id}-review`,
+        name: `${name} Review`,
+        upstreamModelId: id,
+        quotaFamily: "review",
+      },
+    ];
+  });
 
 const parseCodexModels = (data) => appendCodexReviewModels(parseOpenAIStyleModels(data));
 
@@ -63,7 +64,7 @@ const createOpenAIModelsConfig = (url) => ({
   headers: { "Content-Type": "application/json" },
   authHeader: "Authorization",
   authPrefix: "Bearer ",
-  parseResponse: parseOpenAIStyleModels
+  parseResponse: parseOpenAIStyleModels,
 });
 
 const resolveQwenModelsUrl = (connection) => {
@@ -85,17 +86,17 @@ const PROVIDER_MODELS_CONFIG = {
     method: "GET",
     headers: {
       "Anthropic-Version": "2023-06-01",
-      "Content-Type": "application/json"
+      "Content-Type": "application/json",
     },
     authHeader: "x-api-key",
-    parseResponse: (data) => data.data || []
+    parseResponse: (data) => data.data || [],
   },
   gemini: {
     url: "https://generativelanguage.googleapis.com/v1beta/models",
     method: "GET",
     headers: { "Content-Type": "application/json" },
     authQuery: "key", // Use query param for API key
-    parseResponse: (data) => data.models || []
+    parseResponse: (data) => data.models || [],
   },
   qwen: {
     url: "https://portal.qwen.ai/v1/models",
@@ -103,15 +104,15 @@ const PROVIDER_MODELS_CONFIG = {
     headers: { "Content-Type": "application/json" },
     authHeader: "Authorization",
     authPrefix: "Bearer ",
-    parseResponse: (data) => data.data || []
+    parseResponse: (data) => data.data || [],
   },
   codex: {
     url: "https://chatgpt.com/backend-api/codex/models?client_version=1.0.0",
     method: "GET",
-    headers: { "Content-Type": "application/json", "Accept": "application/json" },
+    headers: { "Content-Type": "application/json", Accept: "application/json" },
     authHeader: "Authorization",
     authPrefix: "Bearer ",
-    parseResponse: parseCodexModels
+    parseResponse: parseCodexModels,
   },
   antigravity: {
     url: "https://daily-cloudcode-pa.sandbox.googleapis.com/v1internal:models",
@@ -120,7 +121,7 @@ const PROVIDER_MODELS_CONFIG = {
     authHeader: "Authorization",
     authPrefix: "Bearer ",
     body: {},
-    parseResponse: (data) => data.models || []
+    parseResponse: (data) => data.models || [],
   },
   github: {
     url: "https://api.githubcopilot.com/models",
@@ -130,7 +131,7 @@ const PROVIDER_MODELS_CONFIG = {
       "Copilot-Integration-Id": "vscode-chat",
       "editor-version": "vscode/1.107.1",
       "editor-plugin-version": "copilot-chat/0.26.7",
-      "user-agent": "GitHubCopilotChat/0.26.7"
+      "user-agent": "GitHubCopilotChat/0.26.7",
     },
     authHeader: "Authorization",
     authPrefix: "Bearer ",
@@ -138,16 +139,16 @@ const PROVIDER_MODELS_CONFIG = {
       if (!data?.data) return [];
       // Filter out embeddings, non-chat models, and disabled models
       return data.data
-        .filter(m => m.capabilities?.type === "chat")
-        .filter(m => m.policy?.state !== "disabled") // Only return explicitly enabled models
-        .map(m => ({
+        .filter((m) => m.capabilities?.type === "chat")
+        .filter((m) => m.policy?.state !== "disabled") // Only return explicitly enabled models
+        .map((m) => ({
           id: m.id,
           name: m.name || m.id,
           version: m.version,
           capabilities: m.capabilities,
-          isDefault: m.model_picker_enabled === true
+          isDefault: m.model_picker_enabled === true,
         }));
-    }
+    },
   },
   openai: createOpenAIModelsConfig("https://api.openai.com/v1/models"),
   openrouter: createOpenAIModelsConfig("https://openrouter.ai/api/v1/models"),
@@ -156,10 +157,10 @@ const PROVIDER_MODELS_CONFIG = {
     method: "GET",
     headers: {
       "Anthropic-Version": "2023-06-01",
-      "Content-Type": "application/json"
+      "Content-Type": "application/json",
     },
     authHeader: "x-api-key",
-    parseResponse: (data) => data.data || []
+    parseResponse: (data) => data.data || [],
   },
 
   alicode: {
@@ -168,7 +169,7 @@ const PROVIDER_MODELS_CONFIG = {
     headers: { "Content-Type": "application/json" },
     authHeader: "Authorization",
     authPrefix: "Bearer ",
-    parseResponse: (data) => data.data || []
+    parseResponse: (data) => data.data || [],
   },
   "alicode-intl": {
     url: "https://coding-intl.dashscope.aliyuncs.com/v1/models",
@@ -176,7 +177,7 @@ const PROVIDER_MODELS_CONFIG = {
     headers: { "Content-Type": "application/json" },
     authHeader: "Authorization",
     authPrefix: "Bearer ",
-    parseResponse: (data) => data.data || []
+    parseResponse: (data) => data.data || [],
   },
   "volcengine-ark": createOpenAIModelsConfig("https://ark.cn-beijing.volces.com/api/coding/v3/models"),
   byteplus: createOpenAIModelsConfig("https://ark.ap-southeast.bytepluses.com/api/coding/v3/models"),
@@ -199,7 +200,7 @@ const PROVIDER_MODELS_CONFIG = {
   nanobanana: createOpenAIModelsConfig("https://api.nanobananaapi.ai/v1/models"),
   chutes: createOpenAIModelsConfig("https://llm.chutes.ai/v1/models"),
   nvidia: createOpenAIModelsConfig("https://integrate.api.nvidia.com/v1/models"),
-  assemblyai: createOpenAIModelsConfig("https://api.assemblyai.com/v1/models")
+  assemblyai: createOpenAIModelsConfig("https://api.assemblyai.com/v1/models"),
 };
 
 /**
@@ -224,17 +225,14 @@ export async function GET(request, { params }) {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${connection.apiKey}`,
+          Authorization: `Bearer ${connection.apiKey}`,
         },
       });
 
       if (!response.ok) {
         const errorText = await response.text();
         console.log(`Error fetching models from ${connection.provider}:`, errorText);
-        return NextResponse.json(
-          { error: `Failed to fetch models: ${response.status}` },
-          { status: response.status }
-        );
+        return NextResponse.json({ error: `Failed to fetch models: ${response.status}` }, { status: response.status });
       }
 
       const data = await response.json();
@@ -243,14 +241,17 @@ export async function GET(request, { params }) {
       return NextResponse.json({
         provider: connection.provider,
         connectionId: connection.id,
-        models
+        models,
       });
     }
 
     if (isAnthropicCompatibleProvider(connection.provider)) {
       let baseUrl = connection.providerSpecificData?.baseUrl;
       if (!baseUrl) {
-        return NextResponse.json({ error: "No base URL configured for Anthropic compatible provider" }, { status: 400 });
+        return NextResponse.json(
+          { error: "No base URL configured for Anthropic compatible provider" },
+          { status: 400 },
+        );
       }
 
       baseUrl = baseUrl.replace(/\/$/, "");
@@ -265,17 +266,14 @@ export async function GET(request, { params }) {
           "Content-Type": "application/json",
           "x-api-key": connection.apiKey,
           "anthropic-version": "2023-06-01",
-          "Authorization": `Bearer ${connection.apiKey}`
+          Authorization: `Bearer ${connection.apiKey}`,
         },
       });
 
       if (!response.ok) {
         const errorText = await response.text();
         console.log(`Error fetching models from ${connection.provider}:`, errorText);
-        return NextResponse.json(
-          { error: `Failed to fetch models: ${response.status}` },
-          { status: response.status }
-        );
+        return NextResponse.json({ error: `Failed to fetch models: ${response.status}` }, { status: response.status });
       }
 
       const data = await response.json();
@@ -284,7 +282,7 @@ export async function GET(request, { params }) {
       return NextResponse.json({
         provider: connection.provider,
         connectionId: connection.id,
-        models
+        models,
       });
     }
 
@@ -303,7 +301,7 @@ export async function GET(request, { params }) {
             return NextResponse.json({
               provider: connection.provider,
               connectionId: connection.id,
-              models
+              models,
             });
           } catch (error) {
             if (error.message.includes("AccessDeniedException") && refreshToken) {
@@ -321,7 +319,7 @@ export async function GET(request, { params }) {
                 return NextResponse.json({
                   provider: connection.provider,
                   connectionId: connection.id,
-                  models
+                  models,
                 });
               }
             }
@@ -356,11 +354,11 @@ export async function GET(request, { params }) {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            "Authorization": `Bearer ${token}`,
+            Authorization: `Bearer ${token}`,
             "User-Agent": "google-api-nodejs-client/9.15.1",
-            "X-Goog-Api-Client": "google-cloud-sdk vscode_cloudshelleditor/0.1"
+            "X-Goog-Api-Client": "google-cloud-sdk vscode_cloudshelleditor/0.1",
           },
-          body: JSON.stringify(body)
+          body: JSON.stringify(body),
         });
         return response;
       };
@@ -390,7 +388,7 @@ export async function GET(request, { params }) {
             return NextResponse.json({
               provider: connection.provider,
               connectionId: connection.id,
-              models
+              models,
             });
           }
         } else {
@@ -421,10 +419,7 @@ export async function GET(request, { params }) {
       if (!response.ok) {
         const errorText = await response.text();
         console.log(`Error fetching models from ollama-local:`, errorText);
-        return NextResponse.json(
-          { error: `Failed to fetch models: ${response.status}` },
-          { status: response.status }
-        );
+        return NextResponse.json({ error: `Failed to fetch models: ${response.status}` }, { status: response.status });
       }
       const data = await response.json();
       const models = parseOpenAIStyleModels(data);
@@ -439,7 +434,7 @@ export async function GET(request, { params }) {
     if (!config) {
       return NextResponse.json(
         { error: `Provider ${connection.provider} does not support models listing` },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -467,7 +462,7 @@ export async function GET(request, { params }) {
     // Make request
     const fetchOptions = {
       method: config.method,
-      headers
+      headers,
     };
 
     if (config.body && config.method === "POST") {
@@ -479,10 +474,7 @@ export async function GET(request, { params }) {
     if (!response.ok) {
       const errorText = await response.text();
       console.log(`Error fetching models from ${connection.provider}:`, errorText);
-      return NextResponse.json(
-        { error: `Failed to fetch models: ${response.status}` },
-        { status: response.status }
-      );
+      return NextResponse.json({ error: `Failed to fetch models: ${response.status}` }, { status: response.status });
     }
 
     const data = await response.json();
@@ -491,7 +483,7 @@ export async function GET(request, { params }) {
     return NextResponse.json({
       provider: connection.provider,
       connectionId: connection.id,
-      models
+      models,
     });
   } catch (error) {
     console.log("Error fetching provider models:", error);

@@ -12,7 +12,11 @@ export default function AddCustomModelModal({ isOpen, providerAlias, providerDis
 
   // Reset state when modal opens
   useEffect(() => {
-    if (isOpen) { setModelId(""); setTestStatus(null); setTestError(""); }
+    if (isOpen) {
+      setModelId("");
+      setTestStatus(null);
+      setTestError("");
+    }
   }, [isOpen]);
 
   // Strip provider's own alias prefix (e.g. "cc/model" -> "model" for cc provider)
@@ -65,7 +69,11 @@ export default function AddCustomModelModal({ isOpen, providerAlias, providerDis
             <input
               type="text"
               value={modelId}
-              onChange={(e) => { setModelId(e.target.value); setTestStatus(null); setTestError(""); }}
+              onChange={(e) => {
+                setModelId(e.target.value);
+                setTestStatus(null);
+                setTestError("");
+              }}
               onKeyDown={handleKeyDown}
               placeholder="e.g. claude-opus-4-5"
               className="flex-1 px-3 py-2 text-sm border border-border rounded-lg bg-background focus:outline-none focus:border-primary"
@@ -82,7 +90,8 @@ export default function AddCustomModelModal({ isOpen, providerAlias, providerDis
             </Button>
           </div>
           <p className="text-xs text-text-muted mt-1">
-            Sent to provider as: <code className="font-mono bg-sidebar px-1 rounded">{stripAlias(modelId.trim()) || "model-id"}</code>
+            Sent to provider as:{" "}
+            <code className="font-mono bg-sidebar px-1 rounded">{stripAlias(modelId.trim()) || "model-id"}</code>
           </p>
         </div>
 
@@ -101,13 +110,10 @@ export default function AddCustomModelModal({ isOpen, providerAlias, providerDis
         )}
 
         <div className="flex gap-2 pt-1">
-          <Button onClick={onClose} variant="ghost" fullWidth size="sm">Cancel</Button>
-          <Button
-            onClick={handleSave}
-            fullWidth
-            size="sm"
-            disabled={!modelId.trim() || saving}
-          >
+          <Button onClick={onClose} variant="ghost" fullWidth size="sm">
+            Cancel
+          </Button>
+          <Button onClick={handleSave} fullWidth size="sm" disabled={!modelId.trim() || saving}>
             {saving ? "Adding..." : "Add Model"}
           </Button>
         </div>

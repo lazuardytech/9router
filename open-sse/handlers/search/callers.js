@@ -209,10 +209,7 @@ function buildLinkupRequest(config, params) {
 
   const { includes, excludes } = parseDomainFilter(params.domainFilter);
   const requestedDepth = getProviderSetting(params, "depth");
-  const depth =
-    requestedDepth && ["fast", "standard", "deep"].includes(requestedDepth)
-      ? requestedDepth
-      : "standard";
+  const depth = requestedDepth && ["fast", "standard", "deep"].includes(requestedDepth) ? requestedDepth : "standard";
 
   const body = {
     q: params.query,
@@ -289,10 +286,7 @@ function buildYouComRequest(config, params) {
 
   if (params.contentOptions?.full_page) {
     qp.set("livecrawl", params.searchType === "news" ? "news" : "web");
-    qp.append(
-      "livecrawl_formats",
-      params.contentOptions.format === "markdown" ? "markdown" : "html"
-    );
+    qp.append("livecrawl_formats", params.contentOptions.format === "markdown" ? "markdown" : "html");
   }
 
   return {
@@ -330,16 +324,16 @@ function buildSearxngRequest(config, params) {
 // ── Dispatcher ──────────────────────────────────────────────────────────
 
 const BUILDERS = {
-  "serper": buildSerperRequest,
+  serper: buildSerperRequest,
   "brave-search": buildBraveRequest,
-  "perplexity": buildPerplexityRequest,
-  "exa": buildExaRequest,
-  "tavily": buildTavilyRequest,
+  perplexity: buildPerplexityRequest,
+  exa: buildExaRequest,
+  tavily: buildTavilyRequest,
   "google-pse": buildGooglePseRequest,
-  "linkup": buildLinkupRequest,
-  "searchapi": buildSearchApiRequest,
-  "youcom": buildYouComRequest,
-  "searxng": buildSearxngRequest,
+  linkup: buildLinkupRequest,
+  searchapi: buildSearchApiRequest,
+  youcom: buildYouComRequest,
+  searxng: buildSearxngRequest,
 };
 
 /**

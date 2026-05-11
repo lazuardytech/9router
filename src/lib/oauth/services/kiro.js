@@ -265,8 +265,8 @@ export class KiroService {
       headers: {
         "Content-Type": "application/x-amz-json-1.0",
         "x-amz-target": target,
-        "Authorization": `Bearer ${accessToken}`,
-        "Accept": "application/json",
+        Authorization: `Bearer ${accessToken}`,
+        Accept: "application/json",
       },
       body: JSON.stringify({
         origin: "AI_EDITOR",
@@ -280,7 +280,7 @@ export class KiroService {
     }
 
     const data = await response.json();
-    return (data.models || []).map(m => ({
+    return (data.models || []).map((m) => ({
       id: m.modelId,
       name: m.modelName || m.modelId,
       description: m.description,

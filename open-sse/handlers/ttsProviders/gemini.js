@@ -22,8 +22,8 @@ const BITS_PER_SAMPLE = 16;
 // Build WAV header for raw PCM payload
 function pcmToWav(pcmBuffer) {
   const dataSize = pcmBuffer.length;
-  const byteRate = SAMPLE_RATE * CHANNELS * BITS_PER_SAMPLE / 8;
-  const blockAlign = CHANNELS * BITS_PER_SAMPLE / 8;
+  const byteRate = (SAMPLE_RATE * CHANNELS * BITS_PER_SAMPLE) / 8;
+  const blockAlign = (CHANNELS * BITS_PER_SAMPLE) / 8;
   const header = Buffer.alloc(44);
   header.write("RIFF", 0);
   header.writeUInt32LE(36 + dataSize, 4);

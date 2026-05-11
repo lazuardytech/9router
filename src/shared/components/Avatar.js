@@ -2,13 +2,7 @@
 
 import { cn } from "@/shared/utils/cn";
 
-export default function Avatar({
-  src,
-  alt = "Avatar",
-  name,
-  size = "md",
-  className,
-}) {
+export default function Avatar({ src, alt = "Avatar", name, size = "md", className }) {
   const sizes = {
     xs: "size-6 text-xs",
     sm: "size-8 text-sm",
@@ -60,7 +54,7 @@ export default function Avatar({
           "rounded-full bg-cover bg-center bg-no-repeat",
           "ring-2 ring-white dark:ring-surface-dark shadow-sm",
           sizes[size],
-          className
+          className,
         )}
         style={{ backgroundImage: `url(${src})` }}
         role="img"
@@ -76,7 +70,7 @@ export default function Avatar({
         "ring-2 ring-white dark:ring-surface-dark shadow-sm",
         sizes[size],
         getColorFromName(name),
-        className
+        className,
       )}
       role="img"
       aria-label={alt}
@@ -85,4 +79,3 @@ export default function Avatar({
     </div>
   );
 }
-

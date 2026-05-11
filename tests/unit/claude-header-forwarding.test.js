@@ -151,7 +151,7 @@ describe("DefaultExecutor.buildHeaders() — claude provider", () => {
     // Live values should win over static providers.js values
     expect(headers["user-agent"]).toBe("claude-code/2.1.63 node/24.3.0");
     // Beta flags are MERGED (static + cached) to preserve required flags like oauth
-    const betaFlags = headers["anthropic-beta"].split(",").map(s => s.trim());
+    const betaFlags = headers["anthropic-beta"].split(",").map((s) => s.trim());
     expect(betaFlags).toContain("claude-code-20250219");
     expect(betaFlags).toContain("oauth-2025-04-20");
     expect(betaFlags).toContain("interleaved-thinking-2025-05-14");
@@ -216,9 +216,7 @@ describe("DefaultExecutor.buildHeaders() — claude provider cold start (no cach
 
     // Static fallback values from providers.js must still be present
     // They may be Title-Case since no cache to conflict with them
-    const hasVersion =
-      headers["Anthropic-Version"] === "2023-06-01" ||
-      headers["anthropic-version"] === "2023-06-01";
+    const hasVersion = headers["Anthropic-Version"] === "2023-06-01" || headers["anthropic-version"] === "2023-06-01";
     expect(hasVersion).toBe(true);
   });
 
@@ -246,7 +244,7 @@ describe("DefaultExecutor.buildHeaders() — anthropic-compatible stripping", ()
         apiKey: "key",
         providerSpecificData: { baseUrl: "https://myproxy.example.com/v1" },
       },
-      true
+      true,
     );
 
     expect(headers["x-app"]).toBeUndefined();
@@ -262,7 +260,7 @@ describe("DefaultExecutor.buildHeaders() — anthropic-compatible stripping", ()
         apiKey: "key",
         providerSpecificData: { baseUrl: "https://myproxy.example.com/v1" },
       },
-      true
+      true,
     );
 
     const betaVal = headers["anthropic-beta"] || headers["Anthropic-Beta"] || "";
@@ -278,7 +276,7 @@ describe("DefaultExecutor.buildHeaders() — anthropic-compatible stripping", ()
         apiKey: "key",
         providerSpecificData: { baseUrl: "https://myproxy.example.com/v1" },
       },
-      false
+      false,
     );
 
     const betaVal = headers["anthropic-beta"] || headers["Anthropic-Beta"] || "";
@@ -295,12 +293,11 @@ describe("DefaultExecutor.buildHeaders() — anthropic-compatible stripping", ()
         apiKey: "key",
         providerSpecificData: { baseUrl: "https://api.anthropic.com/v1" },
       },
-      true
+      true,
     );
 
     // No stripping — anthropic-version should survive
-    const hasVersion =
-      headers["Anthropic-Version"] || headers["anthropic-version"];
+    const hasVersion = headers["Anthropic-Version"] || headers["anthropic-version"];
     expect(hasVersion).toBeDefined();
   });
 
@@ -311,11 +308,10 @@ describe("DefaultExecutor.buildHeaders() — anthropic-compatible stripping", ()
         apiKey: "key",
         providerSpecificData: {},
       },
-      true
+      true,
     );
 
-    const hasVersion =
-      headers["Anthropic-Version"] || headers["anthropic-version"];
+    const hasVersion = headers["Anthropic-Version"] || headers["anthropic-version"];
     expect(hasVersion).toBeDefined();
   });
 });

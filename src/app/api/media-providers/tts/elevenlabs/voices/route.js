@@ -29,7 +29,13 @@ export async function GET(request) {
       if (!byLang[code]) {
         byLang[code] = {
           code,
-          name: (() => { try { return langNames.of(code); } catch { return code; } })(),
+          name: (() => {
+            try {
+              return langNames.of(code);
+            } catch {
+              return code;
+            }
+          })(),
           voices: [],
         };
       }
@@ -41,7 +47,7 @@ export async function GET(request) {
           gender: voice.labels?.gender || "",
           lang: code,
           // premade voices are free; professional library voices added to account may require paid plan
-          free_users_allowed: voice.category === "premade" || voice.is_owner === true
+          free_users_allowed: voice.category === "premade" || voice.is_owner === true,
         });
       }
     };

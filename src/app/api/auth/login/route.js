@@ -4,9 +4,7 @@ import bcrypt from "bcryptjs";
 import { SignJWT } from "jose";
 import { cookies } from "next/headers";
 
-const SECRET = new TextEncoder().encode(
-  process.env.JWT_SECRET || "9router-default-secret-change-me"
-);
+const SECRET = new TextEncoder().encode(process.env.JWT_SECRET || "9router-default-secret-change-me");
 
 function isTunnelRequest(request, settings) {
   const host = (request.headers.get("host") || "").split(":")[0].toLowerCase();

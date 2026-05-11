@@ -3,14 +3,7 @@
 import { useState } from "react";
 import PropTypes from "prop-types";
 
-export default function ProviderIcon({
-  src,
-  alt,
-  size = 32,
-  className = "",
-  fallbackText = "?",
-  fallbackColor,
-}) {
+export default function ProviderIcon({ src, alt, size = 32, className = "", fallbackText = "?", fallbackColor }) {
   const [errored, setErrored] = useState(false);
 
   if (!src || errored) {
@@ -29,16 +22,7 @@ export default function ProviderIcon({
     );
   }
 
-  return (
-    <img
-      src={src}
-      alt={alt}
-      width={size}
-      height={size}
-      className={className}
-      onError={() => setErrored(true)}
-    />
-  );
+  return <img src={src} alt={alt} width={size} height={size} className={className} onError={() => setErrored(true)} />;
 }
 
 ProviderIcon.propTypes = {

@@ -75,7 +75,10 @@ export async function handleSearch(request) {
     const comboStrategies = settings.comboStrategies || {};
     const comboStrategy = comboStrategies[providerInput]?.fallbackStrategy || settings.comboStrategy || "fallback";
     const comboStickyLimit = settings.comboStickyRoundRobinLimit;
-    log.info("SEARCH", `Combo "${providerInput}" with ${comboModels.length} providers (strategy: ${comboStrategy}, sticky: ${comboStickyLimit})`);
+    log.info(
+      "SEARCH",
+      `Combo "${providerInput}" with ${comboModels.length} providers (strategy: ${comboStrategy}, sticky: ${comboStickyLimit})`,
+    );
     return handleComboChat({
       body,
       models: comboModels,
@@ -83,7 +86,7 @@ export async function handleSearch(request) {
       log,
       comboName: providerInput,
       comboStrategy,
-      comboStickyLimit
+      comboStickyLimit,
     });
   }
 
@@ -126,7 +129,7 @@ async function handleSingleProviderSearch(body, providerInput, request, apiKey, 
     offset: body.offset,
     domain_filter: body.domain_filter,
     content_options: body.content_options,
-    provider_options: body.provider_options
+    provider_options: body.provider_options,
   };
 
   // No-auth providers (e.g. searxng) bypass credential lookup
@@ -137,7 +140,7 @@ async function handleSingleProviderSearch(body, providerInput, request, apiKey, 
       provider: resolvedProvider,
       providerConfig,
       credentials: null,
-      log
+      log,
     });
     if (result.success) return result.response;
     return result.response;
@@ -156,7 +159,12 @@ async function handleSingleProviderSearch(body, providerInput, request, apiKey, 
         const errorMsg = lastError || credentials.lastError || "Unavailable";
         const status = lastStatus || Number(credentials.lastErrorCode) || HTTP_STATUS.SERVICE_UNAVAILABLE;
         log.warn("SEARCH", `[${providerId}] ${errorMsg} (${credentials.retryAfterHuman})`);
-        return unavailableResponse(status, `[${providerId}] ${errorMsg}`, credentials.retryAfter, credentials.retryAfterHuman);
+        return unavailableResponse(
+          status,
+          `[${providerId}] ${errorMsg}`,
+          credentials.retryAfter,
+          credentials.retryAfterHuman,
+        );
       }
       if (excludeConnectionIds.size === 0) {
         log.error("AUTH", `No credentials for provider: ${providerId}`);
@@ -181,17 +189,22 @@ async function handleSingleProviderSearch(body, providerInput, request, apiKey, 
           accessToken: newCreds.accessToken,
           refreshToken: newCreds.refreshToken,
           providerSpecificData: newCreds.providerSpecificData,
-          testStatus: "active"
+          testStatus: "active",
         });
       },
       onRequestSuccess: async () => {
         await clearAccountError(credentials.connectionId, credentials);
-      }
+      },
     });
 
     if (result.success) return result.response;
 
-    const { shouldFallback } = await markAccountUnavailable(credentials.connectionId, result.status, result.error, providerId);
+    const { shouldFallback } = await markAccountUnavailable(
+      credentials.connectionId,
+      result.status,
+      result.error,
+      providerId,
+    );
 
     if (shouldFallback) {
       log.warn("AUTH", `Account ${credentials.connectionName} unavailable (${result.status}), trying fallback`);

@@ -60,13 +60,25 @@ function stripContentTypes(body, stripList = []) {
   };
   for (const msg of body.messages) {
     if (!Array.isArray(msg.content)) continue;
-    msg.content = msg.content.filter(part => !shouldStrip(part.type));
+    msg.content = msg.content.filter((part) => !shouldStrip(part.type));
     if (msg.content.length === 0) msg.content = "";
   }
 }
 
 // Translate request: source -> openai -> target
-export function translateRequest(sourceFormat, targetFormat, model, body, stream = true, credentials = null, provider = null, reqLogger = null, stripList = [], connectionId = null, clientTool = null) {
+export function translateRequest(
+  sourceFormat,
+  targetFormat,
+  model,
+  body,
+  stream = true,
+  credentials = null,
+  provider = null,
+  reqLogger = null,
+  stripList = [],
+  connectionId = null,
+  clientTool = null,
+) {
   ensureInitialized();
   let result = body;
 
@@ -78,7 +90,7 @@ export function translateRequest(sourceFormat, targetFormat, model, body, stream
 
   // Always ensure tool_calls have id (some providers require it)
   ensureToolCallIds(result);
-  
+
   // Fix missing tool responses (insert empty tool_result if needed)
   fixMissingToolResponses(result);
 
@@ -206,7 +218,7 @@ export function initState(sourceFormat) {
     finishReason: null,
     finishReasonSent: false,
     usage: null,
-    contentBlockIndex: -1
+    contentBlockIndex: -1,
   };
 
   // Add openai-responses specific fields
@@ -232,7 +244,7 @@ export function initState(sourceFormat) {
       funcCallIds: {},
       funcArgsDone: {},
       funcItemDone: {},
-      completedSent: false
+      completedSent: false,
     };
   }
 

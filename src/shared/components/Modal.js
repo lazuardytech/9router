@@ -30,7 +30,9 @@ export default function Modal({
     } else {
       document.body.style.overflow = "";
     }
-    return () => { document.body.style.overflow = ""; };
+    return () => {
+      document.body.style.overflow = "";
+    };
   }, [isOpen]);
 
   useEffect(() => {
@@ -59,7 +61,7 @@ export default function Modal({
           "rounded-[14px] shadow-[var(--shadow-elev)]",
           "fade-in",
           sizes[size],
-          className
+          className,
         )}
       >
         {/* Header */}
@@ -73,9 +75,7 @@ export default function Modal({
                   <div className="w-3 h-3 rounded-full bg-[#27C93F]" />
                 </div>
               )}
-              {title && (
-                <h2 className="text-lg font-semibold text-text-main">{title}</h2>
-              )}
+              {title && <h2 className="text-lg font-semibold text-text-main">{title}</h2>}
             </div>
             {showCloseButton && (
               <button
@@ -93,9 +93,7 @@ export default function Modal({
 
         {/* Footer */}
         {footer && (
-          <div className="flex items-center justify-end gap-3 p-6 border-t border-border-subtle">
-            {footer}
-          </div>
+          <div className="flex items-center justify-end gap-3 p-6 border-t border-border-subtle">{footer}</div>
         )}
       </div>
     </div>

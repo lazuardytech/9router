@@ -2,7 +2,12 @@
 
 // Get HH:MM:SS timestamp
 function getTimeString() {
-  return new Date().toLocaleTimeString("en-US", { hour12: false, hour: "2-digit", minute: "2-digit", second: "2-digit" });
+  return new Date().toLocaleTimeString("en-US", {
+    hour12: false,
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+  });
 }
 
 /**
@@ -78,7 +83,7 @@ export function createStreamController({ onDisconnect, onError, log, provider, m
       onError?.(error);
     },
 
-    abort: () => abortController.abort()
+    abort: () => abortController.abort(),
   };
 }
 
@@ -118,7 +123,7 @@ export function createDisconnectAwareStream(transformStream, streamController) {
       streamController.handleDisconnect(reason || "cancelled");
       reader.cancel();
       writer.abort();
-    }
+    },
   });
 }
 
@@ -132,7 +137,6 @@ export function pipeWithDisconnect(providerResponse, transformStream, streamCont
   const transformedBody = providerResponse.body.pipeThrough(transformStream);
   return createDisconnectAwareStream(
     { readable: transformedBody, writable: { getWriter: () => ({ abort: () => Promise.resolve() }) } },
-    streamController
+    streamController,
   );
 }
-

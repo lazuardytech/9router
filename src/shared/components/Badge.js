@@ -17,21 +17,14 @@ const sizes = {
   lg: "px-3 py-1.5 text-sm",
 };
 
-export default function Badge({
-  children,
-  variant = "default",
-  size = "md",
-  dot = false,
-  icon,
-  className,
-}) {
+export default function Badge({ children, variant = "default", size = "md", dot = false, icon, className }) {
   return (
     <span
       className={cn(
         "inline-flex items-center gap-1.5 rounded-full font-semibold",
         variants[variant],
         sizes[size],
-        className
+        className,
       )}
     >
       {dot && (
@@ -43,7 +36,7 @@ export default function Badge({
             variant === "error" && "bg-red-500",
             variant === "info" && "bg-blue-500",
             variant === "primary" && "bg-brand-500",
-            variant === "default" && "bg-gray-500"
+            variant === "default" && "bg-gray-500",
           )}
         />
       )}

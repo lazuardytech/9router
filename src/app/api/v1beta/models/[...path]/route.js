@@ -21,8 +21,8 @@ export async function OPTIONS() {
     headers: {
       "Access-Control-Allow-Origin": "*",
       "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
-      "Access-Control-Allow-Headers": "*"
-    }
+      "Access-Control-Allow-Headers": "*",
+    },
   });
 }
 
@@ -52,22 +52,14 @@ export async function POST(request, { params }) {
       // Format: /v1beta/models/provider/model:generateContent
       const provider = path[0];
       const modelAction = path[1];
-      action = modelAction.includes(":streamGenerateContent")
-        ? ":streamGenerateContent"
-        : ":generateContent";
-      const modelName = modelAction
-        .replace(":streamGenerateContent", "")
-        .replace(":generateContent", "");
+      action = modelAction.includes(":streamGenerateContent") ? ":streamGenerateContent" : ":generateContent";
+      const modelName = modelAction.replace(":streamGenerateContent", "").replace(":generateContent", "");
       model = provider + "/" + modelName;
     } else {
       // Format: /v1beta/models/model:generateContent
       const modelAction = path[0];
-      action = modelAction.includes(":streamGenerateContent")
-        ? ":streamGenerateContent"
-        : ":generateContent";
-      model = modelAction
-        .replace(":streamGenerateContent", "")
-        .replace(":generateContent", "");
+      action = modelAction.includes(":streamGenerateContent") ? ":streamGenerateContent" : ":generateContent";
+      model = modelAction.replace(":streamGenerateContent", "").replace(":generateContent", "");
     }
 
     const body = await request.json();
@@ -100,10 +92,7 @@ export async function POST(request, { params }) {
     }
   } catch (error) {
     console.log("Error handling Gemini request:", error);
-    return Response.json(
-      { error: { message: error.message, code: 500 } },
-      { status: 500 }
-    );
+    return Response.json({ error: { message: error.message, code: 500 } }, { status: 500 });
   }
 }
 
@@ -119,9 +108,7 @@ function convertGeminiToInternal(geminiBody, model, stream) {
 
   // Convert system instruction
   if (geminiBody.systemInstruction) {
-    const systemText = geminiBody.systemInstruction.parts
-      ?.map(p => p.text)
-      .join("\n") || "";
+    const systemText = geminiBody.systemInstruction.parts?.map((p) => p.text).join("\n") || "";
     if (systemText) {
       messages.push({ role: "system", content: systemText });
     }
@@ -131,7 +118,7 @@ function convertGeminiToInternal(geminiBody, model, stream) {
   if (geminiBody.contents) {
     for (const content of geminiBody.contents) {
       const role = content.role === "model" ? "assistant" : "user";
-      const text = content.parts?.map(p => p.text).join("\n") || "";
+      const text = content.parts?.map((p) => p.text).join("\n") || "";
       messages.push({ role, content: text });
     }
   }
@@ -233,17 +220,14 @@ function transformOpenAISSEToGeminiSSE(upstreamResponse, model) {
             candidatesTokenCount: parsed.usage.completion_tokens || 0,
             totalTokenCount: parsed.usage.total_tokens || 0,
           };
-          const reasoningTokens =
-            parsed.usage.completion_tokens_details?.reasoning_tokens;
+          const reasoningTokens = parsed.usage.completion_tokens_details?.reasoning_tokens;
           if (reasoningTokens) {
             geminiChunk.usageMetadata.thoughtsTokenCount = reasoningTokens;
           }
           geminiChunk.modelVersion = parsed.model || model;
         }
 
-        controller.enqueue(
-          encoder.encode("data: " + JSON.stringify(geminiChunk) + "\r\n\r\n")
-        );
+        controller.enqueue(encoder.encode("data: " + JSON.stringify(geminiChunk) + "\r\n\r\n"));
       }
     },
     // No flush() needed: Gemini SSE ends by stream close, not a sentinel
@@ -273,19 +257,21 @@ async function convertOpenAIResponseToGemini(response, model) {
     return response;
   }
 
-  if (body.candidates) return Response.json(body, {
-    headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" }
-  });
+  if (body.candidates)
+    return Response.json(body, {
+      headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },
+    });
 
-  if (body.error) return Response.json(body, {
-    status: response.status,
-    headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" }
-  });
+  if (body.error)
+    return Response.json(body, {
+      status: response.status,
+      headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },
+    });
 
   const choice = body.choices?.[0];
   if (!choice) {
     return Response.json(body, {
-      headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" }
+      headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },
     });
   }
 
@@ -323,6 +309,6 @@ async function convertOpenAIResponseToGemini(response, model) {
   }
 
   return Response.json(geminiResponse, {
-    headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" }
+    headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },
   });
 }

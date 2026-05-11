@@ -30,10 +30,16 @@ export function gitStatus(input) {
 
     // Long-form branch detection (LLM usually sends this, not porcelain)
     const longBranch = raw.match(/^On branch (\S+)/);
-    if (longBranch) { branch = longBranch[1]; continue; }
+    if (longBranch) {
+      branch = longBranch[1];
+      continue;
+    }
 
     // Porcelain branch header: "## main...origin/main"
-    if (raw.startsWith("##")) { branch = raw.replace(/^##\s*/, ""); continue; }
+    if (raw.startsWith("##")) {
+      branch = raw.replace(/^##\s*/, "");
+      continue;
+    }
 
     // Porcelain status (2 chars + space + path)
     if (raw.length >= 3 && /^[ MADRCU?!][ MADRCU?!] /.test(raw)) {
@@ -66,9 +72,15 @@ export function gitStatus(input) {
     if (longMatch) {
       const kind = longMatch[1];
       const path = longMatch[2].trim();
-      if (kind === "both modified") { conflicts++; }
-      else if (kind === "modified" || kind === "deleted") { modified++; modifiedFiles.push(path); }
-      else if (kind === "new file" || kind === "renamed") { staged++; stagedFiles.push(path); }
+      if (kind === "both modified") {
+        conflicts++;
+      } else if (kind === "modified" || kind === "deleted") {
+        modified++;
+        modifiedFiles.push(path);
+      } else if (kind === "new file" || kind === "renamed") {
+        staged++;
+        stagedFiles.push(path);
+      }
       continue;
     }
 

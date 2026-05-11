@@ -1,7 +1,15 @@
 import { translateResponse, initState } from "../translator/index.js";
 import { FORMATS } from "../translator/formats.js";
 import { trackPendingRequest, appendRequestLog } from "@/lib/usageDb.js";
-import { extractUsage, hasValidUsage, estimateUsage, logUsage, addBufferToUsage, filterUsageForFormat, COLORS } from "./usageTracking.js";
+import {
+  extractUsage,
+  hasValidUsage,
+  estimateUsage,
+  logUsage,
+  addBufferToUsage,
+  filterUsageForFormat,
+  COLORS,
+} from "./usageTracking.js";
 import { parseSSELine, hasValuableContent, fixInvalidId, formatSSE } from "./streamHelpers.js";
 import { decloakToolNames } from "./claudeCloaking.js";
 import { CLAUDE_TOOL_SUFFIX } from "../config/appConstants.js";
@@ -13,7 +21,7 @@ function stripClaudeToolSuffixes(node) {
 
   if (Array.isArray(node)) {
     let changed = false;
-    const next = node.map(child => {
+    const next = node.map((child) => {
       const mapped = stripClaudeToolSuffixes(child);
       if (mapped !== child) changed = true;
       return mapped;
@@ -62,8 +70,8 @@ const sharedEncoder = new TextEncoder();
  * Stream modes
  */
 const STREAM_MODE = {
-  TRANSLATE: "translate",    // Full translation between formats
-  PASSTHROUGH: "passthrough" // No translation, normalize output, extract usage
+  TRANSLATE: "translate", // Full translation between formats
+  PASSTHROUGH: "passthrough", // No translation, normalize output, extract usage
 };
 
 /**
@@ -92,7 +100,7 @@ export function createSSEStream(options = {}) {
     connectionId = null,
     body = null,
     onStreamComplete = null,
-    apiKey = null
+    apiKey = null,
   } = options;
 
   let buffer = "";
@@ -148,8 +156,14 @@ export function createSSEStream(options = {}) {
               // Ensure OpenAI-required fields are present on streaming chunks (Letta compat)
               let fieldsInjected = false;
               if (parsed.choices !== undefined) {
-                if (!parsed.object) { parsed.object = "chat.completion.chunk"; fieldsInjected = true; }
-                if (!parsed.created) { parsed.created = Math.floor(Date.now() / 1000); fieldsInjected = true; }
+                if (!parsed.object) {
+                  parsed.object = "chat.completion.chunk";
+                  fieldsInjected = true;
+                }
+                if (!parsed.created) {
+                  parsed.created = Math.floor(Date.now() / 1000);
+                  fieldsInjected = true;
+                }
               }
 
               // Strip Azure-specific non-standard fields from streaming chunks
@@ -203,7 +217,7 @@ export function createSSEStream(options = {}) {
                 output = `data: ${JSON.stringify(parsed)}\n`;
                 injectedUsage = true;
               }
-            } catch { }
+            } catch {}
           }
 
           if (!injectedUsage) {
@@ -241,7 +255,7 @@ export function createSSEStream(options = {}) {
           totalContentLength += parsed.delta.thinking.length;
           accumulatedThinking += parsed.delta.thinking;
         }
-        
+
         // OpenAI format - content
         if (parsed.choices?.[0]?.delta?.content) {
           totalContentLength += parsed.choices[0].delta.content.length;
@@ -252,7 +266,7 @@ export function createSSEStream(options = {}) {
           totalContentLength += parsed.choices[0].delta.reasoning_content.length;
           accumulatedThinking += parsed.choices[0].delta.reasoning_content;
         }
-        
+
         // Gemini format
         if (parsed.candidates?.[0]?.content?.parts) {
           for (const part of parsed.candidates[0].content.parts) {
@@ -332,16 +346,20 @@ export function createSSEStream(options = {}) {
           if (hasValidUsage(usage)) {
             logUsage(provider, usage, model, connectionId, apiKey);
           } else {
-            appendRequestLog({ model, provider, connectionId, tokens: null, status: "200 OK" }).catch(() => { });
+            appendRequestLog({ model, provider, connectionId, tokens: null, status: "200 OK" }).catch(() => {});
           }
-          
+
           emit("data: [DONE]\n\n", controller);
 
           if (onStreamComplete) {
-            onStreamComplete({
-              content: accumulatedContent,
-              thinking: accumulatedThinking
-            }, usage, ttftAt);
+            onStreamComplete(
+              {
+                content: accumulatedContent,
+                thinking: accumulatedThinking,
+              },
+              usage,
+              ttftAt,
+            );
           }
           return;
         }
@@ -391,23 +409,38 @@ export function createSSEStream(options = {}) {
         if (hasValidUsage(state?.usage)) {
           logUsage(state.provider || targetFormat, state.usage, model, connectionId, apiKey);
         } else {
-          appendRequestLog({ model, provider, connectionId, tokens: null, status: "200 OK" }).catch(() => { });
+          appendRequestLog({ model, provider, connectionId, tokens: null, status: "200 OK" }).catch(() => {});
         }
-        
+
         if (onStreamComplete) {
-          onStreamComplete({
-            content: accumulatedContent,
-            thinking: accumulatedThinking
-          }, state?.usage, ttftAt);
+          onStreamComplete(
+            {
+              content: accumulatedContent,
+              thinking: accumulatedThinking,
+            },
+            state?.usage,
+            ttftAt,
+          );
         }
       } catch (error) {
         console.log("Error in flush:", error);
       }
-    }
+    },
   });
 }
 
-export function createSSETransformStreamWithLogger(targetFormat, sourceFormat, provider = null, reqLogger = null, toolNameMap = null, model = null, connectionId = null, body = null, onStreamComplete = null, apiKey = null) {
+export function createSSETransformStreamWithLogger(
+  targetFormat,
+  sourceFormat,
+  provider = null,
+  reqLogger = null,
+  toolNameMap = null,
+  model = null,
+  connectionId = null,
+  body = null,
+  onStreamComplete = null,
+  apiKey = null,
+) {
   return createSSEStream({
     mode: STREAM_MODE.TRANSLATE,
     targetFormat,
@@ -419,11 +452,21 @@ export function createSSETransformStreamWithLogger(targetFormat, sourceFormat, p
     connectionId,
     body,
     onStreamComplete,
-    apiKey
+    apiKey,
   });
 }
 
-export function createPassthroughStreamWithLogger(provider = null, reqLogger = null, model = null, connectionId = null, body = null, onStreamComplete = null, apiKey = null, sourceFormat = null, toolNameMap = null) {
+export function createPassthroughStreamWithLogger(
+  provider = null,
+  reqLogger = null,
+  model = null,
+  connectionId = null,
+  body = null,
+  onStreamComplete = null,
+  apiKey = null,
+  sourceFormat = null,
+  toolNameMap = null,
+) {
   return createSSEStream({
     mode: STREAM_MODE.PASSTHROUGH,
     sourceFormat,
@@ -434,6 +477,6 @@ export function createPassthroughStreamWithLogger(provider = null, reqLogger = n
     connectionId,
     body,
     onStreamComplete,
-    apiKey
+    apiKey,
   });
 }

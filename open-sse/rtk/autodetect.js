@@ -29,7 +29,7 @@ export function autoDetectFilter(text) {
   if (RE_GIT_STATUS.test(head) || isMostlyPorcelain(head)) return gitStatus;
 
   const lines = head.split("\n");
-  const nonEmpty = lines.filter(l => l.trim().length > 0);
+  const nonEmpty = lines.filter((l) => l.trim().length > 0);
 
   // Rust grep rule: first 5 non-empty lines, ANY matches "file:number:content"
   const first5 = nonEmpty.slice(0, 5);
@@ -79,9 +79,9 @@ function isPathLike(line) {
 }
 
 function isMostlyPorcelain(head) {
-  const lines = head.split("\n").filter(l => l.trim());
+  const lines = head.split("\n").filter((l) => l.trim());
   if (lines.length < 3) return false;
-  const hits = lines.filter(l => RE_PORCELAIN.test(l)).length;
+  const hits = lines.filter((l) => RE_PORCELAIN.test(l)).length;
   return hits / lines.length >= 0.6;
 }
 

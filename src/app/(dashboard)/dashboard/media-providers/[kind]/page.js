@@ -14,7 +14,7 @@ const COMBO_BASE_NAMES = { image: "image-combo", tts: "tts-combo" };
 
 function getEffectiveStatus(conn) {
   const isCooldown = Object.entries(conn).some(
-    ([k, v]) => k.startsWith("modelLock_") && v && new Date(v).getTime() > Date.now()
+    ([k, v]) => k.startsWith("modelLock_") && v && new Date(v).getTime() > Date.now(),
   );
   return conn.testStatus === "unavailable" && !isCooldown ? "active" : conn.testStatus;
 }
@@ -24,20 +24,48 @@ function MediaProviderCard({ provider, kind, connections, isCustom }) {
   const isNoAuth = !!providerInfo?.noAuth;
 
   const providerConns = connections.filter((c) => c.provider === provider.id);
-  const connected = providerConns.filter((c) => { const s = getEffectiveStatus(c); return s === "active" || s === "success"; }).length;
-  const error = providerConns.filter((c) => { const s = getEffectiveStatus(c); return s === "error" || s === "expired" || s === "unavailable"; }).length;
+  const connected = providerConns.filter((c) => {
+    const s = getEffectiveStatus(c);
+    return s === "active" || s === "success";
+  }).length;
+  const error = providerConns.filter((c) => {
+    const s = getEffectiveStatus(c);
+    return s === "error" || s === "expired" || s === "unavailable";
+  }).length;
   const total = providerConns.length;
   const allDisabled = total > 0 && providerConns.every((c) => c.isActive === false);
 
   const renderStatus = () => {
-    if (isNoAuth) return <Badge variant="success" size="sm">Ready</Badge>;
-    if (allDisabled) return <Badge variant="default" size="sm">Disabled</Badge>;
+    if (isNoAuth)
+      return (
+        <Badge variant="success" size="sm">
+          Ready
+        </Badge>
+      );
+    if (allDisabled)
+      return (
+        <Badge variant="default" size="sm">
+          Disabled
+        </Badge>
+      );
     if (total === 0) return <span className="text-xs text-text-muted">No connections</span>;
     return (
       <>
-        {connected > 0 && <Badge variant="success" size="sm" dot>{connected} Connected</Badge>}
-        {error > 0 && <Badge variant="error" size="sm" dot>{error} Error</Badge>}
-        {connected === 0 && error === 0 && <Badge variant="default" size="sm">{total} Added</Badge>}
+        {connected > 0 && (
+          <Badge variant="success" size="sm" dot>
+            {connected} Connected
+          </Badge>
+        )}
+        {error > 0 && (
+          <Badge variant="error" size="sm" dot>
+            {error} Error
+          </Badge>
+        )}
+        {connected === 0 && error === 0 && (
+          <Badge variant="default" size="sm">
+            {total} Added
+          </Badge>
+        )}
       </>
     );
   };
@@ -51,7 +79,9 @@ function MediaProviderCard({ provider, kind, connections, isCustom }) {
         <div className="flex min-w-0 items-center gap-3">
           <div
             className="size-8 rounded-lg flex items-center justify-center shrink-0"
-            style={{ backgroundColor: `${provider.color?.length > 7 ? provider.color : (provider.color ?? "#888") + "15"}` }}
+            style={{
+              backgroundColor: `${provider.color?.length > 7 ? provider.color : (provider.color ?? "#888") + "15"}`,
+            }}
           >
             <ProviderIcon
               src={`/providers/${provider.id}.png`}
@@ -65,7 +95,11 @@ function MediaProviderCard({ provider, kind, connections, isCustom }) {
           <div>
             <h3 className="font-semibold text-sm">{provider.name}</h3>
             <div className="flex items-center gap-2 mt-0.5 flex-wrap">
-              {isCustom && <Badge variant="default" size="sm">Custom</Badge>}
+              {isCustom && (
+                <Badge variant="default" size="sm">
+                  Custom
+                </Badge>
+              )}
               {renderStatus()}
             </div>
           </div>
@@ -81,7 +115,10 @@ function ComboList({ combos }) {
     <div className="flex flex-col gap-2">
       {combos.map((combo) => (
         <Link key={combo.id} href={`/dashboard/media-providers/combo/${combo.id}`}>
-          <Card padding="xs" className="hover:bg-black/[0.02] dark:hover:bg-white/[0.02] transition-colors cursor-pointer">
+          <Card
+            padding="xs"
+            className="hover:bg-black/[0.02] dark:hover:bg-white/[0.02] transition-colors cursor-pointer"
+          >
             <div className="flex min-w-0 items-center gap-3">
               <span className="material-symbols-outlined text-primary text-[18px]">layers</span>
               <code className="text-sm font-mono font-medium flex-1 truncate">{combo.name}</code>
@@ -90,7 +127,12 @@ function ComboList({ combos }) {
                   const pid = typeof entry === "string" ? entry.split("/")[0] : "";
                   const p = AI_PROVIDERS[pid];
                   return (
-                    <div key={`${entry}-${i}`} title={p?.name || entry} className="size-5 rounded flex items-center justify-center" style={{ backgroundColor: `${(p?.color ?? "#888")}15` }}>
+                    <div
+                      key={`${entry}-${i}`}
+                      title={p?.name || entry}
+                      className="size-5 rounded flex items-center justify-center"
+                      style={{ backgroundColor: `${p?.color ?? "#888"}15` }}
+                    >
                       <ProviderIcon
                         src={`/providers/${pid}.png`}
                         alt={p?.name || pid}
@@ -175,7 +217,9 @@ export default function MediaProviderKindPage() {
     let name = base;
     let i = 1;
     const existing = new Set(combos.map((c) => c.name));
-    while (existing.has(name)) { name = `${base}-${i++}`; }
+    while (existing.has(name)) {
+      name = `${base}-${i++}`;
+    }
     const res = await fetch("/api/combos", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -195,7 +239,9 @@ export default function MediaProviderKindPage() {
       {(isEmbedding || supportsCombo) && (
         <div className="flex items-center justify-end gap-2">
           {supportsCombo && (
-            <Button size="sm" icon="add" onClick={handleCreateCombo}>Create Combo</Button>
+            <Button size="sm" icon="add" onClick={handleCreateCombo}>
+              Create Combo
+            </Button>
           )}
           {isEmbedding && (
             <Button size="sm" icon="add" onClick={() => setShowAddCustomEmbedding(true)}>
@@ -205,9 +251,7 @@ export default function MediaProviderKindPage() {
         </div>
       )}
 
-      {supportsCombo && kindCombos.length > 0 && (
-        <ComboList combos={kindCombos} />
-      )}
+      {supportsCombo && kindCombos.length > 0 && <ComboList combos={kindCombos} />}
 
       {allProviders.length === 0 ? (
         <div className="text-center py-12 border border-dashed border-border rounded-xl text-text-muted text-sm">
@@ -216,21 +260,10 @@ export default function MediaProviderKindPage() {
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
           {providers.map((provider) => (
-            <MediaProviderCard
-              key={provider.id}
-              provider={provider}
-              kind={kind}
-              connections={connections}
-            />
+            <MediaProviderCard key={provider.id} provider={provider} kind={kind} connections={connections} />
           ))}
           {customProviders.map((provider) => (
-            <MediaProviderCard
-              key={provider.id}
-              provider={provider}
-              kind={kind}
-              connections={connections}
-              isCustom
-            />
+            <MediaProviderCard key={provider.id} provider={provider} kind={kind} connections={connections} isCustom />
           ))}
         </div>
       )}

@@ -4,13 +4,28 @@ import { useState } from "react";
 import PropTypes from "prop-types";
 import { Button, Badge, Input, Modal, Select } from "@/shared/components";
 
-export default function AddApiKeyModal({ isOpen, provider, providerName, isCompatible, isAnthropic, authType, authHint, website, proxyPools, error, onSave, onClose }) {
+export default function AddApiKeyModal({
+  isOpen,
+  provider,
+  providerName,
+  isCompatible,
+  isAnthropic,
+  authType,
+  authHint,
+  website,
+  proxyPools,
+  error,
+  onSave,
+  onClose,
+}) {
   const NONE_PROXY_POOL_VALUE = "__none__";
   const isOllamaLocal = provider === "ollama-local";
   const isCookie = authType === "cookie";
   const credentialLabel = isCookie ? "Cookie Value" : "API Key";
   const credentialPlaceholder = isCookie
-    ? (provider === "grok-web" ? "sso=xxxxx... or just the raw value" : "eyJhbGciOi...")
+    ? provider === "grok-web"
+      ? "sso=xxxxx... or just the raw value"
+      : "eyJhbGciOi..."
     : "";
 
   const isAzure = provider === "azure";
@@ -88,7 +103,11 @@ export default function AddApiKeyModal({ isOpen, provider, providerName, isCompa
         const res = await fetch("/api/providers/validate", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ provider, apiKey: formData.apiKey, providerSpecificData: buildProviderSpecificData() }),
+          body: JSON.stringify({
+            provider,
+            apiKey: formData.apiKey,
+            providerSpecificData: buildProviderSpecificData(),
+          }),
         });
         const data = await res.json();
         isValid = !!data.valid;
@@ -106,7 +125,7 @@ export default function AddApiKeyModal({ isOpen, provider, providerName, isCompa
         priority: formData.priority,
         proxyPoolId: formData.proxyPoolId === NONE_PROXY_POOL_VALUE ? null : formData.proxyPoolId,
         testStatus: isValid ? "active" : "unknown",
-        providerSpecificData: buildProviderSpecificData()
+        providerSpecificData: buildProviderSpecificData(),
       });
     } finally {
       setSaving(false);
@@ -180,7 +199,8 @@ export default function AddApiKeyModal({ isOpen, provider, providerName, isCompa
         )}
         {isOllamaLocal && (
           <p className="text-xs text-text-muted">
-            Leave blank to use <code>http://localhost:11434</code>. For remote Ollama, enter the full host URL (e.g. <code>http://192.168.1.10:11434</code>).
+            Leave blank to use <code>http://localhost:11434</code>. For remote Ollama, enter the full host URL (e.g.{" "}
+            <code>http://192.168.1.10:11434</code>).
           </p>
         )}
         {validationResult && (
@@ -188,12 +208,11 @@ export default function AddApiKeyModal({ isOpen, provider, providerName, isCompa
             {validationResult === "success" ? "Valid" : "Invalid"}
           </Badge>
         )}
-        {error && (
-          <p className="text-xs text-red-500 break-words">{error}</p>
-        )}
+        {error && <p className="text-xs text-red-500 break-words">{error}</p>}
         {isCompatible && (
           <p className="text-xs text-text-muted">
-            Enter the model ID exactly as your compatible endpoint expects it. This model will be saved as the connection default.
+            Enter the model ID exactly as your compatible endpoint expects it. This model will be saved as the
+            connection default.
           </p>
         )}
         {isCloudflareAi && (
@@ -206,7 +225,15 @@ export default function AddApiKeyModal({ isOpen, provider, providerName, isCompa
               placeholder="abc123def456..."
             />
             <p className="text-xs text-text-muted mt-2">
-              Find your Account ID in the right sidebar of <a href="https://dash.cloudflare.com" target="_blank" rel="noopener noreferrer" className="text-primary underline">dash.cloudflare.com</a>
+              Find your Account ID in the right sidebar of{" "}
+              <a
+                href="https://dash.cloudflare.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-primary underline"
+              >
+                dash.cloudflare.com
+              </a>
             </p>
           </div>
         )}
@@ -271,7 +298,17 @@ export default function AddApiKeyModal({ isOpen, provider, providerName, isCompa
         </p>
 
         <div className="flex gap-2">
-          <Button onClick={handleSubmit} fullWidth disabled={saving || (!isOllamaLocal && (!formData.name || !formData.apiKey)) || (isCompatible && !formData.defaultModel.trim()) || (isAzure && (!azureData.azureEndpoint || !azureData.deployment || !azureData.organization)) || (isCloudflareAi && !cloudflareData.accountId)}>
+          <Button
+            onClick={handleSubmit}
+            fullWidth
+            disabled={
+              saving ||
+              (!isOllamaLocal && (!formData.name || !formData.apiKey)) ||
+              (isCompatible && !formData.defaultModel.trim()) ||
+              (isAzure && (!azureData.azureEndpoint || !azureData.deployment || !azureData.organization)) ||
+              (isCloudflareAi && !cloudflareData.accountId)
+            }
+          >
             {saving ? "Saving..." : "Save"}
           </Button>
           <Button onClick={onClose} variant="ghost" fullWidth>
@@ -292,10 +329,12 @@ AddApiKeyModal.propTypes = {
   authType: PropTypes.string,
   authHint: PropTypes.string,
   website: PropTypes.string,
-  proxyPools: PropTypes.arrayOf(PropTypes.shape({
-    id: PropTypes.string,
-    name: PropTypes.string,
-  })),
+  proxyPools: PropTypes.arrayOf(
+    PropTypes.shape({
+      id: PropTypes.string,
+      name: PropTypes.string,
+    }),
+  ),
   error: PropTypes.string,
   onSave: PropTypes.func.isRequired,
   onClose: PropTypes.func.isRequired,
