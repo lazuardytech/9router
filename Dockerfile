@@ -9,7 +9,7 @@ RUN apk --no-cache upgrade && apk --no-cache add python3 make g++ linux-headers
 
 COPY package.json pnpm-lock.yaml .npmrc ./
 RUN --mount=type=cache,target=/root/.local/share/pnpm/store \
-  npm i -g pnpm && pnpm install --frozen-lockfile
+  npm i -g pnpm && pnpm config set dangerouslyAllowAllBuilds true && pnpm install --frozen-lockfile
 
 COPY . ./
 ENV NEXT_TELEMETRY_DISABLED=1
@@ -30,11 +30,7 @@ COPY --from=builder /app/public ./public
 COPY --from=builder /app/.next/static ./.next/static
 COPY --from=builder /app/.next/standalone ./
 COPY --from=builder /app/open-sse ./open-sse
-# Next file tracing can omit sibling files; MITM runs server.js as a separate process.
-COPY --from=builder /app/src/mitm ./src/mitm
 COPY --from=builder /app/src/shared ./src/shared
-# Standalone node_modules may omit deps only required by the MITM child process.
-COPY --from=builder /app/node_modules/node-forge ./node_modules/node-forge
 
 RUN mkdir -p /app/data && chown -R node:node /app && \
   mkdir -p /app/data-home && chown node:node /app/data-home && \
