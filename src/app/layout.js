@@ -8,6 +8,9 @@ import { initConsoleLogCapture } from "@/lib/consoleLogBuffer";
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
+      <head>
+        <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+      </head>
       <body className="h-full bg-surface text-text-main custom-scrollbar">
         <ThemeProvider>
           <ServiceWorkerRegistrar />
