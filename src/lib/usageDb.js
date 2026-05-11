@@ -776,8 +776,9 @@ export async function getUsageStats(period = "all") {
     }
   }
 
-  // Calculate totalRequests from period-filtered data (not lifetime)
-  stats.totalRequests = Object.values(stats.byProvider).reduce((sum, p) => sum + (p.requests || 0), 0);
+  stats.totalRequests = period === "all"
+    ? readTotalRequests(db)
+    : Object.values(stats.byProvider).reduce((sum, p) => sum + (p.requests || 0), 0);
 
   return stats;
 }

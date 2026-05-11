@@ -10,7 +10,7 @@
     "dev:bun": "bun --bun next dev --webpack --port 20128",
     "build:bun": "NODE_ENV=production bun --bun next build --webpack",
     "start:bun": "NODE_ENV=production bun ./.next/standalone/server.js",
-    "test:run": "cd tests && NODE_PATH=/tmp/node_modules /tmp/node_modules/.bin/vitest run --reporter=verbose"
+    "test:run": "vitest run --reporter=verbose"
   },
   "dependencies": {
     "@monaco-editor/react": "^4.7.0",
