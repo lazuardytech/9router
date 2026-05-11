@@ -80,7 +80,6 @@ function extractTokensViaBetterSqlite(dbPath) {
   // Dynamic require so the route stays importable even if native bindings fail.
   // `bun:sqlite` is marked external in next.config.mjs so webpack passes the
   // require through to the runtime resolver.
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
   const isBun = typeof Bun !== "undefined";
   const Database = isBun
     ? require("bun:sqlite").Database
