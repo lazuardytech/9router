@@ -88,11 +88,15 @@ export async function handleChatCore({
 
   // Check client Accept header preference for non-streaming requests
   // This fixes AI SDK compatibility where clients send Accept: application/json
+  // Only force non-streaming when client explicitly sets stream: false in body.
+  // Accept: application/json alone is not enough — some proxies (e.g. omniroute)
+  // always send Accept: application/json even for streaming requests.
   const acceptHeader = clientRawRequest?.headers?.accept || "";
-  const clientPrefersJson = acceptHeader.includes("application/json");
   const clientPrefersSSE = acceptHeader.includes("text/event-stream");
-  if (clientPrefersJson && !clientPrefersSSE && body.stream !== true) {
+  if (body.stream === false) {
     stream = false;
+  } else if (clientPrefersSSE) {
+    stream = true;
   }
 
   const reqLogger = await createRequestLogger(sourceFormat, targetFormat, model);
