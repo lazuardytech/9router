@@ -1,0 +1,58 @@
+# RWX Run Configuration - Test Suite Only
+# Mirrors test step of GitHub Actions ci.yml
+# Usage: rwx run .rwx/test.yml --wait
+
+on:
+  cli:
+    init:
+      commit-sha: ${{ event.git.sha }}
+
+base:
+  image: ubuntu:24.04
+  config: rwx/base 1.0.2
+
+tasks:
+  - key: code
+    call: git/clone 2.0.7
+    with:
+      repository: https://github.com/lazuardytech/9router.git
+      ref: ${{ init.commit-sha }}
+      github-token: ${{ github.token }}
+
+  - key: node
+    call: nodejs/install 1.1.14
+    with:
+      node-version: 22.14.0
+
+  - key: pnpm-install
+    use: [code, node]
+    run: |
+      corepack enable
+      corepack prepare pnpm@10 --activate
+      pnpm install --no-frozen-lockfile
+    filter:
+      - package.json
+      - pnpm-lock.yaml
+
+  - key: tests-install
+    use: [code, node, pnpm-install]
+    run: |
+      cd /tmp && pnpm add vitest
+      cd $RWX_WORKSPACE/tests && pnpm install --no-frozen-lockfile
+    filter:
+      - tests/package.json
+      - tests/package-lock.json
+
+  - key: run-fe-tests
+    use: [pnpm-install, tests-install]
+    run: |
+      echo "Running FE tests..."
+      pnpm run test:run
+    timeout: 10m
+
+  - key: results
+    use: [run-fe-tests]
+    run: |
+      echo "================================================"
+      echo "  ALL TESTS PASSED"
+      echo "================================================"

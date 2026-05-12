@@ -1,0 +1,50 @@
+# RWX Run Configuration - Format & Lint Check
+# ESLint for FE
+# Usage: rwx run .rwx/format.yml --wait
+
+on:
+  cli:
+    init:
+      commit-sha: ${{ event.git.sha }}
+
+base:
+  image: ubuntu:24.04
+  config: rwx/base 1.0.2
+
+tasks:
+  - key: code
+    call: git/clone 2.0.7
+    with:
+      repository: https://github.com/lazuardytech/9router.git
+      ref: ${{ init.commit-sha }}
+      github-token: ${{ github.token }}
+
+  - key: node
+    call: nodejs/install 1.1.14
+    with:
+      node-version: 22.14.0
+
+  - key: pnpm-install
+    use: [code, node]
+    run: |
+      corepack enable
+      corepack prepare pnpm@10 --activate
+      pnpm install --no-frozen-lockfile
+    filter:
+      - package.json
+      - pnpm-lock.yaml
+
+  - key: run-fe-lint
+    use: [pnpm-install]
+    run: |
+      echo "Running ESLint..."
+      pnpm exec eslint .
+    timeout: 5m
+
+  - key: results
+    use: [run-fe-lint]
+    run: |
+      echo "================================================"
+      echo "  FORMAT CHECK COMPLETE"
+      echo "  ESLint: OK"
+      echo "================================================"
