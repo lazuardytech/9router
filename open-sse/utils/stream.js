@@ -115,6 +115,7 @@ export function createSSEStream(options = {}) {
   let accumulatedContent = "";
   let accumulatedThinking = "";
   let ttftAt = null;
+  let sawDone = false;
 
   const allowSuffixFallback = provider === "claude";
 
@@ -221,6 +222,9 @@ export function createSSEStream(options = {}) {
           }
 
           if (!injectedUsage) {
+            if (trimmed === "data: [DONE]" || trimmed === "data:[DONE]") {
+              sawDone = true;
+            }
             if (line.startsWith("data:") && !line.startsWith("data: ")) {
               output = "data: " + line.slice(5) + "\n";
             } else {
@@ -349,7 +353,7 @@ export function createSSEStream(options = {}) {
             appendRequestLog({ model, provider, connectionId, tokens: null, status: "200 OK" }).catch(() => {});
           }
 
-          emit("data: [DONE]\n\n", controller);
+          if (!sawDone) emit("data: [DONE]\n\n", controller);
 
           if (onStreamComplete) {
             onStreamComplete(

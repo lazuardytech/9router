@@ -120,7 +120,7 @@ export async function handleChat(request, clientRawRequest = null) {
       comboStrategy,
       comboStickyLimit,
     });
-    if (comboInfo.modelId) return overrideResponseModelId(comboResponse, comboInfo.modelId);
+    if (comboInfo.modelId) return await overrideResponseModelId(comboResponse, comboInfo.modelId);
     return comboResponse;
   }
 
@@ -162,7 +162,7 @@ async function handleSingleModelChat(body, modelStr, clientRawRequest = null, re
         comboStrategy,
         comboStickyLimit,
       });
-      if (comboInfo.modelId) return overrideResponseModelId(innerComboResponse, comboInfo.modelId);
+      if (comboInfo.modelId) return await overrideResponseModelId(innerComboResponse, comboInfo.modelId);
       return innerComboResponse;
     }
     log.warn("CHAT", "Invalid model format", { model: modelStr });
