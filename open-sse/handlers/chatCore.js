@@ -141,6 +141,16 @@ export async function handleChatCore({
     translatedBody.model = model;
   }
 
+  // Ensure stream flag in body matches resolved stream value.
+  // Some upstream proxies (e.g. omniroute) don't inject stream into the body —
+  // they rely on Accept header only. Without this, upstream gets stream=undefined
+  // and may return non-streaming JSON even when we expect SSE.
+  if (stream) {
+    translatedBody.stream = true;
+  } else {
+    translatedBody.stream = false;
+  }
+
   // Token savers: applied at the final body just before dispatch
   // Covers both passthrough (source shape) and translated (target shape) flows
   const finalFormat = passthrough ? sourceFormat : targetFormat;
