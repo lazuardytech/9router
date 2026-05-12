@@ -3,6 +3,7 @@
 import { useState, useMemo, useEffect } from "react";
 import PropTypes from "prop-types";
 import Modal from "./Modal";
+import Button from "./Button";
 import { getModelsByProviderId } from "@/shared/constants/models";
 import {
   OAUTH_PROVIDERS,
@@ -394,6 +395,19 @@ export default function ModelSelectModal({
       title={title}
       size="md"
       className="p-4!"
+      footer={
+        !closeOnSelect ? (
+          <Button
+            onClick={() => {
+              onClose();
+              setSearchQuery("");
+            }}
+            fullWidth
+          >
+            Done
+          </Button>
+        ) : null
+      }
     >
       {/* Search - compact */}
       <div className="mb-3">
