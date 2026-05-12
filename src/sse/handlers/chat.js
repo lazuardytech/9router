@@ -9,10 +9,10 @@ import {
 } from "../services/auth.js";
 import { cacheClaudeHeaders } from "open-sse/utils/claudeHeaderCache.js";
 import { getSettings } from "@/lib/localDb";
-import { getModelInfo, getComboModels } from "../services/model.js";
+import { getModelInfo, getComboInfo } from "../services/model.js";
 import { handleChatCore } from "open-sse/handlers/chatCore.js";
 import { errorResponse, unavailableResponse } from "open-sse/utils/error.js";
-import { handleComboChat } from "open-sse/services/combo.js";
+import { handleComboChat, injectComboSystemPrompt } from "open-sse/services/combo.js";
 import { handleBypassRequest } from "open-sse/utils/bypassHandler.js";
 import { HTTP_STATUS } from "open-sse/config/runtimeConfig.js";
 import { detectFormatByEndpoint } from "open-sse/translator/formats.js";
@@ -93,8 +93,14 @@ export async function handleChat(request, clientRawRequest = null) {
   if (bypassResponse) return bypassResponse.response || bypassResponse;
 
   // Check if model is a combo (has multiple models with fallback)
-  const comboModels = await getComboModels(modelStr);
-  if (comboModels) {
+  const comboInfo = await getComboInfo(modelStr);
+  if (comboInfo) {
+    // Inject combo-level system prompt (if any) before fallback loop so every
+    // attempted model receives it.
+    if (comboInfo.systemPrompt) {
+      injectComboSystemPrompt(body, comboInfo.systemPrompt);
+      log.info("CHAT", `Combo "${modelStr}" injecting system prompt (${comboInfo.systemPrompt.length} chars)`);
+    }
     // Check for combo-specific strategy first, fallback to global
     const comboStrategies = settings.comboStrategies || {};
     const comboSpecificStrategy = comboStrategies[modelStr]?.fallbackStrategy;
@@ -103,11 +109,11 @@ export async function handleChat(request, clientRawRequest = null) {
     const comboStickyLimit = settings.comboStickyRoundRobinLimit;
     log.info(
       "CHAT",
-      `Combo "${modelStr}" with ${comboModels.length} models (strategy: ${comboStrategy}, sticky: ${comboStickyLimit})`,
+      `Combo "${modelStr}" with ${comboInfo.models.length} models (strategy: ${comboStrategy}, sticky: ${comboStickyLimit})`,
     );
     return handleComboChat({
       body,
-      models: comboModels,
+      models: comboInfo.models,
       handleSingleModel: (b, m) => handleSingleModelChat(b, m, clientRawRequest, request, apiKey),
       log,
       comboName: modelStr,
@@ -128,9 +134,13 @@ async function handleSingleModelChat(body, modelStr, clientRawRequest = null, re
 
   // If provider is null, this might be a combo name - check and handle
   if (!modelInfo.provider) {
-    const comboModels = await getComboModels(modelStr);
-    if (comboModels) {
+    const comboInfo = await getComboInfo(modelStr);
+    if (comboInfo) {
       const chatSettings = await getSettings();
+      if (comboInfo.systemPrompt) {
+        injectComboSystemPrompt(body, comboInfo.systemPrompt);
+        log.info("CHAT", `Combo "${modelStr}" injecting system prompt (${comboInfo.systemPrompt.length} chars)`);
+      }
       // Check for combo-specific strategy first, fallback to global
       const comboStrategies = chatSettings.comboStrategies || {};
       const comboSpecificStrategy = comboStrategies[modelStr]?.fallbackStrategy;
@@ -139,11 +149,11 @@ async function handleSingleModelChat(body, modelStr, clientRawRequest = null, re
       const comboStickyLimit = chatSettings.comboStickyRoundRobinLimit;
       log.info(
         "CHAT",
-        `Combo "${modelStr}" with ${comboModels.length} models (strategy: ${comboStrategy}, sticky: ${comboStickyLimit})`,
+        `Combo "${modelStr}" with ${comboInfo.models.length} models (strategy: ${comboStrategy}, sticky: ${comboStickyLimit})`,
       );
       return handleComboChat({
         body,
-        models: comboModels,
+        models: comboInfo.models,
         handleSingleModel: (b, m) => handleSingleModelChat(b, m, clientRawRequest, request, apiKey),
         log,
         comboName: modelStr,

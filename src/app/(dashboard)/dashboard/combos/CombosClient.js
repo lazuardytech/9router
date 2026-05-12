@@ -343,10 +343,13 @@ function ModelItem({ index, model, isFirst, isLast, onEdit, onMoveUp, onMoveDown
   );
 }
 
+const SYSTEM_PROMPT_MAX = 25000;
+
 function ComboFormModal({ isOpen, combo, onClose, onSave, activeProviders, kindFilter = null }) {
   // Initialize state with combo values - key prop on parent handles reset on remount
   const [name, setName] = useState(combo?.name || "");
   const [models, setModels] = useState(combo?.models || []);
+  const [systemPrompt, setSystemPrompt] = useState(combo?.systemPrompt || "");
   const [showModelSelect, setShowModelSelect] = useState(false);
   const [saving, setSaving] = useState(false);
   const [nameError, setNameError] = useState("");
@@ -417,8 +420,9 @@ function ComboFormModal({ isOpen, combo, onClose, onSave, activeProviders, kindF
 
   const handleSave = async () => {
     if (!validateName(name)) return;
+    if (systemPrompt.length > SYSTEM_PROMPT_MAX) return;
     setSaving(true);
-    await onSave({ name: name.trim(), models });
+    await onSave({ name: name.trim(), models, systemPrompt: systemPrompt.trim() || null });
     setSaving(false);
   };
 
@@ -481,12 +485,42 @@ function ComboFormModal({ isOpen, combo, onClose, onSave, activeProviders, kindF
             </button>
           </div>
 
+          {/* System Prompt */}
+          <div>
+            <div className="flex items-center justify-between mb-1.5">
+              <label className="text-sm font-medium" htmlFor="combo-system-prompt">
+                System Prompt <span className="text-text-muted font-normal">(optional)</span>
+              </label>
+              <span
+                className={`text-[10px] ${systemPrompt.length > SYSTEM_PROMPT_MAX ? "text-red-500" : "text-text-muted"}`}
+              >
+                {systemPrompt.length.toLocaleString()} / {SYSTEM_PROMPT_MAX.toLocaleString()}
+              </span>
+            </div>
+            <textarea
+              id="combo-system-prompt"
+              value={systemPrompt}
+              onChange={(e) => setSystemPrompt(e.target.value.slice(0, SYSTEM_PROMPT_MAX))}
+              placeholder="Optional system prompt injected into every request routed through this combo (max 25000 chars)."
+              rows={6}
+              className="w-full rounded-lg border border-black/10 dark:border-white/10 bg-white dark:bg-black/20 px-3 py-2 text-sm text-text-main outline-none focus:border-primary/50 resize-y min-h-[96px]"
+            />
+            <p className="text-[10px] text-text-muted mt-0.5">
+              Will be prepended as a system message to every model call routed via this combo.
+            </p>
+          </div>
+
           {/* Actions */}
           <div className="flex flex-col gap-2 pt-1 sm:flex-row">
             <Button onClick={onClose} variant="ghost" fullWidth size="sm">
               Cancel
             </Button>
-            <Button onClick={handleSave} fullWidth size="sm" disabled={!name.trim() || !!nameError || saving}>
+            <Button
+              onClick={handleSave}
+              fullWidth
+              size="sm"
+              disabled={!name.trim() || !!nameError || saving || systemPrompt.length > SYSTEM_PROMPT_MAX}
+            >
               {saving ? "Saving..." : isEdit ? "Save" : "Create"}
             </Button>
           </div>

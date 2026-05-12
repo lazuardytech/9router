@@ -95,6 +95,92 @@ export function getComboModelsFromData(modelStr, combosData) {
 }
 
 /**
+ * Get full combo entry (models + systemPrompt) from combos data
+ * @param {string} modelStr
+ * @param {Array|Object} combosData
+ * @returns {{models: string[], systemPrompt: string|null}|null}
+ */
+export function getComboEntryFromData(modelStr, combosData) {
+  if (modelStr.includes("/")) return null;
+  const combos = Array.isArray(combosData) ? combosData : combosData?.combos || [];
+  const combo = combos.find((c) => c.name === modelStr);
+  if (combo && combo.models && combo.models.length > 0) {
+    return { models: combo.models, systemPrompt: combo.systemPrompt || null };
+  }
+  return null;
+}
+
+/**
+ * Inject a combo-level system prompt into the request body.
+ * Mutates and returns the body. Detects shape (OpenAI / Claude / Gemini /
+ * OpenAI Responses / Antigravity) and prepends the prompt so it takes priority.
+ * @param {Object} body
+ * @param {string} systemPrompt
+ * @returns {Object}
+ */
+export function injectComboSystemPrompt(body, systemPrompt) {
+  if (!body || typeof systemPrompt !== "string" || !systemPrompt.trim()) return body;
+  const prompt = systemPrompt;
+
+  // Antigravity envelope: { request: { systemInstruction, contents, ... } }
+  if (body.request && (body.request.contents || body.request.systemInstruction)) {
+    const req = body.request;
+    const existing = req.systemInstruction;
+    const newPart = { text: prompt };
+    if (existing?.parts && Array.isArray(existing.parts)) {
+      existing.parts.unshift(newPart);
+    } else if (existing?.role || existing?.parts) {
+      req.systemInstruction = { role: existing.role || "user", parts: [newPart, ...(existing.parts || [])] };
+    } else {
+      req.systemInstruction = { role: "user", parts: [newPart] };
+    }
+    return body;
+  }
+
+  // Gemini: { contents, systemInstruction? }
+  if (Array.isArray(body.contents)) {
+    const existing = body.systemInstruction;
+    const newPart = { text: prompt };
+    if (existing?.parts && Array.isArray(existing.parts)) {
+      existing.parts.unshift(newPart);
+    } else {
+      body.systemInstruction = { role: "user", parts: [newPart] };
+    }
+    return body;
+  }
+
+  // OpenAI Responses API: { input, instructions? }
+  if (body.input !== undefined && body.messages === undefined) {
+    if (Array.isArray(body.input)) {
+      body.input.unshift({ role: "system", content: prompt });
+    } else {
+      body.instructions = body.instructions ? `${prompt}\n\n${body.instructions}` : prompt;
+    }
+    return body;
+  }
+
+  // Claude: { messages, system? }
+  if (Array.isArray(body.messages) && (body.system !== undefined || body.anthropic_version)) {
+    if (typeof body.system === "string") {
+      body.system = `${prompt}\n\n${body.system}`;
+    } else if (Array.isArray(body.system)) {
+      body.system = [{ type: "text", text: prompt }, ...body.system];
+    } else {
+      body.system = prompt;
+    }
+    return body;
+  }
+
+  // OpenAI chat completions (default): { messages }
+  if (Array.isArray(body.messages)) {
+    body.messages = [{ role: "system", content: prompt }, ...body.messages];
+    return body;
+  }
+
+  return body;
+}
+
+/**
  * Handle combo chat with fallback
  * @param {Object} options
  * @param {Object} options.body - Request body

@@ -41,6 +41,17 @@ export async function PUT(request, { params }) {
       }
     }
 
+    if ("systemPrompt" in body) {
+      if (body.systemPrompt != null && typeof body.systemPrompt !== "string") {
+        return NextResponse.json({ error: "systemPrompt must be a string" }, { status: 400 });
+      }
+      if (typeof body.systemPrompt === "string" && body.systemPrompt.length > 25000) {
+        return NextResponse.json({ error: "systemPrompt exceeds 25000 characters" }, { status: 400 });
+      }
+      body.systemPrompt =
+        typeof body.systemPrompt === "string" && body.systemPrompt.trim() ? body.systemPrompt : null;
+    }
+
     // Capture previous name to invalidate rotation state on rename
     const prev = await getComboById(id);
     const combo = await updateCombo(id, body);

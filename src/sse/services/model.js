@@ -69,3 +69,16 @@ export async function getComboModels(modelStr) {
   }
   return null;
 }
+
+/**
+ * Return full combo info (models + systemPrompt) for routing logic
+ * @returns {Promise<{models: string[], systemPrompt: string|null}|null>}
+ */
+export async function getComboInfo(modelStr) {
+  if (modelStr.includes("/")) return null;
+  const combo = await getComboByName(modelStr);
+  if (combo && combo.models && combo.models.length > 0) {
+    return { models: combo.models, systemPrompt: combo.systemPrompt || null };
+  }
+  return null;
+}

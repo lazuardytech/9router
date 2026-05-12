@@ -851,6 +851,7 @@ export async function createCombo(data) {
     name: data.name,
     models: data.models || [],
     kind: data.kind || null,
+    systemPrompt: data.systemPrompt || null,
     createdAt: now,
     updatedAt: now,
   };

@@ -21,7 +21,7 @@ export async function GET() {
 export async function POST(request) {
   try {
     const body = await request.json();
-    const { name, models, kind } = body;
+    const { name, models, kind, systemPrompt } = body;
 
     if (!name) {
       return NextResponse.json({ error: "Name is required" }, { status: 400 });
@@ -32,13 +32,25 @@ export async function POST(request) {
       return NextResponse.json({ error: "Name can only contain letters, numbers, -, _ and ." }, { status: 400 });
     }
 
+    if (systemPrompt != null && typeof systemPrompt !== "string") {
+      return NextResponse.json({ error: "systemPrompt must be a string" }, { status: 400 });
+    }
+    if (typeof systemPrompt === "string" && systemPrompt.length > 25000) {
+      return NextResponse.json({ error: "systemPrompt exceeds 25000 characters" }, { status: 400 });
+    }
+
     // Check if name already exists
     const existing = await getComboByName(name);
     if (existing) {
       return NextResponse.json({ error: "Combo name already exists" }, { status: 400 });
     }
 
-    const combo = await createCombo({ name, models: models || [], kind: kind || null });
+    const combo = await createCombo({
+      name,
+      models: models || [],
+      kind: kind || null,
+      systemPrompt: typeof systemPrompt === "string" && systemPrompt.trim() ? systemPrompt : null,
+    });
 
     return NextResponse.json(combo, { status: 201 });
   } catch (error) {
