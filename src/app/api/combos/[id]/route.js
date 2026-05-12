@@ -48,8 +48,7 @@ export async function PUT(request, { params }) {
       if (typeof body.systemPrompt === "string" && body.systemPrompt.length > 25000) {
         return NextResponse.json({ error: "systemPrompt exceeds 25000 characters" }, { status: 400 });
       }
-      body.systemPrompt =
-        typeof body.systemPrompt === "string" && body.systemPrompt.trim() ? body.systemPrompt : null;
+      body.systemPrompt = typeof body.systemPrompt === "string" && body.systemPrompt.trim() ? body.systemPrompt : null;
     }
 
     if ("modelId" in body) {

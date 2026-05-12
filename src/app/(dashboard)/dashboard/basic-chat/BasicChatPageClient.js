@@ -175,11 +175,15 @@ export default function BasicChatPageClient() {
     if (typeof window === "undefined") return [];
     try {
       const saved = safeParse(globalThis.localStorage.getItem(STORAGE_KEYS.sessions), []);
-      return Array.isArray(saved) ? saved.map((session) => ({
-        ...session,
-        messages: Array.isArray(session.messages) ? session.messages : [],
-      })) : [];
-    } catch { return []; }
+      return Array.isArray(saved)
+        ? saved.map((session) => ({
+            ...session,
+            messages: Array.isArray(session.messages) ? session.messages : [],
+          }))
+        : [];
+    } catch {
+      return [];
+    }
   });
   const [activeSessionId, setActiveSessionId] = useState(() => {
     if (typeof window === "undefined") return "";

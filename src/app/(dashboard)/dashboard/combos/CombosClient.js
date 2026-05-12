@@ -423,7 +423,12 @@ function ComboFormModal({ isOpen, combo, onClose, onSave, activeProviders, kindF
     if (!validateName(name)) return;
     if (systemPrompt.length > SYSTEM_PROMPT_MAX) return;
     setSaving(true);
-    await onSave({ name: name.trim(), models, systemPrompt: systemPrompt.trim() || null, modelId: modelId.trim() || null });
+    await onSave({
+      name: name.trim(),
+      models,
+      systemPrompt: systemPrompt.trim() || null,
+      modelId: modelId.trim() || null,
+    });
     setSaving(false);
   };
 
@@ -489,7 +494,11 @@ function ComboFormModal({ isOpen, combo, onClose, onSave, activeProviders, kindF
           {/* Model ID */}
           <div>
             <Input
-              label={<>Model ID <span className="text-text-muted font-normal">(optional)</span></>}
+              label={
+                <>
+                  Model ID <span className="text-text-muted font-normal">(optional)</span>
+                </>
+              }
               value={modelId}
               onChange={(e) => setModelId(e.target.value)}
               placeholder="e.g. melma-zen"

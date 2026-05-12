@@ -290,8 +290,8 @@ describe("handleImageGenerationCore", () => {
           "",
           "",
         ].join("\n"),
-        { status: 200, headers: { "Content-Type": "text/event-stream" } }
-      )
+        { status: 200, headers: { "Content-Type": "text/event-stream" } },
+      ),
     );
 
     const result = await handleImageGenerationCore({
@@ -318,15 +318,13 @@ describe("handleImageGenerationCore", () => {
           "chatgpt-account-id": "account-123",
           version: "0.129.0",
         }),
-      })
+      }),
     );
 
     const fetchCall = global.fetch.mock.calls[0];
     const requestBody = JSON.parse(fetchCall[1].body);
     expect(requestBody.model).toBe("gpt-5.5");
-    expect(requestBody.tools).toEqual([
-      { type: "image_generation", output_format: "png", size: "1024x1024" },
-    ]);
+    expect(requestBody.tools).toEqual([{ type: "image_generation", output_format: "png", size: "1024x1024" }]);
 
     const responseBody = await result.response.json();
     expect(responseBody.data[0].b64_json).toBe("base64codeximage");
