@@ -181,6 +181,13 @@ export function createSSEStream(options = {}) {
                 }
               }
 
+              // Forward error payloads as-is so downstream can detect them
+              if (parsed.error && !parsed.choices) {
+                output = `data: ${JSON.stringify(parsed)}\n`;
+                emit(output, controller);
+                continue;
+              }
+
               if (!hasValuableContent(parsed, FORMATS.OPENAI)) {
                 continue;
               }
