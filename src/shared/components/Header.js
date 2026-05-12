@@ -168,7 +168,7 @@ export default function Header({ onMenuClick, showMenuButton = true, sidebarColl
   return (
     <header className="shrink-0 flex items-center justify-between gap-3 ps-2 pe-4 lg:ps-4 lg:pe-8 pt-3 pb-2 border-b border-border-subtle bg-surface/60 backdrop-blur-xl lg:bg-transparent lg:backdrop-blur-none z-20">
       {/* Sidebar toggle button (Mobile: menu, Desktop: collapse/expand) */}
-      <div className="flex items-center gap-2 shrink-0 pt-1">
+      <div className="flex items-center gap-2 shrink-0 pb-0.5">
         {/* Mobile menu button */}
         <div className="lg:hidden">
           {showMenuButton && (
