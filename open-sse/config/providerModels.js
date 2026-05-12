@@ -241,6 +241,10 @@ export const PROVIDER_MODELS = {
     { id: "kwaipilot/kat-coder-pro", name: "KAT Coder Pro" },
   ],
 
+  melma: [
+    { id: "melma/zen", name: "Melma Zen" },
+  ],
+
   // API Key Providers (alias = id)
   openai: [
     // Flagship models

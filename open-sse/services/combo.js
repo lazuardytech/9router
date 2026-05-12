@@ -299,3 +299,55 @@ export async function handleComboChat({
     headers: { "Content-Type": "application/json" },
   });
 }
+
+/**
+ * Override the `model` field in a combo response.
+ * Handles both non-streaming (JSON) and streaming (SSE) responses.
+ * @param {Response} response
+ * @param {string} modelId
+ * @returns {Response}
+ */
+export async function overrideResponseModelId(response, modelId) {
+  if (!modelId || !response) return response;
+
+  const contentType = response.headers.get("content-type") || "";
+
+  // SSE streaming — rewrite each `data:` line that contains a `"model"` field
+  if (contentType.includes("text/event-stream")) {
+    const { readable, writable } = new TransformStream({
+      transform(chunk, controller) {
+        const text = typeof chunk === "string" ? chunk : new TextDecoder().decode(chunk);
+        const rewritten = text
+          .split("\n")
+          .map((line) => {
+            if (!line.startsWith("data:")) return line;
+            const payload = line.slice(5).trim();
+            if (payload === "[DONE]") return line;
+            try {
+              const obj = JSON.parse(payload);
+              if ("model" in obj) obj.model = modelId;
+              return `data: ${JSON.stringify(obj)}`;
+            } catch {
+              return line;
+            }
+          })
+          .join("\n");
+        controller.enqueue(new TextEncoder().encode(rewritten));
+      },
+    });
+    response.body.pipeTo(writable).catch(() => {});
+    const headers = new Headers(response.headers);
+    return new Response(readable, { status: response.status, headers });
+  }
+
+  // Non-streaming JSON
+  try {
+    const body = await response.json();
+    if (body && typeof body === "object" && "model" in body) body.model = modelId;
+    const headers = new Headers(response.headers);
+    headers.set("Content-Type", "application/json");
+    return new Response(JSON.stringify(body), { status: response.status, headers });
+  } catch {
+    return response;
+  }
+}

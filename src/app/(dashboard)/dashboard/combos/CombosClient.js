@@ -350,6 +350,7 @@ function ComboFormModal({ isOpen, combo, onClose, onSave, activeProviders, kindF
   const [name, setName] = useState(combo?.name || "");
   const [models, setModels] = useState(combo?.models || []);
   const [systemPrompt, setSystemPrompt] = useState(combo?.systemPrompt || "");
+  const [modelId, setModelId] = useState(combo?.modelId || "");
   const [showModelSelect, setShowModelSelect] = useState(false);
   const [saving, setSaving] = useState(false);
   const [nameError, setNameError] = useState("");
@@ -422,7 +423,7 @@ function ComboFormModal({ isOpen, combo, onClose, onSave, activeProviders, kindF
     if (!validateName(name)) return;
     if (systemPrompt.length > SYSTEM_PROMPT_MAX) return;
     setSaving(true);
-    await onSave({ name: name.trim(), models, systemPrompt: systemPrompt.trim() || null });
+    await onSave({ name: name.trim(), models, systemPrompt: systemPrompt.trim() || null, modelId: modelId.trim() || null });
     setSaving(false);
   };
 
@@ -483,6 +484,19 @@ function ComboFormModal({ isOpen, combo, onClose, onSave, activeProviders, kindF
               <span className="material-symbols-outlined text-[16px]">add</span>
               Add Model
             </button>
+          </div>
+
+          {/* Model ID */}
+          <div>
+            <Input
+              label={<>Model ID <span className="text-text-muted font-normal">(optional)</span></>}
+              value={modelId}
+              onChange={(e) => setModelId(e.target.value)}
+              placeholder="e.g. melma-zen"
+            />
+            <p className="text-[10px] text-text-muted mt-0.5">
+              Override the model name returned to clients in API responses.
+            </p>
           </div>
 
           {/* System Prompt */}

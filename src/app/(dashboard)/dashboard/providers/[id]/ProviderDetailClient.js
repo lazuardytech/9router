@@ -72,6 +72,7 @@ export default function ProviderDetailPage() {
   const [providerStrategy, setProviderStrategy] = useState(null); // null = use global, "round-robin" = override
   const [providerStickyLimit, setProviderStickyLimit] = useState("");
   const [thinkingMode, setThinkingMode] = useState("auto");
+  const [effortMode, setEffortMode] = useState("default");
   const [suggestedModels, setSuggestedModels] = useState([]);
   const [kiloFreeModels, setKiloFreeModels] = useState([]);
   const [disabledModelIds, setDisabledModelIds] = useState([]);
@@ -220,6 +221,7 @@ export default function ProviderDetailPage() {
       // Load per-provider thinking config
       const thinkingCfg = (settingsData.providerThinking || {})[providerId] || {};
       setThinkingMode(thinkingCfg.mode || "auto");
+      setEffortMode(thinkingCfg.effortMode || "default");
       if (nodesRes.ok) {
         let node = (nodesData.nodes || []).find((entry) => entry.id === providerId) || null;
 
@@ -306,16 +308,19 @@ export default function ProviderDetailPage() {
     saveProviderStrategy("round-robin", value);
   };
 
-  const saveThinkingConfig = async (mode) => {
+  const saveThinkingConfig = async (mode, effort) => {
     try {
       const settingsRes = await fetch("/api/settings", { cache: "no-store" });
       const settingsData = settingsRes.ok ? await settingsRes.json() : {};
       const current = settingsData.providerThinking || {};
       const updated = { ...current };
-      if (!mode || mode === "auto") {
+      const cfg = {};
+      if (mode && mode !== "auto") cfg.mode = mode;
+      if (effort && effort !== "default") cfg.effortMode = effort;
+      if (Object.keys(cfg).length === 0) {
         delete updated[providerId];
       } else {
-        updated[providerId] = { mode };
+        updated[providerId] = cfg;
       }
       await fetch("/api/settings", {
         method: "PATCH",
@@ -329,7 +334,12 @@ export default function ProviderDetailPage() {
 
   const handleThinkingModeChange = (mode) => {
     setThinkingMode(mode);
-    saveThinkingConfig(mode);
+    saveThinkingConfig(mode, effortMode);
+  };
+
+  const handleEffortModeChange = (effort) => {
+    setEffortMode(effort);
+    saveThinkingConfig(thinkingMode, effort);
   };
 
   useEffect(() => {
@@ -1033,21 +1043,22 @@ export default function ProviderDetailPage() {
           <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <h2 className="text-lg font-semibold">Connections</h2>
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4">
-              {/* Thinking config */}
-              {/* {thinkingConfig && (
-                <div className="flex items-center gap-2">
-                  <span className="text-xs text-text-muted font-medium">Thinking</span>
-                  <select
-                    value={thinkingMode}
-                    onChange={(e) => handleThinkingModeChange(e.target.value)}
-                    className="text-xs px-2 py-1 border border-border rounded-md bg-background focus:outline-none focus:border-primary"
-                  >
-                    {thinkingConfig.options.map((opt) => (
-                      <option key={opt} value={opt}>{opt.charAt(0).toUpperCase() + opt.slice(1)}</option>
-                    ))}
-                  </select>
-                </div>
-              )} */}
+              {/* Thinking Effort */}
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-text-muted font-medium">Thinking Effort</span>
+                <select
+                  value={effortMode}
+                  onChange={(e) => handleEffortModeChange(e.target.value)}
+                  className="text-xs px-2 py-1 border border-border rounded-md bg-background focus:outline-none focus:border-primary"
+                >
+                  <option value="default">Default</option>
+                  <option value="none">None</option>
+                  <option value="low">Low</option>
+                  <option value="medium">Medium</option>
+                  <option value="high">High</option>
+                  <option value="extra-high">Extra High</option>
+                </select>
+              </div>
               {/* Round Robin toggle */}
               <div className="flex flex-wrap items-center gap-2">
                 <span className="text-xs text-text-muted font-medium">Round Robin</span>

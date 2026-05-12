@@ -12,7 +12,7 @@ import { getSettings } from "@/lib/localDb";
 import { getModelInfo, getComboInfo } from "../services/model.js";
 import { handleChatCore } from "open-sse/handlers/chatCore.js";
 import { errorResponse, unavailableResponse } from "open-sse/utils/error.js";
-import { handleComboChat, injectComboSystemPrompt } from "open-sse/services/combo.js";
+import { handleComboChat, injectComboSystemPrompt, overrideResponseModelId } from "open-sse/services/combo.js";
 import { handleBypassRequest } from "open-sse/utils/bypassHandler.js";
 import { HTTP_STATUS } from "open-sse/config/runtimeConfig.js";
 import { detectFormatByEndpoint } from "open-sse/translator/formats.js";
@@ -111,7 +111,7 @@ export async function handleChat(request, clientRawRequest = null) {
       "CHAT",
       `Combo "${modelStr}" with ${comboInfo.models.length} models (strategy: ${comboStrategy}, sticky: ${comboStickyLimit})`,
     );
-    return handleComboChat({
+    const comboResponse = await handleComboChat({
       body,
       models: comboInfo.models,
       handleSingleModel: (b, m) => handleSingleModelChat(b, m, clientRawRequest, request, apiKey),
@@ -120,6 +120,8 @@ export async function handleChat(request, clientRawRequest = null) {
       comboStrategy,
       comboStickyLimit,
     });
+    if (comboInfo.modelId) return overrideResponseModelId(comboResponse, comboInfo.modelId);
+    return comboResponse;
   }
 
   // Single model request
@@ -151,7 +153,7 @@ async function handleSingleModelChat(body, modelStr, clientRawRequest = null, re
         "CHAT",
         `Combo "${modelStr}" with ${comboInfo.models.length} models (strategy: ${comboStrategy}, sticky: ${comboStickyLimit})`,
       );
-      return handleComboChat({
+      const innerComboResponse = await handleComboChat({
         body,
         models: comboInfo.models,
         handleSingleModel: (b, m) => handleSingleModelChat(b, m, clientRawRequest, request, apiKey),
@@ -160,6 +162,8 @@ async function handleSingleModelChat(body, modelStr, clientRawRequest = null, re
         comboStrategy,
         comboStickyLimit,
       });
+      if (comboInfo.modelId) return overrideResponseModelId(innerComboResponse, comboInfo.modelId);
+      return innerComboResponse;
     }
     log.warn("CHAT", "Invalid model format", { model: modelStr });
     return errorResponse(HTTP_STATUS.BAD_REQUEST, "Invalid model format");

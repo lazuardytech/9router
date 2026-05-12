@@ -78,7 +78,7 @@ export async function getComboInfo(modelStr) {
   if (modelStr.includes("/")) return null;
   const combo = await getComboByName(modelStr);
   if (combo && combo.models && combo.models.length > 0) {
-    return { models: combo.models, systemPrompt: combo.systemPrompt || null };
+    return { models: combo.models, systemPrompt: combo.systemPrompt || null, modelId: combo.modelId || null };
   }
   return null;
 }

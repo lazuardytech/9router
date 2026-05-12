@@ -243,7 +243,7 @@ export const THINKING_CONFIG = {
     defaultBudgetTokens: 10000,
   },
   effort: {
-    options: ["auto", "none", "low", "medium", "high"],
+    options: ["auto", "none", "low", "medium", "high", "extra-high"],
     defaultMode: "auto",
   },
 };
@@ -1455,6 +1455,16 @@ export const APIKEY_PROVIDERS = {
         { id: "jina-embeddings-v2-base-code", name: "Jina Embeddings v2 Base Code", dimensions: 768 },
       ],
     },
+  },
+  melma: {
+    id: "melma",
+    alias: "melma",
+    name: "Melma",
+    icon: "auto_awesome",
+    color: "#6366F1",
+    textIcon: "ML",
+    website: "https://melma.lazuardy.tech",
+    notice: { apiKeyUrl: "https://melma.lazuardy.tech" },
   },
   "jina-reader": {
     id: "jina-reader",

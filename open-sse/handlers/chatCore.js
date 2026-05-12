@@ -60,7 +60,7 @@ export async function handleChatCore({
   const stripList = getModelStrip(alias, model);
 
   // Inject provider-level thinking config override (only if client hasn't set)
-  // on/off → extended type (body.thinking), none/low/medium/high → effort type (body.reasoning_effort)
+  // on/off → extended type (body.thinking), none/low/medium/high/extra-high → effort type (body.reasoning_effort)
   if (providerThinking?.mode && providerThinking.mode !== "auto") {
     const mode = providerThinking.mode;
     if (mode === "on" && !body.thinking) {
@@ -71,6 +71,11 @@ export async function handleChatCore({
     } else if (!body.reasoning_effort) {
       body = { ...body, reasoning_effort: mode };
     }
+  }
+
+  // Inject provider-level effort override (only if client hasn't set reasoning_effort)
+  if (providerThinking?.effortMode && providerThinking.effortMode !== "default" && !body.reasoning_effort) {
+    body = { ...body, reasoning_effort: providerThinking.effortMode };
   }
 
   const clientRequestedStreaming =

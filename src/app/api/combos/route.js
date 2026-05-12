@@ -21,7 +21,7 @@ export async function GET() {
 export async function POST(request) {
   try {
     const body = await request.json();
-    const { name, models, kind, systemPrompt } = body;
+    const { name, models, kind, systemPrompt, modelId } = body;
 
     if (!name) {
       return NextResponse.json({ error: "Name is required" }, { status: 400 });
@@ -39,6 +39,10 @@ export async function POST(request) {
       return NextResponse.json({ error: "systemPrompt exceeds 25000 characters" }, { status: 400 });
     }
 
+    if (modelId != null && typeof modelId !== "string") {
+      return NextResponse.json({ error: "modelId must be a string" }, { status: 400 });
+    }
+
     // Check if name already exists
     const existing = await getComboByName(name);
     if (existing) {
@@ -50,6 +54,7 @@ export async function POST(request) {
       models: models || [],
       kind: kind || null,
       systemPrompt: typeof systemPrompt === "string" && systemPrompt.trim() ? systemPrompt : null,
+      modelId: typeof modelId === "string" && modelId.trim() ? modelId.trim() : null,
     });
 
     return NextResponse.json(combo, { status: 201 });

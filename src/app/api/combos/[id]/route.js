@@ -52,6 +52,13 @@ export async function PUT(request, { params }) {
         typeof body.systemPrompt === "string" && body.systemPrompt.trim() ? body.systemPrompt : null;
     }
 
+    if ("modelId" in body) {
+      if (body.modelId != null && typeof body.modelId !== "string") {
+        return NextResponse.json({ error: "modelId must be a string" }, { status: 400 });
+      }
+      body.modelId = typeof body.modelId === "string" && body.modelId.trim() ? body.modelId.trim() : null;
+    }
+
     // Capture previous name to invalidate rotation state on rename
     const prev = await getComboById(id);
     const combo = await updateCombo(id, body);
