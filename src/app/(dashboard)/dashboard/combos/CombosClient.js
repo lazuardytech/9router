@@ -351,6 +351,7 @@ function ComboFormModal({ isOpen, combo, onClose, onSave, activeProviders, kindF
   const [models, setModels] = useState(combo?.models || []);
   const [systemPrompt, setSystemPrompt] = useState(combo?.systemPrompt || "");
   const [modelId, setModelId] = useState(combo?.modelId || "");
+  const [contentFilterMessage, setContentFilterMessage] = useState(combo?.contentFilterMessage || "");
   const [showModelSelect, setShowModelSelect] = useState(false);
   const [saving, setSaving] = useState(false);
   const [nameError, setNameError] = useState("");
@@ -428,6 +429,7 @@ function ComboFormModal({ isOpen, combo, onClose, onSave, activeProviders, kindF
       models,
       systemPrompt: systemPrompt.trim() || null,
       modelId: modelId.trim() || null,
+      contentFilterMessage: contentFilterMessage.trim() || null,
     });
     setSaving(false);
   };
@@ -505,6 +507,24 @@ function ComboFormModal({ isOpen, combo, onClose, onSave, activeProviders, kindF
             />
             <p className="text-[10px] text-text-muted mt-0.5">
               Override the model name returned to clients in API responses.
+            </p>
+          </div>
+
+          {/* Content Filter Message */}
+          <div>
+            <Input
+              label={
+                <>
+                  Content Filter Message <span className="text-text-muted font-normal">(optional)</span>
+                </>
+              }
+              value={contentFilterMessage}
+              onChange={(e) => setContentFilterMessage(e.target.value.slice(0, 2000))}
+              placeholder="e.g. I'm sorry, I can't help with that."
+            />
+            <p className="text-[10px] text-text-muted mt-0.5">
+              Humanistic reply shown to clients when upstream content filter is triggered. Defaults to a programmatic
+              error if not set.
             </p>
           </div>
 

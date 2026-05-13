@@ -58,6 +58,19 @@ export async function PUT(request, { params }) {
       body.modelId = typeof body.modelId === "string" && body.modelId.trim() ? body.modelId.trim() : null;
     }
 
+    if ("contentFilterMessage" in body) {
+      if (body.contentFilterMessage != null && typeof body.contentFilterMessage !== "string") {
+        return NextResponse.json({ error: "contentFilterMessage must be a string" }, { status: 400 });
+      }
+      if (typeof body.contentFilterMessage === "string" && body.contentFilterMessage.length > 2000) {
+        return NextResponse.json({ error: "contentFilterMessage exceeds 2000 characters" }, { status: 400 });
+      }
+      body.contentFilterMessage =
+        typeof body.contentFilterMessage === "string" && body.contentFilterMessage.trim()
+          ? body.contentFilterMessage.trim()
+          : null;
+    }
+
     // Capture previous name to invalidate rotation state on rename
     const prev = await getComboById(id);
     const combo = await updateCombo(id, body);

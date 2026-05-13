@@ -44,6 +44,7 @@ export async function handleChatCore({
   cavemanLevel,
   sourceFormatOverride,
   providerThinking,
+  contentFilterMessage,
 }) {
   const { provider, model } = modelInfo;
   const requestStartTime = Date.now();
@@ -439,6 +440,38 @@ export async function handleChatCore({
             if (parsed.error && !parsed.choices) {
               trackPendingRequest(model, provider, connectionId, false, true);
               reader.cancel().catch(() => {});
+
+              // If contentFilterMessage is set, return a humanistic SSE response
+              // instead of a programmatic error so the client sees a natural reply.
+              if (contentFilterMessage) {
+                const fallbackId = `chatcmpl-${Date.now().toString(36)}`;
+                const created = Math.floor(Date.now() / 1000);
+                const chunk1 = `data: ${JSON.stringify({ id: fallbackId, object: "chat.completion.chunk", created, model, choices: [{ index: 0, delta: { role: "assistant", content: contentFilterMessage }, finish_reason: null }] })}\n\n`;
+                const chunk2 = `data: ${JSON.stringify({ id: fallbackId, object: "chat.completion.chunk", created, model, choices: [{ index: 0, delta: {}, finish_reason: "stop" }], usage: { prompt_tokens: 0, completion_tokens: 0, total_tokens: 0 } })}\n\n`;
+                const done = "data: [DONE]\n\n";
+                const encoder = new TextEncoder();
+                const fallbackStream = new ReadableStream({
+                  start(controller) {
+                    controller.enqueue(encoder.encode(chunk1));
+                    controller.enqueue(encoder.encode(chunk2));
+                    controller.enqueue(encoder.encode(done));
+                    controller.close();
+                  },
+                });
+                return {
+                  success: true,
+                  response: new Response(fallbackStream, {
+                    status: 200,
+                    headers: {
+                      "Content-Type": "text/event-stream",
+                      "Cache-Control": "no-cache",
+                      Connection: "keep-alive",
+                      "Access-Control-Allow-Origin": "*",
+                    },
+                  }),
+                };
+              }
+
               const errMsg = parsed.error.message || "Upstream error";
               const statusCode =
                 parsed.error.code === "content_filter"

@@ -114,7 +114,8 @@ export async function handleChat(request, clientRawRequest = null) {
     const comboResponse = await handleComboChat({
       body,
       models: comboInfo.models,
-      handleSingleModel: (b, m) => handleSingleModelChat(b, m, clientRawRequest, request, apiKey),
+      handleSingleModel: (b, m) =>
+        handleSingleModelChat(b, m, clientRawRequest, request, apiKey, comboInfo.contentFilterMessage),
       log,
       comboName: modelStr,
       comboStrategy,
@@ -131,7 +132,14 @@ export async function handleChat(request, clientRawRequest = null) {
 /**
  * Handle single model chat request
  */
-async function handleSingleModelChat(body, modelStr, clientRawRequest = null, request = null, apiKey = null) {
+async function handleSingleModelChat(
+  body,
+  modelStr,
+  clientRawRequest = null,
+  request = null,
+  apiKey = null,
+  contentFilterMessage = null,
+) {
   const modelInfo = await getModelInfo(modelStr);
 
   // If provider is null, this might be a combo name - check and handle
@@ -156,7 +164,8 @@ async function handleSingleModelChat(body, modelStr, clientRawRequest = null, re
       const innerComboResponse = await handleComboChat({
         body,
         models: comboInfo.models,
-        handleSingleModel: (b, m) => handleSingleModelChat(b, m, clientRawRequest, request, apiKey),
+        handleSingleModel: (b, m) =>
+          handleSingleModelChat(b, m, clientRawRequest, request, apiKey, comboInfo.contentFilterMessage),
         log,
         comboName: modelStr,
         comboStrategy,
@@ -242,6 +251,7 @@ async function handleSingleModelChat(body, modelStr, clientRawRequest = null, re
       cavemanEnabled: !!chatSettings.cavemanEnabled,
       cavemanLevel: chatSettings.cavemanLevel || "full",
       providerThinking,
+      contentFilterMessage,
       // Detect source format by endpoint + body
       sourceFormatOverride: request?.url ? detectFormatByEndpoint(new URL(request.url).pathname, body) : null,
       onCredentialsRefreshed: async (newCreds) => {

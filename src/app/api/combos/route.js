@@ -21,7 +21,7 @@ export async function GET() {
 export async function POST(request) {
   try {
     const body = await request.json();
-    const { name, models, kind, systemPrompt, modelId } = body;
+    const { name, models, kind, systemPrompt, modelId, contentFilterMessage } = body;
 
     if (!name) {
       return NextResponse.json({ error: "Name is required" }, { status: 400 });
@@ -43,6 +43,13 @@ export async function POST(request) {
       return NextResponse.json({ error: "modelId must be a string" }, { status: 400 });
     }
 
+    if (contentFilterMessage != null && typeof contentFilterMessage !== "string") {
+      return NextResponse.json({ error: "contentFilterMessage must be a string" }, { status: 400 });
+    }
+    if (typeof contentFilterMessage === "string" && contentFilterMessage.length > 2000) {
+      return NextResponse.json({ error: "contentFilterMessage exceeds 2000 characters" }, { status: 400 });
+    }
+
     // Check if name already exists
     const existing = await getComboByName(name);
     if (existing) {
@@ -55,6 +62,8 @@ export async function POST(request) {
       kind: kind || null,
       systemPrompt: typeof systemPrompt === "string" && systemPrompt.trim() ? systemPrompt : null,
       modelId: typeof modelId === "string" && modelId.trim() ? modelId.trim() : null,
+      contentFilterMessage:
+        typeof contentFilterMessage === "string" && contentFilterMessage.trim() ? contentFilterMessage.trim() : null,
     });
 
     return NextResponse.json(combo, { status: 201 });
