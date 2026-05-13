@@ -224,13 +224,7 @@ export async function handleNonStreamingResponse({
     translatedResponse.usage = filterUsageForFormat(addBufferToUsage(translatedResponse.usage), sourceFormat);
   }
 
-  // Strip reasoning_content — some clients (e.g. Firecrawl AI SDK) have JSON parsers that
-  // break on this non-standard field, even though OpenAI allows it in extensions.
-  if (translatedResponse?.choices) {
-    for (const choice of translatedResponse.choices) {
-      if (choice?.message) delete choice.message.reasoning_content;
-    }
-  }
+  // Preserve reasoning_content so downstream clients can render thinking panels.
 
   reqLogger.logConvertedResponse(translatedResponse);
 

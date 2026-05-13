@@ -589,10 +589,27 @@ export function openaiResponsesToOpenAIResponse(chunk, state) {
     return null;
   }
 
-  // Reasoning events (convert to content or skip)
-  if (eventType === "response.reasoning_summary_text.delta") {
-    // Optionally include reasoning as content, or skip
-    return null;
+  // Reasoning events
+  if (
+    eventType === "response.reasoning_summary_text.delta" ||
+    eventType === "response.reasoning_content_text.delta" ||
+    eventType === "response.reasoning_text.delta"
+  ) {
+    const reasoningDelta = data.delta || "";
+    if (!reasoningDelta) return null;
+    return {
+      id: state.chatId || `chatcmpl-${Date.now()}`,
+      object: "chat.completion.chunk",
+      created: state.created || Math.floor(Date.now() / 1000),
+      model: state.model || "unknown",
+      choices: [
+        {
+          index: 0,
+          delta: { reasoning_content: reasoningDelta },
+          finish_reason: null,
+        },
+      ],
+    };
   }
 
   // Ignore other events

@@ -274,17 +274,8 @@ export async function handleForcedSSEToJson({
       ),
     ).catch(() => {});
 
-    // Strip reasoning_content only when content is non-empty.
-    // When content is empty (e.g. thinking models that used all tokens for reasoning),
-    // reasoning_content is the only useful output and must be preserved.
-    // Previously this was unconditional, which broke Qwen3.5, Claude extended thinking, etc.
-    if (parsed?.choices) {
-      for (const choice of parsed.choices) {
-        if (choice?.message?.reasoning_content && choice.message.content) {
-          delete choice.message.reasoning_content;
-        }
-      }
-    }
+    // Preserve reasoning_content even when content is non-empty so clients that
+    // expose a dedicated thinking panel can always consume it.
 
     return {
       success: true,
