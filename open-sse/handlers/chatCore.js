@@ -450,12 +450,28 @@ export async function handleChatCore({
           }
         }
       }
-      // Reconstruct response with peeked chunk prepended
-      const { readable, writable } = new TransformStream();
-      const writer = writable.getWriter();
-      writer.write(firstChunk);
-      providerResponse.body.pipeTo(writable).catch(() => {});
-      providerResponse = new Response(readable, {
+      // Reconstruct response with peeked chunk prepended.
+      // providerResponse.body is already locked by reader, so pipe via reader.
+      const reconstructed = new ReadableStream({
+        async start(controller) {
+          controller.enqueue(firstChunk);
+          try {
+            while (true) {
+              const { value, done } = await reader.read();
+              if (done) break;
+              controller.enqueue(value);
+            }
+          } catch (e) {
+            controller.error(e);
+          } finally {
+            controller.close();
+          }
+        },
+        cancel() {
+          reader.cancel().catch(() => {});
+        },
+      });
+      providerResponse = new Response(reconstructed, {
         status: providerResponse.status,
         statusText: providerResponse.statusText,
         headers: providerResponse.headers,
