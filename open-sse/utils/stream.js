@@ -181,8 +181,14 @@ export function createSSEStream(options = {}) {
                 }
               }
 
-              // Forward error payloads as-is so downstream can detect them
+              // Error payload mid-stream: if we already sent content, skip it
+              // to avoid corrupting the stream. If no content yet, forward as-is
+              // so downstream can detect and handle it.
               if (parsed.error && !parsed.choices) {
+                if (totalContentLength > 0) {
+                  // Already sent content — silently drop error and close stream
+                  continue;
+                }
                 output = `data: ${JSON.stringify(parsed)}\n`;
                 emit(output, controller);
                 continue;
