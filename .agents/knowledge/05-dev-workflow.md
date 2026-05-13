@@ -2,14 +2,12 @@
 
 ## Package manager
 
-**pnpm** (migrated from npm in `c720d3f`). Config: `.npmrc` with `node-linker=hoisted`. Install:
+**pnpm**. Config: `.npmrc` with `node-linker=hoisted`. Install:
 
 ```bash
 pnpm install              # install deps (no --frozen-lockfile for dev)
 pnpm install --frozen-lockfile  # CI/Docker
 ```
-
-For convenience, `npm run` still works (delegates to pnpm via `package.json` scripts).
 
 `paseo.json` at root for [Paseo](https://paseo.dev) worktree integration.
 
@@ -18,12 +16,12 @@ For convenience, `npm run` still works (delegates to pnpm via `package.json` scr
 `package.json:6-14`:
 
 ```bash
-npm run dev          # next dev --webpack --port 20128
-npm run build        # NODE_ENV=production next build --webpack
-npm start            # NODE_ENV=production next start  (no --port; uses $PORT or 3000)
-npm run dev:bun      # bun --bun next dev --webpack --port 20128
-npm run build:bun    # bun --bun next build (prod)
-npm run start:bun    # bun ./.next/standalone/server.js
+pnpm run dev          # next dev --webpack --port 20128
+pnpm run build        # NODE_ENV=production next build --webpack
+pnpm run start        # NODE_ENV=production next start  (no --port; uses $PORT or 3000)
+pnpm run dev:bun      # bun --bun next dev --webpack --port 20128
+pnpm run build:bun    # bun --bun next build (prod)
+pnpm run start:bun    # bun ./.next/standalone/server.js
 ```
 
 **Default dev port: 20128.** Hardcoded in `package.json:7,10` and skills docs. Production `next start` does NOT set port — relies on `$PORT` env or 3000 default. Mismatch is a known gotcha.
@@ -32,9 +30,9 @@ npm run start:bun    # bun ./.next/standalone/server.js
 
 | Task | Command | Notes |
 |---|---|---|
-| Lint | `pnpm exec eslint .` or `npx eslint .` | No npm script. Flat config in `eslint.config.mjs`, extends `eslint-config-next/core-web-vitals` |
+| Lint | `pnpm exec eslint .` | Flat config in `eslint.config.mjs`, extends `eslint-config-next/core-web-vitals` |
 | Typecheck | none | Pure JS. Only `jsconfig.json`, no TS |
-| Tests | `npm run test:run` | Vitest via root `vitest.config.mjs`. Single-fork pool. Deps via pnpm. |
+| Tests | `pnpm run test:run` | Vitest via root `vitest.config.mjs`. Single-fork pool. Deps via pnpm. |
 
 18 unit files in `tests/unit/` (17 + `sqlite-migration.test.js`): embeddings (core+cloud), claude header forwarding, codex image/refresh, combo routing, image-gen, oauth-cursor import, openai↔claude translation, perplexity-web, provider validation, rtk (3 incl. e2e + multi-provider e2e), translator normalization, web-cookie validation, antigravity-cache, sqlite-migration.
 
@@ -55,7 +53,7 @@ docker run -d -p 20128:20128 -v "$HOME/.9router:/app/data" -e DATA_DIR=/app/data
 
 - Base: `oven/bun:1.3.2-alpine`
 - Multi-stage: builder (nodejs/pnpm/python3/g++ for native deps) → runner
-- Builder installs pnpm globally (`npm i -g pnpm`), then `pnpm install --frozen-lockfile`
+- Builder enables pnpm via Corepack, then runs `pnpm install --frozen-lockfile`
 - Standalone Next output + `open-sse/` + `src/mitm/` copied separately (Next standalone tracing misses them)
 - `node-forge` copied separately for MITM cert gen
 - `su-exec` drops to `bun` user after chowning `/app/data`
@@ -67,7 +65,7 @@ Two workflows:
 
 ### `.github/workflows/ci.yml` (lint + test + build)
 - **Trigger**: push/PR (any branch)
-- Steps: pnpm install → lint (`pnpm exec eslint . || true`) → install test deps → `npm run test:run` → `npm run build`
+- Steps: pnpm install → lint (`pnpm exec eslint . || true`) → install test deps → `pnpm run test:run` → `pnpm run build`
 - pnpm via `pnpm/action-setup@v4` (v10)
 
 ### `.github/workflows/docker-publish.yml`

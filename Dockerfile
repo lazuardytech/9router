@@ -9,7 +9,8 @@ RUN apk --no-cache upgrade && apk --no-cache add python3 make g++ linux-headers
 
 COPY package.json pnpm-lock.yaml .npmrc ./
 RUN --mount=type=cache,target=/root/.local/share/pnpm/store \
-  npm i -g pnpm && pnpm config set dangerouslyAllowAllBuilds true && pnpm install --frozen-lockfile
+  corepack enable && corepack prepare pnpm@10 --activate && \
+  pnpm config set dangerouslyAllowAllBuilds true && pnpm install --frozen-lockfile
 
 COPY . ./
 ENV NEXT_TELEMETRY_DISABLED=1

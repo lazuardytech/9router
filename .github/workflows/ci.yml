@@ -1,4 +1,4 @@
-name: CI - Build and Test
+name: Build & Test
 
 on:
   push:
@@ -39,10 +39,10 @@ jobs:
           cd $GITHUB_WORKSPACE/tests && pnpm install --no-frozen-lockfile
 
       - name: Run tests
-        run: npm run test:run
+        run: pnpm run test:run
 
       - name: Build application
-        run: npm run build
+        run: pnpm run build
 
       - name: Test build artifacts
         run: |

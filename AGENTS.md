@@ -22,7 +22,7 @@ Documentation for AI agents working on **9router** (Lazuardy Tech project, forke
 
 ## Project Directives
 1. **Naming**: Retain internal "9router" references (package names, data dirs, env vars).
-2. **Local Packages**: `open-sse` is local; alias via `jsconfig.json`. Do not npm install.
+2. **Local Packages**: `open-sse` is local; alias via `jsconfig.json`. Do not install from the registry.
 3. **Quality**: Run `pnpm exec eslint .` and `pnpm run test:run` before push.
 4. **Logging**: Use `log.error` or `console.warn`. `log.warn()` is disabled.
 5. **Infrastructure**: MITM init order is critical. `process.env.MITM_SERVER_PATH` must be set before manager init.

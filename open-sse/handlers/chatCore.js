@@ -18,6 +18,7 @@ import { handleStreamingResponse, buildOnStreamComplete } from "./chatCore/strea
 import { detectClientTool, isNativePassthrough } from "../utils/clientDetector.js";
 import { injectCaveman } from "../rtk/caveman.js";
 import { compressMessages, formatRtkLog } from "../rtk/index.js";
+import { reserveReasoningTokenBudget } from "../utils/tokenBudget.js";
 
 /**
  * Core chat handler - shared between SSE and Worker
@@ -166,6 +167,8 @@ export async function handleChatCore({
     injectCaveman(translatedBody, finalFormat, cavemanLevel);
     log?.debug?.("CAVEMAN", `${cavemanLevel} | ${finalFormat}`);
   }
+
+  reserveReasoningTokenBudget(translatedBody, { provider, model, targetFormat, log });
 
   const executor = getExecutor(provider);
   trackPendingRequest(model, provider, connectionId, true);

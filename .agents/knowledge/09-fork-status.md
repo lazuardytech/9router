@@ -51,7 +51,7 @@ Divergence is still small but growing:
 | Upstream timeout/fallback (`d96ac0a`) | `LOCAL_UPSTREAM_TIMEOUT_MS`, combined AbortController |
 | Claude tool decloaking (`75a84a6`) | Recursive shape-agnostic `decloakToolNames` |
 | NineRemote promo removed | `NineRemoteButton.js`, modal, HeaderMenu entry deleted |
-| CI overhaul (`d188511`) | `npm run test:run`, no `|| true`, `latest` always emitted |
+| CI overhaul (`d188511`) | `pnpm run test:run`, no `|| true`, `latest` always emitted |
 | Test fixes (`c8e8d7a`) | Fixed 4 test files |
 
 **Code references use "9router" internally, by design** (package name `9router-app`, data dir `~/.9router/`, env vars, GitHub raw URLs in `skills.js`). "9router" is used only for external/repo context. See gotcha #13 in `07-gotchas.md`.

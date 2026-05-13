@@ -4,7 +4,7 @@ Things that will trip up a new contributor (human or AI). Read before editing an
 
 ## 1. `open-sse` is NOT an npm dep
 
-Imported as bare `open-sse/...` (e.g. `chat.js:1`, `completions/route.js:3`) but it's a **local in-repo package**, NOT in `package.json`. Aliased via `jsconfig.json:6-7`. Has its own folder layout (`config/`, `executors/`, `handlers/`, `rtk/`, `services/`, `transformer/`, `translator/`, `utils/`); `index.js` is a barrel re-export. **No dist step — edits are live.** Don't `npm install open-sse`.
+Imported as bare `open-sse/...` (e.g. `chat.js:1`, `completions/route.js:3`) but it's a **local in-repo package**, NOT in `package.json`. Aliased via `jsconfig.json:6-7`. Has its own folder layout (`config/`, `executors/`, `handlers/`, `rtk/`, `services/`, `transformer/`, `translator/`, `utils/`); `index.js` is a barrel re-export. **No dist step — edits are live.** Do not install `open-sse` from the registry.
 
 ## 2. Hardcoded port 20128 (with prod mismatch)
 
@@ -79,7 +79,7 @@ Zustand stores use `_id` for record IDs (`providerStore.js:18,24`) but backing s
 
 ## 15. Tests use root vitest config + pnpm
 
-Tests now run via `npm run test:run` which uses the root `vitest.config.mjs` (single-fork pool, `vite-tsconfig-paths` plugin). No more `cd tests && npm test` with `/tmp/node_modules`. Install test deps via `pnpm install` at root.
+Tests now run via `pnpm run test:run` which uses the root `vitest.config.mjs` (single-fork pool, `vite-tsconfig-paths` plugin). Install test deps via `pnpm install` at root.
 
 Root `vitest.config.mjs` uses `pool: "forks"` with `singleFork: true` — SQLite migration test mutates `process.env.DATA_DIR` and needs isolation from other suites.
 
@@ -89,7 +89,7 @@ Two CI workflows:
 - **`.github/workflows/ci.yml`** — lint + test + build on **push/PR** (any branch). Uses pnpm.
 - **`.github/workflows/docker-publish.yml`** — Docker build+push on `v*` tag push + manual. `latest` tag emitted on every build (not just default branch).
 
-`ci.yml` removed the `|| true` on lint — failures now fail the pipeline. Reports: `npm run test:run` and `npm run build`.
+`ci.yml` removed the `|| true` on lint — failures now fail the pipeline. Reports: `pnpm run test:run` and `pnpm run build`.
 
 ## 17. Cooldown is per-MODEL, not per-account
 
@@ -104,9 +104,9 @@ Two CI workflows:
 
 **For 9router**, this URL is wrong (points at upstream). Consider whether to fork skills hosting.
 
-## 19. pnpm migration — don't use npm to install
+## 19. pnpm-only dependency workflow
 
-Package manager is pnpm (migrated `c720d3f`). `.npmrc` sets `node-linker=hoisted` for compatibility. `pnpm-lock.yaml` is committed. **Don't use `npm install`** — it will produce a different `node_modules` layout. `npm run` scripts still work (delegated).
+Package manager is pnpm. `.npmrc` sets `node-linker=hoisted` for compatibility. `pnpm-lock.yaml` is committed. Use `pnpm install` and `pnpm run ...` for all local, CI, and Docker workflows.
 
 `better-sqlite3` is in `pnpm.onlyBuiltDependencies` in `package.json` so its native bindings compile. If you add a new native dep, add it to this list.
 

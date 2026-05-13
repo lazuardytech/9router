@@ -41,7 +41,7 @@ tasks:
       cd $RWX_WORKSPACE/tests && pnpm install --no-frozen-lockfile
     filter:
       - tests/package.json
-      - tests/package-lock.json
+      - tests/pnpm-lock.yaml
 
   - key: run-fe-tests
     use: [pnpm-install, tests-install]
