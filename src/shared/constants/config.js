@@ -5,7 +5,7 @@ export const APP_CONFIG = {
   name: "9Router",
   description: "AI Infrastructure Management",
   version: pkg.version,
-  displayVersion: "0.2.4",
+  displayVersion: "0.2.5",
 };
 
 // GitHub configuration
