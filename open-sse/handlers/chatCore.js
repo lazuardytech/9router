@@ -438,6 +438,7 @@ export async function handleChatCore({
             const parsed = JSON.parse(payload);
             if (parsed.error && !parsed.choices) {
               trackPendingRequest(model, provider, connectionId, false, true);
+              reader.cancel().catch(() => {});
               const errMsg = parsed.error.message || "Upstream error";
               const statusCode =
                 parsed.error.code === "content_filter"
