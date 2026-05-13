@@ -422,6 +422,47 @@ export async function handleChatCore({
   }
 
   // Streaming response
+  // Peek first chunk to detect upstream error payloads (e.g. content_filter_error)
+  // returned as HTTP 200 with error in body. Convert to proper error response so
+  // downstream proxies (e.g. omniroute) can fallback correctly.
+  if (stream && providerResponse.body) {
+    const reader = providerResponse.body.getReader();
+    const { value: firstChunk, done } = await reader.read();
+    if (!done && firstChunk) {
+      const text = new TextDecoder().decode(firstChunk);
+      const dataLine = text.split("\n").find((l) => l.startsWith("data:"));
+      if (dataLine) {
+        const payload = dataLine.slice(5).trim();
+        if (payload && payload !== "[DONE]") {
+          try {
+            const parsed = JSON.parse(payload);
+            if (parsed.error && !parsed.choices) {
+              trackPendingRequest(model, provider, connectionId, false, true);
+              const errMsg = parsed.error.message || "Upstream error";
+              const statusCode =
+                parsed.error.code === "content_filter"
+                  ? HTTP_STATUS.UNPROCESSABLE_ENTITY || 422
+                  : HTTP_STATUS.BAD_GATEWAY;
+              return createErrorResult(statusCode, errMsg);
+            }
+          } catch {
+            // not JSON, continue
+          }
+        }
+      }
+      // Reconstruct response with peeked chunk prepended
+      const { readable, writable } = new TransformStream();
+      const writer = writable.getWriter();
+      writer.write(firstChunk);
+      providerResponse.body.pipeTo(writable).catch(() => {});
+      providerResponse = new Response(readable, {
+        status: providerResponse.status,
+        statusText: providerResponse.statusText,
+        headers: providerResponse.headers,
+      });
+    }
+  }
+
   const { onStreamComplete } = buildOnStreamComplete({ ...sharedCtx });
   return handleStreamingResponse({
     ...sharedCtx,
