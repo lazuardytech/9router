@@ -23,7 +23,6 @@ const getPageInfo = (pathname) => {
       title: provider?.name || providerId,
       description: "",
       breadcrumbs: [
-        { label: "Media Providers", href: `/dashboard/media-providers/${kindId}` },
         { label: kindConfig?.label || kindId, href: `/dashboard/media-providers/${kindId}` },
         { label: provider?.name || providerId, image: `/providers/${providerId}.png` },
       ],
