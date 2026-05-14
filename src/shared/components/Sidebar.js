@@ -134,7 +134,7 @@ const analyticsItems = [
   { href: "/dashboard/quota", label: "Quota", icon: "data_usage" },
 ];
 
-const debugItems = [{ href: "/dashboard/logs", label: "Console Log", icon: "terminal" }];
+const debugItems = [{ href: "/dashboard/logs", label: "Logs", icon: "terminal" }];
 
 const systemItems = [
   { href: "/dashboard/health", label: "Health", icon: "monitor_heart" },

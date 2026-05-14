@@ -90,7 +90,7 @@ const getPageInfo = (pathname) => {
       breadcrumbs: [],
     };
   if (pathname.includes("/logs"))
-    return { title: "Console Log", description: "Live server console output", icon: "terminal", breadcrumbs: [] };
+    return { title: "Logs", description: "Request logs, proxy pools, and console output", icon: "terminal", breadcrumbs: [] };
   if (pathname.includes("/memory"))
     return { title: "Memory", description: "Manage memory entries", icon: "memory_alt", breadcrumbs: [] };
   if (pathname.includes("/health"))
