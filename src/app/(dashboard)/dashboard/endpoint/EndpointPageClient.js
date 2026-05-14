@@ -335,7 +335,10 @@ export default function APIPageClient({ machineId }) {
 
       setTunnelUrl(data.tunnelUrl || "");
       setTunnelPublicUrl(data.publicUrl || "");
+      setTunnelEnabled(true);
       await pingTunnelHealth(url);
+      // Refresh full data to sync all state
+      await fetchData();
     } catch (error) {
       setTunnelStatus({ type: "error", message: error.message });
     } finally {
