@@ -106,7 +106,7 @@ export default function Sidebar({ onClose }) {
     <>
       <aside className="flex w-60 flex-col border-r border-charcoal-grey bg-graphite min-h-full">
         {/* Logo */}
-        <div className="px-4 py-3 border-b border-charcoal-grey">
+        <div className="flex items-center h-11 px-4 border-b border-charcoal-grey shrink-0">
           <Link href="/dashboard" className="flex items-center gap-2.5 group" onClick={onClose}>
             <div className="flex items-center justify-center size-7 rounded-[6px] bg-porcelain shadow-[var(--shadow-sm)]">
               <span className="material-symbols-outlined text-pitch-black text-[16px]">hub</span>
