@@ -4,7 +4,7 @@ export default function HeroSection() {
   return (
     <section className="relative pt-28 pb-20 px-6 min-h-[90vh] flex flex-col items-center justify-center overflow-hidden">
       {/* Background glow */}
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[400px] bg-neon-lime/4 rounded-full blur-[120px] pointer-events-none" />
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[400px] bg-porcelain/4 rounded-full blur-[120px] pointer-events-none" />
       <div className="absolute bottom-0 right-1/4 w-[400px] h-[400px] bg-aether-blue/4 rounded-full blur-[100px] pointer-events-none" />
 
       {/* Grid overlay */}
@@ -13,14 +13,14 @@ export default function HeroSection() {
       <div className="relative z-10 max-w-3xl w-full text-center flex flex-col items-center gap-6">
         {/* Badge */}
         <div className="inline-flex items-center gap-2 rounded-full border border-charcoal-grey bg-graphite px-3 py-1">
-          <span className="size-1.5 rounded-full bg-neon-lime animate-pulse" />
+          <span className="size-1.5 rounded-full bg-porcelain animate-pulse" />
           <span className="text-[11px] text-storm-cloud tracking-[-0.1px]">v1.0 is now live</span>
         </div>
 
         {/* Heading */}
         <h1 className="text-[48px] md:text-[64px] font-[590] leading-[1.1] tracking-[-0.22px] text-porcelain">
           One Endpoint for <br />
-          <span className="text-neon-lime">All AI Providers</span>
+          <span className="text-porcelain">All AI Providers</span>
         </h1>
 
         {/* Description */}
@@ -33,7 +33,7 @@ export default function HeroSection() {
         <div className="flex flex-wrap items-center justify-center gap-3 mt-2">
           <a
             href="/dashboard"
-            className="inline-flex items-center gap-2 h-9 px-5 rounded-[6px] bg-neon-lime hover:bg-[#d4e010] text-pitch-black text-[13px] font-[590] transition-colors duration-100 shadow-[var(--shadow-sm)]"
+            className="inline-flex items-center gap-2 h-9 px-5 rounded-[6px] bg-porcelain hover:bg-[#d4e010] text-pitch-black text-[13px] font-[590] transition-colors duration-100 shadow-[var(--shadow-sm)]"
           >
             <span className="material-symbols-outlined text-[16px]">rocket_launch</span>
             Get Started

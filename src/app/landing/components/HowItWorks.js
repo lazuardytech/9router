@@ -42,14 +42,14 @@ export default function HowItWorks() {
               key={step.number}
               className={`relative z-10 p-5 rounded-[6px] border transition-colors duration-150 ${
                 step.accent
-                  ? "bg-deep-slate border-neon-lime/20"
+                  ? "bg-deep-slate border-porcelain/10"
                   : "bg-pitch-black border-charcoal-grey hover:border-muted-ash"
               }`}
             >
               <div className="flex items-center gap-3 mb-4">
                 <div
                   className={`flex items-center justify-center size-9 rounded-[6px] ${
-                    step.accent ? "bg-neon-lime" : "bg-deep-slate border border-charcoal-grey"
+                    step.accent ? "bg-porcelain" : "bg-deep-slate border border-charcoal-grey"
                   }`}
                 >
                   <span
@@ -64,7 +64,7 @@ export default function HowItWorks() {
               </div>
               <h3
                 className={`text-[14px] font-[510] tracking-[-0.13px] mb-2 ${
-                  step.accent ? "text-neon-lime" : "text-porcelain"
+                  step.accent ? "text-porcelain" : "text-porcelain"
                 }`}
               >
                 {step.title}

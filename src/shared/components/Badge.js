@@ -4,7 +4,7 @@ import { cn } from "@/shared/utils/cn";
 
 const variants = {
   default: "bg-gunmetal text-storm-cloud",
-  primary: "bg-neon-lime/10 text-neon-lime",
+  primary: "bg-porcelain/8 text-porcelain",
   success: "bg-emerald/10 text-emerald",
   warning: "bg-yellow-500/10 text-yellow-400",
   error: "bg-warning-red/10 text-warning-red",
@@ -20,7 +20,7 @@ const sizes = {
 
 const dotColors = {
   default: "bg-storm-cloud",
-  primary: "bg-neon-lime",
+  primary: "bg-porcelain",
   success: "bg-emerald",
   warning: "bg-yellow-400",
   error: "bg-warning-red",

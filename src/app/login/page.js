@@ -73,12 +73,12 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-pitch-black p-4 relative overflow-hidden">
       {/* Background glow */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-neon-lime/3 rounded-full blur-[120px] pointer-events-none" />
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-porcelain/3 rounded-full blur-[120px] pointer-events-none" />
 
       <div className="relative z-10 w-full max-w-sm">
         {/* Logo */}
         <div className="flex flex-col items-center mb-8">
-          <div className="flex items-center justify-center size-10 rounded-[6px] bg-neon-lime shadow-[var(--shadow-sm)] mb-4">
+          <div className="flex items-center justify-center size-10 rounded-[6px] bg-porcelain shadow-[var(--shadow-sm)] mb-4">
             <span className="material-symbols-outlined text-pitch-black text-[22px]">hub</span>
           </div>
           <h1 className="text-[20px] font-[510] text-porcelain tracking-[-0.22px]">9Router</h1>

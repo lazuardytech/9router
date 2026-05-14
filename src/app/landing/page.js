@@ -14,7 +14,7 @@ export default function LandingPage() {
     <div className="relative text-porcelain font-sans overflow-x-hidden bg-pitch-black">
       {/* Subtle background glows */}
       <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden">
-        <div className="absolute top-0 left-1/4 w-[600px] h-[600px] bg-neon-lime/3 rounded-full blur-[130px]" />
+        <div className="absolute top-0 left-1/4 w-[600px] h-[600px] bg-porcelain/3 rounded-full blur-[130px]" />
         <div className="absolute top-1/3 right-1/4 w-[500px] h-[500px] bg-aether-blue/3 rounded-full blur-[130px]" />
       </div>
 
@@ -39,7 +39,7 @@ export default function LandingPage() {
               <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
                 <button
                   onClick={() => router.push("/dashboard")}
-                  className="w-full sm:w-auto inline-flex items-center justify-center gap-2 h-9 px-6 rounded-[6px] bg-neon-lime hover:bg-[#d4e010] text-pitch-black text-[13px] font-[590] transition-colors duration-100 shadow-[var(--shadow-sm)]"
+                  className="w-full sm:w-auto inline-flex items-center justify-center gap-2 h-9 px-6 rounded-[6px] bg-porcelain hover:bg-[#d4e010] text-pitch-black text-[13px] font-[590] transition-colors duration-100 shadow-[var(--shadow-sm)]"
                 >
                   <span className="material-symbols-outlined text-[16px]">rocket_launch</span>
                   Start Free

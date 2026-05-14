@@ -4,7 +4,7 @@ import { cn } from "@/shared/utils/cn";
 
 const variants = {
   primary:
-    "bg-neon-lime hover:bg-[#d4e010] text-pitch-black font-[590] shadow-[var(--shadow-sm)] disabled:opacity-40 disabled:cursor-not-allowed btn-cta",
+    "bg-porcelain hover:bg-[#d4e010] text-pitch-black font-[590] shadow-[var(--shadow-sm)] disabled:opacity-40 disabled:cursor-not-allowed btn-cta",
   secondary:
     "bg-gunmetal hover:bg-charcoal-grey text-porcelain border border-charcoal-grey hover:border-muted-ash disabled:opacity-40 disabled:cursor-not-allowed",
   outline:

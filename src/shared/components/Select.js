@@ -32,7 +32,7 @@ export default function Select({
           className={cn(
             "w-full py-2.5 px-3.5 pr-9 text-[13px] text-porcelain",
             "bg-gunmetal border border-charcoal-grey rounded-[6px] appearance-none",
-            "focus:outline-none focus:border-neon-lime/50 focus:ring-1 focus:ring-neon-lime/25",
+            "focus:outline-none focus:border-porcelain/50 focus:ring-1 focus:ring-porcelain/25",
             "transition-colors duration-100 disabled:opacity-40 disabled:cursor-not-allowed",
             "text-[16px] sm:text-[13px]",
             error && "border-warning-red focus:border-warning-red focus:ring-warning-red/25",

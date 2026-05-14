@@ -53,13 +53,13 @@ function NavItem({ href, label, icon, active, onClick }) {
       onClick={onClick}
       className={cn(
         "flex items-center gap-2.5 px-3 py-1.5 rounded-[2px] transition-colors duration-100 group",
-        active ? "bg-neon-lime/8 text-neon-lime" : "text-storm-cloud hover:bg-deep-slate hover:text-porcelain",
+        active ? "bg-porcelain/8 text-porcelain" : "text-storm-cloud hover:bg-deep-slate hover:text-porcelain",
       )}
     >
       <span
         className={cn(
           "material-symbols-outlined text-[15px] shrink-0",
-          active ? "text-neon-lime" : "text-fog-grey group-hover:text-storm-cloud",
+          active ? "text-porcelain" : "text-fog-grey group-hover:text-storm-cloud",
         )}
       >
         {icon}
@@ -108,7 +108,7 @@ export default function Sidebar({ onClose }) {
         {/* Logo */}
         <div className="px-4 py-3 border-b border-charcoal-grey">
           <Link href="/dashboard" className="flex items-center gap-2.5 group" onClick={onClose}>
-            <div className="flex items-center justify-center size-7 rounded-[6px] bg-neon-lime shadow-[var(--shadow-sm)]">
+            <div className="flex items-center justify-center size-7 rounded-[6px] bg-porcelain shadow-[var(--shadow-sm)]">
               <span className="material-symbols-outlined text-pitch-black text-[16px]">hub</span>
             </div>
             <div className="flex flex-col">
@@ -132,7 +132,7 @@ export default function Sidebar({ onClose }) {
               className={cn(
                 "w-full flex items-center gap-2.5 px-3 py-1.5 rounded-[2px] transition-colors duration-100 group",
                 pathname.startsWith("/dashboard/media-providers")
-                  ? "bg-neon-lime/8 text-neon-lime"
+                  ? "bg-porcelain/8 text-porcelain"
                   : "text-storm-cloud hover:bg-deep-slate hover:text-porcelain",
               )}
             >
@@ -140,7 +140,7 @@ export default function Sidebar({ onClose }) {
                 className={cn(
                   "material-symbols-outlined text-[15px] shrink-0",
                   pathname.startsWith("/dashboard/media-providers")
-                    ? "text-neon-lime"
+                    ? "text-porcelain"
                     : "text-fog-grey group-hover:text-storm-cloud",
                 )}
               >
@@ -167,7 +167,7 @@ export default function Sidebar({ onClose }) {
                     className={cn(
                       "flex items-center gap-2 px-3 py-1.5 rounded-[2px] transition-colors duration-100",
                       pathname.startsWith(`/dashboard/media-providers/${kind.id}`)
-                        ? "text-neon-lime"
+                        ? "text-porcelain"
                         : "text-fog-grey hover:bg-deep-slate hover:text-storm-cloud",
                     )}
                   >
@@ -181,7 +181,7 @@ export default function Sidebar({ onClose }) {
                   className={cn(
                     "flex items-center gap-2 px-3 py-1.5 rounded-[2px] transition-colors duration-100",
                     pathname.startsWith(COMBINED_WEB_ITEM.href)
-                      ? "text-neon-lime"
+                      ? "text-porcelain"
                       : "text-fog-grey hover:bg-deep-slate hover:text-storm-cloud",
                   )}
                 >

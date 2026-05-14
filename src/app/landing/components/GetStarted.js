@@ -36,7 +36,7 @@ export default function GetStarted() {
             <div className="flex flex-col gap-5">
               {STEPS.map((step) => (
                 <div key={step.number} className="flex gap-3">
-                  <div className="flex-none flex items-center justify-center size-6 rounded-[4px] bg-neon-lime/10 text-neon-lime text-[11px] font-[590] mt-0.5">
+                  <div className="flex-none flex items-center justify-center size-6 rounded-[4px] bg-porcelain/8 text-porcelain text-[11px] font-[590] mt-0.5">
                     {step.number}
                   </div>
                   <div>
@@ -65,7 +65,7 @@ export default function GetStarted() {
                   className="flex items-center gap-2 mb-4 group cursor-pointer"
                   onClick={() => copy("bunx 9router", "landing")}
                 >
-                  <span className="text-neon-lime">$</span>
+                  <span className="text-porcelain">$</span>
                   <span className="text-porcelain">bunx 9router</span>
                   <span className="ml-auto text-[10px] text-fog-grey opacity-0 group-hover:opacity-100 transition-opacity">
                     {copied === "landing" ? "✓ copied" : "copy"}
@@ -74,19 +74,19 @@ export default function GetStarted() {
 
                 <div className="space-y-1 text-storm-cloud mb-5">
                   <div>
-                    <span className="text-neon-lime/60">&gt;</span> Starting 9Router...
+                    <span className="text-porcelain/40">&gt;</span> Starting 9Router...
                   </div>
                   <div>
-                    <span className="text-neon-lime/60">&gt;</span> Server running on{" "}
+                    <span className="text-porcelain/40">&gt;</span> Server running on{" "}
                     <span className="text-aether-blue">http://localhost:20128</span>
                   </div>
                   <div>
-                    <span className="text-neon-lime/60">&gt;</span> Dashboard:{" "}
+                    <span className="text-porcelain/40">&gt;</span> Dashboard:{" "}
                     <span className="text-aether-blue">http://localhost:20128/dashboard</span>
                   </div>
                   <div>
-                    <span className="text-neon-lime">&gt;</span>{" "}
-                    <span className="text-neon-lime">Ready to route! ✓</span>
+                    <span className="text-porcelain">&gt;</span>{" "}
+                    <span className="text-porcelain">Ready to route! ✓</span>
                   </div>
                 </div>
 

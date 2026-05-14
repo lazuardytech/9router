@@ -1,4 +1,3 @@
-@import url("https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=IBM+Plex+Mono:wght@400&display=swap");
 @import "tailwindcss";
 
 @theme {
@@ -39,8 +38,9 @@
   --color-text-muted: #8a8f98;
   --color-text-subtle: #62666d;
 
-  --color-primary: #e4f222;
-  --color-primary-hover: #d4e010;
+  /* accent = porcelain (white) */
+  --color-primary: #f7f8f8;
+  --color-primary-hover: #e5e5e6;
   --color-primary-fg: #08090a;
 
   --color-danger: #eb5757;
@@ -67,29 +67,21 @@
   --shadow-subtle: rgb(35, 37, 42) 0px 0px 0px 1px inset;
   --shadow-subtle-2: rgba(0, 0, 0, 0.2) 0px 0px 0px 1px;
   --shadow-subtle-3:
-    rgba(0, 0, 0, 0.01) 0px 5px 2px 0px, rgba(0, 0, 0, 0.04) 0px 3px 2px 0px, rgba(0, 0, 0, 0.07) 0px 1px 1px 0px, rgba(
-      0,
-      0,
-      0,
-      0.08
-    ) 0px 0px 1px 0px;
+    rgba(0, 0, 0, 0.01) 0px 5px 2px 0px, rgba(0, 0, 0, 0.04) 0px 3px 2px 0px,
+    rgba(0, 0, 0, 0.07) 0px 1px 1px 0px, rgba(0, 0, 0, 0.08) 0px 0px 1px 0px;
   --shadow-xl: rgba(8, 9, 10, 0.6) 0px 4px 32px 0px;
   --shadow-subtle-4: rgba(0, 0, 0, 0.1) 0px 0px 0px 2px;
   --shadow-subtle-5: rgba(0, 0, 0, 0.33) 0px 0px 0px 1px;
   --shadow-subtle-6:
-    rgba(255, 255, 255, 0.03) 0px 0px 0px 1px inset, rgba(255, 255, 255, 0.04) 0px 1px 0px 0px inset, rgba(0, 0, 0, 0.6) 0px 0px 0px 1px, rgba(
-      0,
-      0,
-      0,
-      0.1
-    ) 0px 4px 4px 0px;
+    rgba(255, 255, 255, 0.03) 0px 0px 0px 1px inset, rgba(255, 255, 255, 0.04) 0px 1px 0px 0px inset,
+    rgba(0, 0, 0, 0.6) 0px 0px 0px 1px, rgba(0, 0, 0, 0.1) 0px 4px 4px 0px;
 
-  /* legacy aliases kept for backward compat */
+  /* legacy aliases */
   --shadow-soft: rgba(0, 0, 0, 0.4) 0px 2px 4px 0px;
   --shadow-warm: rgba(0, 0, 0, 0.4) 0px 2px 4px 0px;
   --shadow-elevated: rgba(8, 9, 10, 0.6) 0px 4px 32px 0px;
   --shadow-elev: rgb(35, 37, 42) 0px 0px 0px 1px inset;
-  --shadow-focus: rgba(228, 242, 34, 0.25) 0px 0px 0px 2px;
+  --shadow-focus: rgba(247, 248, 248, 0.2) 0px 0px 0px 2px;
 }
 
 /* ── Base ── */
@@ -137,13 +129,13 @@ body {
 
 /* ── Focus ── */
 :focus-visible {
-  outline: 1px solid var(--color-neon-lime);
+  outline: 1px solid var(--color-alabaster);
   outline-offset: 2px;
 }
 
 /* ── Selection ── */
 ::selection {
-  background: rgba(228, 242, 34, 0.2);
+  background: rgba(247, 248, 248, 0.15);
   color: var(--color-porcelain);
 }
 
@@ -251,7 +243,7 @@ body {
   left: 0;
   width: 50%;
   height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.15), transparent);
   animation: ctaShimmer 3s ease-in-out infinite;
   pointer-events: none;
   z-index: 1;
@@ -265,8 +257,8 @@ body {
 .dot-grid-bg {
   background-color: var(--color-pitch-black);
   background-image:
-    radial-gradient(circle at 15% 20%, rgba(228, 242, 34, 0.06) 0%, transparent 40%),
-    radial-gradient(circle at 85% 80%, rgba(94, 106, 210, 0.06) 0%, transparent 40%);
+    radial-gradient(circle at 15% 20%, rgba(247, 248, 248, 0.03) 0%, transparent 40%),
+    radial-gradient(circle at 85% 80%, rgba(94, 106, 210, 0.04) 0%, transparent 40%);
 }
 
 /* ── Landing grid overlay ── */
@@ -294,7 +286,7 @@ body {
   font-size: 0.9375rem;
   font-weight: 510;
   margin: 1rem 0 0.5rem;
-  color: var(--color-neon-lime);
+  color: var(--color-alabaster);
 }
 .changelog-body h3 {
   font-size: 0.875rem;
@@ -327,7 +319,7 @@ body {
   color: var(--color-alabaster);
 }
 .changelog-body a {
-  color: var(--color-neon-lime);
+  color: var(--color-alabaster);
   text-decoration: underline;
   text-underline-offset: 2px;
 }
@@ -338,8 +330,6 @@ body {
 }
 
 /* ── Material Symbols ── */
-@import url("https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap");
-
 .material-symbols-outlined {
   font-variation-settings:
     "FILL" 0,

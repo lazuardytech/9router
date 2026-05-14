@@ -8,7 +8,7 @@ export default function Footer() {
           {/* Brand */}
           <div className="col-span-2 lg:col-span-2">
             <div className="flex items-center gap-2.5 mb-4">
-              <div className="size-7 rounded-[6px] bg-neon-lime flex items-center justify-center">
+              <div className="size-7 rounded-[6px] bg-porcelain flex items-center justify-center">
                 <span className="material-symbols-outlined text-pitch-black text-[16px]">hub</span>
               </div>
               <span className="text-[14px] font-[510] text-porcelain tracking-[-0.13px]">9Router</span>

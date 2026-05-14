@@ -41,7 +41,7 @@ export default function Input({
             "w-full py-2.5 px-3.5 text-[13px] text-porcelain bg-gunmetal",
             "rounded-[6px] border border-charcoal-grey",
             "placeholder:text-fog-grey",
-            "focus:outline-none focus:border-neon-lime/50 focus:ring-1 focus:ring-neon-lime/25",
+            "focus:outline-none focus:border-porcelain/50 focus:ring-1 focus:ring-porcelain/25",
             "transition-colors duration-100",
             "disabled:opacity-40 disabled:cursor-not-allowed",
             "text-[16px] sm:text-[13px]",

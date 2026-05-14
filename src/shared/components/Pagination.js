@@ -40,7 +40,7 @@ export default function Pagination({ currentPage, pageSize, totalItems, onPageCh
             <select
               value={pageSize}
               onChange={(e) => onPageSizeChange(Number(e.target.value))}
-              className="h-7 px-2 rounded-[6px] border border-charcoal-grey bg-gunmetal text-[12px] text-porcelain focus:outline-none focus:border-neon-lime/50 cursor-pointer"
+              className="h-7 px-2 rounded-[6px] border border-charcoal-grey bg-gunmetal text-[12px] text-porcelain focus:outline-none focus:border-porcelain/50 cursor-pointer"
               style={{ colorScheme: "dark" }}
             >
               {[10, 20, 50].map((s) => (
@@ -82,7 +82,7 @@ export default function Pagination({ currentPage, pageSize, totalItems, onPageCh
                 className={cn(
                   "flex items-center justify-center size-7 rounded-[6px] text-[12px] transition-colors duration-100",
                   currentPage === page
-                    ? "bg-neon-lime text-pitch-black font-[590]"
+                    ? "bg-porcelain text-pitch-black font-[590]"
                     : "text-storm-cloud hover:bg-deep-slate hover:text-porcelain",
                 )}
               >
