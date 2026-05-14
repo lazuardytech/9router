@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import PropTypes from "prop-types";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -8,6 +8,110 @@ import { cn } from "@/shared/utils/cn";
 import { APP_CONFIG } from "@/shared/constants/config";
 import { MEDIA_PROVIDER_KINDS } from "@/shared/constants/providers";
 import { ConfirmModal } from "./Modal";
+
+function MediaFlyout({ isMediaActive, pathname, onClose }) {
+  const [open, setOpen] = useState(false);
+  const [pos, setPos] = useState({ top: 0 });
+  const triggerRef = useRef(null);
+  const flyoutRef = useRef(null);
+  const timerRef = useRef(null);
+
+  const show = useCallback(() => {
+    clearTimeout(timerRef.current);
+    if (triggerRef.current) {
+      const rect = triggerRef.current.getBoundingClientRect();
+      setPos({ top: rect.top });
+    }
+    setOpen(true);
+  }, []);
+
+  const hide = useCallback(() => {
+    timerRef.current = setTimeout(() => setOpen(false), 80);
+  }, []);
+
+  const cancelHide = useCallback(() => {
+    clearTimeout(timerRef.current);
+  }, []);
+
+  useEffect(() => () => clearTimeout(timerRef.current), []);
+
+  const VISIBLE_MEDIA_KINDS = ["embedding", "image", "tts", "stt"];
+  const COMBINED_WEB_ITEM = {
+    id: "web",
+    label: "Web Fetch & Search",
+    icon: "travel_explore",
+    href: "/dashboard/media-providers/web",
+  };
+
+  return (
+    <>
+      <div
+        ref={triggerRef}
+        onMouseEnter={show}
+        onMouseLeave={hide}
+        className={cn(
+          "flex items-center justify-center py-2 rounded-[2px] transition-colors duration-100",
+          isMediaActive ? "bg-porcelain/8 text-porcelain" : "text-storm-cloud hover:bg-deep-slate hover:text-porcelain",
+        )}
+      >
+        <span
+          className={cn("material-symbols-outlined text-[18px]", isMediaActive ? "text-porcelain" : "text-fog-grey")}
+        >
+          perm_media
+        </span>
+      </div>
+
+      {open && (
+        <div
+          ref={flyoutRef}
+          onMouseEnter={cancelHide}
+          onMouseLeave={hide}
+          style={{ top: pos.top, left: 56 }}
+          className="fixed z-[200] rounded-[6px] border border-charcoal-grey bg-graphite shadow-[var(--shadow-xl)] py-1 min-w-[180px]"
+        >
+          <p className="px-3 py-1.5 text-[10px] font-[590] text-fog-grey uppercase tracking-[0.06em]">
+            Media Providers
+          </p>
+          {MEDIA_PROVIDER_KINDS.filter((k) => VISIBLE_MEDIA_KINDS.includes(k.id)).map((kind) => (
+            <Link
+              key={kind.id}
+              href={`/dashboard/media-providers/${kind.id}`}
+              onClick={() => {
+                setOpen(false);
+                onClose?.();
+              }}
+              className={cn(
+                "flex items-center gap-2.5 px-3 py-1.5 transition-colors duration-100",
+                pathname.startsWith(`/dashboard/media-providers/${kind.id}`)
+                  ? "text-porcelain bg-porcelain/8"
+                  : "text-storm-cloud hover:bg-deep-slate hover:text-porcelain",
+              )}
+            >
+              <span className="material-symbols-outlined text-[14px]">{kind.icon}</span>
+              <span className="text-[12px] tracking-[-0.1px]">{kind.label}</span>
+            </Link>
+          ))}
+          <Link
+            href={COMBINED_WEB_ITEM.href}
+            onClick={() => {
+              setOpen(false);
+              onClose?.();
+            }}
+            className={cn(
+              "flex items-center gap-2.5 px-3 py-1.5 transition-colors duration-100",
+              pathname.startsWith(COMBINED_WEB_ITEM.href)
+                ? "text-porcelain bg-porcelain/8"
+                : "text-storm-cloud hover:bg-deep-slate hover:text-porcelain",
+            )}
+          >
+            <span className="material-symbols-outlined text-[14px]">{COMBINED_WEB_ITEM.icon}</span>
+            <span className="text-[12px] tracking-[-0.1px]">{COMBINED_WEB_ITEM.label}</span>
+          </Link>
+        </div>
+      )}
+    </>
+  );
+}
 
 const VISIBLE_MEDIA_KINDS = ["embedding", "image", "tts", "stt"];
 const COMBINED_WEB_ITEM = {
@@ -169,63 +273,7 @@ export default function Sidebar({ onClose, collapsed = false, onToggleCollapse }
 
             {/* Media Providers — flyout on hover when collapsed, accordion when expanded */}
             {collapsed ? (
-              <div className="relative group/media">
-                <div
-                  className={cn(
-                    "flex items-center justify-center py-2 rounded-[2px] transition-colors duration-100",
-                    isMediaActive
-                      ? "bg-porcelain/8 text-porcelain"
-                      : "text-storm-cloud hover:bg-deep-slate hover:text-porcelain",
-                  )}
-                >
-                  <span
-                    className={cn(
-                      "material-symbols-outlined text-[18px]",
-                      isMediaActive ? "text-porcelain" : "text-fog-grey",
-                    )}
-                  >
-                    perm_media
-                  </span>
-                </div>
-
-                {/* Flyout submenu */}
-                <div className="absolute left-full top-0 ml-1.5 z-50 hidden group-hover/media:block">
-                  <div className="rounded-[6px] border border-charcoal-grey bg-graphite shadow-[var(--shadow-xl)] py-1 min-w-[160px]">
-                    <p className="px-3 py-1.5 text-[10px] font-[590] text-fog-grey uppercase tracking-[0.06em]">
-                      Media Providers
-                    </p>
-                    {MEDIA_PROVIDER_KINDS.filter((k) => VISIBLE_MEDIA_KINDS.includes(k.id)).map((kind) => (
-                      <Link
-                        key={kind.id}
-                        href={`/dashboard/media-providers/${kind.id}`}
-                        onClick={onClose}
-                        className={cn(
-                          "flex items-center gap-2.5 px-3 py-1.5 transition-colors duration-100",
-                          pathname.startsWith(`/dashboard/media-providers/${kind.id}`)
-                            ? "text-porcelain bg-porcelain/8"
-                            : "text-storm-cloud hover:bg-deep-slate hover:text-porcelain",
-                        )}
-                      >
-                        <span className="material-symbols-outlined text-[14px]">{kind.icon}</span>
-                        <span className="text-[12px] tracking-[-0.1px]">{kind.label}</span>
-                      </Link>
-                    ))}
-                    <Link
-                      href={COMBINED_WEB_ITEM.href}
-                      onClick={onClose}
-                      className={cn(
-                        "flex items-center gap-2.5 px-3 py-1.5 transition-colors duration-100",
-                        pathname.startsWith(COMBINED_WEB_ITEM.href)
-                          ? "text-porcelain bg-porcelain/8"
-                          : "text-storm-cloud hover:bg-deep-slate hover:text-porcelain",
-                      )}
-                    >
-                      <span className="material-symbols-outlined text-[14px]">{COMBINED_WEB_ITEM.icon}</span>
-                      <span className="text-[12px] tracking-[-0.1px]">{COMBINED_WEB_ITEM.label}</span>
-                    </Link>
-                  </div>
-                </div>
-              </div>
+              <MediaFlyout isMediaActive={isMediaActive} pathname={pathname} onClose={onClose} />
             ) : (
               <>
                 <button
