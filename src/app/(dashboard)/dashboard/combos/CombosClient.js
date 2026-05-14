@@ -531,11 +531,11 @@ function ComboFormModal({ isOpen, combo, onClose, onSave, activeProviders, kindF
           {/* System Prompt */}
           <div>
             <div className="flex items-center justify-between mb-1.5">
-              <label className="text-sm font-medium" htmlFor="combo-system-prompt">
-                System Prompt <span className="text-text-muted font-normal">(optional)</span>
+              <label className="text-[13px] font-[510] text-porcelain tracking-[-0.12px]" htmlFor="combo-system-prompt">
+                System Prompt <span className="text-fog-grey font-[400]">(optional)</span>
               </label>
               <span
-                className={`text-[10px] ${systemPrompt.length > SYSTEM_PROMPT_MAX ? "text-red-500" : "text-text-muted"}`}
+                className={`text-[10px] ${systemPrompt.length > SYSTEM_PROMPT_MAX ? "text-warning-red" : "text-fog-grey"}`}
               >
                 {systemPrompt.length.toLocaleString()} / {SYSTEM_PROMPT_MAX.toLocaleString()}
               </span>
@@ -546,9 +546,9 @@ function ComboFormModal({ isOpen, combo, onClose, onSave, activeProviders, kindF
               onChange={(e) => setSystemPrompt(e.target.value.slice(0, SYSTEM_PROMPT_MAX))}
               placeholder="Optional system prompt injected into every request routed through this combo (max 25000 chars)."
               rows={6}
-              className="w-full rounded-lg border border-black/10 dark:border-white/10 bg-white dark:bg-black/20 px-3 py-2 text-sm text-text-main outline-none focus:border-primary/50 resize-y min-h-[96px]"
+              className="w-full rounded-[6px] border border-charcoal-grey bg-deep-slate px-3 py-2 text-[13px] text-porcelain placeholder:text-fog-grey outline-none focus:border-porcelain/30 resize-y min-h-[96px] transition-colors duration-100"
             />
-            <p className="text-[10px] text-text-muted mt-0.5">
+            <p className="text-[10px] text-fog-grey mt-0.5">
               Will be prepended as a system message to every model call routed via this combo.
             </p>
           </div>
