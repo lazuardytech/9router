@@ -93,6 +93,13 @@ const getPageInfo = (pathname) => {
     return { title: "Console Log", description: "Live server console output", icon: "terminal", breadcrumbs: [] };
   if (pathname.includes("/memory"))
     return { title: "Memory", description: "Manage memory entries", icon: "memory_alt", breadcrumbs: [] };
+  if (pathname.includes("/health"))
+    return {
+      title: "System Health",
+      description: "Live system status, database, providers, and cache",
+      icon: "monitor_heart",
+      breadcrumbs: [],
+    };
   if (pathname.includes("/cache"))
     return { title: "Cache", description: "Semantic cache configuration", icon: "cached", breadcrumbs: [] };
 
