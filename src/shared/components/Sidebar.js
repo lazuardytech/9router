@@ -228,8 +228,8 @@ export default function Sidebar({ onClose, collapsed = false, onToggleCollapse }
               className="flex items-center gap-2.5 flex-1 min-w-0 group px-2 py-4"
               onClick={onClose}
             >
-              <div className="flex items-center justify-center size-7 rounded-[6px] bg-porcelain shadow-[var(--shadow-sm)] shrink-0">
-                <span className="material-symbols-outlined text-pitch-black text-[16px]">hub</span>
+              <div className="flex items-center justify-center size-7 shrink-0">
+                <img src="/logo.svg" alt="Pod" className="size-7 dark:invert" />
               </div>
               <div className="flex flex-col min-w-0">
                 <span className="text-[13px] font-[510] text-porcelain tracking-[-0.12px] leading-none truncate">
@@ -245,9 +245,9 @@ export default function Sidebar({ onClose, collapsed = false, onToggleCollapse }
               href="/endpoint"
               onClick={onClose}
               title={APP_CONFIG.name}
-              className="flex items-center justify-center size-7 rounded-[6px] bg-porcelain shadow-[var(--shadow-sm)] mx-auto"
+              className="flex items-center justify-center size-7 mx-auto"
             >
-              <span className="material-symbols-outlined text-pitch-black text-[16px]">hub</span>
+              <img src="/logo.svg" alt="Pod" className="size-7 dark:invert" />
             </Link>
           )}
 
