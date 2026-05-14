@@ -24,7 +24,12 @@ async function getObservabilityConfig() {
     const { getSettings } = await import("@/lib/localDb");
     const settings = await getSettings();
     const envEnabled = process.env.OBSERVABILITY_ENABLED !== "false";
-    const enabled = typeof settings.enableObservability === "boolean" ? settings.enableObservability : envEnabled;
+    const enabled =
+      typeof settings.enableObservability === "boolean"
+        ? settings.enableObservability
+        : typeof settings.observabilityEnabled === "boolean"
+          ? settings.observabilityEnabled
+          : envEnabled;
     cachedConfig = {
       enabled,
       maxRecords:

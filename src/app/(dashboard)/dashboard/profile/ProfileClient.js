@@ -273,7 +273,7 @@ export default function ProfilePage() {
       const res = await fetch("/api/settings", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ enableObservability: enabled }),
+        body: JSON.stringify({ observabilityEnabled: enabled, enableObservability: enabled }),
       });
       if (res.ok) {
         setSettings((prev) => ({ ...prev, enableObservability: enabled }));
