@@ -886,13 +886,6 @@ export default function ProviderDetailPage() {
     <div className="flex min-w-0 flex-col gap-6 px-1 sm:gap-8 sm:px-0">
       {/* Header */}
       <div className="min-w-0">
-        <Link
-          href="/dashboard/providers"
-          className="inline-flex items-center gap-1 text-sm text-text-muted hover:text-primary transition-colors mb-4"
-        >
-          <span className="material-symbols-outlined text-lg">arrow_back</span>
-          Back to Providers
-        </Link>
         <div className="flex min-w-0 items-center gap-3 sm:gap-4">
           <div
             className="flex size-12 shrink-0 items-center justify-center rounded-lg"

@@ -66,6 +66,12 @@ const getPageInfo = (pathname) => {
     }
   }
 
+  if (pathname.includes("/providers/new"))
+    return {
+      title: "Add New Provider",
+      description: "",
+      breadcrumbs: [{ label: "Providers", href: "/dashboard/providers" }, { label: "New" }],
+    };
   if (pathname.includes("/providers") && !pathname.includes("/media-providers"))
     return { title: "Providers", description: "Manage your AI provider connections", icon: "dns", breadcrumbs: [] };
   if (pathname.includes("/combos"))
