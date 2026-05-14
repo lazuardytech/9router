@@ -58,7 +58,7 @@ export default function NewProviderPage() {
       });
 
       if (response.ok) {
-        router.push("/dashboard/providers");
+        router.push("/providers");
       } else {
         const data = await response.json();
         setErrors({ submit: data.error || "Failed to create provider" });
@@ -183,7 +183,7 @@ export default function NewProviderPage() {
 
           {/* Actions */}
           <div className="flex gap-3 pt-4 border-t border-border">
-            <Link href="/dashboard/providers" className="flex-1">
+            <Link href="/providers" className="flex-1">
               <Button type="button" variant="ghost" fullWidth>
                 Cancel
               </Button>

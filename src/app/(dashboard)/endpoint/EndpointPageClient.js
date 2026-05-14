@@ -930,7 +930,7 @@ export default function APIPageClient({ machineId }) {
                 }
                 action={{
                   label: !requireLogin ? "Enable" : "Change password",
-                  href: "/dashboard/settings",
+                  href: "/settings",
                 }}
               />
             )}

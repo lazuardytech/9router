@@ -36,7 +36,7 @@ function UsageContent() {
     setTabLoading(true);
     const params = new URLSearchParams(searchParams);
     params.set("tab", value);
-    router.push(`/dashboard/usage?${params.toString()}`, { scroll: false });
+    router.push(`/usage?${params.toString()}`, { scroll: false });
     setTimeout(() => setTabLoading(false), 300);
   };
 

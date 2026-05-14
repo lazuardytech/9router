@@ -21,7 +21,7 @@ export default function DashboardLayout({ children }) {
   const notifications = useNotificationStore((state) => state.notifications);
   const removeNotification = useNotificationStore((state) => state.removeNotification);
 
-  const isChat = pathname === "/dashboard/basic-chat";
+  const isChat = pathname === "/basic-chat";
 
   return (
     <div className="flex h-screen w-full overflow-hidden bg-pitch-black">

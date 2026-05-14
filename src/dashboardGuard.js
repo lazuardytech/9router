@@ -69,8 +69,25 @@ export async function proxy(request) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  // Protect all dashboard routes
-  if (pathname.startsWith("/dashboard")) {
+  // Protect all dashboard routes (top-level paths served by the (dashboard) layout)
+  const DASHBOARD_PATHS = [
+    "/endpoint",
+    "/providers",
+    "/combos",
+    "/memory",
+    "/cache",
+    "/usage",
+    "/quota",
+    "/health",
+    "/proxy-pools",
+    "/logs",
+    "/settings",
+    "/translator",
+    "/basic-chat",
+    "/media-providers",
+  ];
+  const isDashboardRoute = DASHBOARD_PATHS.some((p) => pathname === p || pathname.startsWith(p + "/"));
+  if (isDashboardRoute) {
     let requireLogin = true;
     let tunnelDashboardAccess = true;
 
@@ -111,14 +128,44 @@ export async function proxy(request) {
     return NextResponse.redirect(new URL("/login", request.url));
   }
 
-  // Redirect / to /dashboard if logged in, or /dashboard if it's the root
+  // Redirect / to /endpoint (main dashboard entry point)
   if (pathname === "/") {
-    return NextResponse.redirect(new URL("/dashboard", request.url));
+    return NextResponse.redirect(new URL("/endpoint", request.url));
   }
 
   return NextResponse.next();
 }
 
 export const config = {
-  matcher: ["/", "/dashboard/:path*"],
+  matcher: [
+    "/",
+    "/endpoint/:path*",
+    "/endpoint",
+    "/providers/:path*",
+    "/providers",
+    "/combos/:path*",
+    "/combos",
+    "/memory/:path*",
+    "/memory",
+    "/cache/:path*",
+    "/cache",
+    "/usage/:path*",
+    "/usage",
+    "/quota/:path*",
+    "/quota",
+    "/health/:path*",
+    "/health",
+    "/proxy-pools/:path*",
+    "/proxy-pools",
+    "/logs/:path*",
+    "/logs",
+    "/settings/:path*",
+    "/settings",
+    "/translator/:path*",
+    "/translator",
+    "/basic-chat/:path*",
+    "/basic-chat",
+    "/media-providers/:path*",
+    "/media-providers",
+  ],
 };

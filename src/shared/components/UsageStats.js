@@ -12,10 +12,10 @@ function isLLMProvider(id) {
 }
 import Badge from "./Badge";
 import Card from "./Card";
-import OverviewCards from "@/app/(dashboard)/dashboard/usage/components/OverviewCards";
-import UsageTable, { fmt, fmtTime } from "@/app/(dashboard)/dashboard/usage/components/UsageTable";
-import ProviderTopology from "@/app/(dashboard)/dashboard/usage/components/ProviderTopology";
-import UsageChart from "@/app/(dashboard)/dashboard/usage/components/UsageChart";
+import OverviewCards from "@/app/(dashboard)/usage/components/OverviewCards";
+import UsageTable, { fmt, fmtTime } from "@/app/(dashboard)/usage/components/UsageTable";
+import ProviderTopology from "@/app/(dashboard)/usage/components/ProviderTopology";
+import UsageChart from "@/app/(dashboard)/usage/components/UsageChart";
 
 function timeAgo(timestamp) {
   const diff = Math.floor((Date.now() - new Date(timestamp)) / 1000);

@@ -23,7 +23,7 @@ const getPageInfo = (pathname) => {
       title: provider?.name || providerId,
       description: "",
       breadcrumbs: [
-        { label: kindConfig?.label || kindId, href: `/dashboard/media-providers/${kindId}` },
+        { label: kindConfig?.label || kindId, href: `/media-providers/${kindId}` },
         { label: provider?.name || providerId, image: `/providers/${providerId}.png` },
       ],
     };
@@ -58,7 +58,7 @@ const getPageInfo = (pathname) => {
         title: providerInfo.name,
         description: "",
         breadcrumbs: [
-          { label: "Providers", href: "/dashboard/providers" },
+          { label: "Providers", href: "/providers" },
           { label: providerInfo.name, image: `/providers/${providerInfo.id}.png` },
         ],
       };
@@ -69,7 +69,7 @@ const getPageInfo = (pathname) => {
     return {
       title: "Add New Provider",
       description: "",
-      breadcrumbs: [{ label: "Providers", href: "/dashboard/providers" }, { label: "New" }],
+      breadcrumbs: [{ label: "Providers", href: "/providers" }, { label: "New" }],
     };
   if (pathname.includes("/providers") && !pathname.includes("/media-providers"))
     return { title: "Providers", description: "Manage your AI provider connections", icon: "dns", breadcrumbs: [] };
@@ -91,7 +91,7 @@ const getPageInfo = (pathname) => {
     };
   if (pathname.includes("/proxy-pools"))
     return { title: "Proxy Pools", description: "Manage your proxy pool configurations", icon: "lan", breadcrumbs: [] };
-  if (pathname.includes("/endpoint") || pathname === "/dashboard")
+  if (pathname.includes("/endpoint") || pathname === "/endpoint")
     return { title: "Endpoint", description: "API endpoint configuration", icon: "api", breadcrumbs: [] };
   if (pathname.includes("/settings"))
     return { title: "Settings", description: "Manage your preferences", icon: "settings", breadcrumbs: [] };

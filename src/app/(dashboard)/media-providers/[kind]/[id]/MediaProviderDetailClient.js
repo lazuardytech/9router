@@ -13,8 +13,8 @@ import {
 } from "@/shared/constants/providers";
 import { getModelsByProviderId } from "@/shared/constants/models";
 import { useCopyToClipboard } from "@/shared/hooks/useCopyToClipboard";
-import ConnectionsCard from "@/app/(dashboard)/dashboard/providers/components/ConnectionsCard";
-import ModelsCard from "@/app/(dashboard)/dashboard/providers/components/ModelsCard";
+import ConnectionsCard from "@/app/(dashboard)/providers/components/ConnectionsCard";
+import ModelsCard from "@/app/(dashboard)/providers/components/ModelsCard";
 import { TTS_PROVIDER_CONFIG } from "@/shared/constants/ttsProviders";
 import { getTtsVoicesForModel } from "open-sse/config/ttsModels.js";
 import { GOOGLE_TTS_LANGUAGES } from "open-sse/config/googleTtsLanguages.js";
@@ -1903,7 +1903,7 @@ export default function MediaProviderDetailPage() {
     if (!confirm("Delete this Custom Embedding node?")) return;
     try {
       const res = await fetch(`/api/provider-nodes/${id}`, { method: "DELETE" });
-      if (res.ok) router.push(`/dashboard/media-providers/${kind}`);
+      if (res.ok) router.push(`/media-providers/${kind}`);
     } catch (error) {
       console.log("Error deleting custom embedding node:", error);
     }

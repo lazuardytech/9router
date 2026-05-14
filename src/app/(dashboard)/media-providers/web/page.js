@@ -1,16 +1,11 @@
 "use client";
 
-import { useParams, notFound, useRouter } from "next/navigation";
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { Card, Badge, Button, AddCustomEmbeddingModal } from "@/shared/components";
+import { useRouter } from "next/navigation";
+import { Card, Badge, Button } from "@/shared/components";
 import ProviderIcon from "@/shared/components/ProviderIcon";
-import { MEDIA_PROVIDER_KINDS, AI_PROVIDERS, getProvidersByKind } from "@/shared/constants/providers";
-
-// Kinds that support combos (currently disabled for image/tts — temporarily hidden).
-// webSearch/webFetch handled by /web page.
-const COMBO_KINDS = new Set([]);
-const COMBO_BASE_NAMES = { image: "image-combo", tts: "tts-combo" };
+import { AI_PROVIDERS, getProvidersByKind } from "@/shared/constants/providers";
 
 function getEffectiveStatus(conn) {
   const isCooldown = Object.entries(conn).some(
@@ -19,10 +14,9 @@ function getEffectiveStatus(conn) {
   return conn.testStatus === "unavailable" && !isCooldown ? "active" : conn.testStatus;
 }
 
-function MediaProviderCard({ provider, kind, connections, isCustom }) {
+function ProviderCard({ provider, kind, connections }) {
   const providerInfo = AI_PROVIDERS[provider.id];
   const isNoAuth = !!providerInfo?.noAuth;
-
   const providerConns = connections.filter((c) => c.provider === provider.id);
   const connected = providerConns.filter((c) => {
     const s = getEffectiveStatus(c);
@@ -71,7 +65,7 @@ function MediaProviderCard({ provider, kind, connections, isCustom }) {
   };
 
   return (
-    <Link href={`/dashboard/media-providers/${kind}/${provider.id}`} className="group">
+    <Link href={`/media-providers/${kind}/${provider.id}`} className="group">
       <Card
         padding="xs"
         className={`h-full hover:bg-black/[0.01] dark:hover:bg-white/[0.01] transition-colors cursor-pointer ${allDisabled ? "opacity-50" : ""}`}
@@ -94,14 +88,7 @@ function MediaProviderCard({ provider, kind, connections, isCustom }) {
           </div>
           <div>
             <h3 className="font-semibold text-sm">{provider.name}</h3>
-            <div className="flex items-center gap-2 mt-0.5 flex-wrap">
-              {isCustom && (
-                <Badge variant="default" size="sm">
-                  Custom
-                </Badge>
-              )}
-              {renderStatus()}
-            </div>
+            <div className="flex items-center gap-2 mt-0.5 flex-wrap">{renderStatus()}</div>
           </div>
         </div>
       </Card>
@@ -110,11 +97,13 @@ function MediaProviderCard({ provider, kind, connections, isCustom }) {
 }
 
 function ComboList({ combos }) {
-  if (combos.length === 0) return null;
+  if (combos.length === 0) {
+    return <p className="text-xs text-text-muted italic">No combos yet.</p>;
+  }
   return (
     <div className="flex flex-col gap-2">
       {combos.map((combo) => (
-        <Link key={combo.id} href={`/dashboard/media-providers/combo/${combo.id}`}>
+        <Link key={combo.id} href={`/media-providers/combo/${combo.id}`}>
           <Card
             padding="xs"
             className="hover:bg-black/[0.02] dark:hover:bg-white/[0.02] transition-colors cursor-pointer"
@@ -122,6 +111,7 @@ function ComboList({ combos }) {
             <div className="flex min-w-0 items-center gap-3">
               <span className="material-symbols-outlined text-primary text-[18px]">layers</span>
               <code className="text-sm font-mono font-medium flex-1 truncate">{combo.name}</code>
+              {/* Provider icons preview */}
               <div className="flex flex-wrap items-center gap-1 sm:shrink-0">
                 {combo.models.slice(0, 6).map((entry, i) => {
                   const pid = typeof entry === "string" ? entry.split("/")[0] : "";
@@ -158,62 +148,76 @@ function ComboList({ combos }) {
   );
 }
 
-export default function MediaProviderKindPage() {
-  const { kind } = useParams();
+function Section({ title, icon, kind, providers, connections, combos, onCreateCombo }) {
+  return (
+    <div>
+      {/* Header — title left, Create Combo right */}
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-3">
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="material-symbols-outlined text-primary">{icon}</span>
+          <h2 className="text-base font-semibold">{title}</h2>
+          <span className="text-xs text-text-muted">
+            ({providers.length} providers · {combos.length} combos)
+          </span>
+        </div>
+        <Button size="sm" icon="add" onClick={onCreateCombo}>
+          Create Combo
+        </Button>
+      </div>
+
+      {/* Combos — top */}
+      {combos.length > 0 && (
+        <div className="mb-4">
+          <ComboList combos={combos} />
+        </div>
+      )}
+
+      {/* Providers grid — bottom */}
+      {providers.length === 0 ? (
+        <div className="text-center py-8 border border-dashed border-border rounded-xl text-text-muted text-sm">
+          No providers.
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+          {providers.map((p) => (
+            <ProviderCard key={p.id} provider={p} kind={kind} connections={connections} />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+export default function WebProvidersPage() {
   const router = useRouter();
   const [connections, setConnections] = useState([]);
-  const [customNodes, setCustomNodes] = useState([]);
   const [combos, setCombos] = useState([]);
-  const [showAddCustomEmbedding, setShowAddCustomEmbedding] = useState(false);
 
-  // webSearch/webFetch listing pages are merged into /web
+  const fetchAll = async () => {
+    try {
+      const [connsRes, combosRes] = await Promise.all([
+        fetch("/api/providers", { cache: "no-store" }),
+        fetch("/api/combos", { cache: "no-store" }),
+      ]);
+      if (connsRes.ok) setConnections((await connsRes.json()).connections || []);
+      if (combosRes.ok) setCombos((await combosRes.json()).combos || []);
+    } catch {
+      /* noop */
+    }
+  };
+
   useEffect(() => {
-    if (kind === "webSearch" || kind === "webFetch") {
-      router.replace("/dashboard/media-providers/web");
-    }
-  }, [kind, router]);
+    fetchAll();
+  }, []);
 
-  const kindConfig = MEDIA_PROVIDER_KINDS.find((k) => k.id === kind);
-  const isEmbedding = kind === "embedding";
-  const supportsCombo = COMBO_KINDS.has(kind);
+  const searchProviders = getProvidersByKind("webSearch");
+  const fetchProviders = getProvidersByKind("webFetch");
+  const searchCombos = combos.filter((c) => c.kind === "webSearch");
+  const fetchCombos = combos.filter((c) => c.kind === "webFetch");
 
-  useEffect(() => {
-    if (!kindConfig) return;
-    fetch("/api/providers", { cache: "no-store" })
-      .then((r) => r.json())
-      .then((d) => setConnections(d.connections || []))
-      .catch(() => {});
-    if (isEmbedding) {
-      fetch("/api/provider-nodes", { cache: "no-store" })
-        .then((r) => r.json())
-        .then((d) => setCustomNodes((d.nodes || []).filter((n) => n.type === "custom-embedding")))
-        .catch(() => {});
-    }
-    if (supportsCombo) {
-      fetch("/api/combos", { cache: "no-store" })
-        .then((r) => r.json())
-        .then((d) => setCombos(d.combos || []))
-        .catch(() => {});
-    }
-  }, [isEmbedding, supportsCombo, kindConfig]);
-
-  if (!kindConfig) return notFound();
-
-  const providers = getProvidersByKind(kind);
-  const kindCombos = combos.filter((c) => c.kind === kind);
-
-  // Map custom nodes to MediaProviderCard shape
-  const customProviders = customNodes.map((n) => ({
-    id: n.id,
-    name: n.name || "Custom Embedding",
-    color: "#6366F1",
-    textIcon: "CE",
-  }));
-
-  const allProviders = [...providers, ...customProviders];
-
-  const handleCreateCombo = async () => {
-    const base = COMBO_BASE_NAMES[kind] || `${kind}-combo`;
+  const handleCreateCombo = async (kind) => {
+    // Generate unique default name
+    const base = kind === "webSearch" ? "search-combo" : "fetch-combo";
     let name = base;
     let i = 1;
     const existing = new Set(combos.map((c) => c.name));
@@ -227,7 +231,7 @@ export default function MediaProviderKindPage() {
     });
     if (res.ok) {
       const created = await res.json();
-      router.push(`/dashboard/media-providers/combo/${created.id}`);
+      router.push(`/media-providers/combo/${created.id}`);
     } else {
       const err = await res.json();
       alert(err.error || "Failed to create combo");
@@ -235,49 +239,29 @@ export default function MediaProviderKindPage() {
   };
 
   return (
-    <div className="flex flex-col gap-6">
-      {(isEmbedding || supportsCombo) && (
-        <div className="flex items-center justify-end gap-2">
-          {supportsCombo && (
-            <Button size="sm" icon="add" onClick={handleCreateCombo}>
-              Create Combo
-            </Button>
-          )}
-          {isEmbedding && (
-            <Button size="sm" icon="add" onClick={() => setShowAddCustomEmbedding(true)}>
-              Add Custom Embedding
-            </Button>
-          )}
-        </div>
-      )}
+    <div className="flex flex-col gap-8">
+      <Section
+        title="Web Search"
+        icon="search"
+        kind="webSearch"
+        providers={searchProviders}
+        connections={connections}
+        combos={searchCombos}
+        onCreateCombo={() => handleCreateCombo("webSearch")}
+      />
 
-      {supportsCombo && kindCombos.length > 0 && <ComboList combos={kindCombos} />}
+      {/* Divider between sections */}
+      <div className="border-t border-border" />
 
-      {allProviders.length === 0 ? (
-        <div className="text-center py-12 border border-dashed border-border rounded-xl text-text-muted text-sm">
-          No providers support <strong>{kindConfig.label}</strong> yet.
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-          {providers.map((provider) => (
-            <MediaProviderCard key={provider.id} provider={provider} kind={kind} connections={connections} />
-          ))}
-          {customProviders.map((provider) => (
-            <MediaProviderCard key={provider.id} provider={provider} kind={kind} connections={connections} isCustom />
-          ))}
-        </div>
-      )}
-
-      {isEmbedding && (
-        <AddCustomEmbeddingModal
-          isOpen={showAddCustomEmbedding}
-          onClose={() => setShowAddCustomEmbedding(false)}
-          onCreated={(node) => {
-            setCustomNodes((prev) => [...prev, node]);
-            setShowAddCustomEmbedding(false);
-          }}
-        />
-      )}
+      <Section
+        title="Web Fetch"
+        icon="travel_explore"
+        kind="webFetch"
+        providers={fetchProviders}
+        connections={connections}
+        combos={fetchCombos}
+        onCreateCombo={() => handleCreateCombo("webFetch")}
+      />
     </div>
   );
 }

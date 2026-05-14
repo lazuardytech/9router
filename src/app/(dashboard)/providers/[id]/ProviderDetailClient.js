@@ -864,7 +864,7 @@ export default function ProviderDetailPage() {
     return (
       <div className="text-center py-20">
         <p className="text-text-muted">Provider not found</p>
-        <Link href="/dashboard/providers" className="text-primary mt-4 inline-block">
+        <Link href="/providers" className="text-primary mt-4 inline-block">
           Back to Providers
         </Link>
       </div>
@@ -1008,7 +1008,7 @@ export default function ProviderDetailPage() {
                   try {
                     const res = await fetch(`/api/provider-nodes/${providerId}`, { method: "DELETE" });
                     if (res.ok) {
-                      router.push("/dashboard/providers");
+                      router.push("/providers");
                     }
                   } catch (error) {
                     console.log("Error deleting provider node:", error);

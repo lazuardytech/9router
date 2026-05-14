@@ -40,7 +40,7 @@ function MediaFlyout({ isMediaActive, pathname, onClose }) {
     id: "web",
     label: "Web Fetch & Search",
     icon: "travel_explore",
-    href: "/dashboard/media-providers/web",
+    href: "/media-providers/web",
   };
 
   return (
@@ -75,14 +75,14 @@ function MediaFlyout({ isMediaActive, pathname, onClose }) {
           {MEDIA_PROVIDER_KINDS.filter((k) => VISIBLE_MEDIA_KINDS.includes(k.id)).map((kind) => (
             <Link
               key={kind.id}
-              href={`/dashboard/media-providers/${kind.id}`}
+              href={`/media-providers/${kind.id}`}
               onClick={() => {
                 setOpen(false);
                 onClose?.();
               }}
               className={cn(
                 "flex items-center gap-2.5 px-3 py-1.5 transition-colors duration-100",
-                pathname.startsWith(`/dashboard/media-providers/${kind.id}`)
+                pathname.startsWith(`/media-providers/${kind.id}`)
                   ? "text-porcelain bg-porcelain/8"
                   : "text-storm-cloud hover:bg-deep-slate hover:text-porcelain",
               )}
@@ -118,27 +118,27 @@ const COMBINED_WEB_ITEM = {
   id: "web",
   label: "Web Fetch & Search",
   icon: "travel_explore",
-  href: "/dashboard/media-providers/web",
+  href: "/media-providers/web",
 };
 
 const apiItems = [
-  { href: "/dashboard/endpoint", label: "Endpoint", icon: "api" },
-  { href: "/dashboard/providers", label: "LLM Providers", icon: "dns" },
-  { href: "/dashboard/combos", label: "Combos", icon: "layers" },
-  { href: "/dashboard/memory", label: "Memory", icon: "memory_alt" },
-  { href: "/dashboard/cache", label: "Cache", icon: "cached" },
+  { href: "/endpoint", label: "Endpoint", icon: "api" },
+  { href: "/providers", label: "LLM Providers", icon: "dns" },
+  { href: "/combos", label: "Combos", icon: "layers" },
+  { href: "/memory", label: "Memory", icon: "memory_alt" },
+  { href: "/cache", label: "Cache", icon: "cached" },
 ];
 
 const analyticsItems = [
-  { href: "/dashboard/usage", label: "Usage", icon: "bar_chart" },
-  { href: "/dashboard/quota", label: "Quota", icon: "data_usage" },
+  { href: "/usage", label: "Usage", icon: "bar_chart" },
+  { href: "/quota", label: "Quota", icon: "data_usage" },
 ];
 
 const systemItems = [
-  { href: "/dashboard/health", label: "Health", icon: "monitor_heart" },
-  { href: "/dashboard/proxy-pools", label: "Proxy Pools", icon: "lan" },
-  { href: "/dashboard/logs", label: "Logs", icon: "terminal" },
-  { href: "/dashboard/settings", label: "Settings", icon: "settings" },
+  { href: "/health", label: "Health", icon: "monitor_heart" },
+  { href: "/proxy-pools", label: "Proxy Pools", icon: "lan" },
+  { href: "/logs", label: "Logs", icon: "terminal" },
+  { href: "/settings", label: "Settings", icon: "settings" },
 ];
 
 function NavSection({ label, children, collapsed }) {
@@ -186,13 +186,13 @@ export default function Sidebar({ onClose, collapsed = false, onToggleCollapse }
   const [isDisconnected, setIsDisconnected] = useState(false);
 
   const isActive = (href) => {
-    if (href === "/dashboard/endpoint") {
-      return pathname === "/dashboard" || pathname.startsWith("/dashboard/endpoint");
+    if (href === "/endpoint") {
+      return pathname === "/" || pathname.startsWith("/endpoint");
     }
     return pathname.startsWith(href);
   };
 
-  const isMediaActive = pathname.startsWith("/dashboard/media-providers");
+  const isMediaActive = pathname.startsWith("/media-providers");
 
   const handleShutdown = async () => {
     setIsShuttingDown(true);
@@ -224,7 +224,7 @@ export default function Sidebar({ onClose, collapsed = false, onToggleCollapse }
         <div className="flex items-center h-14 px-3 border-b border-charcoal-grey shrink-0 gap-2">
           {!collapsed && (
             <Link
-              href="/dashboard"
+              href="/endpoint"
               className="flex items-center gap-2.5 flex-1 min-w-0 group px-2 py-4"
               onClick={onClose}
             >
@@ -242,7 +242,7 @@ export default function Sidebar({ onClose, collapsed = false, onToggleCollapse }
 
           {collapsed && (
             <Link
-              href="/dashboard"
+              href="/endpoint"
               onClick={onClose}
               title={APP_CONFIG.name}
               className="flex items-center justify-center size-7 rounded-[6px] bg-porcelain shadow-[var(--shadow-sm)] mx-auto"
@@ -308,11 +308,11 @@ export default function Sidebar({ onClose, collapsed = false, onToggleCollapse }
                     {MEDIA_PROVIDER_KINDS.filter((k) => VISIBLE_MEDIA_KINDS.includes(k.id)).map((kind) => (
                       <Link
                         key={kind.id}
-                        href={`/dashboard/media-providers/${kind.id}`}
+                        href={`/media-providers/${kind.id}`}
                         onClick={onClose}
                         className={cn(
                           "flex items-center gap-2 px-3 py-1.5 rounded-[2px] transition-colors duration-100",
-                          pathname.startsWith(`/dashboard/media-providers/${kind.id}`)
+                          pathname.startsWith(`/media-providers/${kind.id}`)
                             ? "text-porcelain"
                             : "text-fog-grey hover:bg-deep-slate hover:text-storm-cloud",
                         )}

@@ -105,7 +105,7 @@ export default function ProxyLogsTab() {
         <p className="text-[11px] text-fog-grey leading-[1.5]">
           Live proxy request logging is not available. Showing configured proxy pools. Manage pools in{" "}
           <a
-            href="/dashboard/proxy-pools"
+            href="/proxy-pools"
             className="text-storm-cloud hover:text-porcelain underline underline-offset-2 transition-colors duration-100"
           >
             Proxy Pools
@@ -137,7 +137,7 @@ export default function ProxyLogsTab() {
             <span className="material-symbols-outlined text-[28px] text-fog-grey">lan</span>
             <p className="text-[12px] text-fog-grey">No proxy pools configured.</p>
             <a
-              href="/dashboard/proxy-pools"
+              href="/proxy-pools"
               className="mt-1 h-7 px-3 inline-flex items-center rounded-[6px] border border-charcoal-grey text-[12px] text-storm-cloud hover:bg-deep-slate hover:text-porcelain transition-colors duration-100"
             >
               Configure proxy pools
