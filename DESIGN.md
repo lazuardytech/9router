@@ -1,4 +1,4 @@
-# 9Router Design System
+# Pod Design System
 
 > Reference: [Linear Design System — Refero](https://styles.refero.design/style/90ce5883-bb24-4466-93f7-801cd617b0d1)
 > Theme: **Dark only** — "Midnight Command Center"
@@ -7,7 +7,7 @@
 
 ## Overview
 
-9Router adopts the Linear design language: a deep, layered dark-mode interface with a single vivid accent (Neon Lime `#e4f222`) reserved exclusively for primary actions. The aesthetic is compact, precise, and technical — like a high-performance control panel.
+Pod adopts the Linear design language: a deep, layered dark-mode interface with a single vivid accent (Neon Lime `#e4f222`) reserved exclusively for primary actions. The aesthetic is compact, precise, and technical — like a high-performance control panel.
 
 ---
 

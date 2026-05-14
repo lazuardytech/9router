@@ -19,7 +19,7 @@ export default function Navigation() {
           <div className="size-7 rounded-[6px] bg-porcelain flex items-center justify-center">
             <span className="material-symbols-outlined text-pitch-black text-[16px]">hub</span>
           </div>
-          <span className="text-porcelain text-[14px] font-[510] tracking-[-0.13px]">9Router</span>
+          <span className="text-porcelain text-[14px] font-[510] tracking-[-0.13px]">Pod</span>
         </button>
 
         {/* Desktop links */}
@@ -27,8 +27,8 @@ export default function Navigation() {
           {[
             { label: "Features", href: "#features" },
             { label: "How it Works", href: "#how-it-works" },
-            { label: "Docs", href: "https://github.com/decolua/9router#readme", external: true },
-            { label: "GitHub", href: "https://github.com/decolua/9router", external: true },
+            { label: "Docs", href: "https://github.com/lazuardytech/pod#readme", external: true },
+            { label: "GitHub", href: "https://github.com/lazuardytech/pod", external: true },
           ].map((item) => (
             <a
               key={item.label}
@@ -66,8 +66,8 @@ export default function Navigation() {
             {[
               { label: "Features", href: "#features" },
               { label: "How it Works", href: "#how-it-works" },
-              { label: "Docs", href: "https://github.com/decolua/9router#readme", external: true },
-              { label: "GitHub", href: "https://github.com/decolua/9router", external: true },
+              { label: "Docs", href: "https://github.com/lazuardytech/pod#readme", external: true },
+              { label: "GitHub", href: "https://github.com/lazuardytech/pod", external: true },
             ].map((item) => (
               <a
                 key={item.label}

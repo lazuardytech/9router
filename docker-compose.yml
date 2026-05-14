@@ -1,12 +1,12 @@
 services:
-  9router:
-    image: lazuardytech/9router
-    container_name: 9router
+  pod:
+    image: lazuardytech/pod
+    container_name: pod
     restart: unless-stopped
     env_file: .env
     ports:
       - '20128:20128'
     volumes:
-      - 9router-data:/app/data
+      - pod-data:/app/data
 volumes:
-  9router-data:
+  pod-data:

@@ -20,7 +20,7 @@ RUN bun run build
 FROM oven/bun:1.3.14-alpine AS runner
 WORKDIR /app
 
-LABEL org.opencontainers.image.title="9router"
+LABEL org.opencontainers.image.title="pod"
 
 ENV NODE_ENV=production
 ENV PORT=20128

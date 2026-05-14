@@ -4,7 +4,7 @@ import { useCopyToClipboard } from "@/shared/hooks/useCopyToClipboard";
 const STEPS = [
   {
     number: "1",
-    title: "Install 9Router",
+    title: "Install Pod",
     desc: "Run bunx to start the server instantly",
   },
   {
@@ -30,7 +30,7 @@ export default function GetStarted() {
           <div className="flex-1">
             <h2 className="text-[32px] font-[590] text-porcelain tracking-[-0.22px] mb-3">Get Started in 30 Seconds</h2>
             <p className="text-[14px] text-storm-cloud leading-[1.6] tracking-[-0.13px] mb-8">
-              Install 9Router, configure your providers via web dashboard, and start routing AI requests.
+              Install Pod, configure your providers via web dashboard, and start routing AI requests.
             </p>
 
             <div className="flex flex-col gap-5">
@@ -63,10 +63,10 @@ export default function GetStarted() {
               <div className="p-5 font-mono text-[12px] leading-relaxed overflow-x-auto">
                 <div
                   className="flex items-center gap-2 mb-4 group cursor-pointer"
-                  onClick={() => copy("bunx 9router", "landing")}
+                  onClick={() => copy("bunx pod", "landing")}
                 >
                   <span className="text-porcelain">$</span>
-                  <span className="text-porcelain">bunx 9router</span>
+                  <span className="text-porcelain">bunx pod</span>
                   <span className="ml-auto text-[10px] text-fog-grey opacity-0 group-hover:opacity-100 transition-opacity">
                     {copied === "landing" ? "✓ copied" : "copy"}
                   </span>
@@ -74,7 +74,7 @@ export default function GetStarted() {
 
                 <div className="space-y-1 text-storm-cloud mb-5">
                   <div>
-                    <span className="text-porcelain/40">&gt;</span> Starting 9Router...
+                    <span className="text-porcelain/40">&gt;</span> Starting Pod...
                   </div>
                   <div>
                     <span className="text-porcelain/40">&gt;</span> Server running on{" "}

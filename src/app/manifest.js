@@ -1,7 +1,7 @@
 export default function manifest() {
   return {
-    name: "9Router - AI Infrastructure Management",
-    short_name: "9Router",
+    name: "Pod - AI Infrastructure Management",
+    short_name: "Pod",
     description: "One endpoint for all your AI providers. Manage keys, monitor usage, and scale effortlessly.",
     id: "/",
     start_url: "/",

@@ -6,7 +6,7 @@
 // keep the other in sync. The SQL text below is identical to schema.sql.
 
 export const SCHEMA_SQL = `
--- 9Router SQLite schema v1
+-- Pod SQLite schema v1
 -- Hybrid model: hot fields as columns, flexible fields as JSON TEXT.
 
 -- Config tables (from db.json) -------------------------------------------

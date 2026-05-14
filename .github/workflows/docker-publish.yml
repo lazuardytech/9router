@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
 
 env:
-  IMAGE_NAME: lazuardytech/9router
+  IMAGE_NAME: lazuardytech/pod
 
 concurrency:
   group: docker-publish-${{ github.ref }}

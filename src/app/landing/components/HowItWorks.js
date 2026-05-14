@@ -9,7 +9,7 @@ const STEPS = [
   },
   {
     number: "02",
-    title: "9Router Hub",
+    title: "Pod Hub",
     desc: "Our engine analyzes the prompt, checks provider health, and routes for lowest latency or cost.",
     icon: "hub",
     accent: true,
@@ -27,7 +27,7 @@ export default function HowItWorks() {
     <section className="py-20 px-6 border-y border-charcoal-grey bg-graphite" id="how-it-works">
       <div className="max-w-6xl mx-auto">
         <div className="mb-12">
-          <h2 className="text-[32px] font-[590] text-porcelain tracking-[-0.22px] mb-3">How 9Router Works</h2>
+          <h2 className="text-[32px] font-[590] text-porcelain tracking-[-0.22px] mb-3">How Pod Works</h2>
           <p className="text-[14px] text-storm-cloud max-w-md leading-[1.6] tracking-[-0.13px]">
             Data flows seamlessly from your application through our intelligent routing layer to the best provider.
           </p>

@@ -14,8 +14,8 @@ import { waitForHealth, probeUrlAlive } from "./networkProbe.js";
 
 // Removed initDbHooks call
 
-const WORKER_URL = process.env.TUNNEL_WORKER_URL || "https://9router.com";
-const MACHINE_ID_SALT = "9router-tunnel-salt";
+const WORKER_URL = process.env.TUNNEL_WORKER_URL || "https://pod.lazuardytech.com";
+const MACHINE_ID_SALT = "pod-tunnel-salt";
 
 // Per-service state (independent: tunnel ≠ tailscale)
 const tunnelSvc = {

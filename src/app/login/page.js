@@ -83,7 +83,7 @@ export default function LoginPage() {
           <div className="flex items-center justify-center size-10 rounded-[6px] bg-porcelain shadow-[var(--shadow-sm)] mb-4">
             <span className="material-symbols-outlined text-pitch-black text-[22px]">hub</span>
           </div>
-          <h1 className="text-[20px] font-[510] text-porcelain tracking-[-0.22px]">9Router</h1>
+          <h1 className="text-[20px] font-[510] text-porcelain tracking-[-0.22px]">Pod</h1>
           <p className="text-[13px] text-storm-cloud mt-1 tracking-[-0.12px]">Enter your password to continue</p>
         </div>
 

@@ -39,7 +39,7 @@ export default function HeroSection() {
             Get Started
           </a>
           <a
-            href="https://github.com/decolua/9router"
+            href="https://github.com/lazuardytech/pod"
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex items-center gap-2 h-9 px-5 rounded-[6px] border border-charcoal-grey bg-graphite hover:bg-deep-slate text-porcelain text-[13px] font-[400] transition-colors duration-100"
