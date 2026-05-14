@@ -33,6 +33,7 @@ const analyticsItems = [
 const debugItems = [{ href: "/dashboard/console-log", label: "Console Log", icon: "terminal" }];
 
 const systemItems = [
+  { href: "/dashboard/health", label: "Health", icon: "monitor_heart" },
   { href: "/dashboard/proxy-pools", label: "Proxy Pools", icon: "lan" },
   { href: "/dashboard/profile", label: "Settings", icon: "settings" },
 ];
