@@ -37,7 +37,8 @@ const systemItems = [
   { href: "/dashboard/profile", label: "Settings", icon: "settings" },
 ];
 
-function NavSection({ label, children }) {
+function NavSection({ label, children, collapsed }) {
+  if (collapsed) return <div className="space-y-0.5">{children}</div>;
   return (
     <div className="pt-4 first:pt-0">
       <p className="px-3 mb-1 text-[10px] font-[590] text-fog-grey uppercase tracking-[0.06em]">{label}</p>
@@ -46,30 +47,33 @@ function NavSection({ label, children }) {
   );
 }
 
-function NavItem({ href, label, icon, active, onClick }) {
+function NavItem({ href, label, icon, active, onClick, collapsed }) {
   return (
     <Link
       href={href}
       onClick={onClick}
+      title={collapsed ? label : undefined}
       className={cn(
-        "flex items-center gap-2.5 px-3 py-1.5 rounded-[2px] transition-colors duration-100 group",
+        "flex items-center gap-2.5 rounded-[2px] transition-colors duration-100 group",
+        collapsed ? "justify-center px-0 py-2" : "px-3 py-1.5",
         active ? "bg-porcelain/8 text-porcelain" : "text-storm-cloud hover:bg-deep-slate hover:text-porcelain",
       )}
     >
       <span
         className={cn(
-          "material-symbols-outlined text-[15px] shrink-0",
+          "material-symbols-outlined shrink-0",
+          collapsed ? "text-[18px]" : "text-[15px]",
           active ? "text-porcelain" : "text-fog-grey group-hover:text-storm-cloud",
         )}
       >
         {icon}
       </span>
-      <span className="text-[13px] font-[400] tracking-[-0.12px] truncate">{label}</span>
+      {!collapsed && <span className="text-[13px] font-[400] tracking-[-0.12px] truncate">{label}</span>}
     </Link>
   );
 }
 
-export default function Sidebar({ onClose }) {
+export default function Sidebar({ onClose, collapsed = false, onToggleCollapse }) {
   const pathname = usePathname();
   const [mediaOpen, setMediaOpen] = useState(false);
   const [showShutdownModal, setShowShutdownModal] = useState(false);
@@ -83,6 +87,8 @@ export default function Sidebar({ onClose }) {
     }
     return pathname.startsWith(href);
   };
+
+  const isMediaActive = pathname.startsWith("/dashboard/media-providers");
 
   const handleShutdown = async () => {
     setIsShuttingDown(true);
@@ -104,134 +110,209 @@ export default function Sidebar({ onClose }) {
 
   return (
     <>
-      <aside className="flex w-60 flex-col border-r border-charcoal-grey bg-graphite min-h-full">
-        {/* Logo */}
-        <div className="flex items-center h-11 px-4 border-b border-charcoal-grey shrink-0">
-          <Link href="/dashboard" className="flex items-center gap-2.5 group" onClick={onClose}>
-            <div className="flex items-center justify-center size-7 rounded-[6px] bg-porcelain shadow-[var(--shadow-sm)]">
+      <aside
+        className={cn(
+          "flex flex-col border-r border-charcoal-grey bg-graphite min-h-full overflow-hidden transition-all duration-200",
+          collapsed ? "w-14" : "w-60",
+        )}
+      >
+        {/* App title + collapse button */}
+        <div className="flex items-center h-11 px-3 border-b border-charcoal-grey shrink-0 gap-2">
+          {!collapsed && (
+            <Link href="/dashboard" className="flex items-center gap-2.5 flex-1 min-w-0 group" onClick={onClose}>
+              <div className="flex items-center justify-center size-7 rounded-[6px] bg-porcelain shadow-[var(--shadow-sm)] shrink-0">
+                <span className="material-symbols-outlined text-pitch-black text-[16px]">hub</span>
+              </div>
+              <div className="flex flex-col min-w-0">
+                <span className="text-[13px] font-[510] text-porcelain tracking-[-0.12px] leading-none truncate">
+                  {APP_CONFIG.name}
+                </span>
+                <span className="text-[10px] text-fog-grey leading-none mt-0.5">v{APP_CONFIG.displayVersion}</span>
+              </div>
+            </Link>
+          )}
+
+          {collapsed && (
+            <Link
+              href="/dashboard"
+              onClick={onClose}
+              title={APP_CONFIG.name}
+              className="flex items-center justify-center size-7 rounded-[6px] bg-porcelain shadow-[var(--shadow-sm)] mx-auto"
+            >
               <span className="material-symbols-outlined text-pitch-black text-[16px]">hub</span>
-            </div>
-            <div className="flex flex-col">
-              <span className="text-[13px] font-[510] text-porcelain tracking-[-0.12px] leading-none">
-                {APP_CONFIG.name}
+            </Link>
+          )}
+
+          {/* Collapse toggle — desktop only */}
+          {onToggleCollapse && (
+            <button
+              type="button"
+              onClick={onToggleCollapse}
+              title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+              className={cn(
+                "hidden lg:flex items-center justify-center size-6 rounded-[4px] text-fog-grey hover:bg-deep-slate hover:text-porcelain transition-colors duration-100 shrink-0",
+                collapsed && "mx-auto",
+              )}
+            >
+              <span className="material-symbols-outlined text-[15px]">
+                {collapsed ? "left_panel_open" : "left_panel_close"}
               </span>
-              <span className="text-[10px] text-fog-grey leading-none mt-0.5">v{APP_CONFIG.displayVersion}</span>
-            </div>
-          </Link>
+            </button>
+          )}
         </div>
 
         {/* Navigation */}
-        <nav className="flex-1 px-2 py-3 overflow-y-auto custom-scrollbar space-y-0">
-          <NavSection label="API">
-            <NavItem {...apiItems[0]} active={isActive(apiItems[0].href)} onClick={onClose} />
-            <NavItem {...apiItems[1]} active={isActive(apiItems[1].href)} onClick={onClose} />
+        <nav className={cn("flex-1 overflow-y-auto custom-scrollbar space-y-0", collapsed ? "px-1 py-3" : "px-2 py-3")}>
+          <NavSection label="API" collapsed={collapsed}>
+            <NavItem {...apiItems[0]} active={isActive(apiItems[0].href)} onClick={onClose} collapsed={collapsed} />
+            <NavItem {...apiItems[1]} active={isActive(apiItems[1].href)} onClick={onClose} collapsed={collapsed} />
 
-            {/* Media Providers accordion */}
-            <button
-              onClick={() => setMediaOpen((v) => !v)}
-              className={cn(
-                "w-full flex items-center gap-2.5 px-3 py-1.5 rounded-[2px] transition-colors duration-100 group",
-                pathname.startsWith("/dashboard/media-providers")
-                  ? "bg-porcelain/8 text-porcelain"
-                  : "text-storm-cloud hover:bg-deep-slate hover:text-porcelain",
-              )}
-            >
-              <span
+            {/* Media Providers — icon only when collapsed */}
+            {collapsed ? (
+              <Link
+                href="/dashboard/media-providers/embedding"
+                onClick={onClose}
+                title="Media Providers"
                 className={cn(
-                  "material-symbols-outlined text-[15px] shrink-0",
-                  pathname.startsWith("/dashboard/media-providers")
-                    ? "text-porcelain"
-                    : "text-fog-grey group-hover:text-storm-cloud",
+                  "flex items-center justify-center py-2 rounded-[2px] transition-colors duration-100",
+                  isMediaActive
+                    ? "bg-porcelain/8 text-porcelain"
+                    : "text-storm-cloud hover:bg-deep-slate hover:text-porcelain",
                 )}
               >
-                perm_media
-              </span>
-              <span className="text-[13px] font-[400] tracking-[-0.12px] flex-1 text-left truncate">
-                Media Providers
-              </span>
-              <span
-                className="material-symbols-outlined text-[13px] text-fog-grey transition-transform duration-150"
-                style={{ transform: mediaOpen ? "rotate(180deg)" : "rotate(0deg)" }}
-              >
-                expand_more
-              </span>
-            </button>
-
-            {mediaOpen && (
-              <div className="pl-3 space-y-0.5">
-                {MEDIA_PROVIDER_KINDS.filter((k) => VISIBLE_MEDIA_KINDS.includes(k.id)).map((kind) => (
-                  <Link
-                    key={kind.id}
-                    href={`/dashboard/media-providers/${kind.id}`}
-                    onClick={onClose}
-                    className={cn(
-                      "flex items-center gap-2 px-3 py-1.5 rounded-[2px] transition-colors duration-100",
-                      pathname.startsWith(`/dashboard/media-providers/${kind.id}`)
-                        ? "text-porcelain"
-                        : "text-fog-grey hover:bg-deep-slate hover:text-storm-cloud",
-                    )}
-                  >
-                    <span className="material-symbols-outlined text-[13px]">{kind.icon}</span>
-                    <span className="text-[12px] tracking-[-0.1px]">{kind.label}</span>
-                  </Link>
-                ))}
-                <Link
-                  href={COMBINED_WEB_ITEM.href}
-                  onClick={onClose}
+                <span
                   className={cn(
-                    "flex items-center gap-2 px-3 py-1.5 rounded-[2px] transition-colors duration-100",
-                    pathname.startsWith(COMBINED_WEB_ITEM.href)
-                      ? "text-porcelain"
-                      : "text-fog-grey hover:bg-deep-slate hover:text-storm-cloud",
+                    "material-symbols-outlined text-[18px]",
+                    isMediaActive ? "text-porcelain" : "text-fog-grey",
                   )}
                 >
-                  <span className="material-symbols-outlined text-[13px]">{COMBINED_WEB_ITEM.icon}</span>
-                  <span className="text-[12px] tracking-[-0.1px]">{COMBINED_WEB_ITEM.label}</span>
-                </Link>
-              </div>
+                  perm_media
+                </span>
+              </Link>
+            ) : (
+              <>
+                <button
+                  onClick={() => setMediaOpen((v) => !v)}
+                  className={cn(
+                    "w-full flex items-center gap-2.5 px-3 py-1.5 rounded-[2px] transition-colors duration-100 group",
+                    isMediaActive
+                      ? "bg-porcelain/8 text-porcelain"
+                      : "text-storm-cloud hover:bg-deep-slate hover:text-porcelain",
+                  )}
+                >
+                  <span
+                    className={cn(
+                      "material-symbols-outlined text-[15px] shrink-0",
+                      isMediaActive ? "text-porcelain" : "text-fog-grey group-hover:text-storm-cloud",
+                    )}
+                  >
+                    perm_media
+                  </span>
+                  <span className="text-[13px] font-[400] tracking-[-0.12px] flex-1 text-left truncate">
+                    Media Providers
+                  </span>
+                  <span
+                    className="material-symbols-outlined text-[13px] text-fog-grey transition-transform duration-150"
+                    style={{ transform: mediaOpen ? "rotate(180deg)" : "rotate(0deg)" }}
+                  >
+                    expand_more
+                  </span>
+                </button>
+
+                {mediaOpen && (
+                  <div className="pl-3 space-y-0.5">
+                    {MEDIA_PROVIDER_KINDS.filter((k) => VISIBLE_MEDIA_KINDS.includes(k.id)).map((kind) => (
+                      <Link
+                        key={kind.id}
+                        href={`/dashboard/media-providers/${kind.id}`}
+                        onClick={onClose}
+                        className={cn(
+                          "flex items-center gap-2 px-3 py-1.5 rounded-[2px] transition-colors duration-100",
+                          pathname.startsWith(`/dashboard/media-providers/${kind.id}`)
+                            ? "text-porcelain"
+                            : "text-fog-grey hover:bg-deep-slate hover:text-storm-cloud",
+                        )}
+                      >
+                        <span className="material-symbols-outlined text-[13px]">{kind.icon}</span>
+                        <span className="text-[12px] tracking-[-0.1px]">{kind.label}</span>
+                      </Link>
+                    ))}
+                    <Link
+                      href={COMBINED_WEB_ITEM.href}
+                      onClick={onClose}
+                      className={cn(
+                        "flex items-center gap-2 px-3 py-1.5 rounded-[2px] transition-colors duration-100",
+                        pathname.startsWith(COMBINED_WEB_ITEM.href)
+                          ? "text-porcelain"
+                          : "text-fog-grey hover:bg-deep-slate hover:text-storm-cloud",
+                      )}
+                    >
+                      <span className="material-symbols-outlined text-[13px]">{COMBINED_WEB_ITEM.icon}</span>
+                      <span className="text-[12px] tracking-[-0.1px]">{COMBINED_WEB_ITEM.label}</span>
+                    </Link>
+                  </div>
+                )}
+              </>
             )}
 
             {apiItems.slice(2).map((item) => (
-              <NavItem key={item.href} {...item} active={isActive(item.href)} onClick={onClose} />
+              <NavItem key={item.href} {...item} active={isActive(item.href)} onClick={onClose} collapsed={collapsed} />
             ))}
           </NavSection>
 
-          <NavSection label="Analytics">
+          {!collapsed && <div className="h-px" />}
+
+          <NavSection label="Analytics" collapsed={collapsed}>
             {analyticsItems.map((item) => (
-              <NavItem key={item.href} {...item} active={isActive(item.href)} onClick={onClose} />
+              <NavItem key={item.href} {...item} active={isActive(item.href)} onClick={onClose} collapsed={collapsed} />
             ))}
           </NavSection>
 
-          <NavSection label="System">
+          {!collapsed && <div className="h-px" />}
+
+          <NavSection label="System" collapsed={collapsed}>
             {systemItems.map((item) => (
-              <NavItem key={item.href} {...item} active={isActive(item.href)} onClick={onClose} />
+              <NavItem key={item.href} {...item} active={isActive(item.href)} onClick={onClose} collapsed={collapsed} />
             ))}
             {debugItems.map((item) => (
-              <NavItem key={item.href} {...item} active={isActive(item.href)} onClick={onClose} />
+              <NavItem key={item.href} {...item} active={isActive(item.href)} onClick={onClose} collapsed={collapsed} />
             ))}
           </NavSection>
         </nav>
 
         {/* Footer actions */}
-        <div className="flex items-center gap-1.5 p-2 border-t border-charcoal-grey">
+        <div
+          className={cn(
+            "flex items-center border-t border-charcoal-grey",
+            collapsed ? "flex-col gap-1 p-1.5" : "gap-1.5 p-2",
+          )}
+        >
           <button
             onClick={handleRestart}
             disabled={isRestarting}
-            className="flex-1 flex items-center justify-center gap-1.5 h-7 rounded-[6px] border border-charcoal-grey text-storm-cloud hover:bg-deep-slate hover:text-porcelain disabled:opacity-40 transition-colors duration-100 text-[12px]"
+            title="Restart"
+            className={cn(
+              "flex items-center justify-center gap-1.5 rounded-[6px] border border-charcoal-grey text-storm-cloud hover:bg-deep-slate hover:text-porcelain disabled:opacity-40 transition-colors duration-100 text-[12px]",
+              collapsed ? "size-8" : "flex-1 h-7",
+            )}
           >
             {isRestarting ? (
               <span className="material-symbols-outlined text-[14px] animate-spin">progress_activity</span>
             ) : (
               <span className="material-symbols-outlined text-[14px]">restart_alt</span>
             )}
-            Restart
+            {!collapsed && "Restart"}
           </button>
           <button
             onClick={() => setShowShutdownModal(true)}
-            className="flex-1 flex items-center justify-center gap-1.5 h-7 rounded-[6px] border border-charcoal-grey text-storm-cloud hover:bg-warning-red/10 hover:border-warning-red/30 hover:text-warning-red transition-colors duration-100 text-[12px]"
+            title="Shutdown"
+            className={cn(
+              "flex items-center justify-center gap-1.5 rounded-[6px] border border-charcoal-grey text-storm-cloud hover:bg-warning-red/10 hover:border-warning-red/30 hover:text-warning-red transition-colors duration-100 text-[12px]",
+              collapsed ? "size-8" : "flex-1 h-7",
+            )}
           >
             <span className="material-symbols-outlined text-[14px]">power_settings_new</span>
-            Shutdown
+            {!collapsed && "Shutdown"}
           </button>
         </div>
       </aside>
@@ -271,4 +352,6 @@ export default function Sidebar({ onClose }) {
 
 Sidebar.propTypes = {
   onClose: PropTypes.func,
+  collapsed: PropTypes.bool,
+  onToggleCollapse: PropTypes.func,
 };

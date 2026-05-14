@@ -121,32 +121,17 @@ export default function Header({ onMenuClick, showMenuButton = true, sidebarColl
     <header className="shrink-0 flex items-center justify-between gap-3 px-4 h-11 border-b border-charcoal-grey bg-pitch-black z-20">
       {/* Left: sidebar toggles */}
       <div className="flex items-center gap-1 shrink-0">
-        {/* Mobile */}
-        <div className="lg:hidden">
-          {showMenuButton && (
+        {/* Mobile only */}
+        {showMenuButton && (
+          <div className="lg:hidden">
             <button
               onClick={onMenuClick}
               className="flex items-center justify-center size-7 rounded-[4px] text-storm-cloud hover:bg-deep-slate hover:text-porcelain transition-colors duration-100"
             >
               <span className="material-symbols-outlined text-[18px]">menu</span>
             </button>
-          )}
-        </div>
-        {/* Desktop */}
-        <div className="hidden lg:block">
-          {showMenuButton && (
-            <button
-              type="button"
-              onClick={onToggleSidebar}
-              className="flex items-center justify-center size-7 rounded-[4px] text-storm-cloud hover:bg-deep-slate hover:text-porcelain transition-colors duration-100"
-              aria-label={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
-            >
-              <span className="material-symbols-outlined text-[18px]">
-                {sidebarCollapsed ? "left_panel_open" : "left_panel_close"}
-              </span>
-            </button>
-          )}
-        </div>
+          </div>
+        )}
       </div>
 
       {/* Center: breadcrumbs / title */}

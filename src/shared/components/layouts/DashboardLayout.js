@@ -67,10 +67,8 @@ export default function DashboardLayout({ children }) {
       )}
 
       {/* Sidebar — Desktop */}
-      <div
-        className={cn("hidden lg:flex transition-all duration-200", sidebarCollapsed ? "w-0 overflow-hidden" : "w-60")}
-      >
-        <Sidebar />
+      <div className={cn("hidden lg:flex transition-all duration-200", sidebarCollapsed ? "w-14" : "w-60")}>
+        <Sidebar collapsed={sidebarCollapsed} onToggleCollapse={() => setSidebarCollapsed((v) => !v)} />
       </div>
 
       {/* Sidebar — Mobile */}
