@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import PropTypes from "prop-types";
+import { useTheme } from "@/shared/hooks/useTheme";
 
 function MenuItem({ icon, label, onClick, danger }) {
   return (
@@ -27,6 +28,7 @@ MenuItem.propTypes = {
 export default function HeaderMenu({ onLogout }) {
   const [isOpen, setIsOpen] = useState(false);
   const menuRef = useRef(null);
+  const { isDark, toggleTheme } = useTheme();
 
   useEffect(() => {
     const handleClickOutside = (e) => {
@@ -53,7 +55,16 @@ export default function HeaderMenu({ onLogout }) {
       </button>
 
       {isOpen && (
-        <div className="absolute right-0 top-full mt-1 w-44 bg-graphite border border-charcoal-grey rounded-[6px] shadow-[var(--shadow-xl)] z-50 fade-in overflow-hidden py-1">
+        <div className="absolute right-0 top-full mt-1 w-48 bg-graphite border border-charcoal-grey rounded-[6px] shadow-[var(--shadow-xl)] z-50 fade-in overflow-hidden py-1">
+          <MenuItem
+            icon={isDark ? "light_mode" : "dark_mode"}
+            label={isDark ? "Toggle Light Theme" : "Toggle Dark Theme"}
+            onClick={() => {
+              toggleTheme();
+              close();
+            }}
+          />
+          <div className="my-1 border-t border-charcoal-grey" />
           <MenuItem
             icon="logout"
             label="Logout"
