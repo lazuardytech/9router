@@ -325,7 +325,7 @@ export default function ProviderTopology({
           nodesConnectable={false}
           elementsSelectable={false}
         >
-          <Controls showInteractive={false} className="usage-flow-controls" />
+          <Controls showInteractive={false} className="usage-flow-controls text-black" />
         </ReactFlow>
       )}
     </div>
