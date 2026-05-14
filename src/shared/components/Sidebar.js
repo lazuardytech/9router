@@ -120,7 +120,11 @@ export default function Sidebar({ onClose, collapsed = false, onToggleCollapse }
         {/* App title + collapse button */}
         <div className="flex items-center h-11 px-3 border-b border-charcoal-grey shrink-0 gap-2">
           {!collapsed && (
-            <Link href="/dashboard" className="flex items-center gap-2.5 flex-1 min-w-0 group" onClick={onClose}>
+            <Link
+              href="/dashboard"
+              className="flex items-center gap-2.5 flex-1 min-w-0 group px-2 py-4"
+              onClick={onClose}
+            >
               <div className="flex items-center justify-center size-7 rounded-[6px] bg-porcelain shadow-[var(--shadow-sm)] shrink-0">
                 <span className="material-symbols-outlined text-pitch-black text-[16px]">hub</span>
               </div>

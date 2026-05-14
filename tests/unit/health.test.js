@@ -140,9 +140,7 @@ describe("GET /api/monitoring/health (integration)", () => {
         { id: "conn-2", provider: "anthropic", enabled: false },
         { id: "conn-3", provider: "gemini", enabled: true },
       ],
-      getCombos: async () => [
-        { id: "combo-1", name: "fallback-combo" },
-      ],
+      getCombos: async () => [{ id: "combo-1", name: "fallback-combo" }],
       getApiKeys: async () => [
         { id: "key-1", key: "sk-test" },
         { id: "key-2", key: "sk-test-2" },
@@ -367,7 +365,9 @@ describe("GET /api/monitoring/health — localDb partial failure", () => {
     }));
 
     vi.doMock("@/lib/localDb.js", () => ({
-      getProviderConnections: async () => { throw new Error("db locked"); },
+      getProviderConnections: async () => {
+        throw new Error("db locked");
+      },
       getCombos: async () => [],
       getApiKeys: async () => [],
       getSettings: async () => ({}),
