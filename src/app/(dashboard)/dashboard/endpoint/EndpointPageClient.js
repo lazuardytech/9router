@@ -1126,7 +1126,11 @@ export default function APIPageClient({ machineId }) {
 
                       {/* Created */}
                       <td className="px-3 py-2 border-r border-charcoal-grey/50 text-fog-grey font-mono text-[11px]">
-                        {new Date(key.createdAt).toLocaleDateString()}
+                        {new Date(key.createdAt).toLocaleDateString("en-US", {
+                          month: "short",
+                          day: "numeric",
+                          year: "numeric",
+                        })}
                       </td>
 
                       {/* Status */}
