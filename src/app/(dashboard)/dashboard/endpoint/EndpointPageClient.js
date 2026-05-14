@@ -1019,74 +1019,124 @@ export default function APIPageClient({ machineId }) {
             </Button>
           </div>
         ) : (
-          <div className="flex flex-col">
-            {keys.map((key) => (
-              <div
-                key={key.id}
-                className={`group flex items-center justify-between py-3 border-b border-black/[0.03] dark:border-white/[0.03] last:border-b-0 ${key.isActive === false ? "opacity-60" : ""}`}
-              >
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium">{key.name}</p>
-                  <div className="flex items-center gap-2 mt-1">
-                    <code className="text-xs text-text-muted font-mono">
-                      {visibleKeys.has(key.id) ? key.key : maskKey(key.key)}
-                    </code>
-                    <button
-                      onClick={() => toggleKeyVisibility(key.id)}
-                      className="p-1 hover:bg-black/5 dark:hover:bg-white/5 rounded text-text-muted hover:text-primary opacity-0 group-hover:opacity-100 transition-all"
-                      title={visibleKeys.has(key.id) ? "Hide key" : "Show key"}
+          <div className="rounded-[6px] border border-charcoal-grey overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse text-[12px]">
+                <thead>
+                  <tr className="border-b border-charcoal-grey bg-pitch-black/40">
+                    <th className="px-3 py-2 text-[10px] font-[590] uppercase tracking-[0.05em] text-fog-grey border-r border-charcoal-grey">
+                      Name
+                    </th>
+                    <th className="px-3 py-2 text-[10px] font-[590] uppercase tracking-[0.05em] text-fog-grey border-r border-charcoal-grey">
+                      Key
+                    </th>
+                    <th className="px-3 py-2 text-[10px] font-[590] uppercase tracking-[0.05em] text-fog-grey border-r border-charcoal-grey">
+                      Limit
+                    </th>
+                    <th className="px-3 py-2 text-[10px] font-[590] uppercase tracking-[0.05em] text-fog-grey border-r border-charcoal-grey">
+                      Created
+                    </th>
+                    <th className="px-3 py-2 text-[10px] font-[590] uppercase tracking-[0.05em] text-fog-grey border-r border-charcoal-grey">
+                      Status
+                    </th>
+                    <th className="px-3 py-2 text-[10px] font-[590] uppercase tracking-[0.05em] text-fog-grey">
+                      Actions
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {keys.map((key) => (
+                    <tr
+                      key={key.id}
+                      className={`group border-b border-charcoal-grey/50 last:border-0 hover:bg-deep-slate transition-colors duration-100 ${
+                        key.isActive === false ? "opacity-60" : ""
+                      }`}
                     >
-                      <span className="material-symbols-outlined text-[14px]">
-                        {visibleKeys.has(key.id) ? "visibility_off" : "visibility"}
-                      </span>
-                    </button>
-                    <button
-                      onClick={() => copy(key.key, key.id)}
-                      className="p-1 hover:bg-black/5 dark:hover:bg-white/5 rounded text-text-muted hover:text-primary opacity-0 group-hover:opacity-100 transition-all"
-                    >
-                      <span className="material-symbols-outlined text-[14px]">
-                        {copied === key.id ? "check" : "content_copy"}
-                      </span>
-                    </button>
-                  </div>
-                  <p className="text-xs text-text-muted mt-1">Created {new Date(key.createdAt).toLocaleDateString()}</p>
-                  {key.limitType === "limited" ? (
-                    <p className="text-xs text-blue-500 mt-1">
-                      Limited · {key.requestsPerMinute || 0} req/min · {key.concurrentRequests || 0} concurrent
-                    </p>
-                  ) : (
-                    <p className="text-xs text-emerald-500 mt-1">Unlimited</p>
-                  )}
-                  {key.isActive === false && <p className="text-xs text-orange-500 mt-1">Paused</p>}
-                </div>
-                <div className="flex items-center gap-2">
-                  <Toggle
-                    size="sm"
-                    checked={key.isActive ?? true}
-                    onChange={(checked) => {
-                      if (key.isActive && !checked) {
-                        if (
-                          confirm(
-                            `Pause API key "${key.name}"?\n\nThis key will stop working immediately but can be resumed later.`,
-                          )
-                        ) {
-                          handleToggleKey(key.id, checked);
-                        }
-                      } else {
-                        handleToggleKey(key.id, checked);
-                      }
-                    }}
-                    title={key.isActive ? "Pause key" : "Resume key"}
-                  />
-                  <button
-                    onClick={() => handleDeleteKey(key.id)}
-                    className="p-2 hover:bg-red-500/10 rounded text-red-500 opacity-0 group-hover:opacity-100 transition-all"
-                  >
-                    <span className="material-symbols-outlined text-[18px]">delete</span>
-                  </button>
-                </div>
-              </div>
-            ))}
+                      {/* Name */}
+                      <td className="px-3 py-2 border-r border-charcoal-grey/50">
+                        <span className="text-[13px] font-[510] text-porcelain tracking-[-0.12px]">{key.name}</span>
+                      </td>
+
+                      {/* Key */}
+                      <td className="px-3 py-2 border-r border-charcoal-grey/50">
+                        <div className="flex items-center gap-1.5">
+                          <code className="text-[11px] text-storm-cloud font-mono">
+                            {visibleKeys.has(key.id) ? key.key : maskKey(key.key)}
+                          </code>
+                          <button
+                            onClick={() => toggleKeyVisibility(key.id)}
+                            className="flex items-center justify-center size-5 rounded-[3px] text-fog-grey hover:text-porcelain hover:bg-charcoal-grey opacity-0 group-hover:opacity-100 transition-all duration-100"
+                            title={visibleKeys.has(key.id) ? "Hide key" : "Show key"}
+                          >
+                            <span className="material-symbols-outlined text-[12px]">
+                              {visibleKeys.has(key.id) ? "visibility_off" : "visibility"}
+                            </span>
+                          </button>
+                          <button
+                            onClick={() => copy(key.key, key.id)}
+                            className="flex items-center justify-center size-5 rounded-[3px] text-fog-grey hover:text-porcelain hover:bg-charcoal-grey opacity-0 group-hover:opacity-100 transition-all duration-100"
+                            title="Copy key"
+                          >
+                            <span className="material-symbols-outlined text-[12px]">
+                              {copied === key.id ? "check" : "content_copy"}
+                            </span>
+                          </button>
+                        </div>
+                      </td>
+
+                      {/* Limit */}
+                      <td className="px-3 py-2 border-r border-charcoal-grey/50">
+                        {key.limitType === "limited" ? (
+                          <span className="text-[11px] text-aether-blue">
+                            {key.requestsPerMinute || 0} req/min · {key.concurrentRequests || 0} concurrent
+                          </span>
+                        ) : (
+                          <span className="text-[11px] text-emerald">Unlimited</span>
+                        )}
+                      </td>
+
+                      {/* Created */}
+                      <td className="px-3 py-2 border-r border-charcoal-grey/50 text-fog-grey font-mono text-[11px]">
+                        {new Date(key.createdAt).toLocaleDateString()}
+                      </td>
+
+                      {/* Status */}
+                      <td className="px-3 py-2 border-r border-charcoal-grey/50">
+                        <Toggle
+                          size="sm"
+                          checked={key.isActive ?? true}
+                          onChange={(checked) => {
+                            if (key.isActive && !checked) {
+                              if (
+                                confirm(
+                                  `Pause API key "${key.name}"?\n\nThis key will stop working immediately but can be resumed later.`,
+                                )
+                              ) {
+                                handleToggleKey(key.id, checked);
+                              }
+                            } else {
+                              handleToggleKey(key.id, checked);
+                            }
+                          }}
+                          title={key.isActive ? "Pause key" : "Resume key"}
+                        />
+                      </td>
+
+                      {/* Actions */}
+                      <td className="px-3 py-2">
+                        <button
+                          onClick={() => handleDeleteKey(key.id)}
+                          className="flex items-center justify-center size-6 rounded-[4px] text-fog-grey hover:bg-warning-red/10 hover:text-warning-red opacity-0 group-hover:opacity-100 transition-all duration-100"
+                          title="Delete key"
+                        >
+                          <span className="material-symbols-outlined text-[14px]">delete</span>
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
         )}
       </Card>
