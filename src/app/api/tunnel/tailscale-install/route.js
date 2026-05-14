@@ -26,7 +26,7 @@ export async function POST(request) {
   const isBrew = platform === "darwin" && hasBrew();
   const needsPassword = !isWindows && !isBrew;
 
-  const sudoPassword = body.sudoPassword || getCachedPassword() || (await loadEncryptedPassword()) || "";
+  const sudoPassword = body.sudoPassword || "";
 
   if (needsPassword && !sudoPassword.trim()) {
     return new Response(JSON.stringify({ error: "Sudo password is required" }), {
