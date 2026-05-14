@@ -538,7 +538,7 @@ export default function UsageStats({ period: periodProp, setPeriod: setPeriodPro
           ? spinner
           : activeTableConfig && (
               <UsageTable
-                title=""
+                title="Usage Details"
                 columns={activeTableConfig.columns}
                 groupedData={activeTableConfig.groupedData}
                 tableType={tableView}
