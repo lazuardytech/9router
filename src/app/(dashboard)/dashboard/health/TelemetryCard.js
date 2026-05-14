@@ -94,10 +94,15 @@ export default function TelemetryCard() {
       setHealth(json);
       setLastUpdated(new Date());
       const mem = json.system?.memoryUsage?.rss ?? 0;
-      setSamples((prev) => [
-        ...prev.slice(Math.max(0, prev.length - MAX_SAMPLES + 1)),
-        { timestamp: Date.now(), memoryBytes: mem, heapUsed: json.system?.memoryUsage?.heapUsed ?? 0 },
-      ]);
+      const heap = json.system?.memoryUsage?.heapUsed ?? 0;
+      const newSample = { timestamp: Date.now(), memoryBytes: mem, heapUsed: heap };
+      setSamples((prev) => {
+        // Seed with 2 identical points on first load so sparkline renders immediately
+        if (prev.length === 0) {
+          return [{ ...newSample, timestamp: Date.now() - REFRESH_MS }, newSample];
+        }
+        return [...prev.slice(Math.max(0, prev.length - MAX_SAMPLES + 1)), newSample];
+      });
     } finally {
       setLoading(false);
     }
