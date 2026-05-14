@@ -34,13 +34,27 @@ COPY --from=builder /app/.next/standalone ./
 COPY --from=builder /app/open-sse ./open-sse
 COPY --from=builder /app/src/shared ./src/shared
 
+# Install tailscale (userspace mode, no systemd needed)
+RUN apk --no-cache upgrade && apk --no-cache add su-exec curl && \
+  curl -fsSL https://pkgs.tailscale.com/stable/tailscale_latest_amd64.tgz | tar -xz --strip-components=1 -C /usr/local/bin tailscale_*/tailscale tailscale_*/tailscaled 2>/dev/null || \
+  (ARCH=$(uname -m) && \
+   case "$ARCH" in \
+     x86_64) TS_ARCH=amd64 ;; \
+     aarch64|arm64) TS_ARCH=arm64 ;; \
+     armv7l) TS_ARCH=arm ;; \
+     *) TS_ARCH=amd64 ;; \
+   esac && \
+   TS_VERSION=$(curl -fsSL https://pkgs.tailscale.com/stable/ | grep -oP 'tailscale_\K[0-9]+\.[0-9]+\.[0-9]+' | head -1) && \
+   curl -fsSL "https://pkgs.tailscale.com/stable/tailscale_${TS_VERSION}_${TS_ARCH}.tgz" | \
+   tar -xz --strip-components=1 -C /usr/local/bin "tailscale_${TS_VERSION}_${TS_ARCH}/tailscale" "tailscale_${TS_VERSION}_${TS_ARCH}/tailscaled") && \
+  chmod +x /usr/local/bin/tailscale /usr/local/bin/tailscaled
+
 RUN mkdir -p /app/data && chown -R node:node /app && \
   mkdir -p /app/data-home && chown node:node /app/data-home && \
   ln -sf /app/data-home /root/.9router 2>/dev/null || true
 
 # Fix permissions at runtime (handles mounted volumes)
-RUN apk --no-cache upgrade && apk --no-cache add su-exec && \
-  printf '#!/bin/sh\nchown -R node:node /app/data /app/data-home 2>/dev/null\nexec su-exec node "$@"\n' > /entrypoint.sh && \
+RUN printf '#!/bin/sh\nchown -R node:node /app/data /app/data-home 2>/dev/null\n# Start tailscaled in userspace mode (background)\nmkdir -p /app/data/tailscale\ntailscaled --tun=userspace-networking --socket=/app/data/tailscale/tailscaled.sock --state=/app/data/tailscale/state &\nexec su-exec node "$@"\n' > /entrypoint.sh && \
   chmod +x /entrypoint.sh
 
 EXPOSE 20128
