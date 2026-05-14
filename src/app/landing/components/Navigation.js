@@ -7,101 +7,87 @@ export default function Navigation() {
   const router = useRouter();
 
   return (
-    <nav className="fixed top-0 z-50 w-full bg-[#181411]/80 backdrop-blur-md border-b border-[#3a2f27]">
-      <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
+    <nav className="fixed top-0 z-50 w-full bg-pitch-black/90 backdrop-blur-md border-b border-charcoal-grey">
+      <div className="max-w-6xl mx-auto px-6 h-12 flex items-center justify-between">
         {/* Logo */}
         <button
           type="button"
-          className="flex items-center gap-3 cursor-pointer bg-transparent border-none p-0"
+          className="flex items-center gap-2.5 cursor-pointer bg-transparent border-none p-0"
           onClick={() => router.push("/")}
           aria-label="Navigate to home"
         >
-          <div className="size-8 rounded bg-linear-to-br from-[#f97815] to-orange-700 flex items-center justify-center text-white">
-            <span className="material-symbols-outlined text-[20px]">hub</span>
+          <div className="size-7 rounded-[6px] bg-neon-lime flex items-center justify-center">
+            <span className="material-symbols-outlined text-pitch-black text-[16px]">hub</span>
           </div>
-          <h2 className="text-white text-xl font-bold tracking-tight">9Router</h2>
+          <span className="text-porcelain text-[14px] font-[510] tracking-[-0.13px]">9Router</span>
         </button>
 
-        {/* Desktop menu */}
-        <div className="hidden md:flex items-center gap-8">
-          <a className="text-gray-300 hover:text-white text-sm font-medium transition-colors" href="#features">
-            Features
-          </a>
-          <a className="text-gray-300 hover:text-white text-sm font-medium transition-colors" href="#how-it-works">
-            How it Works
-          </a>
-          <a
-            className="text-gray-300 hover:text-white text-sm font-medium transition-colors"
-            href="https://github.com/decolua/9router#readme"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Docs
-          </a>
-          <a
-            className="text-gray-300 hover:text-white text-sm font-medium transition-colors flex items-center gap-1"
-            href="https://github.com/decolua/9router"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            GitHub <span className="material-symbols-outlined text-[14px]">open_in_new</span>
-          </a>
+        {/* Desktop links */}
+        <div className="hidden md:flex items-center gap-6">
+          {[
+            { label: "Features", href: "#features" },
+            { label: "How it Works", href: "#how-it-works" },
+            { label: "Docs", href: "https://github.com/decolua/9router#readme", external: true },
+            { label: "GitHub", href: "https://github.com/decolua/9router", external: true },
+          ].map((item) => (
+            <a
+              key={item.label}
+              href={item.href}
+              target={item.external ? "_blank" : undefined}
+              rel={item.external ? "noopener noreferrer" : undefined}
+              className="text-[13px] text-storm-cloud hover:text-porcelain transition-colors duration-100 tracking-[-0.12px]"
+            >
+              {item.label}
+            </a>
+          ))}
         </div>
 
-        {/* CTA + Mobile menu */}
-        <div className="flex items-center gap-4">
+        {/* CTA + mobile toggle */}
+        <div className="flex items-center gap-2">
           <button
             onClick={() => router.push("/dashboard")}
-            className="hidden sm:flex h-9 items-center justify-center rounded-lg px-4 bg-[#f97815] hover:bg-[#e0650a] transition-all text-[#181411] text-sm font-bold shadow-[0_0_15px_rgba(249,120,21,0.4)] hover:shadow-[0_0_20px_rgba(249,120,21,0.6)]"
+            className="hidden sm:flex h-7 items-center justify-center rounded-[6px] px-3 bg-neon-lime hover:bg-[#d4e010] text-pitch-black text-[12px] font-[590] transition-colors duration-100"
           >
-            Get Started
+            Open Dashboard
           </button>
-          <button className="md:hidden text-white" onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
-            <span className="material-symbols-outlined">{mobileMenuOpen ? "close" : "menu"}</span>
+          <button
+            className="md:hidden flex items-center justify-center size-7 rounded-[4px] text-storm-cloud hover:bg-deep-slate hover:text-porcelain transition-colors"
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+          >
+            <span className="material-symbols-outlined text-[18px]">{mobileMenuOpen ? "close" : "menu"}</span>
           </button>
         </div>
       </div>
 
-      {/* Mobile menu dropdown */}
+      {/* Mobile dropdown */}
       {mobileMenuOpen && (
-        <div className="md:hidden border-t border-[#3a2f27] bg-[#181411]/95 backdrop-blur-md">
-          <div className="flex flex-col gap-4 p-6">
-            <a
-              className="text-gray-300 hover:text-white text-sm font-medium transition-colors"
-              href="#features"
-              onClick={() => setMobileMenuOpen(false)}
-            >
-              Features
-            </a>
-            <a
-              className="text-gray-300 hover:text-white text-sm font-medium transition-colors"
-              href="#how-it-works"
-              onClick={() => setMobileMenuOpen(false)}
-            >
-              How it Works
-            </a>
-            <a
-              className="text-gray-300 hover:text-white text-sm font-medium transition-colors"
-              href="https://github.com/decolua/9router#readme"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Docs
-            </a>
-            <a
-              className="text-gray-300 hover:text-white text-sm font-medium transition-colors"
-              href="https://github.com/decolua/9router"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              GitHub
-            </a>
-            <button
-              onClick={() => router.push("/dashboard")}
-              className="h-9 rounded-lg bg-[#f97815] hover:bg-[#e0650a] text-[#181411] text-sm font-bold"
-            >
-              Get Started
-            </button>
+        <div className="md:hidden border-t border-charcoal-grey bg-graphite">
+          <div className="flex flex-col py-2">
+            {[
+              { label: "Features", href: "#features" },
+              { label: "How it Works", href: "#how-it-works" },
+              { label: "Docs", href: "https://github.com/decolua/9router#readme", external: true },
+              { label: "GitHub", href: "https://github.com/decolua/9router", external: true },
+            ].map((item) => (
+              <a
+                key={item.label}
+                href={item.href}
+                target={item.external ? "_blank" : undefined}
+                rel={item.external ? "noopener noreferrer" : undefined}
+                className="px-6 py-2.5 text-[13px] text-storm-cloud hover:text-porcelain hover:bg-deep-slate transition-colors"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                {item.label}
+              </a>
+            ))}
+            <div className="px-6 pt-2 pb-3">
+              <button
+                onClick={() => router.push("/dashboard")}
+                className="w-full h-8 rounded-[6px] bg-neon-lime text-pitch-black text-[13px] font-[590] transition-colors hover:bg-[#d4e010]"
+              >
+                Open Dashboard
+              </button>
+            </div>
           </div>
         </div>
       )}

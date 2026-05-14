@@ -7,12 +7,9 @@ import { usePathname } from "next/navigation";
 import { cn } from "@/shared/utils/cn";
 import { APP_CONFIG } from "@/shared/constants/config";
 import { MEDIA_PROVIDER_KINDS } from "@/shared/constants/providers";
-import Button from "./Button";
 import { ConfirmModal } from "./Modal";
 
-// const VISIBLE_MEDIA_KINDS = ["embedding", "image", "imageToText", "tts", "stt", "webSearch", "webFetch", "video", "music"];
 const VISIBLE_MEDIA_KINDS = ["embedding", "image", "tts", "stt"];
-// Combined entry: webSearch + webFetch share one page at /dashboard/media-providers/web
 const COMBINED_WEB_ITEM = {
   id: "web",
   label: "Web Fetch & Search",
@@ -39,6 +36,38 @@ const systemItems = [
   { href: "/dashboard/proxy-pools", label: "Proxy Pools", icon: "lan" },
   { href: "/dashboard/profile", label: "Settings", icon: "settings" },
 ];
+
+function NavSection({ label, children }) {
+  return (
+    <div className="pt-4 first:pt-0">
+      <p className="px-3 mb-1 text-[10px] font-[590] text-fog-grey uppercase tracking-[0.06em]">{label}</p>
+      <div className="space-y-0.5">{children}</div>
+    </div>
+  );
+}
+
+function NavItem({ href, label, icon, active, onClick }) {
+  return (
+    <Link
+      href={href}
+      onClick={onClick}
+      className={cn(
+        "flex items-center gap-2.5 px-3 py-1.5 rounded-[2px] transition-colors duration-100 group",
+        active ? "bg-neon-lime/8 text-neon-lime" : "text-storm-cloud hover:bg-deep-slate hover:text-porcelain",
+      )}
+    >
+      <span
+        className={cn(
+          "material-symbols-outlined text-[15px] shrink-0",
+          active ? "text-neon-lime" : "text-fog-grey group-hover:text-storm-cloud",
+        )}
+      >
+        {icon}
+      </span>
+      <span className="text-[13px] font-[400] tracking-[-0.12px] truncate">{label}</span>
+    </Link>
+  );
+}
 
 export default function Sidebar({ onClose }) {
   const pathname = usePathname();
@@ -73,172 +102,166 @@ export default function Sidebar({ onClose }) {
     setTimeout(() => globalThis.location.reload(), 3000);
   };
 
-  const renderNavLink = (item, className = "px-3 py-1", iconClassName = "text-[18px]", labelClassName = "text-[13px]") => (
-    <Link
-      key={item.href}
-      href={item.href}
-      onClick={onClose}
-      className={cn(
-        `flex items-center gap-3 ${className} rounded-lg transition-all group`,
-        isActive(item.href) ? "bg-primary/10 text-primary" : "text-text-muted hover:bg-surface-2 hover:text-text-main",
-      )}
-    >
-      <span
-        className={cn(
-          `material-symbols-outlined ${iconClassName}`,
-          isActive(item.href) ? "fill-1" : "group-hover:text-primary transition-colors",
-        )}
-      >
-        {item.icon}
-      </span>
-      <span className={`${labelClassName} font-medium`}>{item.label}</span>
-    </Link>
-  );
-
   return (
     <>
-      <aside className="flex w-72 flex-col border-r border-border-subtle bg-vibrancy backdrop-blur-xl transition-colors duration-300 min-h-full">
+      <aside className="flex w-60 flex-col border-r border-charcoal-grey bg-graphite min-h-full">
         {/* Logo */}
-        <div className="px-6 py-4 flex flex-col gap-2">
-          <Link href="/dashboard" className="flex items-center gap-3">
-            <div className="flex items-center justify-center size-9 rounded-[10px] bg-gradient-to-br from-brand-500 to-brand-700 shadow-[var(--shadow-warm)]">
-              <span className="material-symbols-outlined text-white text-[20px]">hub</span>
+        <div className="px-4 py-3 border-b border-charcoal-grey">
+          <Link href="/dashboard" className="flex items-center gap-2.5 group" onClick={onClose}>
+            <div className="flex items-center justify-center size-7 rounded-[6px] bg-neon-lime shadow-[var(--shadow-sm)]">
+              <span className="material-symbols-outlined text-pitch-black text-[16px]">hub</span>
             </div>
             <div className="flex flex-col">
-              <h1 className="text-lg font-semibold tracking-tight text-text-main">{APP_CONFIG.name}</h1>
-              <span className="text-xs text-text-muted">v{APP_CONFIG.displayVersion}</span>
+              <span className="text-[13px] font-[510] text-porcelain tracking-[-0.12px] leading-none">
+                {APP_CONFIG.name}
+              </span>
+              <span className="text-[10px] text-fog-grey leading-none mt-0.5">v{APP_CONFIG.displayVersion}</span>
             </div>
           </Link>
         </div>
 
         {/* Navigation */}
-        <nav className="flex-1 px-4 py-2 space-y-0.5 overflow-y-auto custom-scrollbar">
-          <div className="space-y-0.5">
-            <p className="px-4 text-xs font-semibold text-text-muted/60 uppercase tracking-wider mb-2">API</p>
-            {renderNavLink(apiItems[0])}
-            {renderNavLink(apiItems[1])}
+        <nav className="flex-1 px-2 py-3 overflow-y-auto custom-scrollbar space-y-0">
+          <NavSection label="API">
+            <NavItem {...apiItems[0]} active={isActive(apiItems[0].href)} onClick={onClose} />
+            <NavItem {...apiItems[1]} active={isActive(apiItems[1].href)} onClick={onClose} />
 
             {/* Media Providers accordion */}
             <button
               onClick={() => setMediaOpen((v) => !v)}
               className={cn(
-                "w-full flex items-center gap-3 px-3 py-1 rounded-lg transition-all group",
+                "w-full flex items-center gap-2.5 px-3 py-1.5 rounded-[2px] transition-colors duration-100 group",
                 pathname.startsWith("/dashboard/media-providers")
-                  ? "bg-primary/10 text-primary"
-                  : "text-text-muted hover:bg-surface-2 hover:text-text-main",
+                  ? "bg-neon-lime/8 text-neon-lime"
+                  : "text-storm-cloud hover:bg-deep-slate hover:text-porcelain",
               )}
             >
-              <span className="material-symbols-outlined text-[18px]">perm_media</span>
-              <span className="text-[13px] font-medium flex-1 text-left">Media Providers</span>
               <span
-                className="material-symbols-outlined text-[14px] transition-transform"
+                className={cn(
+                  "material-symbols-outlined text-[15px] shrink-0",
+                  pathname.startsWith("/dashboard/media-providers")
+                    ? "text-neon-lime"
+                    : "text-fog-grey group-hover:text-storm-cloud",
+                )}
+              >
+                perm_media
+              </span>
+              <span className="text-[13px] font-[400] tracking-[-0.12px] flex-1 text-left truncate">
+                Media Providers
+              </span>
+              <span
+                className="material-symbols-outlined text-[13px] text-fog-grey transition-transform duration-150"
                 style={{ transform: mediaOpen ? "rotate(180deg)" : "rotate(0deg)" }}
               >
                 expand_more
               </span>
             </button>
+
             {mediaOpen && (
-              <div className="pl-4">
+              <div className="pl-3 space-y-0.5">
                 {MEDIA_PROVIDER_KINDS.filter((k) => VISIBLE_MEDIA_KINDS.includes(k.id)).map((kind) => (
                   <Link
                     key={kind.id}
                     href={`/dashboard/media-providers/${kind.id}`}
                     onClick={onClose}
                     className={cn(
-                      "flex items-center gap-3 px-4 py-1 rounded-lg transition-all group",
+                      "flex items-center gap-2 px-3 py-1.5 rounded-[2px] transition-colors duration-100",
                       pathname.startsWith(`/dashboard/media-providers/${kind.id}`)
-                        ? "bg-primary/10 text-primary"
-                        : "text-text-muted hover:bg-surface-2 hover:text-text-main",
+                        ? "text-neon-lime"
+                        : "text-fog-grey hover:bg-deep-slate hover:text-storm-cloud",
                     )}
                   >
-                    <span className="material-symbols-outlined text-[16px]">{kind.icon}</span>
-                    <span className="text-sm">{kind.label}</span>
+                    <span className="material-symbols-outlined text-[13px]">{kind.icon}</span>
+                    <span className="text-[12px] tracking-[-0.1px]">{kind.label}</span>
                   </Link>
                 ))}
                 <Link
-                  key={COMBINED_WEB_ITEM.id}
                   href={COMBINED_WEB_ITEM.href}
                   onClick={onClose}
                   className={cn(
-                    "flex items-center gap-3 px-4 py-1 rounded-lg transition-all group",
+                    "flex items-center gap-2 px-3 py-1.5 rounded-[2px] transition-colors duration-100",
                     pathname.startsWith(COMBINED_WEB_ITEM.href)
-                      ? "bg-primary/10 text-primary"
-                      : "text-text-muted hover:bg-surface-2 hover:text-text-main",
+                      ? "text-neon-lime"
+                      : "text-fog-grey hover:bg-deep-slate hover:text-storm-cloud",
                   )}
                 >
-                  <span className="material-symbols-outlined text-[16px]">{COMBINED_WEB_ITEM.icon}</span>
-                  <span className="text-sm">{COMBINED_WEB_ITEM.label}</span>
+                  <span className="material-symbols-outlined text-[13px]">{COMBINED_WEB_ITEM.icon}</span>
+                  <span className="text-[12px] tracking-[-0.1px]">{COMBINED_WEB_ITEM.label}</span>
                 </Link>
               </div>
             )}
 
-            {renderNavLink(apiItems[2])}
-            {renderNavLink(apiItems[3])}
-            {renderNavLink(apiItems[4])}
-          </div>
+            {apiItems.slice(2).map((item) => (
+              <NavItem key={item.href} {...item} active={isActive(item.href)} onClick={onClose} />
+            ))}
+          </NavSection>
 
-          <div className="pt-3 mt-2 space-y-0.5">
-            <p className="px-4 text-xs font-semibold text-text-muted/60 uppercase tracking-wider mb-2">Analytics</p>
-            {analyticsItems.map((item) => renderNavLink(item))}
-          </div>
+          <NavSection label="Analytics">
+            {analyticsItems.map((item) => (
+              <NavItem key={item.href} {...item} active={isActive(item.href)} onClick={onClose} />
+            ))}
+          </NavSection>
 
-          <div className="pt-3 mt-2 space-y-0.5">
-            <p className="px-4 text-xs font-semibold text-text-muted/60 uppercase tracking-wider mb-2">System</p>
-            {renderNavLink(systemItems[0])}
-            {debugItems.map((item) => renderNavLink(item))}
-            {renderNavLink(systemItems[1])}
-          </div>
+          <NavSection label="System">
+            {systemItems.map((item) => (
+              <NavItem key={item.href} {...item} active={isActive(item.href)} onClick={onClose} />
+            ))}
+            {debugItems.map((item) => (
+              <NavItem key={item.href} {...item} active={isActive(item.href)} onClick={onClose} />
+            ))}
+          </NavSection>
         </nav>
 
-        {/* Footer section */}
-        <div className="grid grid-cols-2 gap-2 p-3 border-t border-border-subtle">
-          <Button
-            variant="outline"
-            fullWidth
-            icon="restart_alt"
+        {/* Footer actions */}
+        <div className="flex items-center gap-1.5 p-2 border-t border-charcoal-grey">
+          <button
             onClick={handleRestart}
-            loading={isRestarting}
-            className="text-yellow-500 border-yellow-300 hover:bg-yellow-50 hover:border-yellow-400"
+            disabled={isRestarting}
+            className="flex-1 flex items-center justify-center gap-1.5 h-7 rounded-[6px] border border-charcoal-grey text-storm-cloud hover:bg-deep-slate hover:text-porcelain disabled:opacity-40 transition-colors duration-100 text-[12px]"
           >
+            {isRestarting ? (
+              <span className="material-symbols-outlined text-[14px] animate-spin">progress_activity</span>
+            ) : (
+              <span className="material-symbols-outlined text-[14px]">restart_alt</span>
+            )}
             Restart
-          </Button>
-          <Button
-            variant="outline"
-            fullWidth
-            icon="power_settings_new"
+          </button>
+          <button
             onClick={() => setShowShutdownModal(true)}
-            className="text-red-500 border-red-200 hover:bg-red-50 hover:border-red-300"
+            className="flex-1 flex items-center justify-center gap-1.5 h-7 rounded-[6px] border border-charcoal-grey text-storm-cloud hover:bg-warning-red/10 hover:border-warning-red/30 hover:text-warning-red transition-colors duration-100 text-[12px]"
           >
+            <span className="material-symbols-outlined text-[14px]">power_settings_new</span>
             Shutdown
-          </Button>
+          </button>
         </div>
       </aside>
 
-      {/* Shutdown Confirmation Modal */}
       <ConfirmModal
         isOpen={showShutdownModal}
         onClose={() => setShowShutdownModal(false)}
         onConfirm={handleShutdown}
-        title="Close Proxy"
-        message="Are you sure you want to close the proxy server?"
-        confirmText="Close"
+        title="Shutdown Server"
+        message="Are you sure you want to stop the proxy server?"
+        confirmText="Shutdown"
         cancelText="Cancel"
         variant="danger"
         loading={isShuttingDown}
       />
 
-      {/* Disconnected Overlay */}
       {isDisconnected && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-6">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-pitch-black/90 backdrop-blur-sm p-6">
           <div className="text-center p-8">
-            <div className="flex items-center justify-center size-16 rounded-full bg-red-500/20 text-red-500 mx-auto mb-4">
-              <span className="material-symbols-outlined text-[32px]">power_off</span>
+            <div className="flex items-center justify-center size-12 rounded-full bg-warning-red/10 text-warning-red mx-auto mb-4">
+              <span className="material-symbols-outlined text-[24px]">power_off</span>
             </div>
-            <h2 className="text-xl font-semibold text-white mb-2">Server Disconnected</h2>
-            <p className="text-text-muted mb-6">The proxy server has been stopped.</p>
-            <Button variant="secondary" onClick={() => globalThis.location.reload()}>
+            <h2 className="text-[15px] font-[510] text-porcelain mb-1.5 tracking-[-0.13px]">Server Disconnected</h2>
+            <p className="text-[13px] text-storm-cloud mb-5">The proxy server has been stopped.</p>
+            <button
+              onClick={() => globalThis.location.reload()}
+              className="h-8 px-4 rounded-[6px] bg-gunmetal border border-charcoal-grey text-[13px] text-porcelain hover:bg-deep-slate transition-colors duration-100"
+            >
               Reload Page
-            </Button>
+            </button>
           </div>
         </div>
       )}

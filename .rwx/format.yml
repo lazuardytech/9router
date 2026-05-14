@@ -19,26 +19,27 @@ tasks:
       ref: ${{ init.commit-sha }}
       github-token: ${{ github.token }}
 
-  - key: node
+  - key: bun
     call: nodejs/install 1.1.14
     with:
       node-version: 22.14.0
 
-  - key: pnpm-install
-    use: [code, node]
+  - key: bun-install
+    use: [code, bun]
     run: |
-      corepack enable
-      corepack prepare pnpm@10 --activate
-      pnpm install --no-frozen-lockfile
+      curl -fsSL https://bun.sh/install | bash
+      export PATH="$HOME/.bun/bin:$PATH"
+      bun install --frozen-lockfile
     filter:
       - package.json
-      - pnpm-lock.yaml
+      - bun.lock
 
   - key: run-fe-lint
-    use: [pnpm-install]
+    use: [bun-install]
     run: |
+      export PATH="$HOME/.bun/bin:$PATH"
       echo "Running ESLint..."
-      pnpm exec eslint .
+      bun x eslint .
     timeout: 5m
 
   - key: results

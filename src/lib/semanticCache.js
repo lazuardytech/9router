@@ -262,4 +262,3 @@ export function isCacheableForWrite(body, headers) {
   if (body?.temperature !== 0) return false;
   return true;
 }
-

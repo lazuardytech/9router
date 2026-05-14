@@ -1,22 +1,21 @@
 # syntax=docker/dockerfile:1.7
-ARG NODE_IMAGE=node:22-alpine
-FROM ${NODE_IMAGE} AS base
+ARG BUN_IMAGE=oven/bun:1.3.14-alpine
+FROM ${BUN_IMAGE} AS base
 WORKDIR /app
 
 FROM base AS builder
 
 RUN apk --no-cache upgrade && apk --no-cache add python3 make g++ linux-headers
 
-COPY package.json pnpm-lock.yaml .npmrc ./
-RUN --mount=type=cache,target=/root/.local/share/pnpm/store \
-  corepack enable && corepack prepare pnpm@10 --activate && \
-  pnpm config set dangerouslyAllowAllBuilds true && pnpm install --frozen-lockfile
+COPY package.json bun.lock ./
+RUN --mount=type=cache,target=/root/.bun/install/cache \
+  bun install --frozen-lockfile
 
 COPY . ./
 ENV NEXT_TELEMETRY_DISABLED=1
-RUN pnpm run build
+RUN bun run build
 
-FROM ${NODE_IMAGE} AS runner
+FROM ${BUN_IMAGE} AS runner
 WORKDIR /app
 
 LABEL org.opencontainers.image.title="9router"

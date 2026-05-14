@@ -233,10 +233,7 @@ export async function handleChatCore({
     }
   }
 
-  if (
-    memoryOwnerId &&
-    shouldInjectMemory(body, { enabled: memorySettings.enabled && memorySettings.maxTokens > 0 })
-  ) {
+  if (memoryOwnerId && shouldInjectMemory(body, { enabled: memorySettings.enabled && memorySettings.maxTokens > 0 })) {
     try {
       const memoryQuery = extractMemoryTextFromRequestBody(body);
       const memories = await retrieveMemories(memoryOwnerId, {

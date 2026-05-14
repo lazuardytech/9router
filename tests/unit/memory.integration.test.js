@@ -71,10 +71,7 @@ describe("memory integration", () => {
       model: "test-model",
       messages: [{ role: "user", content: "hello" }],
     };
-    const memories = [
-      { content: "User likes concise answers" },
-      { content: "User uses pnpm" },
-    ];
+    const memories = [{ content: "User likes concise answers" }, { content: "User uses pnpm" }];
 
     const injected = injectMemory(request, memories, "openai");
     expect(injected.messages[0].role).toBe("system");

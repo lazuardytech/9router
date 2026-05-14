@@ -1,8 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Card, Button, Input } from "@/shared/components";
 import { useRouter } from "next/navigation";
+import { Card, Button, Input } from "@/shared/components";
 
 export default function LoginPage() {
   const [password, setPassword] = useState("");
@@ -16,13 +16,9 @@ export default function LoginPage() {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 5000);
       const baseUrl = typeof window !== "undefined" ? window.location.origin : "";
-
       try {
-        const res = await fetch(`${baseUrl}/api/settings`, {
-          signal: controller.signal,
-        });
+        const res = await fetch(`${baseUrl}/api/settings`, { signal: controller.signal });
         clearTimeout(timeoutId);
-
         if (res.ok) {
           const data = await res.json();
           if (data.requireLogin === false) {
@@ -32,10 +28,9 @@ export default function LoginPage() {
           }
           setHasPassword(!!data.hasPassword);
         } else {
-          // Safe fallback on non-OK response to avoid infinite loading state.
           setHasPassword(true);
         }
-      } catch (err) {
+      } catch {
         clearTimeout(timeoutId);
         setHasPassword(true);
       }
@@ -47,14 +42,12 @@ export default function LoginPage() {
     e.preventDefault();
     setLoading(true);
     setError("");
-
     try {
       const res = await fetch("/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ password }),
       });
-
       if (res.ok) {
         router.push("/dashboard");
         router.refresh();
@@ -62,56 +55,58 @@ export default function LoginPage() {
         const data = await res.json();
         setError(data.error || "Invalid password");
       }
-    } catch (err) {
+    } catch {
       setError("An error occurred. Please try again.");
     } finally {
       setLoading(false);
     }
   };
 
-  // Show loading state while checking password
   if (hasPassword === null) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-bg p-4">
-        <div className="text-center">
-          <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-          <p className="text-text-muted mt-4">Loading...</p>
-        </div>
+      <div className="min-h-screen flex items-center justify-center bg-pitch-black">
+        <span className="material-symbols-outlined animate-spin text-storm-cloud text-[28px]">progress_activity</span>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-bg p-4 relative overflow-hidden">
-      {/* Faint grid background */}
-      <div className="landing-grid absolute inset-0 pointer-events-none" aria-hidden="true" />
-      <div className="relative z-10 w-full max-w-md">
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-primary mb-2">9Router</h1>
-          <p className="text-text-muted">Enter your password to access the dashboard</p>
+    <div className="min-h-screen flex items-center justify-center bg-pitch-black p-4 relative overflow-hidden">
+      {/* Background glow */}
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-neon-lime/3 rounded-full blur-[120px] pointer-events-none" />
+
+      <div className="relative z-10 w-full max-w-sm">
+        {/* Logo */}
+        <div className="flex flex-col items-center mb-8">
+          <div className="flex items-center justify-center size-10 rounded-[6px] bg-neon-lime shadow-[var(--shadow-sm)] mb-4">
+            <span className="material-symbols-outlined text-pitch-black text-[22px]">hub</span>
+          </div>
+          <h1 className="text-[20px] font-[510] text-porcelain tracking-[-0.22px]">9Router</h1>
+          <p className="text-[13px] text-storm-cloud mt-1 tracking-[-0.12px]">Enter your password to continue</p>
         </div>
 
-        <Card>
-          <form onSubmit={handleLogin} className="flex flex-col gap-4">
-            <div className="flex flex-col gap-2">
-              <label className="text-sm font-medium">Password</label>
-              <Input
-                type="password"
-                placeholder="Enter password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                autoFocus
-              />
-              {error && <p className="text-xs text-red-500">{error}</p>}
-            </div>
+        {/* Card */}
+        <Card padding="sm" elev>
+          <form onSubmit={handleLogin} className="flex flex-col gap-3">
+            <Input
+              type="password"
+              label="Password"
+              placeholder="Enter password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              error={error}
+              required
+              autoFocus
+              icon="lock"
+            />
 
-            <Button type="submit" variant="primary" className="w-full" loading={loading}>
-              Login
+            <Button type="submit" variant="primary" fullWidth loading={loading} size="md">
+              Sign in
             </Button>
 
-            <p className="text-xs text-center text-text-muted mt-2">
-              Default password is <code className="bg-sidebar px-1 rounded">123456</code>
+            <p className="text-[11px] text-center text-fog-grey mt-1">
+              Default password is{" "}
+              <code className="bg-gunmetal px-1.5 py-0.5 rounded-[4px] text-storm-cloud font-mono">123456</code>
             </p>
           </form>
         </Card>

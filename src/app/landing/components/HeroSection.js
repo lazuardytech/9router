@@ -2,42 +2,49 @@
 
 export default function HeroSection() {
   return (
-    <section className="relative pt-32 pb-20 px-6 min-h-[90vh] flex flex-col items-center justify-center overflow-hidden">
-      {/* Glow effect */}
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[1000px] h-[500px] bg-[#f97815]/10 rounded-full blur-[120px] pointer-events-none"></div>
+    <section className="relative pt-28 pb-20 px-6 min-h-[90vh] flex flex-col items-center justify-center overflow-hidden">
+      {/* Background glow */}
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[400px] bg-neon-lime/4 rounded-full blur-[120px] pointer-events-none" />
+      <div className="absolute bottom-0 right-1/4 w-[400px] h-[400px] bg-aether-blue/4 rounded-full blur-[100px] pointer-events-none" />
 
-      <div className="relative z-10 max-w-4xl w-full text-center flex flex-col items-center gap-8">
-        {/* Version badge */}
-        <div className="inline-flex items-center gap-2 rounded-full border border-[#3a2f27] bg-[#23180f]/50 px-3 py-1 text-xs font-medium text-[#f97815]">
-          <span className="flex h-2 w-2 rounded-full bg-[#f97815] animate-pulse"></span>
-          v1.0 is now live
+      {/* Grid overlay */}
+      <div className="landing-grid absolute inset-0 pointer-events-none" aria-hidden="true" />
+
+      <div className="relative z-10 max-w-3xl w-full text-center flex flex-col items-center gap-6">
+        {/* Badge */}
+        <div className="inline-flex items-center gap-2 rounded-full border border-charcoal-grey bg-graphite px-3 py-1">
+          <span className="size-1.5 rounded-full bg-neon-lime animate-pulse" />
+          <span className="text-[11px] text-storm-cloud tracking-[-0.1px]">v1.0 is now live</span>
         </div>
 
-        {/* Main heading */}
-        <h1 className="text-5xl md:text-7xl font-black leading-[1.1] tracking-tight">
+        {/* Heading */}
+        <h1 className="text-[48px] md:text-[64px] font-[590] leading-[1.1] tracking-[-0.22px] text-porcelain">
           One Endpoint for <br />
-          <span className="text-[#f97815]">All AI Providers</span>
+          <span className="text-neon-lime">All AI Providers</span>
         </h1>
 
         {/* Description */}
-        <p className="text-lg md:text-xl text-gray-400 max-w-2xl mx-auto font-light">
-          AI endpoint proxy with web dashboard - A JavaScript port of CLIProxyAPI. Works seamlessly with Claude Code,
-          OpenAI Codex, Cline, RooCode, and other CLI tools.
+        <p className="text-[15px] text-storm-cloud max-w-xl leading-[1.6] tracking-[-0.13px]">
+          AI endpoint proxy with web dashboard. Works seamlessly with Claude Code, OpenAI Codex, Cline, RooCode, and
+          other CLI tools.
         </p>
 
-        {/* CTA Buttons */}
-        <div className="flex flex-wrap items-center justify-center gap-4 w-full">
-          <button className="h-12 px-8 rounded-lg bg-[#f97815] hover:bg-[#e0650a] text-[#181411] text-base font-bold transition-all shadow-[0_0_15px_rgba(249,120,21,0.4)] flex items-center gap-2">
-            <span className="material-symbols-outlined">rocket_launch</span>
+        {/* CTAs */}
+        <div className="flex flex-wrap items-center justify-center gap-3 mt-2">
+          <a
+            href="/dashboard"
+            className="inline-flex items-center gap-2 h-9 px-5 rounded-[6px] bg-neon-lime hover:bg-[#d4e010] text-pitch-black text-[13px] font-[590] transition-colors duration-100 shadow-[var(--shadow-sm)]"
+          >
+            <span className="material-symbols-outlined text-[16px]">rocket_launch</span>
             Get Started
-          </button>
+          </a>
           <a
             href="https://github.com/decolua/9router"
             target="_blank"
             rel="noopener noreferrer"
-            className="h-12 px-8 rounded-lg border border-[#3a2f27] bg-[#23180f] hover:bg-[#3a2f27] text-white text-base font-bold transition-all flex items-center gap-2"
+            className="inline-flex items-center gap-2 h-9 px-5 rounded-[6px] border border-charcoal-grey bg-graphite hover:bg-deep-slate text-porcelain text-[13px] font-[400] transition-colors duration-100"
           >
-            <span className="material-symbols-outlined">code</span>
+            <span className="material-symbols-outlined text-[16px]">code</span>
             View on GitHub
           </a>
         </div>

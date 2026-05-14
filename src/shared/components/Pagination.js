@@ -11,110 +11,106 @@ export default function Pagination({ currentPage, pageSize, totalItems, onPageCh
   const getPageNumbers = () => {
     const pages = [];
     const showMax = 5;
-
     let start = Math.max(1, currentPage - 2);
     let end = Math.min(totalPages, start + showMax - 1);
-
-    if (end - start + 1 < showMax) {
-      start = Math.max(1, end - showMax + 1);
-    }
-
-    for (let i = start; i <= end; i++) {
-      pages.push(i);
-    }
+    if (end - start + 1 < showMax) start = Math.max(1, end - showMax + 1);
+    for (let i = start; i <= end; i++) pages.push(i);
     return pages;
   };
 
   const pageNumbers = getPageNumbers();
 
   return (
-    <div className={cn("flex flex-col sm:flex-row items-center justify-between gap-4 py-4", className)}>
-      {/* Info text */}
+    <div className={cn("flex flex-col sm:flex-row items-center justify-between gap-3 py-3", className)}>
+      {/* Info */}
       {totalItems > 0 && (
-        <div className="text-sm text-text-muted">
-          Showing <span className="font-medium text-text-main">{startItem}</span> to{" "}
-          <span className="font-medium text-text-main">{endItem}</span> of{" "}
-          <span className="font-medium text-text-main">{totalItems}</span> results
-        </div>
+        <p className="text-[12px] text-fog-grey tracking-[-0.1px]">
+          <span className="text-storm-cloud">
+            {startItem}–{endItem}
+          </span>{" "}
+          of <span className="text-storm-cloud">{totalItems}</span>
+        </p>
       )}
 
-      <div className="flex items-center gap-4">
-        {/* Page size selector */}
+      <div className="flex items-center gap-3">
+        {/* Page size */}
         {onPageSizeChange && (
           <div className="flex items-center gap-2">
-            <span className="text-sm text-text-muted">Rows:</span>
+            <span className="text-[12px] text-fog-grey">Rows</span>
             <select
               value={pageSize}
               onChange={(e) => onPageSizeChange(Number(e.target.value))}
-              className={cn(
-                "h-9 rounded-lg border border-black/10 dark:border-white/10 bg-surface",
-                "text-sm text-text-main focus:outline-none focus:ring-2 focus:ring-primary/20",
-                "cursor-pointer",
-              )}
-              style={{ colorScheme: "auto" }}
+              className="h-7 px-2 rounded-[6px] border border-charcoal-grey bg-gunmetal text-[12px] text-porcelain focus:outline-none focus:border-neon-lime/50 cursor-pointer"
+              style={{ colorScheme: "dark" }}
             >
-              {[10, 20, 50].map((size) => (
-                <option key={size} value={size}>
-                  {size}
+              {[10, 20, 50].map((s) => (
+                <option key={s} value={s} className="bg-graphite">
+                  {s}
                 </option>
               ))}
             </select>
           </div>
         )}
 
+        {/* Pages */}
         {totalPages > 1 && (
           <div className="flex items-center gap-1">
-            <Button
-              variant="outline"
-              size="sm"
+            <button
               onClick={() => onPageChange(currentPage - 1)}
               disabled={currentPage === 1}
-              className="w-9 px-0"
+              className="flex items-center justify-center size-7 rounded-[6px] border border-charcoal-grey text-storm-cloud hover:bg-deep-slate hover:text-porcelain disabled:opacity-30 disabled:cursor-not-allowed transition-colors duration-100"
             >
-              <span className="material-symbols-outlined text-[18px]">chevron_left</span>
-            </Button>
+              <span className="material-symbols-outlined text-[14px]">chevron_left</span>
+            </button>
 
             {pageNumbers[0] > 1 && (
               <>
-                <Button variant="ghost" size="sm" onClick={() => onPageChange(1)} className="w-9 px-0">
+                <button
+                  onClick={() => onPageChange(1)}
+                  className="flex items-center justify-center size-7 rounded-[6px] text-[12px] text-storm-cloud hover:bg-deep-slate hover:text-porcelain transition-colors duration-100"
+                >
                   1
-                </Button>
-                {pageNumbers[0] > 2 && <span className="text-text-muted px-1">...</span>}
+                </button>
+                {pageNumbers[0] > 2 && <span className="text-[12px] text-fog-grey px-0.5">…</span>}
               </>
             )}
 
             {pageNumbers.map((page) => (
-              <Button
+              <button
                 key={page}
-                variant={currentPage === page ? "primary" : "ghost"}
-                size="sm"
                 onClick={() => onPageChange(page)}
-                className="w-9 px-0"
+                className={cn(
+                  "flex items-center justify-center size-7 rounded-[6px] text-[12px] transition-colors duration-100",
+                  currentPage === page
+                    ? "bg-neon-lime text-pitch-black font-[590]"
+                    : "text-storm-cloud hover:bg-deep-slate hover:text-porcelain",
+                )}
               >
                 {page}
-              </Button>
+              </button>
             ))}
 
             {pageNumbers[pageNumbers.length - 1] < totalPages && (
               <>
                 {pageNumbers[pageNumbers.length - 1] < totalPages - 1 && (
-                  <span className="text-text-muted px-1">...</span>
+                  <span className="text-[12px] text-fog-grey px-0.5">…</span>
                 )}
-                <Button variant="ghost" size="sm" onClick={() => onPageChange(totalPages)} className="w-9 px-0">
+                <button
+                  onClick={() => onPageChange(totalPages)}
+                  className="flex items-center justify-center size-7 rounded-[6px] text-[12px] text-storm-cloud hover:bg-deep-slate hover:text-porcelain transition-colors duration-100"
+                >
                   {totalPages}
-                </Button>
+                </button>
               </>
             )}
 
-            <Button
-              variant="outline"
-              size="sm"
+            <button
               onClick={() => onPageChange(currentPage + 1)}
               disabled={currentPage === totalPages}
-              className="w-9 px-0"
+              className="flex items-center justify-center size-7 rounded-[6px] border border-charcoal-grey text-storm-cloud hover:bg-deep-slate hover:text-porcelain disabled:opacity-30 disabled:cursor-not-allowed transition-colors duration-100"
             >
-              <span className="material-symbols-outlined text-[18px]">chevron_right</span>
-            </Button>
+              <span className="material-symbols-outlined text-[14px]">chevron_right</span>
+            </button>
           </div>
         )}
       </div>

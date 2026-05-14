@@ -188,9 +188,13 @@ function normalizeApiKeyRateLimitInput(input = {}, fallback = {}) {
   const limitType = requestedType === "limited" ? "limited" : "unlimited";
 
   const fallbackRpm =
-    fallback.limitType === "limited" && Number.isInteger(fallback.requestsPerMinute) ? fallback.requestsPerMinute : null;
+    fallback.limitType === "limited" && Number.isInteger(fallback.requestsPerMinute)
+      ? fallback.requestsPerMinute
+      : null;
   const fallbackConcurrent =
-    fallback.limitType === "limited" && Number.isInteger(fallback.concurrentRequests) ? fallback.concurrentRequests : null;
+    fallback.limitType === "limited" && Number.isInteger(fallback.concurrentRequests)
+      ? fallback.concurrentRequests
+      : null;
 
   const rpmCandidate = input.requestsPerMinute ?? fallbackRpm;
   const concurrentCandidate = input.concurrentRequests ?? fallbackConcurrent;

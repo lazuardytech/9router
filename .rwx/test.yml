@@ -19,35 +19,36 @@ tasks:
       ref: ${{ init.commit-sha }}
       github-token: ${{ github.token }}
 
-  - key: node
+  - key: bun
     call: nodejs/install 1.1.14
     with:
       node-version: 22.14.0
 
-  - key: pnpm-install
-    use: [code, node]
+  - key: bun-install
+    use: [code, bun]
     run: |
-      corepack enable
-      corepack prepare pnpm@10 --activate
-      pnpm install --no-frozen-lockfile
+      curl -fsSL https://bun.sh/install | bash
+      export PATH="$HOME/.bun/bin:$PATH"
+      bun install --frozen-lockfile
     filter:
       - package.json
-      - pnpm-lock.yaml
+      - bun.lock
 
   - key: tests-install
-    use: [code, node, pnpm-install]
+    use: [code, bun, bun-install]
     run: |
-      cd /tmp && pnpm add vitest
-      cd $RWX_WORKSPACE/tests && pnpm install --no-frozen-lockfile
+      export PATH="$HOME/.bun/bin:$PATH"
+      cd tests && bun install --frozen-lockfile
     filter:
       - tests/package.json
-      - tests/pnpm-lock.yaml
+      - tests/bun.lock
 
   - key: run-fe-tests
-    use: [pnpm-install, tests-install]
+    use: [bun-install, tests-install]
     run: |
+      export PATH="$HOME/.bun/bin:$PATH"
       echo "Running FE tests..."
-      pnpm run test:run
+      bun run test:run
     timeout: 10m
 
   - key: results

@@ -12,9 +12,9 @@ export default function Toggle({
   className,
 }) {
   const sizes = {
-    sm: { track: "w-8 h-4", thumb: "size-3", translate: "translate-x-4" },
-    md: { track: "w-11 h-6", thumb: "size-5", translate: "translate-x-5" },
-    lg: { track: "w-14 h-7", thumb: "size-6", translate: "translate-x-7" },
+    sm: { track: "w-7 h-4", thumb: "size-3", translate: "translate-x-3" },
+    md: { track: "w-9 h-5", thumb: "size-4", translate: "translate-x-4" },
+    lg: { track: "w-11 h-6", thumb: "size-5", translate: "translate-x-5" },
   };
 
   const handleClick = () => {
@@ -22,7 +22,7 @@ export default function Toggle({
   };
 
   return (
-    <div className={cn("flex items-center gap-3", disabled && "opacity-50 cursor-not-allowed", className)}>
+    <div className={cn("flex items-center gap-2.5", disabled && "opacity-40 cursor-not-allowed", className)}>
       <button
         type="button"
         role="switch"
@@ -31,18 +31,18 @@ export default function Toggle({
         onClick={handleClick}
         className={cn(
           "relative inline-flex shrink-0 cursor-pointer rounded-full",
-          "transition-colors duration-200 ease-in-out",
-          "focus:outline-none focus:ring-2 focus:ring-brand-500/30",
-          checked ? "bg-brand-500" : "bg-surface-3",
+          "transition-colors duration-150 ease-in-out",
+          "focus:outline-none focus-visible:ring-1 focus-visible:ring-neon-lime/50",
+          checked ? "bg-neon-lime" : "bg-gunmetal border border-charcoal-grey",
           sizes[size].track,
           disabled && "cursor-not-allowed",
         )}
       >
         <span
           className={cn(
-            "pointer-events-none inline-block rounded-full bg-white shadow-sm",
-            "transform transition duration-200 ease-in-out",
-            checked ? sizes[size].translate : "translate-x-0.5",
+            "pointer-events-none inline-block rounded-full shadow-sm",
+            "transform transition duration-150 ease-in-out",
+            checked ? `${sizes[size].translate} bg-pitch-black` : "translate-x-0.5 bg-storm-cloud",
             sizes[size].thumb,
             "mt-0.5",
           )}
@@ -50,8 +50,8 @@ export default function Toggle({
       </button>
       {(label || description) && (
         <div className="flex flex-col">
-          {label && <span className="text-sm font-medium text-text-main">{label}</span>}
-          {description && <span className="text-xs text-text-muted">{description}</span>}
+          {label && <span className="text-[13px] font-[400] text-porcelain tracking-[-0.12px]">{label}</span>}
+          {description && <span className="text-[11px] text-fog-grey">{description}</span>}
         </div>
       )}
     </div>

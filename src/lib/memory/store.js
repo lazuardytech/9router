@@ -52,9 +52,7 @@ function getCache(cacheKey) {
 
 function findExistingMemory(db, apiKeyId, key) {
   if (!key) return undefined;
-  const stmt = db.prepare(
-    "SELECT * FROM memories WHERE api_key_id = ? AND key = ? ORDER BY created_at DESC LIMIT 1",
-  );
+  const stmt = db.prepare("SELECT * FROM memories WHERE api_key_id = ? AND key = ? ORDER BY created_at DESC LIMIT 1");
   return stmt.get(apiKeyId, key);
 }
 

@@ -33,7 +33,9 @@ function rowToMemory(row) {
 }
 
 function keywordScore(memory, query) {
-  const normalizedQuery = String(query || "").trim().toLowerCase();
+  const normalizedQuery = String(query || "")
+    .trim()
+    .toLowerCase();
   if (!normalizedQuery) return 0;
   const haystacks = [
     String(memory.content || "").toLowerCase(),

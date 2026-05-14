@@ -15,9 +15,7 @@ function clampInteger(value, fallback, min, max) {
 }
 
 function normalizeStrategy(value) {
-  return value === "recent" || value === "semantic" || value === "hybrid"
-    ? value
-    : DEFAULT_MEMORY_SETTINGS.strategy;
+  return value === "recent" || value === "semantic" || value === "hybrid" ? value : DEFAULT_MEMORY_SETTINGS.strategy;
 }
 
 export function normalizeMemorySettings(rawSettings = {}) {

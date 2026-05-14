@@ -2,19 +2,17 @@
 
 import { useState, useRef, useEffect } from "react";
 import PropTypes from "prop-types";
-import useThemeStore from "@/store/themeStore";
 
-function MenuItem({ icon, label, onClick, trailing, danger }) {
+function MenuItem({ icon, label, onClick, danger }) {
   return (
     <button
       onClick={onClick}
-      className={`flex items-center gap-3 w-full px-4 py-2.5 text-sm transition-colors ${
-        danger ? "text-red-500 hover:bg-red-500/10" : "text-text-main hover:bg-black/5 dark:hover:bg-white/5"
+      className={`flex items-center gap-2.5 w-full px-3 py-2 text-[13px] tracking-[-0.12px] transition-colors duration-100 ${
+        danger ? "text-warning-red hover:bg-warning-red/8" : "text-storm-cloud hover:bg-deep-slate hover:text-porcelain"
       }`}
     >
-      <span className={`material-symbols-outlined text-[20px] ${danger ? "" : "text-text-muted"}`}>{icon}</span>
+      <span className="material-symbols-outlined text-[15px]">{icon}</span>
       <span className="flex-1 text-left">{label}</span>
-      {trailing && <span className="text-base">{trailing}</span>}
     </button>
   );
 }
@@ -23,13 +21,11 @@ MenuItem.propTypes = {
   icon: PropTypes.string.isRequired,
   label: PropTypes.string.isRequired,
   onClick: PropTypes.func.isRequired,
-  trailing: PropTypes.node,
   danger: PropTypes.bool,
 };
 
 export default function HeaderMenu({ onLogout }) {
   const [isOpen, setIsOpen] = useState(false);
-  const { toggleTheme, isDark } = useThemeStore();
   const menuRef = useRef(null);
 
   useEffect(() => {
@@ -50,22 +46,14 @@ export default function HeaderMenu({ onLogout }) {
     <div className="relative" ref={menuRef}>
       <button
         onClick={() => setIsOpen((v) => !v)}
-        className="flex items-center justify-center p-2 rounded-lg text-text-muted hover:text-text-main hover:bg-black/5 dark:hover:bg-white/5 transition-all"
+        className="flex items-center justify-center size-7 rounded-[4px] text-storm-cloud hover:bg-deep-slate hover:text-porcelain transition-colors duration-100"
         title="Menu"
       >
-        <span className="material-symbols-outlined">grid_view</span>
+        <span className="material-symbols-outlined text-[16px]">more_horiz</span>
       </button>
 
       {isOpen && (
-        <div className="absolute right-0 top-full mt-2 w-60 bg-surface border border-black/10 dark:border-white/10 rounded-xl shadow-2xl z-50 animate-in fade-in zoom-in-95 duration-150 overflow-hidden py-1">
-          <MenuItem
-            icon={isDark ? "light_mode" : "dark_mode"}
-            label="Theme"
-            onClick={() => {
-              toggleTheme();
-              close();
-            }}
-          />
+        <div className="absolute right-0 top-full mt-1 w-44 bg-graphite border border-charcoal-grey rounded-[6px] shadow-[var(--shadow-xl)] z-50 fade-in overflow-hidden py-1">
           <MenuItem
             icon="logout"
             label="Logout"

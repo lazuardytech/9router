@@ -1,21 +1,17 @@
-import { Inter } from "next/font/google";
 import "./globals.css";
-import { ThemeProvider } from "@/shared/components/ThemeProvider";
 import ServiceWorkerRegistrar from "@/shared/components/ServiceWorkerRegistrar";
-import "@/lib/initCloudSync"; // Auto-initialize cloud sync
-import "@/lib/network/initOutboundProxy"; // Auto-initialize outbound proxy env
-import { initConsoleLogCapture } from "@/lib/consoleLogBuffer";
+import "@/lib/initCloudSync";
+import "@/lib/network/initOutboundProxy";
+
 export default function RootLayout({ children }) {
   return (
-    <html lang="en">
+    <html lang="en" className="dark">
       <head>
         <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
       </head>
-      <body className="h-full bg-surface text-text-main custom-scrollbar">
-        <ThemeProvider>
-          <ServiceWorkerRegistrar />
-          {children}
-        </ThemeProvider>
+      <body className="h-full bg-pitch-black text-porcelain custom-scrollbar">
+        <ServiceWorkerRegistrar />
+        {children}
       </body>
     </html>
   );

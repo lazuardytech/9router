@@ -6,7 +6,6 @@ import Link from "next/link";
 import PropTypes from "prop-types";
 import ProviderIcon from "@/shared/components/ProviderIcon";
 import HeaderMenu from "@/shared/components/HeaderMenu";
-import ThemeToggle from "@/shared/components/ThemeToggle";
 import { useHeaderSearchStore } from "@/store/headerSearchStore";
 import { OAUTH_PROVIDERS, APIKEY_PROVIDERS } from "@/shared/constants/config";
 import { MEDIA_PROVIDER_KINDS, AI_PROVIDERS } from "@/shared/constants/providers";
@@ -14,7 +13,6 @@ import { MEDIA_PROVIDER_KINDS, AI_PROVIDERS } from "@/shared/constants/providers
 const getPageInfo = (pathname) => {
   if (!pathname) return { title: "", description: "", breadcrumbs: [] };
 
-  // Media provider detail: /dashboard/media-providers/[kind]/[id]
   const mediaDetailMatch = pathname.match(/\/media-providers\/([^/]+)\/([^/]+)$/);
   if (mediaDetailMatch) {
     const kindId = mediaDetailMatch[1];
@@ -32,7 +30,6 @@ const getPageInfo = (pathname) => {
     };
   }
 
-  // Media provider kind: /dashboard/media-providers/[kind]
   const mediaKindMatch = pathname.match(/\/media-providers\/([^/]+)$/);
   if (mediaKindMatch) {
     const kindId = mediaKindMatch[1];
@@ -45,7 +42,6 @@ const getPageInfo = (pathname) => {
     };
   }
 
-  // Provider detail page: /dashboard/providers/[id]
   const providerMatch = pathname.match(/\/providers\/([^/]+)$/);
   if (providerMatch) {
     const providerId = providerMatch[1];
@@ -56,41 +52,21 @@ const getPageInfo = (pathname) => {
         description: "",
         breadcrumbs: [
           { label: "Providers", href: "/dashboard/providers" },
-          {
-            label: providerInfo.name,
-            image: `/providers/${providerInfo.id}.png`,
-          },
+          { label: providerInfo.name, image: `/providers/${providerInfo.id}.png` },
         ],
       };
     }
   }
 
   if (pathname.includes("/providers") && !pathname.includes("/media-providers"))
-    return {
-      title: "Providers",
-      description: "Manage your AI provider connections",
-      icon: "dns",
-      breadcrumbs: [],
-    };
+    return { title: "Providers", description: "Manage your AI provider connections", icon: "dns", breadcrumbs: [] };
   if (pathname.includes("/combos"))
-    return {
-      title: "Combos",
-      description: "Model combos with fallback",
-      icon: "layers",
-      breadcrumbs: [],
-    };
+    return { title: "Combos", description: "Model combos with fallback", icon: "layers", breadcrumbs: [] };
   if (pathname.includes("/usage"))
     return {
       title: "Usage & Analytics",
-      description: "Monitor your API usage, token consumption, and request logs",
+      description: "Monitor API usage, token consumption, and request logs",
       icon: "bar_chart",
-      breadcrumbs: [],
-    };
-  if (pathname.includes("/auth-files"))
-    return {
-      title: "Auth Files",
-      description: "Map provider credentials stored in the local database",
-      icon: "vpn_key",
       breadcrumbs: [],
     };
   if (pathname.includes("/quota"))
@@ -101,26 +77,11 @@ const getPageInfo = (pathname) => {
       breadcrumbs: [],
     };
   if (pathname.includes("/proxy-pools"))
-    return {
-      title: "Proxy Pools",
-      description: "Manage your proxy pool configurations",
-      icon: "lan",
-      breadcrumbs: [],
-    };
-  if (pathname.includes("/endpoint"))
-    return {
-      title: "Endpoint",
-      description: "API endpoint configuration",
-      icon: "api",
-      breadcrumbs: [],
-    };
+    return { title: "Proxy Pools", description: "Manage your proxy pool configurations", icon: "lan", breadcrumbs: [] };
+  if (pathname.includes("/endpoint") || pathname === "/dashboard")
+    return { title: "Endpoint", description: "API endpoint configuration", icon: "api", breadcrumbs: [] };
   if (pathname.includes("/profile"))
-    return {
-      title: "Settings",
-      description: "Manage your preferences",
-      icon: "settings",
-      breadcrumbs: [],
-    };
+    return { title: "Settings", description: "Manage your preferences", icon: "settings", breadcrumbs: [] };
   if (pathname.includes("/translator"))
     return {
       title: "Translator",
@@ -129,27 +90,18 @@ const getPageInfo = (pathname) => {
       breadcrumbs: [],
     };
   if (pathname.includes("/console-log"))
-    return {
-      title: "Console Log",
-      description: "Live server console output",
-      icon: "monitor",
-      breadcrumbs: [],
-    };
-  if (pathname === "/dashboard")
-    return {
-      title: "Endpoint",
-      description: "API endpoint configuration",
-      icon: "api",
-      breadcrumbs: [],
-    };
+    return { title: "Console Log", description: "Live server console output", icon: "terminal", breadcrumbs: [] };
+  if (pathname.includes("/memory"))
+    return { title: "Memory", description: "Manage memory entries", icon: "memory_alt", breadcrumbs: [] };
+  if (pathname.includes("/cache"))
+    return { title: "Cache", description: "Semantic cache configuration", icon: "cached", breadcrumbs: [] };
+
   return { title: "", description: "", breadcrumbs: [] };
 };
 
 export default function Header({ onMenuClick, showMenuButton = true, sidebarCollapsed, onToggleSidebar }) {
   const pathname = usePathname();
   const router = useRouter();
-
-  // Memoize page info to prevent unnecessary recalculations
   const pageInfo = useMemo(() => getPageInfo(pathname), [pathname]);
   const { title, description, icon, breadcrumbs } = pageInfo;
 
@@ -166,32 +118,30 @@ export default function Header({ onMenuClick, showMenuButton = true, sidebarColl
   };
 
   return (
-    <header className="shrink-0 flex items-center justify-between gap-3 ps-2 pe-4 lg:ps-4 lg:pe-8 pt-3 pb-2 border-b border-border-subtle bg-surface/60 backdrop-blur-xl lg:bg-transparent lg:backdrop-blur-none z-20">
-      {/* Sidebar toggle button (Mobile: menu, Desktop: collapse/expand) */}
-      <div className="flex items-center gap-2 shrink-0 pb-0.5">
-        {/* Mobile menu button */}
+    <header className="shrink-0 flex items-center justify-between gap-3 px-4 h-11 border-b border-charcoal-grey bg-pitch-black z-20">
+      {/* Left: sidebar toggles */}
+      <div className="flex items-center gap-1 shrink-0">
+        {/* Mobile */}
         <div className="lg:hidden">
           {showMenuButton && (
             <button
               onClick={onMenuClick}
-              className="p-1.5 text-text-main hover:text-primary transition-colors rounded-lg hover:bg-surface-subtle"
+              className="flex items-center justify-center size-7 rounded-[4px] text-storm-cloud hover:bg-deep-slate hover:text-porcelain transition-colors duration-100"
             >
-              <span className="material-symbols-outlined">menu</span>
+              <span className="material-symbols-outlined text-[18px]">menu</span>
             </button>
           )}
         </div>
-
-        {/* Desktop collapse button */}
+        {/* Desktop */}
         <div className="hidden lg:block">
           {showMenuButton && (
             <button
               type="button"
               onClick={onToggleSidebar}
-              className="p-0 mr-2 text-text-muted hover:text-primary transition-all rounded-lg hover:bg-surface-subtle border border-transparent hover:border-primary/20"
+              className="flex items-center justify-center size-7 rounded-[4px] text-storm-cloud hover:bg-deep-slate hover:text-porcelain transition-colors duration-100"
               aria-label={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
-              title={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
             >
-              <span className="material-symbols-outlined text-[20px] leading-none mt-1.5 px-2">
+              <span className="material-symbols-outlined text-[18px]">
                 {sidebarCollapsed ? "left_panel_open" : "left_panel_close"}
               </span>
             </button>
@@ -199,53 +149,48 @@ export default function Header({ onMenuClick, showMenuButton = true, sidebarColl
         </div>
       </div>
 
-      {/* Page title with breadcrumbs */}
-      <div className="flex flex-col min-w-0 flex-1">
+      {/* Center: breadcrumbs / title */}
+      <div className="flex items-center gap-1.5 min-w-0 flex-1">
         {breadcrumbs.length > 0 ? (
-          <div className="flex items-center gap-2">
-            {breadcrumbs.map((crumb, index) => (
-              <div key={`${crumb.label}-${crumb.href || "current"}`} className="flex items-center gap-2">
-                {index > 0 && (
-                  <span className="material-symbols-outlined text-text-muted text-base">chevron_right</span>
-                )}
-                {crumb.href ? (
-                  <Link href={crumb.href} className="text-text-muted hover:text-primary transition-colors">
+          breadcrumbs.map((crumb, index) => (
+            <div key={`${crumb.label}-${crumb.href || "current"}`} className="flex items-center gap-1.5">
+              {index > 0 && <span className="material-symbols-outlined text-fog-grey text-[14px]">chevron_right</span>}
+              {crumb.href ? (
+                <Link
+                  href={crumb.href}
+                  className="text-[13px] text-storm-cloud hover:text-porcelain transition-colors duration-100 tracking-[-0.12px]"
+                >
+                  {crumb.label}
+                </Link>
+              ) : (
+                <div className="flex items-center gap-1.5">
+                  {crumb.image && (
+                    <ProviderIcon
+                      src={crumb.image}
+                      alt={crumb.label}
+                      size={18}
+                      className="rounded-[3px]"
+                      fallbackText={crumb.label.slice(0, 2).toUpperCase()}
+                    />
+                  )}
+                  <span className="text-[13px] font-[510] text-porcelain tracking-[-0.12px] truncate">
                     {crumb.label}
-                  </Link>
-                ) : (
-                  <div className="flex items-center gap-2">
-                    {crumb.image && (
-                      <ProviderIcon
-                        src={crumb.image}
-                        alt={crumb.label}
-                        size={28}
-                        className="object-contain rounded max-w-[28px] max-h-[28px]"
-                        fallbackText={crumb.label.slice(0, 2).toUpperCase()}
-                      />
-                    )}
-                    <h1 className="text-base lg:text-2xl font-semibold text-text-main tracking-tight truncate">
-                      {crumb.label}
-                    </h1>
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
-        ) : title ? (
-          <div>
-            <div className="flex items-center gap-2">
-              {icon && <span className="material-symbols-outlined text-primary text-xl lg:text-2xl">{icon}</span>}
-              <h1 className="text-base lg:text-2xl font-semibold tracking-tight truncate">{title}</h1>
+                  </span>
+                </div>
+              )}
             </div>
-            {description && <p className="hidden lg:block text-sm text-text-muted truncate">{description}</p>}
+          ))
+        ) : title ? (
+          <div className="flex items-center gap-1.5">
+            {icon && <span className="material-symbols-outlined text-storm-cloud text-[16px]">{icon}</span>}
+            <span className="text-[13px] font-[510] text-porcelain tracking-[-0.12px] truncate">{title}</span>
           </div>
         ) : null}
       </div>
 
-      {/* Right actions */}
+      {/* Right: search + menu */}
       <div className="flex items-center gap-1 shrink-0">
         <HeaderSearch />
-        <ThemeToggle />
         <HeaderMenu onLogout={handleLogout} />
       </div>
     </header>
@@ -261,8 +206,8 @@ function HeaderSearch() {
   if (!visible) return null;
 
   return (
-    <div className="relative w-[160px] sm:w-[220px]">
-      <span className="material-symbols-outlined absolute left-2 top-1/2 -translate-y-1/2 text-text-muted text-[16px] pointer-events-none">
+    <div className="relative w-[160px] sm:w-[200px]">
+      <span className="material-symbols-outlined absolute left-2.5 top-1/2 -translate-y-1/2 text-storm-cloud text-[14px] pointer-events-none">
         search
       </span>
       <input
@@ -270,16 +215,16 @@ function HeaderSearch() {
         value={query}
         onChange={(e) => setQuery(e.target.value)}
         placeholder={placeholder}
-        className="w-full h-8 pl-9 pr-7 rounded-lg border border-border bg-surface/60 text-sm focus:outline-none focus:border-primary/50 transition-colors"
+        className="w-full h-7 pl-8 pr-6 rounded-[6px] border border-charcoal-grey bg-gunmetal text-[12px] text-porcelain placeholder:text-fog-grey focus:outline-none focus:border-neon-lime/50 transition-colors duration-100"
       />
       {query && (
         <button
           type="button"
           onClick={() => setQuery("")}
-          className="absolute right-1 top-1/2 -translate-y-1/2 text-text-muted hover:text-text-main p-0.5 rounded"
+          className="absolute right-1.5 top-1/2 -translate-y-1/2 text-storm-cloud hover:text-porcelain transition-colors"
           aria-label="Clear search"
         >
-          <span className="material-symbols-outlined text-[16px]">close</span>
+          <span className="material-symbols-outlined text-[13px]">close</span>
         </button>
       )}
     </div>

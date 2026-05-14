@@ -2,47 +2,43 @@
 
 import { cn } from "@/shared/utils/cn";
 
-// Spinner loading
 export function Spinner({ size = "md", className }) {
   const sizes = {
-    sm: "size-4",
-    md: "size-6",
-    lg: "size-8",
-    xl: "size-12",
+    sm: "text-[16px]",
+    md: "text-[20px]",
+    lg: "text-[28px]",
+    xl: "text-[40px]",
   };
 
   return (
-    <span className={cn("material-symbols-outlined animate-spin text-brand-500", sizes[size], className)}>
+    <span className={cn("material-symbols-outlined animate-spin text-storm-cloud", sizes[size], className)}>
       progress_activity
     </span>
   );
 }
 
-// Full page loading
 export function PageLoading({ message = "Loading..." }) {
   return (
-    <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-bg">
+    <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-pitch-black">
       <Spinner size="xl" />
-      <p className="mt-4 text-text-muted">{message}</p>
+      {message && <p className="mt-3 text-[13px] text-fog-grey tracking-[-0.12px]">{message}</p>}
     </div>
   );
 }
 
-// Skeleton loading
 export function Skeleton({ className, ...props }) {
-  return <div className={cn("animate-pulse rounded-[10px] bg-surface-2", className)} {...props} />;
+  return <div className={cn("animate-pulse rounded-[6px] bg-deep-slate", className)} {...props} />;
 }
 
-// Card skeleton
 export function CardSkeleton() {
   return (
-    <div className="p-6 rounded-[14px] border border-border-subtle bg-surface shadow-[var(--shadow-soft)]">
-      <div className="flex items-center justify-between mb-4">
-        <Skeleton className="h-4 w-24" />
-        <Skeleton className="size-10 rounded-[10px]" />
+    <div className="p-3 rounded-[6px] border border-charcoal-grey bg-graphite shadow-[var(--shadow-sm)]">
+      <div className="flex items-center justify-between mb-3">
+        <Skeleton className="h-3.5 w-20" />
+        <Skeleton className="size-7 rounded-[6px]" />
       </div>
-      <Skeleton className="h-8 w-16 mb-2" />
-      <Skeleton className="h-3 w-20" />
+      <Skeleton className="h-6 w-14 mb-1.5" />
+      <Skeleton className="h-3 w-16" />
     </div>
   );
 }
