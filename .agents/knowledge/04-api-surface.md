@@ -1,58 +1,71 @@
 # API Surface
 
-All `/v1/*` rewritten to `/api/v1/*` (`next.config.mjs:23-46`). `/codex/*` always rewrites to `/api/v1/responses`.
+All public compatibility endpoints are routed through rewrites in `next.config.mjs`:
 
-## OpenAI-compatible
+- `/v1/:path*` -> `/api/v1/:path*`
+- `/codex/:path*` -> `/api/v1/responses`
 
-| Route | Method | File | Purpose |
-|---|---|---|---|
-| `/v1/chat/completions` | POST | `src/app/api/v1/chat/completions/route.js:30` | Chat (multi-format) |
-| `/v1/responses` | POST | `src/app/api/v1/responses/route.js:27` | OpenAI Responses API |
-| `/v1/responses/compact` | POST | `src/app/api/v1/responses/compact/route.js:27` | Conversation compact |
-| `/v1/embeddings` | POST | `src/app/api/v1/embeddings/route.js:19` | Embeddings |
-| `/v1/audio/speech` | POST | `src/app/api/v1/audio/speech/route.js:14` | TTS |
-| `/v1/audio/transcriptions` | POST | `src/app/api/v1/audio/transcriptions/route.js:17` | STT (Whisper-compat) |
-| `/v1/images/generations` | POST | `src/app/api/v1/images/generations/route.js:14` | Image gen |
-| `/v1/models` | GET | `src/app/api/v1/models/route.js:385` | LLM model list |
-| `/v1/models/{kind}` | GET | `src/app/api/v1/models/[kind]/route.js` | Models by kind |
-| `/v1/search` | POST | `src/app/api/v1/search/route.js:19` | Web search |
-| `/v1/web/fetch` | POST | `src/app/api/v1/web/fetch/route.js:19` | URL fetch/extract |
+## Public Compatibility APIs
 
-## Anthropic-compatible
+### OpenAI-compatible
 
-| Route | Method | File |
-|---|---|---|
-| `/v1/messages` | POST | `src/app/api/v1/messages/route.js:32` |
-| `/v1/messages/count_tokens` | POST | `src/app/api/v1/messages/count_tokens/route.js:17` |
+- `POST /v1/chat/completions`
+- `POST /v1/responses`
+- `POST /v1/responses/compact`
+- `POST /v1/embeddings`
+- `POST /v1/audio/speech`
+- `POST /v1/audio/transcriptions`
+- `POST /v1/images/generations`
+- `GET /v1/models`
+- `GET /v1/models/{kind}`
+- `POST /v1/search`
+- `POST /v1/web/fetch`
 
-## Gemini-compatible
+### Anthropic-compatible
 
-| Route | Method | File |
-|---|---|---|
-| `/v1beta/models` | GET | `src/app/api/v1beta/models/route.js:20` |
-| `/v1beta/models/{...path}` | * | `src/app/api/v1beta/models/[...path]/route.js` |
+- `POST /v1/messages`
+- `POST /v1/messages/count_tokens`
 
-## Ollama-compatible
+### Gemini-compatible
 
-| Route | Method | File |
-|---|---|---|
-| `/v1/api/chat` | POST | `src/app/api/v1/api/chat/route.js:24` |
+- `GET /v1beta/models`
+- `* /v1beta/models/{...path}`
 
-## Format auto-detect
+### Ollama-compatible
 
-`open-sse/translator/formats.js:21` `detectFormatByEndpoint`:
-- `/v1/responses` → `openai-responses`
-- `/v1/messages` → `claude`
-- else → body-based detection
+- `POST /v1/api/chat`
 
-## Mgmt API (dashboard backend)
+## Per-Key Rate Limiting on `/v1/*`
 
-`src/app/api/` — non-`v1` routes for the dashboard:
+All major `/api/v1/*` POST routes are wrapped by:
+- `src/app/api/v1/_utils/apiKeyRateLimit.js`
 
-`auth/`, `oauth/[provider]/`, `providers/`, `provider-nodes/`, `keys/`, `combos/`, `models/alias/`, `pricing/`, `settings/`, `usage/`, `sync/`, `cloud/`, `media-providers/`, `proxy-pools/`, `tunnel/`, `translator/`, `init/`, `health/`, `version/`, `shutdown/`, `tags/`, `locale/`, `settings/migrate-sqlite/` (GET: inspect, POST: run migration).
+Behavior:
+- `unlimited`: no limiter
+- `limited`: enforces both req/min and concurrent request ceilings
+- 429 response with `Retry-After` when exceeded
 
-## Public endpoints (`/v1/*`) — auth model
+## Dashboard and Management APIs (non-`/v1`)
 
-Off by default. When `settings.requireApiKey=true`, all handlers in `src/sse/handlers/*.js` validate `Authorization: Bearer` or `x-api-key` against `localDb.apiKeys` via `validateApiKey`.
+Important groups under `src/app/api/`:
 
-API key format: `sk-{machineId}-{keyId}-{crc8}`. Generated/validated in `src/shared/utils/apiKey.js`.
+- Auth/session: `auth/*`
+- Providers and nodes: `providers/*`, `provider-nodes/*`
+- API keys: `keys/*`
+- Combos: `combos/*`
+- Usage analytics: `usage/*`
+- Settings: `settings/*`
+- Memory and cache:
+  - `GET|DELETE /api/cache`
+  - `GET|PUT /api/settings/cache-config`
+  - `GET|POST /api/memory`
+  - `GET|PATCH|DELETE /api/memory/[id]`
+  - `GET|PUT /api/settings/memory`
+- Tunnel/network ops: `tunnel/*`, `proxy-pools/*`
+- Translator/debug: `translator/*`, `console-log`
+
+## API Key Validation Model
+
+- Public auth can be enforced by `settings.requireApiKey`
+- Accepted headers: `Authorization: Bearer ...` or `x-api-key`
+- Key format parsing/validation lives in `src/shared/utils/apiKey.js`

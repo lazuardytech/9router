@@ -1,77 +1,47 @@
 # Fork Status
 
-## Lineage
+## Repository Identity
 
-```
-CLIProxyAPI (Go)         original — by router-for-me
-        ↓
-9Router (JS port)        active upstream — github.com/decolua/9router
-        ↓
-9router             this repo — github.com/lazuardytech/9router
-        ↓
-OmniRoute (TS port)      sister fork — github.com/diegosouzapw/OmniRoute
-```
+- Repo: `github.com/lazuardytech/9router`
+- Branch: `master`
+- Current tagged release baseline: **v0.3.1**
 
-## Sync state (as of 2026-05-07)
+## Recent Release Tags in This Branch
 
-9router `master` HEAD = upstream `decolua/9router@master` HEAD with merged PR #794 (SQLite migration) + 10 local commits.
+- `v0.2.8`
+- `v0.2.9`
+- `v0.3.0`
+- `v0.3.1`
 
-Upstream merge `bbc3f65` (`Merge upstream PR #794: SQLite migration for high concurrency`) — 23 files changed, ~3K lines added. SQLite-backed storage, new `src/lib/sqlite/`, rewritten `localDb.js`.
+Feature highlights across these tags:
+- reasoning/thinking passthrough fixes
+- semantic cache and memory layer
+- per-key rate limit config + enforcement
+- dashboard navigation update with Memory and Cache pages
 
-Local commits after merge: pnpm migration, upstream timeout/fallback, Claude tool decloaking, NineRemote removal, test fixes, CI overhaul, version bump to 0.4.24.
+## Current Remote Setup
 
-**Initial commit `3857598`** is a flat snapshot — NOT a `git fork` clone. History before `3857598` does not exist locally. To pull upstream history with full graph, would need to re-clone from upstream.
+At this snapshot:
 
-## Sync setup
-
-Remote already configured:
 ```bash
 git remote -v
-# origin    git@github.com:lazuardytech/9router.git
-# upstream  https://github.com/decolua/9router.git
+# origin  git@github.com:lazuardytech/9router.git
 ```
 
-To sync future upstream changes:
-```bash
-git fetch upstream
-git log --oneline master..upstream/master   # check what's new
-git merge upstream/master                   # merge (or rebase if preferred)
-git push origin master
-```
+No `upstream` remote is currently configured in local checkout.
 
-## Local divergence (what makes this 9router not 9router)
+## Divergence Notes
 
-Divergence is still small but growing:
+The branch is intentionally customized for Lazuardy/Melma needs, with emphasis on:
 
-| Change | Status |
-|---|---|
-| `README.md` | Replaced with Lazuardy Tech notice |
-| `.agents/`, `AGENTS.md` | Agent documentation |
-| `pnpm` migration (`c720d3f`) | `.npmrc`, `pnpm-lock.yaml`, `paseo.json`, Docker CI changes |
-| Upstream timeout/fallback (`d96ac0a`) | `LOCAL_UPSTREAM_TIMEOUT_MS`, combined AbortController |
-| Claude tool decloaking (`75a84a6`) | Recursive shape-agnostic `decloakToolNames` |
-| NineRemote promo removed | `NineRemoteButton.js`, modal, HeaderMenu entry deleted |
-| CI overhaul (`d188511`) | `pnpm run test:run`, no `|| true`, `latest` always emitted |
-| Test fixes (`c8e8d7a`) | Fixed 4 test files |
+1. pnpm-first build and CI flow
+2. Docker publish to Docker Hub `lazuardytech/9router`
+3. Memory/cache/rate-limit features integrated into API and dashboard
+4. Internal contributor docs (`AGENTS.md`, `.agents/*`) maintained in-repo
 
-**Code references use "9router" internally, by design** (package name `9router-app`, data dir `~/.9router/`, env vars, GitHub raw URLs in `skills.js`). "9router" is used only for external/repo context. See gotcha #13 in `07-gotchas.md`.
+## Sync Guidance (if upstream re-link is needed later)
 
-## When merging upstream
-
-1. `README.md` will conflict — keep ours (Lazuardy Tech notice).
-2. `.agents/` and `AGENTS.md` won't conflict (don't exist upstream) — keep ours.
-3. `.npmrc`, `.npxrc`, `pnpm-lock.yaml`, `paseo.json` — keep ours (not upstream).
-4. Changes to `package.json` (pnpm config, scripts, dep reorg) — merge carefully.
-5. Changes to `chatCore.js`, `stream.js`, `claudeCloaking.js` — may conflict with our timeout/decloak changes.
-6. Changes to `usageDb.js` — may conflict with our flush hooks.
-7. Changes to `Dockerfile`, CI workflows — may conflict with pnpm changes.
-8. Tests — may conflict with our fixes.
-9. Everything else: prefer upstream.
-
-## Branding decision
-
-Per the project convention (`AGENTS.md`):
-- Internal references keep "9router" (package name, data dir, env vars).
-- "9router" is used only for external/repo context (README, repo name, GitHub URLs).
-
-This is a deliberate minimal-divergence approach. Do not bulk-rename internal references to 9router. If the upstream (`decolua/9router`) adopts a different naming convention, coordinate before diverging.
+If upstream sync is required in the future:
+1. add upstream remote explicitly
+2. inspect diff by feature area (API routes, `open-sse`, sqlite schema, workflows)
+3. preserve local release/versioning and Docker publishing conventions

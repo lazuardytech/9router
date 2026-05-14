@@ -9,37 +9,45 @@ on:
       - master
   workflow_dispatch:
 
+concurrency:
+  group: build-test-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   test-and-build:
     runs-on: ubuntu-latest
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+          run_install: false
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
-
-      - name: Install pnpm
-        uses: pnpm/action-setup@v4
+          node-version: "24"
+          cache: pnpm
+          cache-dependency-path: |
+            pnpm-lock.yaml
+            tests/pnpm-lock.yaml
 
       - name: Install dependencies
-        run: pnpm install --no-frozen-lockfile
+        run: pnpm install --frozen-lockfile --prefer-offline
 
       - name: Run lint
         run: pnpm exec eslint . || true
-
-      - name: Install test dependencies
-        run: |
-          cd /tmp && pnpm add vitest
-          cd $GITHUB_WORKSPACE/tests && pnpm install --no-frozen-lockfile
 
       - name: Run tests
         run: pnpm run test:run
 
       - name: Build application
+        env:
+          NEXT_TELEMETRY_DISABLED: "1"
         run: pnpm run build
 
       - name: Test build artifacts

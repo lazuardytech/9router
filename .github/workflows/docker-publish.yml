@@ -9,6 +9,10 @@ on:
 env:
   IMAGE_NAME: lazuardytech/9router
 
+concurrency:
+  group: docker-publish-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   build-and-push:
     runs-on: ubuntu-latest
@@ -29,13 +33,29 @@ jobs:
         uses: docker/metadata-action@v5
         with:
           images: ${{ env.IMAGE_NAME }}
+          flavor: |
+            latest=false
           tags: |
             type=semver,pattern={{version}}
             type=semver,pattern={{major}}.{{minor}},enable=false
             type=semver,pattern={{major}},enable=false
             type=raw,value=latest
 
-      - name: Build and push
+      - name: Build and push (release tag)
+        if: github.event_name == 'push'
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          platforms: linux/amd64
+          provenance: false
+          sbom: false
+
+      - name: Build and push (manual cache warm-up)
+        if: github.event_name == 'workflow_dispatch'
         uses: docker/build-push-action@v6
         with:
           context: .

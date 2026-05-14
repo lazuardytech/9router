@@ -1,6 +1,8 @@
 # .agents Index
 
-Entrypoint for documentation and knowledge base.
+Knowledge base entrypoint for 9router contributors.
+
+Last synced: **2026-05-14** (baseline **v0.3.1**).
 
 - [Overview](knowledge/01-overview.md)
 - [Architecture](knowledge/02-architecture.md)
