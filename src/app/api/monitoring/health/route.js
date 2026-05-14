@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import os from "node:os";
 import { getDatabase } from "@/lib/sqlite/connection.js";
 import { getProviderConnections, getCombos, getApiKeys, getSettings } from "@/lib/localDb.js";
+import { AI_PROVIDERS } from "@/shared/constants/providers.js";
 
 const START_TIME = globalThis.__9router_start_time ?? (globalThis.__9router_start_time = Date.now());
 
@@ -12,11 +13,7 @@ function getSystemInfo() {
     nodeVersion: process.version,
     platform: process.platform,
     arch: process.arch,
-    memoryUsage: {
-      rss: mem.rss,
-      heapUsed: mem.heapUsed,
-      heapTotal: mem.heapTotal,
-    },
+    memoryUsage: { rss: mem.rss, heapUsed: mem.heapUsed, heapTotal: mem.heapTotal },
     loadAvg: os.loadavg(),
     cpus: os.cpus().length,
     freeMemory: os.freemem(),
@@ -80,6 +77,54 @@ export async function GET() {
     ttlMs: cfg.semanticCacheTTL ?? 1800000,
   };
 
+  // ── Provider Health (per connection) ──────────────────────────────────────
+  const now = Date.now();
+  const providerHealth = conns.map((c) => {
+    const isRateLimited = c.rateLimitedUntil && new Date(c.rateLimitedUntil).getTime() > now;
+    const retryAfterMs = isRateLimited ? new Date(c.rateLimitedUntil).getTime() - now : 0;
+    let state = "CLOSED";
+    if (isRateLimited) state = "OPEN";
+    else if (c.testStatus === "error") state = "HALF_OPEN";
+    const providerInfo = AI_PROVIDERS[c.provider];
+    return {
+      connectionId: c.id,
+      connectionName: c.name || c.provider,
+      provider: c.provider,
+      providerName: providerInfo?.name || c.provider,
+      state,
+      testStatus: c.testStatus,
+      lastError: c.lastError || null,
+      lastErrorAt: c.lastErrorAt || null,
+      rateLimitedUntil: c.rateLimitedUntil || null,
+      retryAfterMs,
+      isActive: c.isActive !== false,
+    };
+  });
+
+  // ── Rate Limit Status (grouped by provider) ───────────────────────────────
+  const rateLimitByProvider = {};
+  for (const c of conns) {
+    const isRateLimited = c.rateLimitedUntil && new Date(c.rateLimitedUntil).getTime() > now;
+    if (!isRateLimited) continue;
+    const key = c.provider;
+    if (!rateLimitByProvider[key]) {
+      const providerInfo = AI_PROVIDERS[key];
+      rateLimitByProvider[key] = {
+        provider: key,
+        providerName: providerInfo?.name || key,
+        rateLimitedCount: 0,
+        connections: [],
+      };
+    }
+    rateLimitByProvider[key].rateLimitedCount += 1;
+    rateLimitByProvider[key].connections.push({
+      connectionId: c.id,
+      connectionName: c.name || c.provider,
+      rateLimitedUntil: c.rateLimitedUntil,
+      retryAfterMs: new Date(c.rateLimitedUntil).getTime() - now,
+    });
+  }
+
   const status = database.ok && database.integrity === "ok" ? "healthy" : "issues";
 
   return NextResponse.json({
@@ -90,5 +135,7 @@ export async function GET() {
     providers,
     tunnel,
     semanticCache,
+    providerHealth,
+    rateLimitStatus: Object.values(rateLimitByProvider),
   });
 }

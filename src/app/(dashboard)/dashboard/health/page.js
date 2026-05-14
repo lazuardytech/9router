@@ -311,6 +311,132 @@ export default function HealthPage() {
           </div>
         </div>
       </div>
+
+      {/* Provider Health */}
+      <div className="rounded-[6px] border border-charcoal-grey bg-graphite p-5">
+        <SectionHeader icon="health_and_safety" title="Provider Health">
+          <div className="flex items-center gap-3 text-[11px] text-fog-grey">
+            <span className="flex items-center gap-1">
+              <span className="size-2 rounded-full bg-emerald" /> Healthy
+            </span>
+            <span className="flex items-center gap-1">
+              <span className="size-2 rounded-full bg-[#f59e0b]" /> Error
+            </span>
+            <span className="flex items-center gap-1">
+              <span className="size-2 rounded-full bg-warning-red" /> Rate Limited
+            </span>
+          </div>
+        </SectionHeader>
+        {!data.providerHealth?.length ? (
+          <p className="text-[12px] text-fog-grey text-center py-4">No provider connections configured.</p>
+        ) : (
+          (() => {
+            const unhealthy = data.providerHealth.filter((p) => p.state !== "CLOSED");
+            const healthy = data.providerHealth.filter((p) => p.state === "CLOSED");
+            return (
+              <div className="space-y-3">
+                {unhealthy.length > 0 && (
+                  <div className="space-y-2">
+                    <p className="text-[10px] font-[590] text-warning-red uppercase tracking-[0.05em]">Issues</p>
+                    {unhealthy.map((p) => (
+                      <div
+                        key={p.connectionId}
+                        className={`rounded-[6px] p-3 border flex items-start gap-3 ${
+                          p.state === "OPEN"
+                            ? "bg-warning-red/5 border-warning-red/20"
+                            : "bg-[#f59e0b]/5 border-[#f59e0b]/20"
+                        }`}
+                      >
+                        <div
+                          className={`size-2 rounded-full mt-1.5 shrink-0 ${
+                            p.state === "OPEN" ? "bg-warning-red" : "bg-[#f59e0b]"
+                          }`}
+                        />
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span className="text-[13px] font-[510] text-porcelain">{p.connectionName}</span>
+                            <span className="text-[10px] text-fog-grey">{p.providerName}</span>
+                            <span
+                              className={`text-[10px] font-[590] px-1.5 py-0.5 rounded-[4px] ${
+                                p.state === "OPEN"
+                                  ? "bg-warning-red/10 text-warning-red"
+                                  : "bg-[#f59e0b]/10 text-[#f59e0b]"
+                              }`}
+                            >
+                              {p.state === "OPEN" ? "Rate Limited" : "Error"}
+                            </span>
+                          </div>
+                          {p.lastError && <p className="text-[11px] text-storm-cloud mt-0.5 truncate">{p.lastError}</p>}
+                          {p.rateLimitedUntil && (
+                            <p className="text-[11px] text-fog-grey mt-0.5">
+                              Retry in {Math.max(0, Math.round(p.retryAfterMs / 1000))}s
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                {healthy.length > 0 && (
+                  <div>
+                    {unhealthy.length > 0 && (
+                      <p className="text-[10px] font-[590] text-emerald uppercase tracking-[0.05em] mb-2">
+                        Operational
+                      </p>
+                    )}
+                    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2">
+                      {healthy.map((p) => (
+                        <div
+                          key={p.connectionId}
+                          className="rounded-[6px] p-2.5 bg-emerald/5 border border-charcoal-grey flex items-center gap-2"
+                        >
+                          <span className="size-2 rounded-full bg-emerald shrink-0" />
+                          <span className="text-[12px] text-porcelain truncate" title={p.connectionName}>
+                            {p.connectionName}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            );
+          })()
+        )}
+      </div>
+
+      {/* Rate Limit Status */}
+      {data.rateLimitStatus?.length > 0 && (
+        <div className="rounded-[6px] border border-charcoal-grey bg-graphite p-5">
+          <SectionHeader icon="speed" title="Rate Limit Status">
+            <span className="text-[11px] text-fog-grey">
+              {data.rateLimitStatus.length} provider{data.rateLimitStatus.length !== 1 ? "s" : ""} affected
+            </span>
+          </SectionHeader>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            {data.rateLimitStatus.map((rl) => (
+              <div key={rl.provider} className="rounded-[6px] border border-[#f59e0b]/20 bg-[#f59e0b]/5 p-3">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-[13px] font-[510] text-porcelain">{rl.providerName}</span>
+                  <span className="text-[11px] font-[590] px-1.5 py-0.5 rounded-[4px] bg-[#f59e0b]/10 text-[#f59e0b]">
+                    {rl.rateLimitedCount} limited
+                  </span>
+                </div>
+                <div className="space-y-1">
+                  {rl.connections.map((c) => (
+                    <div key={c.connectionId} className="flex items-center justify-between text-[11px]">
+                      <span className="text-storm-cloud truncate max-w-[140px]">{c.connectionName}</span>
+                      <span className="text-fog-grey shrink-0">
+                        retry in {Math.max(0, Math.round(c.retryAfterMs / 1000))}s
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
