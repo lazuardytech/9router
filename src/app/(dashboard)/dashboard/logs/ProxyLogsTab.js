@@ -34,12 +34,15 @@ function StatusBadge({ active }) {
   );
 }
 
+import { LogDrawer, LogDrawerHeader, LogDrawerBody, DetailSection, DetailRow } from "@/shared/components/LogDrawer";
+
 export default function ProxyLogsTab() {
   const [pools, setPools] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [testing, setTesting] = useState(null);
   const [testResults, setTestResults] = useState({});
+  const [selectedPool, setSelectedPool] = useState(null);
 
   const fetchPools = useCallback(async () => {
     setLoading(true);
@@ -170,7 +173,11 @@ export default function ProxyLogsTab() {
                   <>
                     <tr
                       key={pool.id}
-                      className="border-b border-charcoal-grey/50 last:border-0 hover:bg-deep-slate transition-colors duration-100"
+                      className={cn(
+                        "border-b border-charcoal-grey/50 last:border-0 cursor-pointer transition-colors duration-100",
+                        selectedPool?.id === pool.id ? "bg-porcelain/5" : "hover:bg-deep-slate",
+                      )}
+                      onClick={() => setSelectedPool(selectedPool?.id === pool.id ? null : pool)}
                     >
                       <td className="px-3 py-2.5 border-r border-charcoal-grey/50 font-[510] text-porcelain">
                         {pool.name}
@@ -233,6 +240,77 @@ export default function ProxyLogsTab() {
           </div>
         )}
       </div>
+
+      {/* Proxy Pool Detail Drawer */}
+      <LogDrawer open={!!selectedPool} onClose={() => setSelectedPool(null)}>
+        <LogDrawerHeader title="Proxy Pool Detail" onClose={() => setSelectedPool(null)} />
+        <LogDrawerBody>
+          {selectedPool && (
+            <>
+              <DetailSection title="Pool Info" icon="lan">
+                <DetailRow label="Name" value={selectedPool.name} accent="text-porcelain font-[510]" />
+                <DetailRow label="URL" value={selectedPool.proxyUrl} mono />
+                <DetailRow label="Type" value={selectedPool.type || "http"} />
+                <DetailRow
+                  label="Status"
+                  value={selectedPool.isActive ? "Enabled" : "Disabled"}
+                  accent={selectedPool.isActive ? "text-emerald" : "text-warning-red"}
+                />
+                <DetailRow label="Connections" value={String(selectedPool.boundConnectionCount ?? 0)} />
+              </DetailSection>
+
+              {selectedPool.username && (
+                <DetailSection title="Authentication" icon="lock">
+                  <DetailRow label="Username" value={selectedPool.username} mono />
+                  <DetailRow label="Password" value="••••••••" mono />
+                </DetailSection>
+              )}
+
+              {selectedPool.noProxy && (
+                <DetailSection title="No Proxy" icon="block">
+                  <DetailRow label="Bypass" value={selectedPool.noProxy} mono />
+                </DetailSection>
+              )}
+
+              {testResults[selectedPool.id] && (
+                <DetailSection title="Last Test Result" icon="network_check">
+                  <div
+                    className={cn(
+                      "flex items-center gap-2 text-[11px] px-2.5 py-1.5 rounded-[4px]",
+                      testResults[selectedPool.id].ok
+                        ? "bg-emerald/8 text-emerald border border-emerald/20"
+                        : "bg-warning-red/8 text-warning-red border border-warning-red/20",
+                    )}
+                  >
+                    <span className="material-symbols-outlined text-[13px]">
+                      {testResults[selectedPool.id].ok ? "check_circle" : "error"}
+                    </span>
+                    {testResults[selectedPool.id].message}
+                  </div>
+                </DetailSection>
+              )}
+
+              <div className="pt-2">
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleTest(selectedPool);
+                  }}
+                  disabled={testing === selectedPool.id}
+                  className="flex items-center gap-1.5 h-7 px-3 rounded-[6px] border border-charcoal-grey text-[12px] text-storm-cloud hover:bg-deep-slate hover:text-porcelain disabled:opacity-50 transition-colors duration-100"
+                >
+                  {testing === selectedPool.id ? (
+                    <span className="material-symbols-outlined text-[13px] animate-spin">progress_activity</span>
+                  ) : (
+                    <span className="material-symbols-outlined text-[13px]">network_check</span>
+                  )}
+                  Test Connection
+                </button>
+              </div>
+            </>
+          )}
+        </LogDrawerBody>
+      </LogDrawer>
     </div>
   );
 }

@@ -437,6 +437,32 @@ export async function getRecentLogs(limit = 200) {
   }
 }
 
+export async function getRecentLogsStructured(limit = 300) {
+  if (isCloud) return [];
+  try {
+    const db = getDatabase();
+    const rows = db
+      .prepare(
+        `SELECT id, timestamp, model, provider, account, prompt_tokens, completion_tokens, status, combo
+         FROM request_log ORDER BY id DESC LIMIT ?`,
+      )
+      .all(limit);
+    return rows.map((r) => ({
+      id: r.id,
+      timestamp: r.timestamp,
+      model: r.model || "-",
+      provider: r.provider || "-",
+      account: r.account || "-",
+      promptTokens: r.prompt_tokens ?? null,
+      completionTokens: r.completion_tokens ?? null,
+      status: r.status || "",
+      combo: r.combo || null,
+    }));
+  } catch {
+    return [];
+  }
+}
+
 // ===== Read path =========================================================
 
 function historyRow(r) {

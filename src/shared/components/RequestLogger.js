@@ -1,31 +1,28 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { cn } from "@/shared/utils/cn";
-import { LogDrawer, LogDrawerHeader, LogDrawerBody, DetailSection, DetailRow, JsonBlock } from "./LogDrawer";
+import RequestLogDetail from "./RequestLogDetail";
+
+// ─── Formatters ───────────────────────────────────────────────────────────────
 
 const fmtTokens = (n) => {
-  if (!n && n !== 0) return "—";
-  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`;
-  if (n >= 1_000) return `${(n / 1_000).toFixed(1)}K`;
-  return String(n);
+  if (n == null || n === "-") return "—";
+  const num = typeof n === "string" ? parseInt(n, 10) : n;
+  if (isNaN(num)) return "—";
+  if (num >= 1_000_000) return `${(num / 1_000_000).toFixed(1)}M`;
+  if (num >= 1_000) return `${(num / 1_000).toFixed(1)}K`;
+  return num.toLocaleString();
 };
 
-function parseLog(raw) {
-  const parts = raw.split(" | ");
-  if (parts.length < 7) return null;
-  return {
-    raw,
-    timestamp: parts[0],
-    model: parts[1],
-    provider: parts[2],
-    account: parts[3],
-    promptTokens: parts[4],
-    completionTokens: parts[5],
-    status: parts[6]?.trim(),
-    combo: parts[7]?.trim() && parts[7].trim() !== "-" ? parts[7].trim() : null,
-  };
-}
+const fmtLatency = (ms) => {
+  if (ms == null) return "—";
+  if (ms >= 60000) return `${(ms / 60000).toFixed(1)}m`;
+  if (ms >= 1000) return `${(ms / 1000).toFixed(1)}s`;
+  return `${ms}ms`;
+};
+
+// ─── Badges ───────────────────────────────────────────────────────────────────
 
 function StatusBadge({ status }) {
   if (!status) return null;
@@ -65,158 +62,35 @@ function ComboBadge({ combo }) {
   );
 }
 
-// ─── Detail Drawer ────────────────────────────────────────────────────────────
-
-function LogDetailDrawer({ log, onClose }) {
-  const [detail, setDetail] = useState(null);
-  const [loading, setLoading] = useState(false);
-
-  useEffect(() => {
-    if (!log) return;
-    setDetail(null);
-    // Try to fetch detail from request-details API by matching timestamp+model
-    const fetchDetail = async () => {
-      setLoading(true);
-      try {
-        const params = new URLSearchParams({ model: log.model, pageSize: 5 });
-        const res = await fetch(`/api/usage/request-details?${params}`);
-        if (res.ok) {
-          const json = await res.json();
-          // Find best match by model
-          const match = json.details?.find((d) => d.model === log.model) ?? json.details?.[0];
-          if (match) setDetail(match);
-        }
-      } catch {
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchDetail();
-  }, [log]);
-
-  if (!log) return null;
-
-  const isOk = log.status?.includes("OK");
-  const isFailed = log.status?.includes("FAILED");
-
-  return (
-    <LogDrawer open={!!log} onClose={onClose}>
-      <LogDrawerHeader title="Request Detail" onClose={onClose} />
-      <LogDrawerBody>
-        {/* Summary */}
-        <DetailSection title="Summary" icon="info">
-          <DetailRow label="Timestamp" value={log.timestamp} mono />
-          <DetailRow label="Model" value={log.model} mono accent="text-porcelain" />
-          <DetailRow label="Provider" value={log.provider} />
-          <DetailRow label="Account" value={log.account} />
-          <DetailRow
-            label="Status"
-            value={
-              <span
-                className={cn(
-                  "text-[11px] font-[590]",
-                  isOk && "text-emerald",
-                  isFailed && "text-warning-red",
-                  !isOk && !isFailed && "text-aether-blue",
-                )}
-              >
-                {log.status}
-              </span>
-            }
-          />
-          <DetailRow label="Combo" value={log.combo} accent="text-amethyst" />
-        </DetailSection>
-
-        {/* Tokens */}
-        <DetailSection title="Tokens" icon="token">
-          <DetailRow label="Input tokens" value={log.promptTokens !== "-" ? log.promptTokens : null} mono />
-          <DetailRow label="Output tokens" value={log.completionTokens !== "-" ? log.completionTokens : null} mono />
-        </DetailSection>
-
-        {/* Detail from DB */}
-        {loading && (
-          <div className="flex items-center gap-2 text-[12px] text-fog-grey">
-            <span className="material-symbols-outlined text-[14px] animate-spin">progress_activity</span>
-            Loading detail...
-          </div>
-        )}
-
-        {detail && (
-          <>
-            {/* Latency */}
-            {detail.latency && Object.keys(detail.latency).length > 0 && (
-              <DetailSection title="Latency" icon="speed">
-                {detail.latency.total != null && <DetailRow label="Total" value={`${detail.latency.total}ms`} mono />}
-                {detail.latency.ttfb != null && <DetailRow label="TTFB" value={`${detail.latency.ttfb}ms`} mono />}
-              </DetailSection>
-            )}
-
-            {/* Request */}
-            {detail.request && Object.keys(detail.request).length > 0 && (
-              <DetailSection title="Client Request" icon="upload">
-                <JsonBlock data={detail.request} />
-              </DetailSection>
-            )}
-
-            {/* Provider Request */}
-            {detail.providerRequest && Object.keys(detail.providerRequest).length > 0 && (
-              <DetailSection title="Provider Request" icon="send">
-                <JsonBlock data={detail.providerRequest} />
-              </DetailSection>
-            )}
-
-            {/* Provider Response */}
-            {detail.providerResponse && Object.keys(detail.providerResponse).length > 0 && (
-              <DetailSection title="Provider Response" icon="download">
-                <JsonBlock data={detail.providerResponse} />
-              </DetailSection>
-            )}
-
-            {/* Client Response */}
-            {detail.response && Object.keys(detail.response).length > 0 && (
-              <DetailSection title="Client Response" icon="output">
-                <JsonBlock data={detail.response} />
-              </DetailSection>
-            )}
-          </>
-        )}
-
-        {!loading && !detail && (
-          <div className="rounded-[6px] border border-charcoal-grey bg-deep-slate p-4 text-center">
-            <span className="material-symbols-outlined text-[20px] text-fog-grey mb-2">info</span>
-            <p className="text-[12px] text-fog-grey">No detailed payload available for this request.</p>
-            <p className="text-[11px] text-fog-grey/60 mt-1">
-              Enable detailed logging in Settings to capture request/response payloads.
-            </p>
-          </div>
-        )}
-      </LogDrawerBody>
-    </LogDrawer>
-  );
-}
-
 // ─── Main Component ───────────────────────────────────────────────────────────
 
 export default function RequestLogger() {
   const [logs, setLogs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [recording, setRecording] = useState(true);
-  const [selected, setSelected] = useState(null);
   const [search, setSearch] = useState("");
   const [filterStatus, setFilterStatus] = useState("all");
   const [filterProvider, setFilterProvider] = useState("all");
+  const [sortBy, setSortBy] = useState("newest");
+
+  // Detail drawer state
+  const [selectedLog, setSelectedLog] = useState(null);
+  const [detailData, setDetailData] = useState(null);
+  const [detailLoading, setDetailLoading] = useState(false);
+
   const prevSigRef = useRef("");
 
   const fetchLogs = useCallback(async (showLoading = false) => {
     if (showLoading) setLoading(true);
     try {
-      const res = await fetch("/api/usage/request-logs");
+      const res = await fetch("/api/usage/request-logs?limit=300");
       if (!res.ok) return;
       const data = await res.json();
-      const sig = JSON.stringify(data.slice(0, 20).map((l) => l.slice(0, 40)));
+      // Skip re-render if IDs haven't changed
+      const sig = JSON.stringify((data || []).slice(0, 20).map((l) => l.id));
       if (sig === prevSigRef.current) return;
       prevSigRef.current = sig;
-      setLogs(data);
+      setLogs(Array.isArray(data) ? data : []);
     } catch {
     } finally {
       if (showLoading) setLoading(false);
@@ -233,53 +107,114 @@ export default function RequestLogger() {
     return () => clearInterval(t);
   }, [recording, fetchLogs]);
 
-  const parsed = logs.map(parseLog).filter(Boolean);
-
-  // Unique providers for filter
-  const providers = [...new Set(parsed.map((l) => l.provider).filter((p) => p && p !== "-"))];
-
-  const filtered = parsed.filter((l) => {
-    if (filterStatus === "ok" && !l.status?.includes("OK")) return false;
-    if (filterStatus === "failed" && !l.status?.includes("FAILED")) return false;
-    if (filterStatus === "pending" && !l.status?.includes("PENDING")) return false;
-    if (filterStatus === "combo" && !l.combo) return false;
-    if (filterProvider !== "all" && l.provider !== filterProvider) return false;
-    if (search) {
-      const q = search.toLowerCase();
-      return (
-        l.model?.toLowerCase().includes(q) ||
-        l.provider?.toLowerCase().includes(q) ||
-        l.account?.toLowerCase().includes(q) ||
-        l.status?.toLowerCase().includes(q) ||
-        l.combo?.toLowerCase().includes(q)
-      );
+  // Open detail drawer — fetch matched request_details
+  const openDetail = useCallback(async (log) => {
+    setSelectedLog(log);
+    setDetailData(null);
+    setDetailLoading(true);
+    try {
+      const res = await fetch(`/api/usage/request-logs/${log.id}`);
+      if (res.ok) {
+        const data = await res.json();
+        setDetailData(data.detail ?? null);
+      }
+    } catch {
+    } finally {
+      setDetailLoading(false);
     }
-    return true;
-  });
+  }, []);
 
-  const counts = {
-    total: parsed.length,
-    ok: parsed.filter((l) => l.status?.includes("OK")).length,
-    failed: parsed.filter((l) => l.status?.includes("FAILED")).length,
-    pending: parsed.filter((l) => l.status?.includes("PENDING")).length,
-    combo: parsed.filter((l) => l.combo).length,
-  };
+  const closeDetail = useCallback(() => {
+    setSelectedLog(null);
+    setDetailData(null);
+  }, []);
+
+  // Derived data
+  const providers = useMemo(() => [...new Set(logs.map((l) => l.provider).filter((p) => p && p !== "-"))], [logs]);
+
+  const filtered = useMemo(() => {
+    let result = logs.filter((l) => {
+      if (filterStatus === "ok" && !l.status?.includes("OK")) return false;
+      if (filterStatus === "failed" && !l.status?.includes("FAILED")) return false;
+      if (filterStatus === "pending" && !l.status?.includes("PENDING")) return false;
+      if (filterStatus === "combo" && !l.combo) return false;
+      if (filterProvider !== "all" && l.provider !== filterProvider) return false;
+      if (search) {
+        const q = search.toLowerCase();
+        return (
+          l.model?.toLowerCase().includes(q) ||
+          l.provider?.toLowerCase().includes(q) ||
+          l.account?.toLowerCase().includes(q) ||
+          l.status?.toLowerCase().includes(q) ||
+          l.combo?.toLowerCase().includes(q)
+        );
+      }
+      return true;
+    });
+
+    // Sort
+    result = [...result];
+    switch (sortBy) {
+      case "oldest":
+        result.reverse();
+        break;
+      case "tokens_desc":
+        result.sort(
+          (a, b) =>
+            (b.promptTokens ?? 0) + (b.completionTokens ?? 0) - ((a.promptTokens ?? 0) + (a.completionTokens ?? 0)),
+        );
+        break;
+      case "tokens_asc":
+        result.sort(
+          (a, b) =>
+            (a.promptTokens ?? 0) + (a.completionTokens ?? 0) - ((b.promptTokens ?? 0) + (b.completionTokens ?? 0)),
+        );
+        break;
+      // newest is default (already ordered by id DESC from API)
+    }
+
+    return result;
+  }, [logs, filterStatus, filterProvider, search, sortBy]);
+
+  const counts = useMemo(
+    () => ({
+      total: logs.length,
+      ok: logs.filter((l) => l.status?.includes("OK")).length,
+      failed: logs.filter((l) => l.status?.includes("FAILED")).length,
+      pending: logs.filter((l) => l.status?.includes("PENDING")).length,
+      combo: logs.filter((l) => l.combo).length,
+    }),
+    [logs],
+  );
 
   return (
     <div className="flex flex-col gap-3">
       {/* Header */}
-      <div className="flex items-center justify-between gap-3">
+      <div className="flex items-center justify-between gap-3 flex-wrap">
         <div className="flex items-center gap-3">
           <h2 className="text-[14px] font-[510] text-porcelain tracking-[-0.13px]">Request Logs</h2>
           <div className="flex items-center gap-2 text-[11px] text-fog-grey">
             <span className="text-storm-cloud">{counts.total}</span> total
             <span className="text-emerald">{counts.ok}</span> ok
-            {counts.failed > 0 && <span className="text-warning-red">{counts.failed}</span>}
-            {counts.pending > 0 && <span className="text-aether-blue animate-pulse">{counts.pending}</span>}
+            {counts.failed > 0 && <span className="text-warning-red">{counts.failed} failed</span>}
+            {counts.pending > 0 && <span className="text-aether-blue animate-pulse">{counts.pending} pending</span>}
             {counts.combo > 0 && <span className="text-amethyst">{counts.combo} combo</span>}
           </div>
         </div>
+
         <div className="flex items-center gap-2">
+          {/* Sort */}
+          <select
+            value={sortBy}
+            onChange={(e) => setSortBy(e.target.value)}
+            className="h-7 px-2 rounded-[6px] border border-charcoal-grey bg-deep-slate text-[12px] text-porcelain focus:outline-none focus:border-porcelain/30 transition-colors duration-100"
+          >
+            <option value="newest">Newest first</option>
+            <option value="oldest">Oldest first</option>
+            <option value="tokens_desc">Most tokens</option>
+            <option value="tokens_asc">Fewest tokens</option>
+          </select>
+
           <button
             onClick={() => fetchLogs(false)}
             className="flex items-center justify-center size-7 rounded-[4px] border border-charcoal-grey text-storm-cloud hover:bg-deep-slate hover:text-porcelain transition-colors duration-100"
@@ -287,6 +222,7 @@ export default function RequestLogger() {
           >
             <span className="material-symbols-outlined text-[15px]">refresh</span>
           </button>
+
           <button
             onClick={() => setRecording((v) => !v)}
             title={recording ? "Pause recording" : "Resume recording"}
@@ -400,52 +336,73 @@ export default function RequestLogger() {
                   <th className="px-3 py-2 text-[10px] font-[590] uppercase tracking-[0.05em] text-fog-grey border-r border-charcoal-grey">
                     Status
                   </th>
-                  <th className="px-3 py-2 text-[10px] font-[590] uppercase tracking-[0.05em] text-fog-grey">Combo</th>
+                  <th className="px-3 py-2 text-[10px] font-[590] uppercase tracking-[0.05em] text-fog-grey border-r border-charcoal-grey">
+                    Combo
+                  </th>
+                  <th className="px-3 py-2 text-[10px] font-[590] uppercase tracking-[0.05em] text-fog-grey">Detail</th>
                 </tr>
               </thead>
               <tbody>
-                {filtered.map((log, i) => (
-                  <tr
-                    key={i}
-                    onClick={() => setSelected(log)}
-                    className={cn(
-                      "border-b border-charcoal-grey/50 last:border-0 cursor-pointer transition-colors duration-100",
-                      log.status?.includes("PENDING") ? "bg-aether-blue/5" : "hover:bg-deep-slate",
-                      selected?.raw === log.raw && "bg-porcelain/5",
-                    )}
-                  >
-                    <td className="px-3 py-2 border-r border-charcoal-grey/50 text-fog-grey font-mono">
-                      {log.timestamp}
-                    </td>
-                    <td
-                      className="px-3 py-2 border-r border-charcoal-grey/50 text-porcelain font-mono max-w-[200px] truncate"
-                      title={log.model}
+                {filtered.map((log) => {
+                  const isSelected = selectedLog?.id === log.id;
+                  const isFailed = log.status?.includes("FAILED");
+                  const isPending = log.status?.includes("PENDING");
+
+                  return (
+                    <tr
+                      key={log.id}
+                      onClick={() => (isSelected ? closeDetail() : openDetail(log))}
+                      className={cn(
+                        "border-b border-charcoal-grey/50 last:border-0 cursor-pointer transition-colors duration-100",
+                        isPending && "bg-aether-blue/5",
+                        isFailed && !isPending && "bg-warning-red/5",
+                        isSelected && "bg-porcelain/5 ring-1 ring-inset ring-porcelain/10",
+                        !isSelected && !isPending && !isFailed && "hover:bg-deep-slate",
+                      )}
                     >
-                      {log.model}
-                    </td>
-                    <td className="px-3 py-2 border-r border-charcoal-grey/50">
-                      <ProviderBadge provider={log.provider} />
-                    </td>
-                    <td
-                      className="px-3 py-2 border-r border-charcoal-grey/50 text-storm-cloud max-w-[140px] truncate"
-                      title={log.account}
-                    >
-                      {log.account || "—"}
-                    </td>
-                    <td className="px-3 py-2 border-r border-charcoal-grey/50 text-right text-aether-blue font-mono">
-                      {fmtTokens(log.promptTokens)}
-                    </td>
-                    <td className="px-3 py-2 border-r border-charcoal-grey/50 text-right text-emerald font-mono">
-                      {fmtTokens(log.completionTokens)}
-                    </td>
-                    <td className="px-3 py-2 border-r border-charcoal-grey/50">
-                      <StatusBadge status={log.status} />
-                    </td>
-                    <td className="px-3 py-2">
-                      <ComboBadge combo={log.combo} />
-                    </td>
-                  </tr>
-                ))}
+                      <td className="px-3 py-2 border-r border-charcoal-grey/50 text-fog-grey font-mono text-[11px]">
+                        {log.timestamp}
+                      </td>
+                      <td
+                        className="px-3 py-2 border-r border-charcoal-grey/50 text-porcelain font-mono max-w-[200px] truncate"
+                        title={log.model}
+                      >
+                        {log.model}
+                      </td>
+                      <td className="px-3 py-2 border-r border-charcoal-grey/50">
+                        <ProviderBadge provider={log.provider} />
+                      </td>
+                      <td
+                        className="px-3 py-2 border-r border-charcoal-grey/50 text-storm-cloud max-w-[140px] truncate"
+                        title={log.account}
+                      >
+                        {log.account || "—"}
+                      </td>
+                      <td className="px-3 py-2 border-r border-charcoal-grey/50 text-right text-aether-blue font-mono">
+                        {fmtTokens(log.promptTokens)}
+                      </td>
+                      <td className="px-3 py-2 border-r border-charcoal-grey/50 text-right text-emerald font-mono">
+                        {fmtTokens(log.completionTokens)}
+                      </td>
+                      <td className="px-3 py-2 border-r border-charcoal-grey/50">
+                        <StatusBadge status={log.status} />
+                      </td>
+                      <td className="px-3 py-2 border-r border-charcoal-grey/50">
+                        <ComboBadge combo={log.combo} />
+                      </td>
+                      <td className="px-3 py-2">
+                        <span
+                          className={cn(
+                            "material-symbols-outlined text-[14px] transition-colors duration-100",
+                            isSelected ? "text-porcelain" : "text-fog-grey/40 group-hover:text-fog-grey",
+                          )}
+                        >
+                          {isSelected ? "chevron_right" : "open_in_new"}
+                        </span>
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           )}
@@ -457,7 +414,7 @@ export default function RequestLogger() {
       </p>
 
       {/* Detail Drawer */}
-      <LogDetailDrawer log={selected} onClose={() => setSelected(null)} />
+      <RequestLogDetail log={selectedLog} detail={detailData} loading={detailLoading} onClose={closeDetail} />
     </div>
   );
 }

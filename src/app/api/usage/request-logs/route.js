@@ -1,13 +1,14 @@
 import { NextResponse } from "next/server";
-import { getRecentLogs } from "@/lib/usageDb";
+import { getRecentLogsStructured } from "@/lib/usageDb";
 
-export async function GET() {
+export async function GET(request) {
   try {
-    const logs = await getRecentLogs(200);
+    const { searchParams } = new URL(request.url);
+    const limit = Math.min(parseInt(searchParams.get("limit") || "300"), 500);
+    const logs = await getRecentLogsStructured(limit);
     return NextResponse.json(logs);
   } catch (error) {
-    console.error("[API ERROR] /api/usage/logs failed:", error);
-    console.error("[API ERROR] Stack:", error?.stack);
+    console.error("[API ERROR] /api/usage/request-logs failed:", error);
     return NextResponse.json({ error: "Failed to fetch logs" }, { status: 500 });
   }
 }
