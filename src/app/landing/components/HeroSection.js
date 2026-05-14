@@ -33,7 +33,7 @@ export default function HeroSection() {
         <div className="flex flex-wrap items-center justify-center gap-3 mt-2">
           <a
             href="/dashboard"
-            className="inline-flex items-center gap-2 h-9 px-5 rounded-[6px] bg-porcelain hover:bg-[#d4e010] text-pitch-black text-[13px] font-[590] transition-colors duration-100 shadow-[var(--shadow-sm)]"
+            className="inline-flex items-center gap-2 h-9 px-5 rounded-[6px] bg-[#E5E5E6] hover:bg-white text-pitch-black text-[13px] font-[590] transition-colors duration-100 shadow-[var(--shadow-sm)]"
           >
             <span className="material-symbols-outlined text-[16px]">rocket_launch</span>
             Get Started

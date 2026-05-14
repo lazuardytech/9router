@@ -38,9 +38,8 @@
   --color-text-muted: #8a8f98;
   --color-text-subtle: #62666d;
 
-  /* accent = porcelain (white) */
-  --color-primary: #f7f8f8;
-  --color-primary-hover: #e5e5e6;
+  --color-primary: #e5e5e6;
+  --color-primary-hover: #ffffff;
   --color-primary-fg: #08090a;
 
   --color-danger: #eb5757;

@@ -46,7 +46,7 @@ export default function Navigation() {
         <div className="flex items-center gap-2">
           <button
             onClick={() => router.push("/dashboard")}
-            className="hidden sm:flex h-7 items-center justify-center rounded-[6px] px-3 bg-porcelain hover:bg-[#d4e010] text-pitch-black text-[12px] font-[590] transition-colors duration-100"
+            className="hidden sm:flex h-7 items-center justify-center rounded-[6px] px-3 bg-[#E5E5E6] hover:bg-white text-pitch-black text-[12px] font-[590] transition-colors duration-100"
           >
             Open Dashboard
           </button>
@@ -83,7 +83,7 @@ export default function Navigation() {
             <div className="px-6 pt-2 pb-3">
               <button
                 onClick={() => router.push("/dashboard")}
-                className="w-full h-8 rounded-[6px] bg-porcelain text-pitch-black text-[13px] font-[590] transition-colors hover:bg-[#d4e010]"
+                className="w-full h-8 rounded-[6px] bg-porcelain text-pitch-black text-[13px] font-[590] transition-colors hover:bg-white"
               >
                 Open Dashboard
               </button>
