@@ -4,11 +4,21 @@ import { ThemeProvider } from "@/shared/components/ThemeProvider";
 import "@/lib/initCloudSync";
 import "@/lib/network/initOutboundProxy";
 
+export const metadata = {
+  appleWebApp: {
+    title: "9router",
+  },
+};
+
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
       <head>
-        <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+        {/* Favicon */}
+        <link rel="icon" href="/favicon.ico" sizes="48x48" />
+        <link rel="icon" href="/icon0.svg" type="image/svg+xml" />
+        <link rel="apple-touch-icon" href="/apple-icon.png" />
+        <meta name="apple-mobile-web-app-title" content="9router" />
         {/* Google Fonts preconnect */}
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
