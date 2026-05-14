@@ -18,7 +18,7 @@ export default function OverviewCards({ stats }) {
         <span className="truncate text-2xl font-bold text-primary">{fmt(stats.totalPromptTokens)}</span>
       </Card>
       <Card className="flex min-w-0 flex-col gap-1 px-4 py-3">
-        <span className="text-text-muted text-sm uppercase font-semibold">Output Tokens</span>
+        <span className="text-text-muted text-sm uppercase font-semibold">Total Output Tokens</span>
         <span className="truncate text-2xl font-bold text-success">{fmt(stats.totalCompletionTokens)}</span>
       </Card>
       <Card className="flex min-w-0 flex-col gap-1 px-4 py-3">
