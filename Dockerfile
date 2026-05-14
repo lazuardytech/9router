@@ -1,6 +1,7 @@
 # syntax=docker/dockerfile:1.7
 ARG BUN_IMAGE=oven/bun:1.3.14-alpine
-FROM ${BUN_IMAGE} AS base
+ARG NODE_IMAGE=node:22-alpine
+FROM ${NODE_IMAGE} AS base
 WORKDIR /app
 
 FROM base AS builder
@@ -9,13 +10,14 @@ RUN apk --no-cache upgrade && apk --no-cache add python3 make g++ linux-headers
 
 COPY package.json bun.lock ./
 RUN --mount=type=cache,target=/root/.bun/install/cache \
+  npm install -g bun@1.3.14 && \
   bun install --frozen-lockfile
 
 COPY . ./
 ENV NEXT_TELEMETRY_DISABLED=1
 RUN bun run build
 
-FROM ${BUN_IMAGE} AS runner
+FROM ${NODE_IMAGE} AS runner
 WORKDIR /app
 
 LABEL org.opencontainers.image.title="9router"
