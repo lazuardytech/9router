@@ -7,7 +7,7 @@ let tempDir;
 let originalDataDir;
 
 beforeAll(() => {
-  tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "9router-memory-test-"));
+  tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "pod-memory-test-"));
   originalDataDir = process.env.DATA_DIR;
   process.env.DATA_DIR = tempDir;
 });

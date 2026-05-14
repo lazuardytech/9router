@@ -1,6 +1,6 @@
 # Overview
 
-9router is Lazuardy Tech's internal AI routing proxy built on a customized 9router codebase.
+Pod is Lazuardy Tech's internal AI routing proxy built on a customized pod codebase.
 
 Current baseline in this repo: **v0.3.1**.
 
@@ -41,6 +41,6 @@ Current baseline in this repo: **v0.3.1**.
 
 ## Ground Rules
 
-- Keep internal naming as `9router` (package/data/env conventions).
+- Keep internal naming as `pod` (package/data/env conventions).
 - Use `pnpm` for all install/build/test workflows.
 - Validate with `pnpm run test:run` and `pnpm run build` before release/tag.

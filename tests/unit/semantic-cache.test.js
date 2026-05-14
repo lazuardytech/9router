@@ -7,7 +7,7 @@ let tempDir;
 let originalDataDir;
 
 beforeAll(() => {
-  tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "9router-semcache-test-"));
+  tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "pod-semcache-test-"));
   originalDataDir = process.env.DATA_DIR;
   process.env.DATA_DIR = tempDir;
 });
@@ -81,6 +81,6 @@ describe("semantic cache", () => {
     expect(isCacheableForWrite(baseBody, {})).toBe(true);
     expect(isCacheableForRead({ ...baseBody, stream: true }, {})).toBe(false);
     expect(isCacheableForWrite({ ...baseBody, temperature: 0.2 }, {})).toBe(false);
-    expect(isCacheableForRead(baseBody, { "x-9router-no-cache": "true" })).toBe(false);
+    expect(isCacheableForRead(baseBody, { "x-pod-no-cache": "true" })).toBe(false);
   });
 });

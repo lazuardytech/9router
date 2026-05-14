@@ -12,8 +12,8 @@ import { SCHEMA_SQL } from "./schema.js";
 
 const require = createRequire(import.meta.url);
 
-const APP_NAME = "9router";
-const SQLITE_FILE_NAME = "9router.sqlite";
+const APP_NAME = "pod";
+const SQLITE_FILE_NAME = "pod.sqlite";
 const SCHEMA_VERSION = "1";
 
 function getDataDir() {

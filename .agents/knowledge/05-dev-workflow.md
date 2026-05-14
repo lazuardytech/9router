@@ -68,7 +68,7 @@ File: `.github/workflows/ci.yml`
 File: `.github/workflows/docker-publish.yml`
 
 - Trigger: tag push `v*`, and manual dispatch
-- Image: `docker.io/lazuardytech/9router`
+- Image: `docker.io/lazuardytech/pod`
 - Platforms: `linux/amd64`
 - Tag strategy includes semver tag and `latest`
 
@@ -83,6 +83,6 @@ File: `.github/workflows/docker-publish.yml`
 
 ## Storage / Migration Notes
 
-- SQLite file: `$DATA_DIR/9router.sqlite`
+- SQLite file: `$DATA_DIR/pod.sqlite`
 - First boot auto-runs JSON to SQLite migration when needed
 - Manual migration endpoint: `/api/settings/migrate-sqlite`

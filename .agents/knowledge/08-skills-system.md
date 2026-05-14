@@ -9,7 +9,7 @@ Status for this repo snapshot (v0.3.1):
 ## What `.agents` means here
 
 In this repo, `.agents/` is an internal knowledge base for coding agents and contributors.
-It is not a runtime feature consumed by the 9router dashboard or API server.
+It is not a runtime feature consumed by the pod dashboard or API server.
 
 ## If a "skills" feature is needed later
 

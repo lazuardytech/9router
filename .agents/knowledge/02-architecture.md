@@ -1,6 +1,6 @@
 # Architecture
 
-This file summarizes the current architecture for `/workspace/9router` (v0.3.1).
+This file summarizes the current architecture for `/workspace/pod` (v0.3.1).
 
 ## Package Layout
 
@@ -58,7 +58,7 @@ Limiter is enforced at `/api/v1/*` route layer via wrapper, including streaming-
 ## Persistence
 
 Primary store is SQLite:
-- File: `$DATA_DIR/9router.sqlite` (default `~/.9router/9router.sqlite`)
+- File: `$DATA_DIR/pod.sqlite` (default `~/.9router/pod.sqlite`)
 - Access via `src/lib/localDb.js` and `src/lib/sqlite/connection.js`
 - `connection.js` applies pragmas and runs schema patches/migrations
 

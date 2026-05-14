@@ -2,7 +2,7 @@
 
 ## Repository Identity
 
-- Repo: `github.com/lazuardytech/9router`
+- Repo: `github.com/lazuardytech/pod`
 - Branch: `master`
 - Current tagged release baseline: **v0.3.1**
 
@@ -25,7 +25,7 @@ At this snapshot:
 
 ```bash
 git remote -v
-# origin  git@github.com:lazuardytech/9router.git
+# origin  git@github.com:lazuardytech/pod.git
 ```
 
 No `upstream` remote is currently configured in local checkout.
@@ -35,7 +35,7 @@ No `upstream` remote is currently configured in local checkout.
 The branch is intentionally customized for Lazuardy/Melma needs, with emphasis on:
 
 1. pnpm-first build and CI flow
-2. Docker publish to Docker Hub `lazuardytech/9router`
+2. Docker publish to Docker Hub `lazuardytech/pod`
 3. Memory/cache/rate-limit features integrated into API and dashboard
 4. Internal contributor docs (`AGENTS.md`, `.agents/*`) maintained in-repo
 

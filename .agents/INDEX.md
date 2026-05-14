@@ -1,6 +1,6 @@
 # .agents Index
 
-Knowledge base entrypoint for 9router contributors.
+Knowledge base entrypoint for pod contributors.
 
 Last synced: **2026-05-14** (baseline **v0.3.1**).
 

@@ -1,5 +1,5 @@
 # RWX Run Configuration - Full Build Pipeline
-# Lint + Test + Build for 9router (FE-only, prebuilt Go binary shipped in repo)
+# Lint + Test + Build for pod (FE-only, prebuilt Go binary shipped in repo)
 # Usage: rwx run .rwx/build.yml --wait
 
 on:

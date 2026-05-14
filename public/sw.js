@@ -1,4 +1,4 @@
-const CACHE_NAME = "9router-image-cache-v1";
+const CACHE_NAME = "pod-image-cache-v1";
 const MAX_AGE_MS = 1000 * 60 * 60 * 24 * 31;
 const IMAGE_EXTENSIONS = [".png", ".jpg", ".jpeg", ".gif", ".webp", ".avif", ".svg", ".ico"];
 

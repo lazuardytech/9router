@@ -46,7 +46,7 @@ Route pages can exist without sidebar exposure (example: translator/basic-chat).
 
 ## 8) SQLite is the source of truth
 
-Default file is `~/.9router/9router.sqlite`.
+Default file is `~/.pod/pod.sqlite`.
 Use `localDb` / sqlite helpers instead of ad-hoc JSON state changes.
 
 ## 9) `log.warn()` caveat
@@ -59,5 +59,5 @@ Use `localDb` / sqlite helpers instead of ad-hoc JSON state changes.
 
 ## 11) Docker publishing target
 
-Release images publish to Docker Hub `lazuardytech/9router` via tag `v*`.
+Release images publish to Docker Hub `lazuardytech/pod` via tag `v*`.
 Do not document GHCR for this repo.

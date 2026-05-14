@@ -67,7 +67,7 @@ const SEED_DB = {
     {
       id: "key-1",
       name: "CLI",
-      key: "sk_9router_test",
+      key: "sk_pod_test",
       machineId: "abc",
       isActive: true,
       createdAt: "2026-01-01T00:00:00.000Z",
@@ -90,7 +90,7 @@ const SEED_USAGE = {
       provider: "openai",
       model: "gpt-4o-mini",
       connectionId: "conn-1",
-      apiKey: "sk_9router_test",
+      apiKey: "sk_pod_test",
       endpoint: "/v1/chat/completions",
       status: "200 OK",
       tokens: { prompt_tokens: 100, completion_tokens: 50 },
@@ -121,7 +121,7 @@ const SEED_REQUEST_DETAILS = {
 };
 
 beforeAll(() => {
-  tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "9router-sqlite-test-"));
+  tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "pod-sqlite-test-"));
   originalDataDir = process.env.DATA_DIR;
   process.env.DATA_DIR = tempDir;
   fs.writeFileSync(path.join(tempDir, "db.json"), JSON.stringify(SEED_DB));
@@ -175,7 +175,7 @@ describe("SQLite migration from legacy JSON", () => {
     expect(combos[0].name).toBe("premium");
     expect(combos[0].models).toEqual(["cc/claude-opus-4-6", "if/kimi-k2-thinking"]);
 
-    expect(await validateApiKey("sk_9router_test")).toBe(true);
+    expect(await validateApiKey("sk_pod_test")).toBe(true);
     expect(await validateApiKey("wrong")).toBe(false);
   });
 
