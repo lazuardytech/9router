@@ -167,28 +167,65 @@ export default function Sidebar({ onClose, collapsed = false, onToggleCollapse }
             <NavItem {...apiItems[0]} active={isActive(apiItems[0].href)} onClick={onClose} collapsed={collapsed} />
             <NavItem {...apiItems[1]} active={isActive(apiItems[1].href)} onClick={onClose} collapsed={collapsed} />
 
-            {/* Media Providers — icon only when collapsed */}
+            {/* Media Providers — flyout on hover when collapsed, accordion when expanded */}
             {collapsed ? (
-              <Link
-                href="/dashboard/media-providers/embedding"
-                onClick={onClose}
-                title="Media Providers"
-                className={cn(
-                  "flex items-center justify-center py-2 rounded-[2px] transition-colors duration-100",
-                  isMediaActive
-                    ? "bg-porcelain/8 text-porcelain"
-                    : "text-storm-cloud hover:bg-deep-slate hover:text-porcelain",
-                )}
-              >
-                <span
+              <div className="relative group/media">
+                <div
                   className={cn(
-                    "material-symbols-outlined text-[18px]",
-                    isMediaActive ? "text-porcelain" : "text-fog-grey",
+                    "flex items-center justify-center py-2 rounded-[2px] transition-colors duration-100",
+                    isMediaActive
+                      ? "bg-porcelain/8 text-porcelain"
+                      : "text-storm-cloud hover:bg-deep-slate hover:text-porcelain",
                   )}
                 >
-                  perm_media
-                </span>
-              </Link>
+                  <span
+                    className={cn(
+                      "material-symbols-outlined text-[18px]",
+                      isMediaActive ? "text-porcelain" : "text-fog-grey",
+                    )}
+                  >
+                    perm_media
+                  </span>
+                </div>
+
+                {/* Flyout submenu */}
+                <div className="absolute left-full top-0 ml-1.5 z-50 hidden group-hover/media:block">
+                  <div className="rounded-[6px] border border-charcoal-grey bg-graphite shadow-[var(--shadow-xl)] py-1 min-w-[160px]">
+                    <p className="px-3 py-1.5 text-[10px] font-[590] text-fog-grey uppercase tracking-[0.06em]">
+                      Media Providers
+                    </p>
+                    {MEDIA_PROVIDER_KINDS.filter((k) => VISIBLE_MEDIA_KINDS.includes(k.id)).map((kind) => (
+                      <Link
+                        key={kind.id}
+                        href={`/dashboard/media-providers/${kind.id}`}
+                        onClick={onClose}
+                        className={cn(
+                          "flex items-center gap-2.5 px-3 py-1.5 transition-colors duration-100",
+                          pathname.startsWith(`/dashboard/media-providers/${kind.id}`)
+                            ? "text-porcelain bg-porcelain/8"
+                            : "text-storm-cloud hover:bg-deep-slate hover:text-porcelain",
+                        )}
+                      >
+                        <span className="material-symbols-outlined text-[14px]">{kind.icon}</span>
+                        <span className="text-[12px] tracking-[-0.1px]">{kind.label}</span>
+                      </Link>
+                    ))}
+                    <Link
+                      href={COMBINED_WEB_ITEM.href}
+                      onClick={onClose}
+                      className={cn(
+                        "flex items-center gap-2.5 px-3 py-1.5 transition-colors duration-100",
+                        pathname.startsWith(COMBINED_WEB_ITEM.href)
+                          ? "text-porcelain bg-porcelain/8"
+                          : "text-storm-cloud hover:bg-deep-slate hover:text-porcelain",
+                      )}
+                    >
+                      <span className="material-symbols-outlined text-[14px]">{COMBINED_WEB_ITEM.icon}</span>
+                      <span className="text-[12px] tracking-[-0.1px]">{COMBINED_WEB_ITEM.label}</span>
+                    </Link>
+                  </div>
+                </div>
+              </div>
             ) : (
               <>
                 <button
