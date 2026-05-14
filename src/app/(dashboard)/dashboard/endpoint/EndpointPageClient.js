@@ -28,6 +28,8 @@ export default function APIPageClient({ machineId }) {
   const [newKeyName, setNewKeyName] = useState("");
   const [editingKey, setEditingKey] = useState(null);
   const [editKeyName, setEditKeyName] = useState("");
+  const [keysPage, setKeysPage] = useState(1);
+  const KEYS_PAGE_SIZE = 15;
   const [newKeyLimitType, setNewKeyLimitType] = useState("unlimited");
   const [newKeyRpm, setNewKeyRpm] = useState("60");
   const [newKeyConcurrent, setNewKeyConcurrent] = useState("5");
@@ -1072,7 +1074,7 @@ export default function APIPageClient({ machineId }) {
                   </tr>
                 </thead>
                 <tbody>
-                  {keys.map((key) => (
+                  {keys.slice((keysPage - 1) * KEYS_PAGE_SIZE, keysPage * KEYS_PAGE_SIZE).map((key) => (
                     <tr
                       key={key.id}
                       className={`group border-b border-charcoal-grey/50 last:border-0 hover:bg-deep-slate transition-colors duration-100 ${
@@ -1182,6 +1184,44 @@ export default function APIPageClient({ machineId }) {
                 </tbody>
               </table>
             </div>
+            {/* Pagination */}
+            {keys.length > KEYS_PAGE_SIZE && (
+              <div className="flex items-center justify-between px-3 py-2 border-t border-charcoal-grey">
+                <span className="text-[11px] text-fog-grey">
+                  {(keysPage - 1) * KEYS_PAGE_SIZE + 1}–{Math.min(keysPage * KEYS_PAGE_SIZE, keys.length)} of{" "}
+                  {keys.length}
+                </span>
+                <div className="flex items-center gap-1">
+                  <button
+                    onClick={() => setKeysPage((p) => Math.max(1, p - 1))}
+                    disabled={keysPage === 1}
+                    className="flex items-center justify-center size-6 rounded-[4px] border border-charcoal-grey text-fog-grey hover:bg-deep-slate hover:text-porcelain disabled:opacity-40 transition-colors duration-100"
+                  >
+                    <span className="material-symbols-outlined text-[14px]">chevron_left</span>
+                  </button>
+                  {Array.from({ length: Math.ceil(keys.length / KEYS_PAGE_SIZE) }, (_, i) => i + 1).map((p) => (
+                    <button
+                      key={p}
+                      onClick={() => setKeysPage(p)}
+                      className={`flex items-center justify-center size-6 rounded-[4px] text-[11px] font-[510] transition-colors duration-100 ${
+                        p === keysPage
+                          ? "bg-porcelain/10 text-porcelain border border-porcelain/20"
+                          : "text-fog-grey hover:bg-deep-slate hover:text-porcelain border border-transparent"
+                      }`}
+                    >
+                      {p}
+                    </button>
+                  ))}
+                  <button
+                    onClick={() => setKeysPage((p) => Math.min(Math.ceil(keys.length / KEYS_PAGE_SIZE), p + 1))}
+                    disabled={keysPage === Math.ceil(keys.length / KEYS_PAGE_SIZE)}
+                    className="flex items-center justify-center size-6 rounded-[4px] border border-charcoal-grey text-fog-grey hover:bg-deep-slate hover:text-porcelain disabled:opacity-40 transition-colors duration-100"
+                  >
+                    <span className="material-symbols-outlined text-[14px]">chevron_right</span>
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         )}
       </Card>
