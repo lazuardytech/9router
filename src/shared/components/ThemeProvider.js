@@ -1,7 +1,14 @@
 "use client";
 
-// Theme is always dark — this provider is kept for compatibility
-// with any code that imports ThemeProvider.
+import { useEffect } from "react";
+import useThemeStore from "@/store/themeStore";
+
 export function ThemeProvider({ children }) {
+  const initTheme = useThemeStore((s) => s.initTheme);
+
+  useEffect(() => {
+    initTheme();
+  }, [initTheme]);
+
   return <>{children}</>;
 }

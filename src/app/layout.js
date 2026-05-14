@@ -1,11 +1,12 @@
 import "./globals.css";
 import ServiceWorkerRegistrar from "@/shared/components/ServiceWorkerRegistrar";
+import { ThemeProvider } from "@/shared/components/ThemeProvider";
 import "@/lib/initCloudSync";
 import "@/lib/network/initOutboundProxy";
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="en" className="dark">
+    <html lang="en">
       <head>
         <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
         {/* Google Fonts preconnect */}
@@ -25,8 +26,10 @@ export default function RootLayout({ children }) {
         />
       </head>
       <body className="h-full bg-pitch-black text-porcelain custom-scrollbar">
-        <ServiceWorkerRegistrar />
-        {children}
+        <ThemeProvider>
+          <ServiceWorkerRegistrar />
+          {children}
+        </ThemeProvider>
       </body>
     </html>
   );
