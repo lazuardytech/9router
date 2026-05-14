@@ -248,7 +248,7 @@ export function getCacheStats() {
 }
 
 export function isCacheableForRead(body, headers) {
-  if ((getHeaderValue(headers, "x-9router-no-cache") || "").toLowerCase() === "true") return false;
+  if ((getHeaderValue(headers, "x-pod-no-cache") || "").toLowerCase() === "true") return false;
   if ((getHeaderValue(headers, "x-omniroute-no-cache") || "").toLowerCase() === "true") return false;
   if (body?.stream !== false) return false;
   if ((body?.temperature ?? 0) !== 0) return false;
@@ -256,7 +256,7 @@ export function isCacheableForRead(body, headers) {
 }
 
 export function isCacheableForWrite(body, headers) {
-  if ((getHeaderValue(headers, "x-9router-no-cache") || "").toLowerCase() === "true") return false;
+  if ((getHeaderValue(headers, "x-pod-no-cache") || "").toLowerCase() === "true") return false;
   if ((getHeaderValue(headers, "x-omniroute-no-cache") || "").toLowerCase() === "true") return false;
   if (body?.stream !== false) return false;
   if (body?.temperature !== 0) return false;

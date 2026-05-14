@@ -54,7 +54,7 @@ RUN apk --no-cache upgrade && apk --no-cache add su-exec curl && \
 
 RUN mkdir -p /app/data && chown -R bun:bun /app && \
   mkdir -p /app/data-home && chown bun:bun /app/data-home && \
-  ln -sf /app/data-home /root/.9router 2>/dev/null || true
+  ln -sf /app/data-home /root/.pod 2>/dev/null || true
 
 # Fix permissions at runtime (handles mounted volumes)
 RUN printf '#!/bin/sh\nchown -R bun:bun /app/data /app/data-home 2>/dev/null\n# Start tailscaled in userspace mode (background)\nmkdir -p /app/data/tailscale\ntailscaled --tun=userspace-networking --socket=/app/data/tailscale/tailscaled.sock --state=/app/data/tailscale/state &\nexec su-exec bun "$@"\n' > /entrypoint.sh && \
