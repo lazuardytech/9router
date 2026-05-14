@@ -822,8 +822,8 @@ export default function APIPageClient({ machineId }) {
           {/* Tailscale */}
           <div className="flex items-center gap-2">
             <span
-              className={`text-xs font-mono px-1.5 py-0.5 rounded shrink-0 min-w-[88px] text-center ${
-                tsEnabled ? "bg-primary/10 text-primary" : "bg-surface-2 text-text-muted"
+              className={`text-xs font-mono px-1.5 py-0.5 rounded-[4px] shrink-0 min-w-[88px] text-center ${
+                tsEnabled ? "bg-porcelain/10 text-porcelain" : "bg-deep-slate text-fog-grey"
               }`}
             >
               Tailscale
@@ -876,12 +876,7 @@ export default function APIPageClient({ machineId }) {
                 </Button>
               </>
             ) : (
-              <Button
-                size="sm"
-                icon="vpn_lock"
-                onClick={handleOpenTsModal}
-                className="bg-linear-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600 text-white!"
-              >
+              <Button size="sm" icon="vpn_lock" onClick={handleOpenTsModal}>
                 Enable
               </Button>
             )}
