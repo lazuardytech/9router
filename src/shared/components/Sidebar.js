@@ -134,11 +134,10 @@ const analyticsItems = [
   { href: "/dashboard/quota", label: "Quota", icon: "data_usage" },
 ];
 
-const debugItems = [{ href: "/dashboard/logs", label: "Logs", icon: "terminal" }];
-
 const systemItems = [
   { href: "/dashboard/health", label: "Health", icon: "monitor_heart" },
   { href: "/dashboard/proxy-pools", label: "Proxy Pools", icon: "lan" },
+  { href: "/dashboard/logs", label: "Logs", icon: "terminal" },
   { href: "/dashboard/settings", label: "Settings", icon: "settings" },
 ];
 
@@ -357,9 +356,6 @@ export default function Sidebar({ onClose, collapsed = false, onToggleCollapse }
 
           <NavSection label="System" collapsed={collapsed}>
             {systemItems.map((item) => (
-              <NavItem key={item.href} {...item} active={isActive(item.href)} onClick={onClose} collapsed={collapsed} />
-            ))}
-            {debugItems.map((item) => (
               <NavItem key={item.href} {...item} active={isActive(item.href)} onClick={onClose} collapsed={collapsed} />
             ))}
           </NavSection>
