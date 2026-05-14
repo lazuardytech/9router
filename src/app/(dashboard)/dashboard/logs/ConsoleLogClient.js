@@ -231,12 +231,7 @@ export default function ConsoleLogClient() {
       <div className="flex-1 rounded-[6px] border border-charcoal-grey bg-pitch-black overflow-hidden flex flex-col">
         {/* Terminal header bar */}
         <div className="flex items-center gap-2 px-3 py-2 border-b border-charcoal-grey bg-graphite shrink-0">
-          <div className="flex items-center gap-1.5">
-            <div className="size-2.5 rounded-full bg-[#FF5F56]" />
-            <div className="size-2.5 rounded-full bg-[#FFBD2E]" />
-            <div className="size-2.5 rounded-full bg-[#27C93F]" />
-          </div>
-          <span className="text-[11px] text-fog-grey font-mono ml-2">console — 9router</span>
+          <span className="text-[11px] text-fog-grey font-mono">console — 9router</span>
           <span className="ml-auto text-[10px] text-fog-grey">
             {filtered.length} / {logs.length} lines
           </span>
