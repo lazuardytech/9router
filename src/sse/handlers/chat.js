@@ -117,7 +117,16 @@ export async function handleChat(request, clientRawRequest = null) {
       body,
       models: comboInfo.models,
       handleSingleModel: (b, m) =>
-        handleSingleModelChat(b, m, clientRawRequest, request, apiKey, comboInfo.contentFilterMessage, apiKeyId),
+        handleSingleModelChat(
+          b,
+          m,
+          clientRawRequest,
+          request,
+          apiKey,
+          comboInfo.contentFilterMessage,
+          apiKeyId,
+          modelStr,
+        ),
       log,
       comboName: modelStr,
       comboStrategy,
@@ -142,6 +151,7 @@ async function handleSingleModelChat(
   apiKey = null,
   contentFilterMessage = null,
   apiKeyId = null,
+  comboName = null,
 ) {
   const modelInfo = await getModelInfo(modelStr);
 
@@ -168,7 +178,16 @@ async function handleSingleModelChat(
         body,
         models: comboInfo.models,
         handleSingleModel: (b, m) =>
-          handleSingleModelChat(b, m, clientRawRequest, request, apiKey, comboInfo.contentFilterMessage, apiKeyId),
+          handleSingleModelChat(
+            b,
+            m,
+            clientRawRequest,
+            request,
+            apiKey,
+            comboInfo.contentFilterMessage,
+            apiKeyId,
+            modelStr,
+          ),
         log,
         comboName: modelStr,
         comboStrategy,
@@ -257,6 +276,7 @@ async function handleSingleModelChat(
       contentFilterMessage,
       chatSettings,
       memoryOwnerId: apiKeyId,
+      comboName,
       // Detect source format by endpoint + body
       sourceFormatOverride: request?.url ? detectFormatByEndpoint(new URL(request.url).pathname, body) : null,
       onCredentialsRefreshed: async (newCreds) => {

@@ -149,6 +149,7 @@ export async function handleChatCore({
   contentFilterMessage,
   chatSettings,
   memoryOwnerId,
+  comboName,
 }) {
   const { provider, model } = modelInfo;
   const requestStartTime = Date.now();
@@ -314,7 +315,7 @@ export async function handleChatCore({
 
   const executor = getExecutor(provider);
   trackPendingRequest(model, provider, connectionId, true);
-  appendRequestLog({ model, provider, connectionId, status: "PENDING" }).catch(() => {});
+  appendRequestLog({ model, provider, connectionId, combo: comboName, status: "PENDING" }).catch(() => {});
 
   const msgCount =
     translatedBody.messages?.length ||
@@ -539,7 +540,8 @@ export async function handleChatCore({
     clientRawRequest,
     onRequestSuccess,
   };
-  const appendLog = (extra) => appendRequestLog({ model, provider, connectionId, ...extra }).catch(() => {});
+  const appendLog = (extra) =>
+    appendRequestLog({ model, provider, connectionId, combo: comboName, ...extra }).catch(() => {});
   const trackDone = () => trackPendingRequest(model, provider, connectionId, false);
 
   // Provider forced streaming but client wants JSON

@@ -76,6 +76,11 @@ function ensureSchemaPatches(db) {
   }
 
   db.exec("UPDATE api_keys SET limit_type = 'unlimited' WHERE limit_type IS NULL OR trim(limit_type) = ''");
+
+  // Add combo column to request_log if missing
+  if (!hasColumn(db, "request_log", "combo")) {
+    db.exec("ALTER TABLE request_log ADD COLUMN combo TEXT");
+  }
 }
 
 function readMeta(db, key) {

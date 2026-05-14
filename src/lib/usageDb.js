@@ -348,12 +348,21 @@ function flushLogs() {
   try {
     const db = getDatabase();
     const stmt = db.prepare(
-      `INSERT INTO request_log (timestamp, model, provider, account, prompt_tokens, completion_tokens, status)
-       VALUES (?, ?, ?, ?, ?, ?, ?)`,
+      `INSERT INTO request_log (timestamp, model, provider, account, prompt_tokens, completion_tokens, status, combo)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
     );
     const insertMany = db.transaction((rows) => {
       for (const r of rows)
-        stmt.run(r.timestamp, r.model, r.provider, r.account, r.prompt_tokens, r.completion_tokens, r.status);
+        stmt.run(
+          r.timestamp,
+          r.model,
+          r.provider,
+          r.account,
+          r.prompt_tokens,
+          r.completion_tokens,
+          r.status,
+          r.combo ?? null,
+        );
     });
     insertMany(batch);
 
@@ -385,7 +394,7 @@ if (!isCloud && !global._flushHooksRegistered) {
   process.on("exit", flushAll);
 }
 
-export async function appendRequestLog({ model, provider, connectionId, tokens, status }) {
+export async function appendRequestLog({ model, provider, connectionId, tokens, status, combo }) {
   if (isCloud) return;
   try {
     const account = await getConnectionName(connectionId);
@@ -399,6 +408,7 @@ export async function appendRequestLog({ model, provider, connectionId, tokens, 
       prompt_tokens: promptTokens,
       completion_tokens: completionTokens,
       status: String(status ?? ""),
+      combo: combo || null,
     });
     if (logQueue.length >= LOG_BATCH_SIZE) flushLogs();
     else scheduleLogFlush();
@@ -413,14 +423,14 @@ export async function getRecentLogs(limit = 200) {
     const db = getDatabase();
     const rows = db
       .prepare(
-        `SELECT timestamp, model, provider, account, prompt_tokens, completion_tokens, status
+        `SELECT timestamp, model, provider, account, prompt_tokens, completion_tokens, status, combo
        FROM request_log ORDER BY id DESC LIMIT ?`,
       )
       .all(limit);
     return rows.map((r) => {
       const sent = r.prompt_tokens ?? "-";
       const received = r.completion_tokens ?? "-";
-      return `${r.timestamp} | ${r.model || "-"} | ${r.provider || "-"} | ${r.account || "-"} | ${sent} | ${received} | ${r.status || ""}`;
+      return `${r.timestamp} | ${r.model || "-"} | ${r.provider || "-"} | ${r.account || "-"} | ${sent} | ${received} | ${r.status || ""} | ${r.combo || "-"}`;
     });
   } catch {
     return [];

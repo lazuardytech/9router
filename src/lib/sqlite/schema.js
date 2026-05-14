@@ -165,7 +165,8 @@ CREATE TABLE IF NOT EXISTS request_log (
   account           TEXT,
   prompt_tokens     INTEGER,
   completion_tokens INTEGER,
-  status            TEXT
+  status            TEXT,
+  combo             TEXT
 );
 CREATE INDEX IF NOT EXISTS idx_reqlog_id_desc ON request_log(id DESC);
 

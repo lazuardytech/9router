@@ -76,7 +76,8 @@ export default function RequestLogger() {
                   <th className="px-3 py-2 border-r border-border">Account</th>
                   <th className="px-3 py-2 border-r border-border">In</th>
                   <th className="px-3 py-2 border-r border-border">Out</th>
-                  <th className="px-3 py-2">Status</th>
+                  <th className="px-3 py-2 border-r border-border">Status</th>
+                  <th className="px-3 py-2">Combo</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border/50">
@@ -85,6 +86,7 @@ export default function RequestLogger() {
                   if (parts.length < 7) return null;
 
                   const status = parts[6];
+                  const combo = parts[7] && parts[7] !== "-" ? parts[7] : null;
                   const isPending = status.includes("PENDING");
                   const isFailed = status.includes("FAILED");
                   const isSuccess = status.includes("OK");
@@ -104,11 +106,20 @@ export default function RequestLogger() {
                       <td className="px-3 py-1.5 border-r border-border text-right text-primary">{parts[4]}</td>
                       <td className="px-3 py-1.5 border-r border-border text-right text-success">{parts[5]}</td>
                       <td
-                        className={`px-3 py-1.5 font-bold ${
+                        className={`px-3 py-1.5 border-r border-border font-bold ${
                           isSuccess ? "text-success" : isFailed ? "text-error" : "text-primary animate-pulse"
                         }`}
                       >
                         {status}
+                      </td>
+                      <td className="px-3 py-1.5 text-text-muted">
+                        {combo ? (
+                          <span className="px-1.5 py-0.5 rounded bg-bg-subtle border border-border text-[10px]">
+                            {combo}
+                          </span>
+                        ) : (
+                          <span className="text-text-muted/40">—</span>
+                        )}
                       </td>
                     </tr>
                   );
