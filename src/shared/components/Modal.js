@@ -13,7 +13,6 @@ export default function Modal({
   size = "md",
   closeOnOverlay = true,
   showCloseButton = true,
-  showTrafficLights = true,
   className,
 }) {
   const sizes = {
@@ -68,13 +67,6 @@ export default function Modal({
         {(title || showCloseButton) && (
           <div className="flex items-center justify-between px-4 py-3 border-b border-charcoal-grey">
             <div className="flex items-center gap-3">
-              {showTrafficLights && (
-                <div className="flex items-center gap-1.5">
-                  <div className="w-2.5 h-2.5 rounded-full bg-[#FF5F56]" />
-                  <div className="w-2.5 h-2.5 rounded-full bg-[#FFBD2E]" />
-                  <div className="w-2.5 h-2.5 rounded-full bg-[#27C93F]" />
-                </div>
-              )}
               {title && <h2 className="text-[13px] font-[510] text-porcelain tracking-[-0.12px]">{title}</h2>}
             </div>
             {showCloseButton && (
@@ -117,7 +109,6 @@ export function ConfirmModal({
       onClose={onClose}
       title={title}
       size="sm"
-      showTrafficLights={false}
       footer={
         <>
           <Button variant="ghost" size="sm" onClick={onClose} disabled={loading}>
