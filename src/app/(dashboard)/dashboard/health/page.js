@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import TelemetryCard from "./TelemetryCard";
 
 function formatBytes(bytes = 0) {
@@ -46,6 +46,7 @@ function SectionHeader({ icon, title, children }) {
 
 export default function HealthPage() {
   const [data, setData] = useState(null);
+  const telemetryRef = useRef(null);
   const [error, setError] = useState(null);
   const [lastRefresh, setLastRefresh] = useState(null);
 
@@ -114,7 +115,10 @@ export default function HealthPage() {
             </span>
           )}
           <button
-            onClick={fetchHealth}
+            onClick={() => {
+              fetchHealth();
+              telemetryRef.current?.refresh();
+            }}
             className="flex items-center justify-center size-7 rounded-[4px] border border-charcoal-grey text-storm-cloud hover:bg-deep-slate hover:text-porcelain"
           >
             <span className="material-symbols-outlined text-[15px]">refresh</span>
@@ -142,7 +146,7 @@ export default function HealthPage() {
       </div>
 
       {/* Telemetry */}
-      <TelemetryCard />
+      <TelemetryCard ref={telemetryRef} />
 
       {/* System + DB */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">

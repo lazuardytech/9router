@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useImperativeHandle, useMemo, useRef, useState, forwardRef } from "react";
 
 const REFRESH_MS = 30_000;
 const MAX_SAMPLES = 24;
@@ -80,7 +80,7 @@ function Sparkline({ samples, field, fmt }) {
   );
 }
 
-export default function TelemetryCard() {
+const TelemetryCard = forwardRef(function TelemetryCard(_, ref) {
   const [health, setHealth] = useState(null);
   const [samples, setSamples] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -113,6 +113,8 @@ export default function TelemetryCard() {
     const t = setInterval(load, REFRESH_MS);
     return () => clearInterval(t);
   }, [load]);
+
+  useImperativeHandle(ref, () => ({ refresh: load }), [load]);
 
   const sys = health?.system ?? {};
 
@@ -165,16 +167,7 @@ export default function TelemetryCard() {
           <span className="material-symbols-outlined text-[18px] text-porcelain">monitoring</span>
           <h2 className="text-[14px] font-[510] text-porcelain tracking-[-0.13px]">System Telemetry</h2>
         </div>
-        <div className="flex items-center gap-3">
-          {lastUpdated && <span className="text-[11px] text-fog-grey">{lastUpdated.toLocaleTimeString()}</span>}
-          <button
-            onClick={load}
-            disabled={loading}
-            className="flex items-center justify-center size-7 rounded-[4px] border border-charcoal-grey text-storm-cloud hover:bg-deep-slate hover:text-porcelain disabled:opacity-40"
-          >
-            <span className={`material-symbols-outlined text-[15px] ${loading ? "animate-spin" : ""}`}>refresh</span>
-          </button>
-        </div>
+        {lastUpdated && <span className="text-[11px] text-fog-grey">{lastUpdated.toLocaleTimeString()}</span>}
       </div>
 
       <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-6 gap-2 mb-4">
@@ -201,4 +194,6 @@ export default function TelemetryCard() {
       </div>
     </div>
   );
-}
+});
+
+export default TelemetryCard;
