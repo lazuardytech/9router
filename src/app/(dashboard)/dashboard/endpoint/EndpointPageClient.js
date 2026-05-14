@@ -822,8 +822,8 @@ export default function APIPageClient({ machineId }) {
           {/* Tailscale */}
           <div className="flex items-center gap-2">
             <span
-              className={`text-xs font-mono px-1.5 py-0.5 rounded-[4px] shrink-0 min-w-[88px] text-center ${
-                tsEnabled ? "bg-porcelain/10 text-porcelain" : "bg-deep-slate text-fog-grey"
+              className={`text-xs font-mono px-1.5 py-0.5 rounded shrink-0 min-w-[88px] text-center ${
+                tsEnabled ? "bg-porcelain/10 text-porcelain" : "bg-surface-2 text-text-muted"
               }`}
             >
               Tailscale
