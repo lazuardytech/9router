@@ -4,9 +4,8 @@ import { useState, useEffect, useCallback } from "react";
 import PropTypes from "prop-types";
 
 const fmtNum = (n) => {
-  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`;
-  if (n >= 1_000) return `${(n / 1_000).toFixed(1)}K`;
-  return String(n || 0);
+  if (!n && n !== 0) return "—";
+  return new Intl.NumberFormat().format(Math.round(n));
 };
 
 const fmtCost = (n) => `$${(n || 0).toFixed(4)}`;

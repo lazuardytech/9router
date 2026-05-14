@@ -483,8 +483,7 @@ export default function UsageStats({ period: periodProp, setPeriod: setPeriodPro
         </div>
       )}
 
-      {/* Overview cards */}
-      {loading ? spinner : <OverviewCards stats={stats} />}
+      {/* Overview cards — rendered by MetricsLineChart above */}
 
       {/* Provider topology + Recent Requests */}
       {loading ? (
