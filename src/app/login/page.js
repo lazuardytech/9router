@@ -9,6 +9,7 @@ export default function LoginPage() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [hasPassword, setHasPassword] = useState(null);
+  const [isDefaultPassword, setIsDefaultPassword] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
@@ -27,6 +28,7 @@ export default function LoginPage() {
             return;
           }
           setHasPassword(!!data.hasPassword);
+          setIsDefaultPassword(!!data.isDefaultPassword);
         } else {
           setHasPassword(true);
         }
@@ -104,10 +106,12 @@ export default function LoginPage() {
               Sign in
             </Button>
 
-            <p className="text-[11px] text-center text-fog-grey mt-1">
-              Default password is{" "}
-              <code className="bg-gunmetal px-1.5 py-0.5 rounded-[4px] text-storm-cloud font-mono">123456</code>
-            </p>
+            {isDefaultPassword && (
+              <p className="text-[11px] text-center text-fog-grey mt-1">
+                Default password is{" "}
+                <code className="bg-gunmetal px-1.5 py-0.5 rounded-[4px] text-storm-cloud font-mono">123456</code>
+              </p>
+            )}
           </form>
         </Card>
       </div>

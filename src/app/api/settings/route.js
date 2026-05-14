@@ -18,6 +18,12 @@ export async function GET() {
 
     const enableRequestLogs = process.env.ENABLE_REQUEST_LOGS === "true";
     const enableTranslator = process.env.ENABLE_TRANSLATOR === "true";
+    const hasCustomInitialPassword = !!process.env.INITIAL_PASSWORD;
+
+    // Show default password hint only when:
+    // - no password has been set yet (using hardcoded default "123456")
+    // - AND INITIAL_PASSWORD env is not set (custom password via env)
+    const isDefaultPassword = !password && !hasCustomInitialPassword;
 
     return NextResponse.json(
       {
@@ -25,6 +31,7 @@ export async function GET() {
         enableRequestLogs,
         enableTranslator,
         hasPassword: !!password,
+        isDefaultPassword,
       },
       { headers: SETTINGS_RESPONSE_HEADERS },
     );
