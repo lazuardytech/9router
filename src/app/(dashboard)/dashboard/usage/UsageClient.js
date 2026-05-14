@@ -3,7 +3,7 @@
 import { Suspense, useState } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { UsageStats, RequestLogger, CardSkeleton, SegmentedControl } from "@/shared/components";
-import RequestDetailsTab from "./components/RequestDetailsTab";
+import MetricsLineChart from "./components/MetricsLineChart";
 
 const PERIODS = [
   { value: "24h", label: "24h" },
@@ -69,6 +69,7 @@ function UsageContent() {
         <>
           {activeTab === "overview" && (
             <Suspense fallback={<CardSkeleton />}>
+              <MetricsLineChart period={period} />
               <UsageStats period={period} setPeriod={setPeriod} hidePeriodSelector />
             </Suspense>
           )}

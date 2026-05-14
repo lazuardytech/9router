@@ -1015,7 +1015,7 @@ export async function getChartData(period = "7d") {
     const startTime = now - bucketCount * bucketMs;
     const buckets = Array.from({ length: bucketCount }, (_, i) => {
       const ts = startTime + i * bucketMs;
-      return { label: labelFn(ts), tokens: 0, cost: 0 };
+      return { label: labelFn(ts), tokens: 0, cost: 0, requests: 0, promptTokens: 0, completionTokens: 0 };
     });
 
     const rows = db
@@ -1029,8 +1029,11 @@ export async function getChartData(period = "7d") {
       const et = new Date(r.timestamp).getTime();
       if (et < startTime || et > now) continue;
       const idx = Math.min(Math.floor((et - startTime) / bucketMs), bucketCount - 1);
+      buckets[idx].promptTokens += r.prompt_tokens || 0;
+      buckets[idx].completionTokens += r.completion_tokens || 0;
       buckets[idx].tokens += (r.prompt_tokens || 0) + (r.completion_tokens || 0);
       buckets[idx].cost += r.cost || 0;
+      buckets[idx].requests += 1;
     }
     return buckets;
   }
@@ -1043,7 +1046,7 @@ export async function getChartData(period = "7d") {
   dayStart.setDate(dayStart.getDate() - (bucketCount - 1));
   const dayRows = db
     .prepare(`
-    SELECT date_key, prompt_tokens, completion_tokens, cost
+    SELECT date_key, prompt_tokens, completion_tokens, cost, requests
     FROM daily_summary
     WHERE bucket = 'day' AND date_key >= ?
   `)
@@ -1058,6 +1061,9 @@ export async function getChartData(period = "7d") {
     const day = byDate[dateKey];
     return {
       label: labelFn(d),
+      requests: day ? day.requests || 0 : 0,
+      promptTokens: day ? day.prompt_tokens || 0 : 0,
+      completionTokens: day ? day.completion_tokens || 0 : 0,
       tokens: day ? (day.prompt_tokens || 0) + (day.completion_tokens || 0) : 0,
       cost: day ? day.cost || 0 : 0,
     };
