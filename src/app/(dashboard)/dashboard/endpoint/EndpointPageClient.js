@@ -26,6 +26,8 @@ export default function APIPageClient({ machineId }) {
   const [loading, setLoading] = useState(true);
   const [showAddModal, setShowAddModal] = useState(false);
   const [newKeyName, setNewKeyName] = useState("");
+  const [editingKey, setEditingKey] = useState(null);
+  const [editKeyName, setEditKeyName] = useState("");
   const [newKeyLimitType, setNewKeyLimitType] = useState("unlimited");
   const [newKeyRpm, setNewKeyRpm] = useState("60");
   const [newKeyConcurrent, setNewKeyConcurrent] = useState("5");
@@ -653,7 +655,6 @@ export default function APIPageClient({ machineId }) {
       const res = await fetch(`/api/keys/${id}`, { method: "DELETE" });
       if (res.ok) {
         setKeys(keys.filter((k) => k.id !== id));
-        // Clean up visibility state
         setVisibleKeys((prev) => {
           const next = new Set(prev);
           next.delete(id);
@@ -662,6 +663,29 @@ export default function APIPageClient({ machineId }) {
       }
     } catch (error) {
       console.log("Error deleting key:", error);
+    }
+  };
+
+  const handleEditKey = (key) => {
+    setEditingKey(key);
+    setEditKeyName(key.name);
+  };
+
+  const handleUpdateKey = async () => {
+    if (!editKeyName.trim() || !editingKey) return;
+    try {
+      const res = await fetch(`/api/keys/${editingKey.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: editKeyName.trim() }),
+      });
+      if (res.ok) {
+        setKeys(keys.map((k) => (k.id === editingKey.id ? { ...k, name: editKeyName.trim() } : k)));
+        setEditingKey(null);
+        setEditKeyName("");
+      }
+    } catch (error) {
+      console.log("Error updating key:", error);
     }
   };
 
@@ -1105,35 +1129,53 @@ export default function APIPageClient({ machineId }) {
 
                       {/* Status */}
                       <td className="px-3 py-2 border-r border-charcoal-grey/50">
-                        <Toggle
-                          size="sm"
-                          checked={key.isActive ?? true}
-                          onChange={(checked) => {
-                            if (key.isActive && !checked) {
-                              if (
-                                confirm(
-                                  `Pause API key "${key.name}"?\n\nThis key will stop working immediately but can be resumed later.`,
-                                )
-                              ) {
+                        <div className="flex items-center gap-2">
+                          <span
+                            className={`text-[11px] font-[510] ${
+                              key.isActive !== false ? "text-emerald" : "text-warning-red"
+                            }`}
+                          >
+                            {key.isActive !== false ? "Enabled" : "Disabled"}
+                          </span>
+                          <Toggle
+                            size="sm"
+                            checked={key.isActive ?? true}
+                            onChange={(checked) => {
+                              if (key.isActive && !checked) {
+                                if (
+                                  confirm(
+                                    `Pause API key "${key.name}"?\n\nThis key will stop working immediately but can be resumed later.`,
+                                  )
+                                ) {
+                                  handleToggleKey(key.id, checked);
+                                }
+                              } else {
                                 handleToggleKey(key.id, checked);
                               }
-                            } else {
-                              handleToggleKey(key.id, checked);
-                            }
-                          }}
-                          title={key.isActive ? "Pause key" : "Resume key"}
-                        />
+                            }}
+                            title={key.isActive ? "Pause key" : "Resume key"}
+                          />
+                        </div>
                       </td>
 
                       {/* Actions */}
                       <td className="px-3 py-2">
-                        <button
-                          onClick={() => handleDeleteKey(key.id)}
-                          className="flex items-center justify-center size-6 rounded-[4px] text-fog-grey hover:bg-warning-red/10 hover:text-warning-red opacity-0 group-hover:opacity-100 transition-all duration-100"
-                          title="Delete key"
-                        >
-                          <span className="material-symbols-outlined text-[14px]">delete</span>
-                        </button>
+                        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-all duration-100">
+                          <button
+                            onClick={() => handleEditKey(key)}
+                            className="flex items-center justify-center size-6 rounded-[4px] text-fog-grey hover:bg-deep-slate hover:text-porcelain transition-colors duration-100"
+                            title="Edit key"
+                          >
+                            <span className="material-symbols-outlined text-[14px]">edit</span>
+                          </button>
+                          <button
+                            onClick={() => handleDeleteKey(key.id)}
+                            className="flex items-center justify-center size-6 rounded-[4px] text-fog-grey hover:bg-warning-red/10 hover:text-warning-red transition-colors duration-100"
+                            title="Delete key"
+                          >
+                            <span className="material-symbols-outlined text-[14px]">delete</span>
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   ))}
@@ -1203,6 +1245,42 @@ export default function APIPageClient({ machineId }) {
             </Button>
           </div>
         </div>
+      </Modal>
+
+      {/* Edit Key Modal */}
+      <Modal
+        isOpen={!!editingKey}
+        title="Edit API Key"
+        onClose={() => {
+          setEditingKey(null);
+          setEditKeyName("");
+        }}
+        size="sm"
+        footer={
+          <>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => {
+                setEditingKey(null);
+                setEditKeyName("");
+              }}
+            >
+              Cancel
+            </Button>
+            <Button size="sm" onClick={handleUpdateKey} disabled={!editKeyName.trim()}>
+              Save
+            </Button>
+          </>
+        }
+      >
+        <Input
+          label="Key Name"
+          value={editKeyName}
+          onChange={(e) => setEditKeyName(e.target.value)}
+          placeholder="Production Key"
+          autoFocus
+        />
       </Modal>
 
       {/* Created Key Modal */}
