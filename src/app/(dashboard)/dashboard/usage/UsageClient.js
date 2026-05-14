@@ -4,6 +4,7 @@ import { Suspense, useState } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { UsageStats, RequestLogger, CardSkeleton, SegmentedControl } from "@/shared/components";
 import MetricsLineChart from "./components/MetricsLineChart";
+import RequestDetailsTab from "./components/RequestDetailsTab";
 
 const PERIODS = [
   { value: "24h", label: "24h" },
