@@ -68,7 +68,9 @@ export default function ProxyLogsTab() {
       const data = await res.json();
       setTestResults((prev) => ({
         ...prev,
-        [pool.id]: res.ok ? { ok: true, message: data.message ?? "Connection successful" } : { ok: false, message: data.error ?? "Test failed" },
+        [pool.id]: res.ok
+          ? { ok: true, message: data.message ?? "Connection successful" }
+          : { ok: false, message: data.error ?? "Test failed" },
       }));
     } catch {
       setTestResults((prev) => ({ ...prev, [pool.id]: { ok: false, message: "Request failed" } }));
@@ -83,11 +85,7 @@ export default function ProxyLogsTab() {
       <div className="flex items-center justify-between gap-3">
         <div className="flex items-center gap-2">
           <h2 className="text-[14px] font-[510] text-porcelain tracking-[-0.13px]">Proxy Pools</h2>
-          {!loading && (
-            <span className="text-[11px] text-fog-grey">
-              {pools.length} configured
-            </span>
-          )}
+          {!loading && <span className="text-[11px] text-fog-grey">{pools.length} configured</span>}
         </div>
         <button
           onClick={fetchPools}
@@ -102,9 +100,11 @@ export default function ProxyLogsTab() {
       <div className="flex items-start gap-2 px-3 py-2.5 rounded-[6px] border border-charcoal-grey bg-deep-slate">
         <span className="material-symbols-outlined text-[14px] text-fog-grey shrink-0 mt-0.5">info</span>
         <p className="text-[11px] text-fog-grey leading-[1.5]">
-          Live proxy request logging is not available. Showing configured proxy pools.
-          Manage pools in{" "}
-          <a href="/dashboard/proxy-pools" className="text-storm-cloud hover:text-porcelain underline underline-offset-2 transition-colors duration-100">
+          Live proxy request logging is not available. Showing configured proxy pools. Manage pools in{" "}
+          <a
+            href="/dashboard/proxy-pools"
+            className="text-storm-cloud hover:text-porcelain underline underline-offset-2 transition-colors duration-100"
+          >
             Proxy Pools
           </a>
           .
@@ -175,7 +175,10 @@ export default function ProxyLogsTab() {
                       <td className="px-3 py-2.5 border-r border-charcoal-grey/50 font-[510] text-porcelain">
                         {pool.name}
                       </td>
-                      <td className="px-3 py-2.5 border-r border-charcoal-grey/50 text-storm-cloud font-mono max-w-[260px] truncate" title={pool.proxyUrl}>
+                      <td
+                        className="px-3 py-2.5 border-r border-charcoal-grey/50 text-storm-cloud font-mono max-w-[260px] truncate"
+                        title={pool.proxyUrl}
+                      >
                         {pool.proxyUrl}
                       </td>
                       <td className="px-3 py-2.5 border-r border-charcoal-grey/50">
@@ -194,7 +197,9 @@ export default function ProxyLogsTab() {
                           className="flex items-center gap-1.5 h-6 px-2.5 rounded-[4px] border border-charcoal-grey text-[11px] text-storm-cloud hover:bg-deep-slate hover:text-porcelain disabled:opacity-50 transition-colors duration-100"
                         >
                           {testing === pool.id ? (
-                            <span className="material-symbols-outlined text-[12px] animate-spin">progress_activity</span>
+                            <span className="material-symbols-outlined text-[12px] animate-spin">
+                              progress_activity
+                            </span>
                           ) : (
                             <span className="material-symbols-outlined text-[12px]">network_check</span>
                           )}
