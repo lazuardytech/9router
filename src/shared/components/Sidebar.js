@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import PropTypes from "prop-types";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -20,21 +20,25 @@ const COMBINED_WEB_ITEM = {
   href: "/dashboard/media-providers/web",
 };
 
-const navItems = [
+const apiItems = [
   { href: "/dashboard/endpoint", label: "Endpoint", icon: "api" },
-  { href: "/dashboard/providers", label: "Providers", icon: "dns" },
-  // { href: "/dashboard/basic-chat", label: "Basic Chat", icon: "chat" }, // Hidden
+  { href: "/dashboard/providers", label: "LLM Providers", icon: "dns" },
   { href: "/dashboard/combos", label: "Combos", icon: "layers" },
+  { href: "/dashboard/memory", label: "Memory", icon: "memory_alt" },
+  { href: "/dashboard/cache", label: "Cache", icon: "cached" },
+];
+
+const analyticsItems = [
   { href: "/dashboard/usage", label: "Usage", icon: "bar_chart" },
-  { href: "/dashboard/quota", label: "Quota Tracker", icon: "data_usage" },
+  { href: "/dashboard/quota", label: "Quota", icon: "data_usage" },
 ];
 
-const debugItems = [
-  { href: "/dashboard/console-log", label: "Console Log", icon: "terminal" },
-  { href: "/dashboard/translator", label: "Translator", icon: "translate" },
-];
+const debugItems = [{ href: "/dashboard/console-log", label: "Console Log", icon: "terminal" }];
 
-const systemItems = [{ href: "/dashboard/proxy-pools", label: "Proxy Pools", icon: "lan" }];
+const systemItems = [
+  { href: "/dashboard/proxy-pools", label: "Proxy Pools", icon: "lan" },
+  { href: "/dashboard/profile", label: "Settings", icon: "settings" },
+];
 
 export default function Sidebar({ onClose }) {
   const pathname = usePathname();
@@ -43,16 +47,6 @@ export default function Sidebar({ onClose }) {
   const [isShuttingDown, setIsShuttingDown] = useState(false);
   const [isRestarting, setIsRestarting] = useState(false);
   const [isDisconnected, setIsDisconnected] = useState(false);
-  const [enableTranslator, setEnableTranslator] = useState(false);
-
-  useEffect(() => {
-    fetch("/api/settings")
-      .then((res) => res.json())
-      .then((data) => {
-        if (data.enableTranslator) setEnableTranslator(true);
-      })
-      .catch(() => {});
-  }, []);
 
   const isActive = (href) => {
     if (href === "/dashboard/endpoint") {
@@ -79,6 +73,28 @@ export default function Sidebar({ onClose }) {
     setTimeout(() => globalThis.location.reload(), 3000);
   };
 
+  const renderNavLink = (item, className = "px-3 py-1", iconClassName = "text-[18px]", labelClassName = "text-[13px]") => (
+    <Link
+      key={item.href}
+      href={item.href}
+      onClick={onClose}
+      className={cn(
+        `flex items-center gap-3 ${className} rounded-lg transition-all group`,
+        isActive(item.href) ? "bg-primary/10 text-primary" : "text-text-muted hover:bg-surface-2 hover:text-text-main",
+      )}
+    >
+      <span
+        className={cn(
+          `material-symbols-outlined ${iconClassName}`,
+          isActive(item.href) ? "fill-1" : "group-hover:text-primary transition-colors",
+        )}
+      >
+        {item.icon}
+      </span>
+      <span className={`${labelClassName} font-medium`}>{item.label}</span>
+    </Link>
+  );
+
   return (
     <>
       <aside className="flex w-72 flex-col border-r border-border-subtle bg-vibrancy backdrop-blur-xl transition-colors duration-300 min-h-full">
@@ -97,33 +113,10 @@ export default function Sidebar({ onClose }) {
 
         {/* Navigation */}
         <nav className="flex-1 px-4 py-2 space-y-0.5 overflow-y-auto custom-scrollbar">
-          {navItems.map((item) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              onClick={onClose}
-              className={cn(
-                "flex items-center gap-3 px-3 py-1 rounded-lg transition-all group",
-                isActive(item.href)
-                  ? "bg-primary/10 text-primary"
-                  : "text-text-muted hover:bg-surface-2 hover:text-text-main",
-              )}
-            >
-              <span
-                className={cn(
-                  "material-symbols-outlined text-[18px]",
-                  isActive(item.href) ? "fill-1" : "group-hover:text-primary transition-colors",
-                )}
-              >
-                {item.icon}
-              </span>
-              <span className="text-[13px] font-medium">{item.label}</span>
-            </Link>
-          ))}
-
-          {/* System section */}
-          <div className="pt-3 mt-2 space-y-0.5">
-            <p className="px-4 text-xs font-semibold text-text-muted/60 uppercase tracking-wider mb-2">System</p>
+          <div className="space-y-0.5">
+            <p className="px-4 text-xs font-semibold text-text-muted/60 uppercase tracking-wider mb-2">API</p>
+            {renderNavLink(apiItems[0])}
+            {renderNavLink(apiItems[1])}
 
             {/* Media Providers accordion */}
             <button
@@ -179,79 +172,21 @@ export default function Sidebar({ onClose }) {
               </div>
             )}
 
-            {systemItems.map((item) => (
-              <Link
-                key={item.href}
-                href={item.href}
-                onClick={onClose}
-                className={cn(
-                  "flex items-center gap-3 px-3 py-1 rounded-lg transition-all group",
-                  isActive(item.href)
-                    ? "bg-primary/10 text-primary"
-                    : "text-text-muted hover:bg-surface-2 hover:text-text-main",
-                )}
-              >
-                <span
-                  className={cn(
-                    "material-symbols-outlined text-[18px]",
-                    isActive(item.href) ? "fill-1" : "group-hover:text-primary transition-colors",
-                  )}
-                >
-                  {item.icon}
-                </span>
-                <span className="text-[13px] font-medium">{item.label}</span>
-              </Link>
-            ))}
+            {renderNavLink(apiItems[2])}
+            {renderNavLink(apiItems[3])}
+            {renderNavLink(apiItems[4])}
+          </div>
 
-            {/* Debug items (inside System section, before Settings) */}
-            {debugItems.map((item) => {
-              const show = item.href !== "/dashboard/translator" || enableTranslator;
-              return show ? (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  onClick={onClose}
-                  className={cn(
-                    "flex items-center gap-3 px-3 py-1 rounded-lg transition-all group",
-                    isActive(item.href)
-                      ? "bg-primary/10 text-primary"
-                      : "text-text-muted hover:bg-surface-2 hover:text-text-main",
-                  )}
-                >
-                  <span
-                    className={cn(
-                      "material-symbols-outlined text-[18px]",
-                      isActive(item.href) ? "fill-1" : "group-hover:text-primary transition-colors",
-                    )}
-                  >
-                    {item.icon}
-                  </span>
-                  <span className="text-[13px] font-medium">{item.label}</span>
-                </Link>
-              ) : null;
-            })}
+          <div className="pt-3 mt-2 space-y-0.5">
+            <p className="px-4 text-xs font-semibold text-text-muted/60 uppercase tracking-wider mb-2">Analytics</p>
+            {analyticsItems.map((item) => renderNavLink(item))}
+          </div>
 
-            {/* Settings */}
-            <Link
-              href="/dashboard/profile"
-              onClick={onClose}
-              className={cn(
-                "flex items-center gap-3 px-3 py-1 rounded-lg transition-all group",
-                isActive("/dashboard/profile")
-                  ? "bg-primary/10 text-primary"
-                  : "text-text-muted hover:bg-surface-2 hover:text-text-main",
-              )}
-            >
-              <span
-                className={cn(
-                  "material-symbols-outlined text-[18px]",
-                  isActive("/dashboard/profile") ? "fill-1" : "group-hover:text-primary transition-colors",
-                )}
-              >
-                settings
-              </span>
-              <span className="text-[13px] font-medium">Settings</span>
-            </Link>
+          <div className="pt-3 mt-2 space-y-0.5">
+            <p className="px-4 text-xs font-semibold text-text-muted/60 uppercase tracking-wider mb-2">System</p>
+            {renderNavLink(systemItems[0])}
+            {debugItems.map((item) => renderNavLink(item))}
+            {renderNavLink(systemItems[1])}
           </div>
         </nav>
 
