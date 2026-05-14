@@ -93,7 +93,7 @@ const getPageInfo = (pathname) => {
     return { title: "Proxy Pools", description: "Manage your proxy pool configurations", icon: "lan", breadcrumbs: [] };
   if (pathname.includes("/endpoint") || pathname === "/dashboard")
     return { title: "Endpoint", description: "API endpoint configuration", icon: "api", breadcrumbs: [] };
-  if (pathname.includes("/profile"))
+  if (pathname.includes("/settings"))
     return { title: "Settings", description: "Manage your preferences", icon: "settings", breadcrumbs: [] };
   if (pathname.includes("/translator"))
     return {
