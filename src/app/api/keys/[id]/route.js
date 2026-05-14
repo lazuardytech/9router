@@ -21,7 +21,7 @@ export async function PUT(request, { params }) {
   try {
     const { id } = await params;
     const body = await request.json();
-    const { isActive } = body;
+    const { isActive, name, limitType, requestsPerMinute, concurrentRequests } = body || {};
 
     const existing = await getApiKeyById(id);
     if (!existing) {
@@ -30,12 +30,37 @@ export async function PUT(request, { params }) {
 
     const updateData = {};
     if (isActive !== undefined) updateData.isActive = isActive;
+    if (name !== undefined) updateData.name = name;
+    if (limitType !== undefined) {
+      if (!["unlimited", "limited"].includes(limitType)) {
+        return NextResponse.json({ error: "limitType must be 'unlimited' or 'limited'" }, { status: 400 });
+      }
+      updateData.limitType = limitType;
+    }
+    if (requestsPerMinute !== undefined) updateData.requestsPerMinute = requestsPerMinute;
+    if (concurrentRequests !== undefined) updateData.concurrentRequests = concurrentRequests;
+
+    if ((limitType || existing.limitType) === "limited") {
+      const rpm =
+        updateData.requestsPerMinute !== undefined ? Number(updateData.requestsPerMinute) : existing.requestsPerMinute;
+      const concurrent =
+        updateData.concurrentRequests !== undefined ? Number(updateData.concurrentRequests) : existing.concurrentRequests;
+      if (!Number.isFinite(rpm) || !Number.isInteger(rpm) || rpm <= 0) {
+        return NextResponse.json({ error: "Request per Minute must be a positive integer" }, { status: 400 });
+      }
+      if (!Number.isFinite(concurrent) || !Number.isInteger(concurrent) || concurrent <= 0) {
+        return NextResponse.json({ error: "Concurrent Request must be a positive integer" }, { status: 400 });
+      }
+    }
 
     const updated = await updateApiKey(id, updateData);
 
     return NextResponse.json({ key: updated });
   } catch (error) {
     console.log("Error updating key:", error);
+    if (String(error?.message || "").includes("positive integer")) {
+      return NextResponse.json({ error: error.message }, { status: 400 });
+    }
     return NextResponse.json({ error: "Failed to update key" }, { status: 500 });
   }
 }

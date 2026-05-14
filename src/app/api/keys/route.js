@@ -19,15 +19,34 @@ export async function GET() {
 export async function POST(request) {
   try {
     const body = await request.json();
-    const { name } = body;
+    const { name, limitType, requestsPerMinute, concurrentRequests } = body || {};
 
     if (!name) {
       return NextResponse.json({ error: "Name is required" }, { status: 400 });
     }
 
+    if (limitType && !["unlimited", "limited"].includes(limitType)) {
+      return NextResponse.json({ error: "limitType must be 'unlimited' or 'limited'" }, { status: 400 });
+    }
+
+    if (limitType === "limited") {
+      const rpm = Number(requestsPerMinute);
+      const concurrent = Number(concurrentRequests);
+      if (!Number.isFinite(rpm) || !Number.isInteger(rpm) || rpm <= 0) {
+        return NextResponse.json({ error: "Request per Minute must be a positive integer" }, { status: 400 });
+      }
+      if (!Number.isFinite(concurrent) || !Number.isInteger(concurrent) || concurrent <= 0) {
+        return NextResponse.json({ error: "Concurrent Request must be a positive integer" }, { status: 400 });
+      }
+    }
+
     // Always get machineId from server
     const machineId = await getConsistentMachineId();
-    const apiKey = await createApiKey(name, machineId);
+    const apiKey = await createApiKey(name, machineId, {
+      limitType: limitType || "unlimited",
+      requestsPerMinute,
+      concurrentRequests,
+    });
 
     return NextResponse.json(
       {
@@ -35,11 +54,17 @@ export async function POST(request) {
         name: apiKey.name,
         id: apiKey.id,
         machineId: apiKey.machineId,
+        limitType: apiKey.limitType,
+        requestsPerMinute: apiKey.requestsPerMinute,
+        concurrentRequests: apiKey.concurrentRequests,
       },
       { status: 201 },
     );
   } catch (error) {
     console.log("Error creating key:", error);
+    if (String(error?.message || "").includes("positive integer")) {
+      return NextResponse.json({ error: error.message }, { status: 400 });
+    }
     return NextResponse.json({ error: "Failed to create key" }, { status: 500 });
   }
 }

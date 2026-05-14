@@ -1,4 +1,5 @@
 import { handleChat } from "@/sse/handlers/chat.js";
+import { withApiKeyRateLimit } from "@/app/api/v1/_utils/apiKeyRateLimit.js";
 import { initTranslators } from "open-sse/translator/index.js";
 
 let initialized = false;
@@ -25,13 +26,15 @@ export async function OPTIONS() {
  * Reuses the same handleChat pipeline, signals compact via body._compact
  */
 export async function POST(request) {
-  await ensureInitialized();
-  const body = await request.json();
-  body._compact = true;
-  const newRequest = new Request(request.url, {
-    method: "POST",
-    headers: request.headers,
-    body: JSON.stringify(body),
+  return await withApiKeyRateLimit(request, async () => {
+    await ensureInitialized();
+    const body = await request.json();
+    body._compact = true;
+    const newRequest = new Request(request.url, {
+      method: "POST",
+      headers: request.headers,
+      body: JSON.stringify(body),
+    });
+    return await handleChat(newRequest);
   });
-  return await handleChat(newRequest);
 }

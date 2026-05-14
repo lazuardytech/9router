@@ -126,6 +126,7 @@ export async function handleForcedSSEToJson({
   onRequestSuccess,
   trackDone,
   appendLog,
+  onFinalJsonResponse,
 }) {
   const contentType = providerResponse.headers.get("content-type") || "";
   const isSSE = contentType.includes("text/event-stream") || (contentType === "" && provider === "codex");
@@ -170,6 +171,11 @@ export async function handleForcedSSEToJson({
 
       // Client is Responses API → return as-is
       if (sourceFormat === FORMATS.OPENAI_RESPONSES) {
+        try {
+          onFinalJsonResponse?.(jsonResponse, usage || null);
+        } catch {
+          // best effort
+        }
         return {
           success: true,
           response: new Response(JSON.stringify(jsonResponse), {
@@ -232,6 +238,12 @@ export async function handleForcedSSEToJson({
         };
       }
 
+      try {
+        onFinalJsonResponse?.(finalResp, finalResp?.usage || usage || null);
+      } catch {
+        // best effort
+      }
+
       return {
         success: true,
         response: new Response(JSON.stringify(finalResp), {
@@ -276,6 +288,12 @@ export async function handleForcedSSEToJson({
 
     // Preserve reasoning_content even when content is non-empty so clients that
     // expose a dedicated thinking panel can always consume it.
+
+    try {
+      onFinalJsonResponse?.(parsed, usage || parsed?.usage || null);
+    } catch {
+      // best effort
+    }
 
     return {
       success: true,

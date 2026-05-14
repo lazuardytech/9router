@@ -161,12 +161,31 @@ function importConfigDb(db, data) {
   if (Array.isArray(data.apiKeys)) {
     const stmt = db.prepare(`
       INSERT OR REPLACE INTO api_keys
-      (id, name, key, machine_id, is_active, created_at)
-      VALUES (?, ?, ?, ?, ?, ?)
+      (id, name, key, machine_id, is_active, created_at, limit_type, requests_per_minute, concurrent_requests)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
     `);
     for (const k of data.apiKeys) {
       if (!k?.id || !k.key) continue;
-      stmt.run(k.id, k.name ?? null, k.key, k.machineId ?? null, k.isActive === false ? 0 : 1, k.createdAt || nowIso());
+      const limitType = k.limitType === "limited" ? "limited" : "unlimited";
+      const requestsPerMinute =
+        limitType === "limited" && Number.isInteger(k.requestsPerMinute) && k.requestsPerMinute > 0
+          ? k.requestsPerMinute
+          : null;
+      const concurrentRequests =
+        limitType === "limited" && Number.isInteger(k.concurrentRequests) && k.concurrentRequests > 0
+          ? k.concurrentRequests
+          : null;
+      stmt.run(
+        k.id,
+        k.name ?? null,
+        k.key,
+        k.machineId ?? null,
+        k.isActive === false ? 0 : 1,
+        k.createdAt || nowIso(),
+        limitType,
+        requestsPerMinute,
+        concurrentRequests,
+      );
       imported++;
     }
   }

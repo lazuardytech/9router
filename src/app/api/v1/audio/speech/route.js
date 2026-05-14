@@ -1,4 +1,5 @@
 import { handleTts } from "@/sse/handlers/tts.js";
+import { withApiKeyRateLimit } from "@/app/api/v1/_utils/apiKeyRateLimit.js";
 
 export async function OPTIONS() {
   return new Response(null, {
@@ -12,5 +13,5 @@ export async function OPTIONS() {
 
 /** POST /v1/audio/speech - OpenAI-compatible TTS endpoint */
 export async function POST(request) {
-  return await handleTts(request);
+  return await withApiKeyRateLimit(request, () => handleTts(request));
 }

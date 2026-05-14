@@ -1,0 +1,113 @@
+import { createMemory } from "./store.js";
+import { MemoryType } from "./types.js";
+
+const PREFERENCE_PATTERNS = [
+  /\bI\s+(?:really\s+)?prefer\s+([^.,\n]+)/gi,
+  /\bI\s+(?:really\s+)?like\s+([^.,\n]+)/gi,
+  /\bmy\s+(?:favorite|favourite)\s+(?:is|are)\s+([^.,\n]+)/gi,
+  /\bI\s+(?:don'?t|do\s+not)\s+like\s+([^.,\n]+)/gi,
+  /\bI\s+(?:hate|dislike|avoid)\s+([^.,\n]+)/gi,
+  /\bI\s+enjoy\s+([^.,\n]+)/gi,
+  /\bI\s+love\s+([^.,\n]+)/gi,
+];
+
+const DECISION_PATTERNS = [
+  /\bI'?(?:ll|will)\s+use\s+([^.,\n]+)/gi,
+  /\bI\s+chose\s+([^.,\n]+)/gi,
+  /\bI\s+(?:have\s+)?decided\s+(?:to\s+)?([^.,\n]+)/gi,
+  /\bI'?m\s+going\s+(?:to\s+)?(?:use|with|adopt)\s+([^.,\n]+)/gi,
+  /\bI\s+selected\s+([^.,\n]+)/gi,
+  /\bI\s+picked\s+([^.,\n]+)/gi,
+  /\bI\s+went\s+with\s+([^.,\n]+)/gi,
+];
+
+const PATTERN_PATTERNS = [
+  /\bI\s+usually\s+([^.,\n]+)/gi,
+  /\bI\s+always\s+([^.,\n]+)/gi,
+  /\bI\s+never\s+([^.,\n]+)/gi,
+  /\bI\s+typically\s+([^.,\n]+)/gi,
+  /\bI\s+tend\s+to\s+([^.,\n]+)/gi,
+  /\bI\s+(?:often|frequently|regularly)\s+([^.,\n]+)/gi,
+];
+
+const MAX_FACT_LENGTH = 500;
+const MIN_FACT_LENGTH = 3;
+const MAX_EXTRACTION_TEXT_LENGTH = 64 * 1024;
+
+function sanitizeMatch(raw) {
+  return String(raw || "")
+    .trim()
+    .replace(/\s+/g, " ")
+    .slice(0, MAX_FACT_LENGTH);
+}
+
+function capExtractionText(text) {
+  if (text.length <= MAX_EXTRACTION_TEXT_LENGTH) return text;
+  return text.slice(-MAX_EXTRACTION_TEXT_LENGTH);
+}
+
+function factKey(category, content) {
+  const slug = content
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "_")
+    .slice(0, 40)
+    .replace(/_+$/, "");
+  return `${category}:${slug}`;
+}
+
+function runPatterns(text, patterns, category, type, seen) {
+  const facts = [];
+  for (const pattern of patterns) {
+    pattern.lastIndex = 0;
+    let match;
+    while ((match = pattern.exec(text)) !== null) {
+      const raw = match[1];
+      if (!raw) continue;
+      const content = sanitizeMatch(raw);
+      if (content.length < MIN_FACT_LENGTH) continue;
+      const key = factKey(category, content);
+      if (seen.has(key)) continue;
+      seen.add(key);
+      facts.push({ key, content, type, category });
+    }
+    pattern.lastIndex = 0;
+  }
+  return facts;
+}
+
+export function extractFactsFromText(text) {
+  if (!text || typeof text !== "string") return [];
+  const cappedText = capExtractionText(text);
+  const seen = new Set();
+  const facts = [];
+  facts.push(...runPatterns(cappedText, PREFERENCE_PATTERNS, "preference", MemoryType.FACTUAL, seen));
+  facts.push(...runPatterns(cappedText, DECISION_PATTERNS, "decision", MemoryType.EPISODIC, seen));
+  facts.push(...runPatterns(cappedText, PATTERN_PATTERNS, "pattern", MemoryType.FACTUAL, seen));
+  return facts;
+}
+
+export function extractFacts(text, apiKeyId, sessionId) {
+  if (!text || !apiKeyId || !sessionId) return;
+  const cappedText = capExtractionText(text);
+
+  setImmediate(() => {
+    const facts = extractFactsFromText(cappedText);
+    if (facts.length === 0) return;
+
+    for (const fact of facts) {
+      createMemory({
+        apiKeyId,
+        sessionId,
+        type: fact.type,
+        key: fact.key,
+        content: fact.content,
+        metadata: {
+          category: fact.category,
+          extractedAt: new Date().toISOString(),
+          source: "llm_response",
+        },
+        expiresAt: null,
+      }).catch(() => {});
+    }
+  });
+}

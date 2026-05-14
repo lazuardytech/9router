@@ -8,7 +8,7 @@ import {
   isValidApiKey,
 } from "../services/auth.js";
 import { cacheClaudeHeaders } from "open-sse/utils/claudeHeaderCache.js";
-import { getSettings } from "@/lib/localDb";
+import { getSettings, getApiKeyByKey } from "@/lib/localDb";
 import { getModelInfo, getComboInfo } from "../services/model.js";
 import { handleChatCore } from "open-sse/handlers/chatCore.js";
 import { errorResponse, unavailableResponse } from "open-sse/utils/error.js";
@@ -61,6 +61,8 @@ export async function handleChat(request, clientRawRequest = null) {
   // Log API key (masked)
   const authHeader = request.headers.get("Authorization");
   const apiKey = extractApiKey(request);
+  const apiKeyRecord = apiKey ? await getApiKeyByKey(apiKey).catch(() => null) : null;
+  const apiKeyId = apiKeyRecord?.id || null;
   if (authHeader && apiKey) {
     const masked = log.maskKey(apiKey);
     log.debug("AUTH", `API Key: ${masked}`);
@@ -115,7 +117,7 @@ export async function handleChat(request, clientRawRequest = null) {
       body,
       models: comboInfo.models,
       handleSingleModel: (b, m) =>
-        handleSingleModelChat(b, m, clientRawRequest, request, apiKey, comboInfo.contentFilterMessage),
+        handleSingleModelChat(b, m, clientRawRequest, request, apiKey, comboInfo.contentFilterMessage, apiKeyId),
       log,
       comboName: modelStr,
       comboStrategy,
@@ -126,7 +128,7 @@ export async function handleChat(request, clientRawRequest = null) {
   }
 
   // Single model request
-  return handleSingleModelChat(body, modelStr, clientRawRequest, request, apiKey);
+  return handleSingleModelChat(body, modelStr, clientRawRequest, request, apiKey, null, apiKeyId);
 }
 
 /**
@@ -139,6 +141,7 @@ async function handleSingleModelChat(
   request = null,
   apiKey = null,
   contentFilterMessage = null,
+  apiKeyId = null,
 ) {
   const modelInfo = await getModelInfo(modelStr);
 
@@ -165,7 +168,7 @@ async function handleSingleModelChat(
         body,
         models: comboInfo.models,
         handleSingleModel: (b, m) =>
-          handleSingleModelChat(b, m, clientRawRequest, request, apiKey, comboInfo.contentFilterMessage),
+          handleSingleModelChat(b, m, clientRawRequest, request, apiKey, comboInfo.contentFilterMessage, apiKeyId),
         log,
         comboName: modelStr,
         comboStrategy,
@@ -252,6 +255,8 @@ async function handleSingleModelChat(
       cavemanLevel: chatSettings.cavemanLevel || "full",
       providerThinking,
       contentFilterMessage,
+      chatSettings,
+      memoryOwnerId: apiKeyId,
       // Detect source format by endpoint + body
       sourceFormatOverride: request?.url ? detectFormatByEndpoint(new URL(request.url).pathname, body) : null,
       onCredentialsRefreshed: async (newCreds) => {

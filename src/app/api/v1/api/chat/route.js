@@ -1,4 +1,5 @@
 import { handleChat } from "@/sse/handlers/chat.js";
+import { withApiKeyRateLimit } from "@/app/api/v1/_utils/apiKeyRateLimit.js";
 import { initTranslators } from "open-sse/translator/index.js";
 import { transformToOllama } from "open-sse/utils/ollamaTransform.js";
 
@@ -22,15 +23,17 @@ export async function OPTIONS() {
 }
 
 export async function POST(request) {
-  await ensureInitialized();
+  return await withApiKeyRateLimit(request, async () => {
+    await ensureInitialized();
 
-  const clonedReq = request.clone();
-  let modelName = "llama3.2";
-  try {
-    const body = await clonedReq.json();
-    modelName = body.model || "llama3.2";
-  } catch {}
+    const clonedReq = request.clone();
+    let modelName = "llama3.2";
+    try {
+      const body = await clonedReq.json();
+      modelName = body.model || "llama3.2";
+    } catch {}
 
-  const response = await handleChat(request);
-  return transformToOllama(response, modelName);
+    const response = await handleChat(request);
+    return transformToOllama(response, modelName);
+  });
 }

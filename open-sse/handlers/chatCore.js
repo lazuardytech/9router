@@ -19,6 +19,107 @@ import { detectClientTool, isNativePassthrough } from "../utils/clientDetector.j
 import { injectCaveman } from "../rtk/caveman.js";
 import { compressMessages, formatRtkLog } from "../rtk/index.js";
 import { reserveReasoningTokenBudget } from "../utils/tokenBudget.js";
+import {
+  generateSignature,
+  getCachedResponse,
+  isCacheableForRead,
+  isCacheableForWrite,
+  setCachedResponse,
+} from "@/lib/semanticCache.js";
+import { extractFacts } from "@/lib/memory/extraction.js";
+import { injectMemory, shouldInjectMemory } from "@/lib/memory/injection.js";
+import { retrieveMemories } from "@/lib/memory/retrieval.js";
+import { normalizeMemorySettings, toMemoryRetrievalConfig } from "@/lib/memory/settings.js";
+
+const MAX_SEMANTIC_CACHE_BYTES = 256 * 1024;
+const MEMORY_EXTRACTION_TEXT_LIMIT = 64 * 1024;
+
+function isSmallEnoughForSemanticCache(value) {
+  try {
+    return JSON.stringify(value).length <= MAX_SEMANTIC_CACHE_BYTES;
+  } catch {
+    return false;
+  }
+}
+
+function toLimitedText(value) {
+  if (typeof value !== "string") return "";
+  const trimmed = value.trim();
+  if (!trimmed) return "";
+  return trimmed.length <= MEMORY_EXTRACTION_TEXT_LIMIT
+    ? trimmed
+    : trimmed.slice(trimmed.length - MEMORY_EXTRACTION_TEXT_LIMIT);
+}
+
+function extractMemoryTextFromResponse(response) {
+  if (!response || typeof response !== "object") return "";
+  const openAIText = response?.choices?.[0]?.message?.content;
+  if (typeof openAIText === "string") return toLimitedText(openAIText);
+  if (typeof response?.output_text === "string") return toLimitedText(response.output_text);
+  if (Array.isArray(response?.content)) {
+    const contentText = response.content
+      .filter((part) => part?.type === "text" && typeof part?.text === "string")
+      .map((part) => String(part.text).trim())
+      .filter(Boolean)
+      .join("\n");
+    if (contentText) return toLimitedText(contentText);
+  }
+  return "";
+}
+
+function extractMemoryTextFromRequestBody(body) {
+  if (!body || typeof body !== "object") return "";
+  const messages = Array.isArray(body.messages) ? body.messages : null;
+  if (messages?.length) {
+    for (let i = messages.length - 1; i >= 0; i -= 1) {
+      const msg = messages[i];
+      if (msg?.role !== "user") continue;
+      if (typeof msg?.content === "string" && msg.content.trim()) return toLimitedText(msg.content);
+      if (Array.isArray(msg?.content)) {
+        const text = msg.content
+          .map((part) => {
+            if (typeof part?.text === "string") return part.text.trim();
+            if (part?.type === "input_text" && typeof part?.text === "string") return part.text.trim();
+            return "";
+          })
+          .filter(Boolean)
+          .join("\n");
+        if (text) return toLimitedText(text);
+      }
+    }
+  }
+
+  const input = Array.isArray(body.input) ? body.input : null;
+  if (input?.length) {
+    for (let i = input.length - 1; i >= 0; i -= 1) {
+      const item = input[i];
+      const role = typeof item?.role === "string" ? item.role.trim().toLowerCase() : "";
+      const itemType = typeof item?.type === "string" ? item.type.trim().toLowerCase() : "";
+      if (role && role !== "user") continue;
+      if (itemType && itemType !== "message") continue;
+      if (typeof item?.content === "string" && item.content.trim()) return toLimitedText(item.content);
+      if (Array.isArray(item?.content)) {
+        const text = item.content
+          .map((part) => {
+            if (typeof part?.text === "string") return part.text.trim();
+            if (part?.type === "input_text" && typeof part?.text === "string") return part.text.trim();
+            return "";
+          })
+          .filter(Boolean)
+          .join("\n");
+        if (text) return toLimitedText(text);
+      }
+    }
+  }
+  return "";
+}
+
+function extractTokensSaved(usage) {
+  if (!usage || typeof usage !== "object") return 0;
+  const prompt = Number(usage.prompt_tokens ?? usage.input_tokens ?? 0) || 0;
+  const completion = Number(usage.completion_tokens ?? usage.output_tokens ?? 0) || 0;
+  return prompt + completion;
+}
 
 /**
  * Core chat handler - shared between SSE and Worker
@@ -46,9 +147,15 @@ export async function handleChatCore({
   sourceFormatOverride,
   providerThinking,
   contentFilterMessage,
+  chatSettings,
+  memoryOwnerId,
 }) {
   const { provider, model } = modelInfo;
   const requestStartTime = Date.now();
+  const pipelineSessionId = connectionId || `req-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 9)}`;
+  const settings = chatSettings || {};
+  const semanticCacheEnabled = settings.semanticCacheEnabled !== false;
+  const memorySettings = normalizeMemorySettings(settings);
 
   const sourceFormat = sourceFormatOverride || detectFormat(body);
 
@@ -106,6 +213,44 @@ export async function handleChatCore({
     reqLogger.logClientRawRequest(clientRawRequest.endpoint, clientRawRequest.body, clientRawRequest.headers);
   reqLogger.logRawRequest(body);
   log?.debug?.("FORMAT", `${sourceFormat} → ${targetFormat} | stream=${stream}`);
+
+  // Semantic cache pre-check
+  if (semanticCacheEnabled && isCacheableForRead(body, clientRawRequest?.headers)) {
+    const signature = generateSignature(model, body.messages ?? body.input, body.temperature, body.top_p);
+    const cached = getCachedResponse(signature);
+    if (cached) {
+      reqLogger.logConvertedResponse(cached);
+      return {
+        success: true,
+        response: new Response(JSON.stringify(cached), {
+          headers: {
+            "Content-Type": "application/json",
+            "Access-Control-Allow-Origin": "*",
+            "X-9Router-Cache": "HIT",
+          },
+        }),
+      };
+    }
+  }
+
+  if (
+    memoryOwnerId &&
+    shouldInjectMemory(body, { enabled: memorySettings.enabled && memorySettings.maxTokens > 0 })
+  ) {
+    try {
+      const memoryQuery = extractMemoryTextFromRequestBody(body);
+      const memories = await retrieveMemories(memoryOwnerId, {
+        ...toMemoryRetrievalConfig(memorySettings),
+        query: memoryQuery || undefined,
+      });
+      if (memories.length > 0) {
+        body = injectMemory(body, memories, provider);
+        log?.debug?.("MEMORY", `Injected ${memories.length} memories for key=${memoryOwnerId}`);
+      }
+    } catch (error) {
+      log?.debug?.("MEMORY", `Memory injection skipped: ${error?.message || String(error)}`);
+    }
+  }
 
   // Native passthrough: CLI tool and provider are the same ecosystem
   // Skip all translation/normalization — only model and Bearer are swapped
@@ -402,7 +547,29 @@ export async function handleChatCore({
 
   // Provider forced streaming but client wants JSON
   if (!clientRequestedStreaming && providerRequiresStreaming) {
-    const result = await handleForcedSSEToJson({ ...sharedCtx, providerResponse, sourceFormat, trackDone, appendLog });
+    const result = await handleForcedSSEToJson({
+      ...sharedCtx,
+      providerResponse,
+      sourceFormat,
+      trackDone,
+      appendLog,
+      onFinalJsonResponse: (finalResponse, usage) => {
+        if (
+          semanticCacheEnabled &&
+          isCacheableForWrite(body, clientRawRequest?.headers) &&
+          isSmallEnoughForSemanticCache(finalResponse)
+        ) {
+          const signature = generateSignature(model, body.messages ?? body.input, body.temperature, body.top_p);
+          setCachedResponse(signature, model, finalResponse, extractTokensSaved(usage));
+        }
+        if (memoryOwnerId && memorySettings.enabled && memorySettings.maxTokens > 0) {
+          const requestMemoryText = extractMemoryTextFromRequestBody(body);
+          if (requestMemoryText) extractFacts(requestMemoryText, memoryOwnerId, pipelineSessionId);
+          const responseMemoryText = extractMemoryTextFromResponse(finalResponse);
+          if (responseMemoryText) extractFacts(responseMemoryText, memoryOwnerId, pipelineSessionId);
+        }
+      },
+    });
     if (result) {
       streamController.handleComplete();
       return result;
@@ -420,6 +587,22 @@ export async function handleChatCore({
       toolNameMap,
       trackDone,
       appendLog,
+      onFinalJsonResponse: (translatedResponse, usage) => {
+        if (
+          semanticCacheEnabled &&
+          isCacheableForWrite(body, clientRawRequest?.headers) &&
+          isSmallEnoughForSemanticCache(translatedResponse)
+        ) {
+          const signature = generateSignature(model, body.messages ?? body.input, body.temperature, body.top_p);
+          setCachedResponse(signature, model, translatedResponse, extractTokensSaved(usage));
+        }
+        if (memoryOwnerId && memorySettings.enabled && memorySettings.maxTokens > 0) {
+          const requestMemoryText = extractMemoryTextFromRequestBody(body);
+          if (requestMemoryText) extractFacts(requestMemoryText, memoryOwnerId, pipelineSessionId);
+          const responseMemoryText = extractMemoryTextFromResponse(translatedResponse);
+          if (responseMemoryText) extractFacts(responseMemoryText, memoryOwnerId, pipelineSessionId);
+        }
+      },
     });
     streamController.handleComplete();
     return result;
@@ -516,7 +699,16 @@ export async function handleChatCore({
     }
   }
 
-  const { onStreamComplete } = buildOnStreamComplete({ ...sharedCtx });
+  const { onStreamComplete: baseOnStreamComplete } = buildOnStreamComplete({ ...sharedCtx });
+  const onStreamComplete = (contentObj, usage, ttftAt) => {
+    baseOnStreamComplete?.(contentObj, usage, ttftAt);
+    if (memoryOwnerId && memorySettings.enabled && memorySettings.maxTokens > 0) {
+      const requestMemoryText = extractMemoryTextFromRequestBody(body);
+      if (requestMemoryText) extractFacts(requestMemoryText, memoryOwnerId, pipelineSessionId);
+      const streamedText = toLimitedText(contentObj?.content || "");
+      if (streamedText) extractFacts(streamedText, memoryOwnerId, pipelineSessionId);
+    }
+  };
   return handleStreamingResponse({
     ...sharedCtx,
     providerResponse,

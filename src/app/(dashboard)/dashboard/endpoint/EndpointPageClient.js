@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import PropTypes from "prop-types";
-import { Card, Button, Input, Modal, CardSkeleton, Toggle } from "@/shared/components";
+import { Card, Button, Input, Modal, CardSkeleton, Toggle, SegmentedControl } from "@/shared/components";
 import { useCopyToClipboard } from "@/shared/hooks/useCopyToClipboard";
 
 const TUNNEL_BENEFITS = [
@@ -26,6 +26,9 @@ export default function APIPageClient({ machineId }) {
   const [loading, setLoading] = useState(true);
   const [showAddModal, setShowAddModal] = useState(false);
   const [newKeyName, setNewKeyName] = useState("");
+  const [newKeyLimitType, setNewKeyLimitType] = useState("unlimited");
+  const [newKeyRpm, setNewKeyRpm] = useState("60");
+  const [newKeyConcurrent, setNewKeyConcurrent] = useState("5");
   const [createdKey, setCreatedKey] = useState(null);
 
   const [requireApiKey, setRequireApiKey] = useState(false);
@@ -602,24 +605,42 @@ export default function APIPageClient({ machineId }) {
 
   const handleCreateKey = async () => {
     if (!newKeyName.trim()) return;
+    if (newKeyLimitType === "limited") {
+      const rpm = Number(newKeyRpm);
+      const concurrent = Number(newKeyConcurrent);
+      if (!Number.isFinite(rpm) || !Number.isInteger(rpm) || rpm <= 0) return;
+      if (!Number.isFinite(concurrent) || !Number.isInteger(concurrent) || concurrent <= 0) return;
+    }
 
     try {
       const res = await fetch("/api/keys", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: newKeyName }),
+        body: JSON.stringify({
+          name: newKeyName,
+          limitType: newKeyLimitType,
+          requestsPerMinute: newKeyLimitType === "limited" ? Number(newKeyRpm) : null,
+          concurrentRequests: newKeyLimitType === "limited" ? Number(newKeyConcurrent) : null,
+        }),
       });
       const data = await res.json();
 
       if (res.ok) {
         setCreatedKey(data.key);
         await fetchData();
-        setNewKeyName("");
-        setShowAddModal(false);
+        resetCreateKeyForm();
       }
     } catch (error) {
       console.log("Error creating key:", error);
     }
+  };
+
+  const resetCreateKeyForm = () => {
+    setNewKeyName("");
+    setNewKeyLimitType("unlimited");
+    setNewKeyRpm("60");
+    setNewKeyConcurrent("5");
+    setShowAddModal(false);
   };
 
   const handleDeleteKey = async (id) => {
@@ -671,6 +692,12 @@ export default function APIPageClient({ machineId }) {
   };
 
   const [baseUrl, setBaseUrl] = useState("/v1");
+  const hasValidCreateRateLimitInputs =
+    newKeyLimitType !== "limited" ||
+    (Number.isInteger(Number(newKeyRpm)) &&
+      Number(newKeyRpm) > 0 &&
+      Number.isInteger(Number(newKeyConcurrent)) &&
+      Number(newKeyConcurrent) > 0);
 
   // Hydration fix: Only access window on client side
   useEffect(() => {
@@ -1028,6 +1055,13 @@ export default function APIPageClient({ machineId }) {
                     </button>
                   </div>
                   <p className="text-xs text-text-muted mt-1">Created {new Date(key.createdAt).toLocaleDateString()}</p>
+                  {key.limitType === "limited" ? (
+                    <p className="text-xs text-blue-500 mt-1">
+                      Limited · {key.requestsPerMinute || 0} req/min · {key.concurrentRequests || 0} concurrent
+                    </p>
+                  ) : (
+                    <p className="text-xs text-emerald-500 mt-1">Unlimited</p>
+                  )}
                   {key.isActive === false && <p className="text-xs text-orange-500 mt-1">Paused</p>}
                 </div>
                 <div className="flex items-center gap-2">
@@ -1067,8 +1101,7 @@ export default function APIPageClient({ machineId }) {
         isOpen={showAddModal}
         title="Create API Key"
         onClose={() => {
-          setShowAddModal(false);
-          setNewKeyName("");
+          resetCreateKeyForm();
         }}
       >
         <div className="flex flex-col gap-4">
@@ -1078,18 +1111,46 @@ export default function APIPageClient({ machineId }) {
             onChange={(e) => setNewKeyName(e.target.value)}
             placeholder="Production Key"
           />
+          <div className="flex flex-col gap-1.5">
+            <label className="text-sm font-medium text-text-main">Limit Type</label>
+            <SegmentedControl
+              value={newKeyLimitType}
+              onChange={setNewKeyLimitType}
+              options={[
+                { value: "unlimited", label: "Unlimited" },
+                { value: "limited", label: "Limited" },
+              ]}
+              size="sm"
+              className="w-full"
+            />
+          </div>
+          {newKeyLimitType === "limited" && (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <Input
+                label="Request per Minute"
+                type="number"
+                min={1}
+                step={1}
+                value={newKeyRpm}
+                onChange={(e) => setNewKeyRpm(e.target.value)}
+                placeholder="60"
+              />
+              <Input
+                label="Concurrent Request"
+                type="number"
+                min={1}
+                step={1}
+                value={newKeyConcurrent}
+                onChange={(e) => setNewKeyConcurrent(e.target.value)}
+                placeholder="5"
+              />
+            </div>
+          )}
           <div className="flex gap-2">
-            <Button onClick={handleCreateKey} fullWidth disabled={!newKeyName.trim()}>
+            <Button onClick={handleCreateKey} fullWidth disabled={!newKeyName.trim() || !hasValidCreateRateLimitInputs}>
               Create
             </Button>
-            <Button
-              onClick={() => {
-                setShowAddModal(false);
-                setNewKeyName("");
-              }}
-              variant="ghost"
-              fullWidth
-            >
+            <Button onClick={resetCreateKeyForm} variant="ghost" fullWidth>
               Cancel
             </Button>
           </div>

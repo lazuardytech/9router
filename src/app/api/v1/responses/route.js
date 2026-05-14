@@ -1,4 +1,5 @@
 import { handleChat } from "@/sse/handlers/chat.js";
+import { withApiKeyRateLimit } from "@/app/api/v1/_utils/apiKeyRateLimit.js";
 import { initTranslators } from "open-sse/translator/index.js";
 
 let initialized = false;
@@ -25,6 +26,8 @@ export async function OPTIONS() {
  * Now handled by translator pattern (openai-responses format auto-detected)
  */
 export async function POST(request) {
-  await ensureInitialized();
-  return await handleChat(request);
+  return await withApiKeyRateLimit(request, async () => {
+    await ensureInitialized();
+    return await handleChat(request);
+  });
 }

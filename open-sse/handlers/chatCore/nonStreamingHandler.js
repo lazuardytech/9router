@@ -158,6 +158,7 @@ export async function handleNonStreamingResponse({
   toolNameMap,
   trackDone,
   appendLog,
+  onFinalJsonResponse,
 }) {
   trackDone();
   const contentType = providerResponse.headers.get("content-type") || "";
@@ -222,6 +223,12 @@ export async function handleNonStreamingResponse({
 
   if (translatedResponse?.usage) {
     translatedResponse.usage = filterUsageForFormat(addBufferToUsage(translatedResponse.usage), sourceFormat);
+  }
+
+  try {
+    onFinalJsonResponse?.(translatedResponse, usage || translatedResponse?.usage || null);
+  } catch {
+    // best effort side-effects only
   }
 
   // Preserve reasoning_content so downstream clients can render thinking panels.

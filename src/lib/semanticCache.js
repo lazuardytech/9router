@@ -1,0 +1,265 @@
+import crypto from "crypto";
+import { LRUCache } from "./cacheLayer.js";
+import { getDatabase } from "./sqlite/connection.js";
+
+function asRecord(value) {
+  return value && typeof value === "object" && !Array.isArray(value) ? value : {};
+}
+
+function toNumber(value, fallback = 0) {
+  if (typeof value === "number" && Number.isFinite(value)) return value;
+  if (typeof value === "string" && value.trim().length > 0) {
+    const parsed = Number(value);
+    return Number.isFinite(parsed) ? parsed : fallback;
+  }
+  return fallback;
+}
+
+function ensureCacheMetricsTable() {
+  try {
+    const db = getDatabase();
+    db.prepare(
+      `CREATE TABLE IF NOT EXISTS cache_metrics (
+        key TEXT PRIMARY KEY,
+        value INTEGER NOT NULL DEFAULT 0,
+        updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+      )`,
+    ).run();
+    db.prepare(
+      `INSERT OR IGNORE INTO cache_metrics (key, value) VALUES ('hits', 0), ('misses', 0), ('tokens_saved', 0)`,
+    ).run();
+  } catch {
+    // ignore
+  }
+}
+
+function incrementMetric(metric, amount = 1) {
+  try {
+    const db = getDatabase();
+    db.prepare(`UPDATE cache_metrics SET value = value + ?, updated_at = datetime('now') WHERE key = ?`).run(
+      amount,
+      metric,
+    );
+  } catch {
+    // ignore
+  }
+}
+
+function getMetricValue(metric) {
+  try {
+    const db = getDatabase();
+    const row = db.prepare(`SELECT value FROM cache_metrics WHERE key = ?`).get(metric);
+    return row ? toNumber(asRecord(row).value, 0) : 0;
+  } catch {
+    return 0;
+  }
+}
+
+function getHeaderValue(headers, name) {
+  if (!headers) return null;
+  if (typeof headers.get === "function") {
+    return headers.get(name);
+  }
+  const needle = String(name || "").toLowerCase();
+  for (const [key, value] of Object.entries(headers || {})) {
+    if (String(key).toLowerCase() !== needle) continue;
+    return typeof value === "string" ? value : null;
+  }
+  return null;
+}
+
+let memoryCache = null;
+
+function getMemoryCache() {
+  if (!memoryCache) {
+    memoryCache = new LRUCache({
+      maxSize: parseInt(process.env.SEMANTIC_CACHE_MAX_SIZE || "100", 10),
+      maxBytes: parseInt(process.env.SEMANTIC_CACHE_MAX_BYTES || String(4 * 1024 * 1024), 10),
+      defaultTTL: parseInt(process.env.SEMANTIC_CACHE_TTL_MS || "1800000", 10),
+    });
+    ensureCacheMetricsTable();
+  }
+  return memoryCache;
+}
+
+function stringifyForSignature(value) {
+  if (typeof value === "string") return value;
+  try {
+    return JSON.stringify(value);
+  } catch {
+    return String(value);
+  }
+}
+
+function normalizeConversation(conversation) {
+  if (typeof conversation === "string") {
+    return [{ role: "user", content: conversation }];
+  }
+  if (!Array.isArray(conversation)) return [];
+
+  return conversation.map((item) => ({
+    role: typeof item?.role === "string" && item.role.trim() ? item.role : "user",
+    content: stringifyForSignature(item?.content),
+  }));
+}
+
+export function generateSignature(model, conversation, temperature = 0, topP = 1) {
+  const payload = JSON.stringify({
+    model,
+    messages: normalizeConversation(conversation),
+    temperature,
+    top_p: topP,
+  });
+  return crypto.createHash("sha256").update(payload).digest("hex");
+}
+
+export function getCachedResponse(signature) {
+  const memResult = getMemoryCache().get(signature);
+  if (memResult) {
+    incrementMetric("hits");
+    incrementMetric("tokens_saved", memResult.tokensSaved || 0);
+    return memResult.response;
+  }
+
+  try {
+    const db = getDatabase();
+    const row = db
+      .prepare("SELECT response, tokens_saved FROM semantic_cache WHERE signature = ? AND expires_at > datetime('now')")
+      .get(signature);
+
+    if (!row) {
+      incrementMetric("misses");
+      return null;
+    }
+
+    const record = asRecord(row);
+    if (typeof record.response !== "string" || !record.response.trim()) {
+      incrementMetric("misses");
+      return null;
+    }
+
+    const parsed = JSON.parse(record.response);
+    const tokensSaved = toNumber(record.tokens_saved, 0);
+    getMemoryCache().set(signature, { response: parsed, tokensSaved });
+    db.prepare("UPDATE semantic_cache SET hit_count = hit_count + 1 WHERE signature = ?").run(signature);
+
+    incrementMetric("hits");
+    incrementMetric("tokens_saved", tokensSaved);
+    return parsed;
+  } catch {
+    incrementMetric("misses");
+    return null;
+  }
+}
+
+export function setCachedResponse(signature, model, response, tokensSaved = 0, ttlMs = 3600000) {
+  const ttl = parseInt(process.env.SEMANTIC_CACHE_TTL_MS || String(ttlMs), 10);
+  getMemoryCache().set(signature, { response, tokensSaved }, ttl);
+
+  try {
+    const db = getDatabase();
+    const id = crypto.randomUUID();
+    const promptHash = signature.slice(0, 16);
+    const now = new Date().toISOString();
+    const expiresAt = new Date(Date.now() + ttl).toISOString();
+
+    db.prepare(
+      `INSERT OR REPLACE INTO semantic_cache
+      (id, signature, model, prompt_hash, response, tokens_saved, hit_count, created_at, expires_at)
+      VALUES (?, ?, ?, ?, ?, ?, 0, ?, ?)`,
+    ).run(id, signature, model, promptHash, JSON.stringify(response), tokensSaved, now, expiresAt);
+  } catch {
+    // ignore
+  }
+}
+
+export function clearCache() {
+  getMemoryCache().clear();
+  let removed = 0;
+  try {
+    const db = getDatabase();
+    const result = db.prepare("DELETE FROM semantic_cache").run();
+    removed = result.changes || 0;
+    db.prepare("UPDATE cache_metrics SET value = 0").run();
+  } catch {
+    // ignore
+  }
+  return removed;
+}
+
+export function invalidateByModel(model) {
+  getMemoryCache().clear();
+  try {
+    const db = getDatabase();
+    const result = db.prepare("DELETE FROM semantic_cache WHERE model = ?").run(model);
+    return result.changes || 0;
+  } catch {
+    return 0;
+  }
+}
+
+export function invalidateBySignature(signature) {
+  getMemoryCache().delete(signature);
+  try {
+    const db = getDatabase();
+    const result = db.prepare("DELETE FROM semantic_cache WHERE signature = ?").run(signature);
+    return (result.changes || 0) > 0;
+  } catch {
+    return false;
+  }
+}
+
+export function invalidateStale(maxAgeMs) {
+  getMemoryCache().clear();
+  try {
+    const db = getDatabase();
+    const cutoff = new Date(Date.now() - maxAgeMs).toISOString();
+    const result = db.prepare("DELETE FROM semantic_cache WHERE created_at < ?").run(cutoff);
+    return result.changes || 0;
+  } catch {
+    return 0;
+  }
+}
+
+export function getCacheStats() {
+  const memStats = getMemoryCache().getStats();
+  let dbSize = 0;
+  try {
+    const db = getDatabase();
+    const row = db.prepare("SELECT COUNT(*) AS count FROM semantic_cache WHERE expires_at > datetime('now')").get();
+    dbSize = toNumber(asRecord(row).count, 0);
+  } catch {
+    // ignore
+  }
+
+  const hits = getMetricValue("hits");
+  const misses = getMetricValue("misses");
+  const tokensSaved = getMetricValue("tokens_saved");
+  const total = hits + misses;
+
+  return {
+    memoryEntries: memStats.size,
+    dbEntries: dbSize,
+    hits,
+    misses,
+    hitRate: total > 0 ? ((hits / total) * 100).toFixed(1) : "0.0",
+    tokensSaved,
+  };
+}
+
+export function isCacheableForRead(body, headers) {
+  if ((getHeaderValue(headers, "x-9router-no-cache") || "").toLowerCase() === "true") return false;
+  if ((getHeaderValue(headers, "x-omniroute-no-cache") || "").toLowerCase() === "true") return false;
+  if (body?.stream !== false) return false;
+  if ((body?.temperature ?? 0) !== 0) return false;
+  return true;
+}
+
+export function isCacheableForWrite(body, headers) {
+  if ((getHeaderValue(headers, "x-9router-no-cache") || "").toLowerCase() === "true") return false;
+  if ((getHeaderValue(headers, "x-omniroute-no-cache") || "").toLowerCase() === "true") return false;
+  if (body?.stream !== false) return false;
+  if (body?.temperature !== 0) return false;
+  return true;
+}
+

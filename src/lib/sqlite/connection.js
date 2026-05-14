@@ -53,6 +53,31 @@ function ensureSchema(db) {
   schemaReady = true;
 }
 
+function hasColumn(db, tableName, columnName) {
+  try {
+    const columns = db.prepare(`PRAGMA table_info(${tableName})`).all();
+    return columns.some((col) => String(col.name) === columnName);
+  } catch {
+    return false;
+  }
+}
+
+function ensureSchemaPatches(db) {
+  const apiKeyColumns = [
+    ["limit_type", "limit_type TEXT NOT NULL DEFAULT 'unlimited'"],
+    ["requests_per_minute", "requests_per_minute INTEGER"],
+    ["concurrent_requests", "concurrent_requests INTEGER"],
+  ];
+
+  for (const [column, ddl] of apiKeyColumns) {
+    if (!hasColumn(db, "api_keys", column)) {
+      db.exec(`ALTER TABLE api_keys ADD COLUMN ${ddl}`);
+    }
+  }
+
+  db.exec("UPDATE api_keys SET limit_type = 'unlimited' WHERE limit_type IS NULL OR trim(limit_type) = ''");
+}
+
 function readMeta(db, key) {
   const row = db.prepare("SELECT value FROM meta WHERE key = ?").get(key);
   return row ? row.value : null;
@@ -90,6 +115,7 @@ export function getDatabase() {
   const db = new Database(SQLITE_FILE);
   applyPragmas(db);
   ensureSchema(db);
+  ensureSchemaPatches(db);
   runInitialMigration(db);
 
   dbInstance = db;

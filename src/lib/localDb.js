@@ -35,6 +35,13 @@ const DEFAULT_SETTINGS = {
   rtkEnabled: true,
   cavemanEnabled: false,
   cavemanLevel: "full",
+  semanticCacheEnabled: true,
+  semanticCacheMaxSize: 100,
+  semanticCacheTTL: 1800000,
+  memoryEnabled: true,
+  memoryMaxTokens: 2000,
+  memoryRetentionDays: 30,
+  memoryStrategy: "hybrid",
 };
 
 function cloneDefaultData() {
@@ -145,6 +152,18 @@ function rowToCombo(r) {
 }
 
 function rowToApiKey(r) {
+  const limitType = r.limit_type === "limited" ? "limited" : "unlimited";
+  const requestsPerMinuteRaw = r.requests_per_minute;
+  const concurrentRequestsRaw = r.concurrent_requests;
+  const requestsPerMinute =
+    limitType === "limited" && Number.isInteger(requestsPerMinuteRaw) && requestsPerMinuteRaw > 0
+      ? requestsPerMinuteRaw
+      : null;
+  const concurrentRequests =
+    limitType === "limited" && Number.isInteger(concurrentRequestsRaw) && concurrentRequestsRaw > 0
+      ? concurrentRequestsRaw
+      : null;
+
   return {
     id: r.id,
     name: r.name,
@@ -152,6 +171,42 @@ function rowToApiKey(r) {
     machineId: r.machine_id,
     isActive: r.is_active !== 0,
     createdAt: r.created_at,
+    limitType,
+    requestsPerMinute,
+    concurrentRequests,
+  };
+}
+
+function toPositiveInteger(value) {
+  const number = Number(value);
+  if (!Number.isFinite(number) || !Number.isInteger(number) || number <= 0) return null;
+  return number;
+}
+
+function normalizeApiKeyRateLimitInput(input = {}, fallback = {}) {
+  const requestedType = input.limitType ?? fallback.limitType;
+  const limitType = requestedType === "limited" ? "limited" : "unlimited";
+
+  const fallbackRpm =
+    fallback.limitType === "limited" && Number.isInteger(fallback.requestsPerMinute) ? fallback.requestsPerMinute : null;
+  const fallbackConcurrent =
+    fallback.limitType === "limited" && Number.isInteger(fallback.concurrentRequests) ? fallback.concurrentRequests : null;
+
+  const rpmCandidate = input.requestsPerMinute ?? fallbackRpm;
+  const concurrentCandidate = input.concurrentRequests ?? fallbackConcurrent;
+
+  if (limitType === "limited") {
+    const requestsPerMinute = toPositiveInteger(rpmCandidate);
+    const concurrentRequests = toPositiveInteger(concurrentCandidate);
+    if (!requestsPerMinute) throw new Error("requestsPerMinute must be a positive integer");
+    if (!concurrentRequests) throw new Error("concurrentRequests must be a positive integer");
+    return { limitType, requestsPerMinute, concurrentRequests };
+  }
+
+  return {
+    limitType: "unlimited",
+    requestsPerMinute: null,
+    concurrentRequests: null,
   };
 }
 
@@ -916,11 +971,12 @@ export async function getApiKeys() {
   return rows.map(rowToApiKey);
 }
 
-export async function createApiKey(name, machineId) {
+export async function createApiKey(name, machineId, options = {}) {
   if (!machineId) throw new Error("machineId is required");
   const now = nowIso();
   const { generateApiKeyWithMachine } = await import("@/shared/utils/apiKey");
   const result = generateApiKeyWithMachine(machineId);
+  const limits = normalizeApiKeyRateLimitInput(options);
   const apiKey = {
     id: uuidv4(),
     name,
@@ -928,6 +984,9 @@ export async function createApiKey(name, machineId) {
     machineId,
     isActive: true,
     createdAt: now,
+    limitType: limits.limitType,
+    requestsPerMinute: limits.requestsPerMinute,
+    concurrentRequests: limits.concurrentRequests,
   };
   if (isCloud) {
     const d = await getCloudDb();
@@ -937,10 +996,21 @@ export async function createApiKey(name, machineId) {
   }
   db()
     .prepare(`
-    INSERT INTO api_keys (id, name, key, machine_id, is_active, created_at)
-    VALUES (?, ?, ?, ?, ?, ?)
+    INSERT INTO api_keys
+    (id, name, key, machine_id, is_active, created_at, limit_type, requests_per_minute, concurrent_requests)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
   `)
-    .run(apiKey.id, apiKey.name, apiKey.key, apiKey.machineId, 1, apiKey.createdAt);
+    .run(
+      apiKey.id,
+      apiKey.name,
+      apiKey.key,
+      apiKey.machineId,
+      1,
+      apiKey.createdAt,
+      apiKey.limitType,
+      apiKey.requestsPerMinute,
+      apiKey.concurrentRequests,
+    );
   return apiKey;
 }
 
@@ -970,18 +1040,40 @@ export async function updateApiKey(id, data) {
     const d = await getCloudDb();
     const idx = (d.data.apiKeys || []).findIndex((k) => k.id === id);
     if (idx === -1) return null;
-    d.data.apiKeys[idx] = { ...d.data.apiKeys[idx], ...data };
+    const current = d.data.apiKeys[idx];
+    const merged = {
+      ...current,
+      ...data,
+      ...normalizeApiKeyRateLimitInput(data, current),
+    };
+    d.data.apiKeys[idx] = merged;
     return d.data.apiKeys[idx];
   }
   const current = await getApiKeyById(id);
   if (!current) return null;
-  const merged = { ...current, ...data };
+  const limits = normalizeApiKeyRateLimitInput(data, current);
+  const merged = {
+    ...current,
+    ...data,
+    ...limits,
+  };
   db()
     .prepare(`
-    UPDATE api_keys SET name = ?, key = ?, machine_id = ?, is_active = ?
+    UPDATE api_keys
+    SET name = ?, key = ?, machine_id = ?, is_active = ?,
+        limit_type = ?, requests_per_minute = ?, concurrent_requests = ?
     WHERE id = ?
   `)
-    .run(merged.name ?? null, merged.key, merged.machineId ?? null, merged.isActive === false ? 0 : 1, id);
+    .run(
+      merged.name ?? null,
+      merged.key,
+      merged.machineId ?? null,
+      merged.isActive === false ? 0 : 1,
+      merged.limitType,
+      merged.requestsPerMinute,
+      merged.concurrentRequests,
+      id,
+    );
   return merged;
 }
 
@@ -993,6 +1085,16 @@ export async function validateApiKey(key) {
   }
   const r = db().prepare("SELECT 1 FROM api_keys WHERE key = ? AND is_active != 0").get(key);
   return !!r;
+}
+
+export async function getApiKeyByKey(key) {
+  if (!key) return null;
+  if (isCloud) {
+    const d = await getCloudDb();
+    return (d.data.apiKeys || []).find((k) => k.key === key && k.isActive !== false) || null;
+  }
+  const r = db().prepare("SELECT * FROM api_keys WHERE key = ? AND is_active != 0 LIMIT 1").get(key);
+  return r ? rowToApiKey(r) : null;
 }
 
 // ===== Settings ==========================================================
@@ -1212,11 +1314,13 @@ export async function importDb(payload) {
     }
 
     const apiKeyStmt = db().prepare(`
-      INSERT INTO api_keys (id, name, key, machine_id, is_active, created_at)
-      VALUES (?, ?, ?, ?, ?, ?)
+      INSERT INTO api_keys
+      (id, name, key, machine_id, is_active, created_at, limit_type, requests_per_minute, concurrent_requests)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
     `);
     for (const k of data.apiKeys || []) {
       if (!k.key) continue;
+      const limits = normalizeApiKeyRateLimitInput(k);
       apiKeyStmt.run(
         k.id || uuidv4(),
         k.name ?? null,
@@ -1224,6 +1328,9 @@ export async function importDb(payload) {
         k.machineId ?? null,
         k.isActive === false ? 0 : 1,
         k.createdAt || nowIso(),
+        limits.limitType,
+        limits.requestsPerMinute,
+        limits.concurrentRequests,
       );
     }
 

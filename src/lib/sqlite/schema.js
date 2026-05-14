@@ -62,7 +62,10 @@ CREATE TABLE IF NOT EXISTS api_keys (
   key          TEXT NOT NULL,
   machine_id   TEXT,
   is_active    INTEGER NOT NULL DEFAULT 1,
-  created_at   TEXT NOT NULL
+  created_at   TEXT NOT NULL,
+  limit_type   TEXT NOT NULL DEFAULT 'unlimited',
+  requests_per_minute INTEGER,
+  concurrent_requests INTEGER
 );
 CREATE INDEX IF NOT EXISTS idx_apikeys_key ON api_keys(key);
 
@@ -165,4 +168,64 @@ CREATE TABLE IF NOT EXISTS request_log (
   status            TEXT
 );
 CREATE INDEX IF NOT EXISTS idx_reqlog_id_desc ON request_log(id DESC);
+
+-- Semantic cache ----------------------------------------------------------
+
+CREATE TABLE IF NOT EXISTS semantic_cache (
+  id           TEXT PRIMARY KEY,
+  signature    TEXT NOT NULL UNIQUE,
+  model        TEXT NOT NULL,
+  prompt_hash  TEXT,
+  response     TEXT NOT NULL,
+  tokens_saved INTEGER NOT NULL DEFAULT 0,
+  hit_count    INTEGER NOT NULL DEFAULT 0,
+  created_at   TEXT NOT NULL,
+  expires_at   TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_semantic_cache_model ON semantic_cache(model);
+CREATE INDEX IF NOT EXISTS idx_semantic_cache_expires ON semantic_cache(expires_at);
+
+CREATE TABLE IF NOT EXISTS cache_metrics (
+  key         TEXT PRIMARY KEY,
+  value       INTEGER NOT NULL DEFAULT 0,
+  updated_at  TEXT NOT NULL DEFAULT (datetime('now'))
+);
+INSERT OR IGNORE INTO cache_metrics (key, value) VALUES ('hits', 0), ('misses', 0), ('tokens_saved', 0);
+
+-- Conversational memory ---------------------------------------------------
+
+CREATE TABLE IF NOT EXISTS memories (
+  id           TEXT PRIMARY KEY,
+  api_key_id   TEXT NOT NULL,
+  session_id   TEXT,
+  type         TEXT NOT NULL CHECK(type IN ('factual', 'episodic', 'procedural', 'semantic')),
+  key          TEXT,
+  content      TEXT NOT NULL,
+  metadata     TEXT,
+  created_at   TEXT NOT NULL DEFAULT (datetime('now')),
+  updated_at   TEXT NOT NULL DEFAULT (datetime('now')),
+  expires_at   TEXT
+);
+CREATE INDEX IF NOT EXISTS idx_memories_api_key ON memories(api_key_id);
+CREATE INDEX IF NOT EXISTS idx_memories_session ON memories(session_id);
+CREATE INDEX IF NOT EXISTS idx_memories_type ON memories(type);
+CREATE INDEX IF NOT EXISTS idx_memories_expires ON memories(expires_at);
+
+CREATE VIRTUAL TABLE IF NOT EXISTS memory_fts USING fts5(
+  content,
+  key
+);
+
+CREATE TRIGGER IF NOT EXISTS memory_fts_ai AFTER INSERT ON memories BEGIN
+  INSERT INTO memory_fts(rowid, content, key) VALUES (new.rowid, new.content, new.key);
+END;
+
+CREATE TRIGGER IF NOT EXISTS memory_fts_ad AFTER DELETE ON memories BEGIN
+  DELETE FROM memory_fts WHERE rowid = old.rowid;
+END;
+
+CREATE TRIGGER IF NOT EXISTS memory_fts_au AFTER UPDATE ON memories BEGIN
+  DELETE FROM memory_fts WHERE rowid = old.rowid;
+  INSERT INTO memory_fts(rowid, content, key) VALUES (new.rowid, new.content, new.key);
+END;
 `;

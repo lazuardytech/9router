@@ -1,4 +1,5 @@
 import { handleEmbeddings } from "@/sse/handlers/embeddings.js";
+import { withApiKeyRateLimit } from "@/app/api/v1/_utils/apiKeyRateLimit.js";
 
 /**
  * Handle CORS preflight
@@ -17,5 +18,5 @@ export async function OPTIONS() {
  * POST /v1/embeddings - OpenAI-compatible embeddings endpoint
  */
 export async function POST(request) {
-  return await handleEmbeddings(request);
+  return await withApiKeyRateLimit(request, () => handleEmbeddings(request));
 }
