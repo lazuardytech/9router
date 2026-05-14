@@ -118,7 +118,7 @@ export default function Sidebar({ onClose, collapsed = false, onToggleCollapse }
         )}
       >
         {/* App title + collapse button */}
-        <div className="flex items-center h-11 px-3 border-b border-charcoal-grey shrink-0 gap-2">
+        <div className="flex items-center h-14 px-3 border-b border-charcoal-grey shrink-0 gap-2">
           {!collapsed && (
             <Link
               href="/dashboard"
