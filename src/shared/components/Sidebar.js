@@ -148,20 +148,15 @@ export default function Sidebar({ onClose, collapsed = false, onToggleCollapse }
             </Link>
           )}
 
-          {/* Collapse toggle — desktop only */}
-          {onToggleCollapse && (
+          {/* Collapse toggle — desktop only, expanded mode only */}
+          {onToggleCollapse && !collapsed && (
             <button
               type="button"
               onClick={onToggleCollapse}
-              title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
-              className={cn(
-                "hidden lg:flex items-center justify-center size-6 rounded-[4px] text-fog-grey hover:bg-deep-slate hover:text-porcelain transition-colors duration-100 shrink-0",
-                collapsed && "mx-auto",
-              )}
+              title="Collapse sidebar"
+              className="hidden lg:flex items-center justify-center size-6 rounded-[4px] text-fog-grey hover:bg-deep-slate hover:text-porcelain transition-colors duration-100 shrink-0"
             >
-              <span className="material-symbols-outlined text-[15px]">
-                {collapsed ? "left_panel_open" : "left_panel_close"}
-              </span>
+              <span className="material-symbols-outlined text-[15px]">left_panel_close</span>
             </button>
           )}
         </div>
@@ -292,6 +287,16 @@ export default function Sidebar({ onClose, collapsed = false, onToggleCollapse }
             collapsed ? "flex-col gap-1 p-1.5" : "gap-1.5 p-2",
           )}
         >
+          {collapsed && onToggleCollapse && (
+            <button
+              type="button"
+              onClick={onToggleCollapse}
+              title="Expand sidebar"
+              className="hidden lg:flex items-center justify-center size-8 rounded-[6px] border border-charcoal-grey text-fog-grey hover:bg-deep-slate hover:text-porcelain transition-colors duration-100"
+            >
+              <span className="material-symbols-outlined text-[14px]">left_panel_open</span>
+            </button>
+          )}
           <button
             onClick={handleRestart}
             disabled={isRestarting}
