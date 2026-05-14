@@ -35,19 +35,22 @@ COPY --from=builder /app/open-sse ./open-sse
 COPY --from=builder /app/src/shared ./src/shared
 
 # Install tailscale (userspace mode, no systemd needed)
+# Alpine edge/community has tailscale package
 RUN apk --no-cache upgrade && apk --no-cache add su-exec curl && \
-  curl -fsSL https://pkgs.tailscale.com/stable/tailscale_latest_amd64.tgz | tar -xz --strip-components=1 -C /usr/local/bin tailscale_*/tailscale tailscale_*/tailscaled 2>/dev/null || \
+  apk add --no-cache --repository=https://dl-cdn.alpinelinux.org/alpine/edge/community tailscale || \
   (ARCH=$(uname -m) && \
    case "$ARCH" in \
      x86_64) TS_ARCH=amd64 ;; \
-     aarch64|arm64) TS_ARCH=arm64 ;; \
+     aarch64) TS_ARCH=arm64 ;; \
      armv7l) TS_ARCH=arm ;; \
      *) TS_ARCH=amd64 ;; \
    esac && \
-   TS_VERSION=$(curl -fsSL https://pkgs.tailscale.com/stable/ | grep -oP 'tailscale_\K[0-9]+\.[0-9]+\.[0-9]+' | head -1) && \
-   curl -fsSL "https://pkgs.tailscale.com/stable/tailscale_${TS_VERSION}_${TS_ARCH}.tgz" | \
-   tar -xz --strip-components=1 -C /usr/local/bin "tailscale_${TS_VERSION}_${TS_ARCH}/tailscale" "tailscale_${TS_VERSION}_${TS_ARCH}/tailscaled") && \
-  chmod +x /usr/local/bin/tailscale /usr/local/bin/tailscaled
+   TS_VERSION=$(curl -fsSL "https://pkgs.tailscale.com/stable/?mode=json" | grep -oP '"version":"\K[^"]+' | head -1) && \
+   echo "Installing tailscale ${TS_VERSION} for ${TS_ARCH}" && \
+   curl -fsSL "https://pkgs.tailscale.com/stable/tailscale_${TS_VERSION}_${TS_ARCH}.tgz" -o /tmp/ts.tgz && \
+   tar -xz --strip-components=1 -C /usr/local/bin -f /tmp/ts.tgz && \
+   rm /tmp/ts.tgz) && \
+  which tailscale && tailscale version
 
 RUN mkdir -p /app/data && chown -R node:node /app && \
   mkdir -p /app/data-home && chown node:node /app/data-home && \
