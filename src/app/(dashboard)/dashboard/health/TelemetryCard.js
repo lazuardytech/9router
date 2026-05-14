@@ -21,30 +21,62 @@ function formatDuration(seconds = 0) {
   return `${m}m`;
 }
 
-function Sparkline({ samples, field }) {
+function Sparkline({ samples, field, fmt }) {
+  const [hovered, setHovered] = useState(null);
   const values = samples.map((s) => Number(s[field])).filter((v) => Number.isFinite(v));
   if (values.length < 2) return <div className="h-10 rounded-[4px] bg-deep-slate" />;
   const min = Math.min(...values);
   const max = Math.max(...values);
   const range = Math.max(1, max - min);
+  const W = 100;
+  const H = 40;
+  const PAD = 2;
   const points = values
     .map((v, i) => {
-      const x = (i / Math.max(1, values.length - 1)) * 100;
-      const y = 36 - ((v - min) / range) * 32;
+      const x = PAD + (i / Math.max(1, values.length - 1)) * (W - PAD * 2);
+      const y = H - PAD - ((v - min) / range) * (H - PAD * 2);
       return `${x.toFixed(2)},${y.toFixed(2)}`;
     })
     .join(" ");
+  const areaPoints = `${PAD},${H - PAD} ${points} ${W - PAD},${H - PAD}`;
+
   return (
-    <svg viewBox="0 0 100 40" aria-hidden="true" className="h-10 w-full">
-      <polyline
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="2"
-        vectorEffect="non-scaling-stroke"
-        points={points}
-        className="text-porcelain/40"
-      />
-    </svg>
+    <div className="relative">
+      <svg viewBox={`0 0 ${W} ${H}`} aria-hidden="true" className="h-10 w-full" onMouseLeave={() => setHovered(null)}>
+        <polygon points={areaPoints} fill="currentColor" fillOpacity="0.06" className="text-porcelain" />
+        <polyline
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.5"
+          vectorEffect="non-scaling-stroke"
+          points={points}
+          className="text-porcelain/40"
+        />
+        {values.map((v, i) => {
+          const x = PAD + (i / Math.max(1, values.length - 1)) * (W - PAD * 2);
+          const y = H - PAD - ((v - min) / range) * (H - PAD * 2);
+          return (
+            <g key={i}>
+              <circle
+                cx={x}
+                cy={y}
+                r="2"
+                fill="currentColor"
+                fillOpacity={hovered === i ? 1 : 0}
+                className="text-porcelain"
+              />
+              <rect x={x - 4} y={0} width={8} height={H} fill="transparent" onMouseEnter={() => setHovered(i)} />
+            </g>
+          );
+        })}
+      </svg>
+      {hovered !== null && samples[hovered] && (
+        <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-deep-slate border border-charcoal-grey rounded-[4px] px-2 py-1 text-[10px] text-porcelain whitespace-nowrap pointer-events-none z-10 shadow-[var(--shadow-xl)]">
+          <div className="text-fog-grey">{new Date(samples[hovered].timestamp).toLocaleTimeString()}</div>
+          <div className="font-[510]">{fmt ? fmt(samples[hovered][field]) : samples[hovered][field]}</div>
+        </div>
+      )}
+    </div>
   );
 }
 
@@ -155,11 +187,11 @@ export default function TelemetryCard() {
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <div className="rounded-[6px] border border-charcoal-grey bg-deep-slate p-3">
           <p className="text-[10px] text-fog-grey mb-2">Memory RSS trend</p>
-          <Sparkline samples={samples} field="memoryBytes" />
+          <Sparkline samples={samples} field="memoryBytes" fmt={formatBytes} />
         </div>
         <div className="rounded-[6px] border border-charcoal-grey bg-deep-slate p-3">
           <p className="text-[10px] text-fog-grey mb-2">Heap used trend</p>
-          <Sparkline samples={samples} field="heapUsed" />
+          <Sparkline samples={samples} field="heapUsed" fmt={formatBytes} />
         </div>
       </div>
     </div>
