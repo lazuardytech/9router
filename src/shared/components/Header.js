@@ -89,7 +89,7 @@ const getPageInfo = (pathname) => {
       icon: "translate",
       breadcrumbs: [],
     };
-  if (pathname.includes("/console-log"))
+  if (pathname.includes("/logs"))
     return { title: "Console Log", description: "Live server console output", icon: "terminal", breadcrumbs: [] };
   if (pathname.includes("/memory"))
     return { title: "Memory", description: "Manage memory entries", icon: "memory_alt", breadcrumbs: [] };
