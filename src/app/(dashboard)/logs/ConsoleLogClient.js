@@ -176,7 +176,7 @@ export default function ConsoleLogClient({ autoScroll, setAutoScroll, clearRef, 
         {/* Left: Search + filter pills */}
         <div className="flex flex-wrap items-center gap-2">
           <div className="relative">
-            <span className="absolute left-2 top-1/2 -translate-y-1/2 material-symbols-outlined text-[13px] text-fog-grey pr-2">
+            <span className="absolute left-2.5 top-1/2 -translate-y-1/2 material-symbols-outlined text-[14px] text-fog-grey">
               search
             </span>
             <input
@@ -184,7 +184,7 @@ export default function ConsoleLogClient({ autoScroll, setAutoScroll, clearRef, 
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search console logs..."
-              className="h-7 pl-8 pr-3 w-48 rounded-[6px] border border-charcoal-grey bg-deep-slate text-[12px] text-porcelain placeholder:text-fog-grey focus:outline-none focus:border-porcelain/30 transition-colors duration-100"
+              className="w-full h-7 pl-9 pr-3 rounded-[6px] border border-charcoal-grey bg-deep-slate text-[12px] text-porcelain placeholder:text-fog-grey focus:outline-none focus:border-porcelain/30 transition-colors duration-100"
             />
           </div>
           <div className="flex items-center gap-1">
