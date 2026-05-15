@@ -1,8 +1,8 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { toast } from "sonner";
 import { Button, Card, CardSkeleton, Input, Select, Toggle } from "@/shared/components";
-import { useNotificationStore } from "@/store/notificationStore";
 
 const MEMORY_TYPE_OPTIONS = [
   { value: "factual", label: "Factual" },
@@ -27,8 +27,6 @@ function toDateLabel(value) {
 }
 
 export default function MemoryClient() {
-  const notify = useNotificationStore();
-
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [savingSettings, setSavingSettings] = useState(false);
@@ -107,13 +105,13 @@ export default function MemoryClient() {
           setApiKeys(keysPayload.keys);
         }
       } catch (error) {
-        notify.error(error?.message || "Failed to load memory data");
+        toast.error(error?.message || "Failed to load memory data");
       } finally {
         if (isInitial) setLoading(false);
         else setRefreshing(false);
       }
     },
-    [notify, queryString],
+    [queryString],
   );
 
   useEffect(() => {
@@ -125,11 +123,11 @@ export default function MemoryClient() {
     const retentionDays = Number.parseInt(settings.retentionDays, 10);
 
     if (!Number.isInteger(maxTokens) || maxTokens < 0 || maxTokens > 16000) {
-      notify.error("maxTokens harus integer 0..16000");
+      toast.error("maxTokens harus integer 0..16000");
       return;
     }
     if (!Number.isInteger(retentionDays) || retentionDays < 1 || retentionDays > 365) {
-      notify.error("retentionDays harus integer 1..365");
+      toast.error("retentionDays harus integer 1..365");
       return;
     }
 
@@ -151,10 +149,10 @@ export default function MemoryClient() {
         throw new Error(payload.error || "Failed to save memory settings");
       }
 
-      notify.success("Memory settings updated");
+      toast.success("Memory settings updated");
       await loadData(false);
     } catch (error) {
-      notify.error(error?.message || "Failed to save memory settings");
+      toast.error(error?.message || "Failed to save memory settings");
     } finally {
       setSavingSettings(false);
     }
@@ -171,10 +169,10 @@ export default function MemoryClient() {
         const payload = await res.json().catch(() => ({}));
         throw new Error(payload.error || "Failed to delete memory");
       }
-      notify.success("Memory deleted");
+      toast.success("Memory deleted");
       await loadData(false);
     } catch (error) {
-      notify.error(error?.message || "Failed to delete memory");
+      toast.error(error?.message || "Failed to delete memory");
     } finally {
       setDeletingId(null);
     }
