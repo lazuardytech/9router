@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { cn } from "@/shared/utils/cn";
 
 function TypeBadge({ type }) {
@@ -43,12 +43,19 @@ export default function ProxyLogsTab({ sortBy, setSortBy, live, setLive, onRefre
   const [testResults, setTestResults] = useState({});
   const [selectedPool, setSelectedPool] = useState(null);
   const [internalPools, setInternalPools] = useState([]);
+  const [connected, setConnected] = useState(false);
+
+  const esRef = useRef(null);
+  const liveRef = useRef(live);
+
+  useEffect(() => {
+    liveRef.current = live;
+  }, [live]);
 
   const activePools = internalPools;
 
-  const fetchPools = useCallback(async (silent = false) => {
-    if (!silent) setLoading(true);
-    setError(null);
+  // Manual REST refresh
+  const fetchPools = useCallback(async () => {
     try {
       const res = await fetch("/api/proxy-pools?includeUsage=true");
       if (!res.ok) throw new Error("Failed to fetch proxy pools");
@@ -58,25 +65,62 @@ export default function ProxyLogsTab({ sortBy, setSortBy, live, setLive, onRefre
       if (onCountChange) onCountChange(newPools.length);
     } catch (err) {
       setError(err.message);
-    } finally {
-      setLoading(false);
     }
-  }, []);
+  }, [onCountChange]);
 
+  // Expose fetchPools to parent via ref
   useEffect(() => {
-    fetchPools();
-  }, [fetchPools]);
-
-  // Expose fetchPools to parent
-  useEffect(() => {
-    if (onRefresh) onRefresh.current = () => fetchPools(false);
+    if (onRefresh) onRefresh.current = fetchPools;
   }, [onRefresh, fetchPools]);
 
+  // SSE connection
   useEffect(() => {
-    if (!live) return;
-    const t = setInterval(() => fetchPools(true), 5000);
-    return () => clearInterval(t);
-  }, [live, fetchPools]);
+    const connect = () => {
+      if (esRef.current) {
+        esRef.current.close();
+        esRef.current = null;
+      }
+      const es = new EventSource("/api/proxy-pools/stream");
+      esRef.current = es;
+
+      es.onopen = () => {
+        setConnected(true);
+        setLoading(false);
+        setError(null);
+      };
+
+      es.onmessage = (e) => {
+        try {
+          const msg = JSON.parse(e.data);
+          if (msg.type === "init" || msg.type === "update") {
+            if (!liveRef.current && msg.type === "update") return;
+            const pools = msg.pools ?? [];
+            setInternalPools(pools);
+            if (onCountChange) onCountChange(pools.length);
+            setLoading(false);
+          }
+        } catch {}
+      };
+
+      es.onerror = () => {
+        setConnected(false);
+        es.close();
+        esRef.current = null;
+        setTimeout(() => {
+          if (esRef.current === null) connect();
+        }, 5000);
+      };
+    };
+
+    connect();
+
+    return () => {
+      if (esRef.current) {
+        esRef.current.close();
+        esRef.current = null;
+      }
+    };
+  }, []);
 
   const handleTest = async (pool) => {
     setTesting(pool.id);
