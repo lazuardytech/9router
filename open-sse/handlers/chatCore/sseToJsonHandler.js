@@ -150,7 +150,7 @@ export async function handleForcedSSEToJson({
       if (onRequestSuccess) await onRequestSuccess();
 
       const usage = jsonResponse.usage || {};
-      appendLog({ tokens: usage, status: "200 OK" });
+      appendLog({ tokens: usage, status: "SUCCESS" });
       saveUsageStats({ provider, model, tokens: usage, connectionId, apiKey, endpoint: clientRawRequest?.endpoint });
 
       const { msgItem, textContent } = pickAssistantMessageForChatCompletion(jsonResponse.output);
@@ -265,7 +265,7 @@ export async function handleForcedSSEToJson({
     if (onRequestSuccess) await onRequestSuccess();
 
     const usage = parsed.usage || {};
-    appendLog({ tokens: usage, status: "200 OK" });
+    appendLog({ tokens: usage, status: "SUCCESS" });
     saveUsageStats({ provider, model, tokens: usage, connectionId, apiKey, endpoint: clientRawRequest?.endpoint });
 
     const totalLatency = Date.now() - requestStartTime;

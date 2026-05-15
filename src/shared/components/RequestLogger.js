@@ -28,7 +28,7 @@ function StatusBadge({ status }) {
   if (!status) return null;
   const isPending = status.includes("PENDING");
   const isFailed = status.includes("FAILED");
-  const isOk = status.includes("OK");
+  const isOk = status.includes("SUCCESS");
   return (
     <span
       className={cn(
@@ -134,7 +134,7 @@ export default function RequestLogger() {
 
   const filtered = useMemo(() => {
     let result = logs.filter((l) => {
-      if (filterStatus === "ok" && !l.status?.includes("OK")) return false;
+      if (filterStatus === "ok" && !l.status?.includes("SUCCESS")) return false;
       if (filterStatus === "failed" && !l.status?.includes("FAILED")) return false;
       if (filterStatus === "pending" && !l.status?.includes("PENDING")) return false;
       if (filterStatus === "combo" && !l.combo) return false;
@@ -179,7 +179,7 @@ export default function RequestLogger() {
   const counts = useMemo(
     () => ({
       total: logs.length,
-      ok: logs.filter((l) => l.status?.includes("OK")).length,
+      ok: logs.filter((l) => l.status?.includes("SUCCESS")).length,
       failed: logs.filter((l) => l.status?.includes("FAILED")).length,
       pending: logs.filter((l) => l.status?.includes("PENDING")).length,
       combo: logs.filter((l) => l.combo).length,
@@ -257,7 +257,7 @@ export default function RequestLogger() {
         <div className="flex items-center gap-1">
           {[
             { key: "all", label: "All" },
-            { key: "ok", label: "OK" },
+            { key: "ok", label: "Success" },
             { key: "failed", label: "Failed" },
             { key: "pending", label: "Pending" },
             { key: "combo", label: "Combo" },

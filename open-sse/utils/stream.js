@@ -363,7 +363,7 @@ export function createSSEStream(options = {}) {
           if (hasValidUsage(usage)) {
             logUsage(provider, usage, model, connectionId, apiKey);
           } else {
-            appendRequestLog({ model, provider, connectionId, tokens: null, status: "200 OK" }).catch(() => {});
+            appendRequestLog({ model, provider, connectionId, tokens: null, status: "SUCCESS" }).catch(() => {});
           }
 
           if (!sawDone) emit("data: [DONE]\n\n", controller);
@@ -426,7 +426,7 @@ export function createSSEStream(options = {}) {
         if (hasValidUsage(state?.usage)) {
           logUsage(state.provider || targetFormat, state.usage, model, connectionId, apiKey);
         } else {
-          appendRequestLog({ model, provider, connectionId, tokens: null, status: "200 OK" }).catch(() => {});
+          appendRequestLog({ model, provider, connectionId, tokens: null, status: "SUCCESS" }).catch(() => {});
         }
 
         if (onStreamComplete) {

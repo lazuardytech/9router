@@ -353,5 +353,5 @@ export function logUsage(provider, usage, model = null, connectionId = null, api
     reasoning_tokens: reasoning || 0,
   };
   saveRequestUsage({ model, provider, connectionId, tokens, apiKey: apiKey || undefined }).catch(() => {});
-  appendRequestLog({ model, provider, connectionId, tokens, status: "200 OK" }).catch(() => {});
+  appendRequestLog({ model, provider, connectionId, tokens, status: "SUCCESS" }).catch(() => {});
 }

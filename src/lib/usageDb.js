@@ -347,24 +347,58 @@ function flushLogs() {
   const batch = logQueue.splice(0, logQueue.length);
   try {
     const db = getDatabase();
-    const stmt = db.prepare(
+    const insertStmt = db.prepare(
       `INSERT INTO request_log (timestamp, model, provider, account, prompt_tokens, completion_tokens, status, combo)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
     );
-    const insertMany = db.transaction((rows) => {
-      for (const r of rows)
-        stmt.run(
-          r.timestamp,
-          r.model,
-          r.provider,
-          r.account,
-          r.prompt_tokens,
-          r.completion_tokens,
-          r.status,
-          r.combo ?? null,
-        );
+    const updateStmt = db.prepare(
+      `UPDATE request_log SET prompt_tokens = ?, completion_tokens = ?, status = ?, combo = COALESCE(?, combo)
+       WHERE id = (
+         SELECT id FROM request_log
+         WHERE model = ? AND provider = ? AND status = 'PENDING'
+         ORDER BY id DESC LIMIT 1
+       )`,
+    );
+    const processMany = db.transaction((rows) => {
+      for (const r of rows) {
+        if (r.status !== "PENDING") {
+          // Try to update existing PENDING row first
+          const result = updateStmt.run(
+            r.prompt_tokens,
+            r.completion_tokens,
+            r.status,
+            r.combo ?? null,
+            r.model,
+            r.provider,
+          );
+          if (result.changes === 0) {
+            // No PENDING row found, insert new
+            insertStmt.run(
+              r.timestamp,
+              r.model,
+              r.provider,
+              r.account,
+              r.prompt_tokens,
+              r.completion_tokens,
+              r.status,
+              r.combo ?? null,
+            );
+          }
+        } else {
+          insertStmt.run(
+            r.timestamp,
+            r.model,
+            r.provider,
+            r.account,
+            r.prompt_tokens,
+            r.completion_tokens,
+            r.status,
+            r.combo ?? null,
+          );
+        }
+      }
     });
-    insertMany(batch);
+    processMany(batch);
 
     // Periodic trim (keep latest LOG_MAX_ROWS) — runs every ~10 flushes
     logTrimCounter += 1;
