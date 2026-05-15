@@ -1,3 +1,9 @@
+// TODO: Thundering herd / cache stampede protection is not yet implemented.
+// When N concurrent identical requests all miss the cache simultaneously, each
+// will independently hit upstream. A clean fix requires restructuring chatCore
+// so the cache read and write happen within a single coordinated call rather
+// than being split across the pipeline. Track in-flight signatures with a
+// Map<signature, Promise> and await the existing promise on collision.
 import crypto from "crypto";
 import { LRUCache } from "./cacheLayer.js";
 import { getDatabase } from "./sqlite/connection.js";

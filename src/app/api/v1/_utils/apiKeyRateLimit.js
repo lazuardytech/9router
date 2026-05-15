@@ -1,3 +1,9 @@
+/**
+ * NOTE: Rate limiting state is in-memory and per-process.
+ * In a multi-process deployment (cluster, PM2, multiple replicas),
+ * limits are NOT enforced globally — each process has independent counters.
+ * For cluster deployments, migrate to a shared store (e.g. Redis).
+ */
 import { getApiKeyByKey } from "@/lib/localDb";
 import { extractApiKey } from "@/sse/services/auth.js";
 

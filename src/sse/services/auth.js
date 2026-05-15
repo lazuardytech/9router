@@ -287,6 +287,14 @@ export async function markAccountUnavailable(
   const reason = typeof errorText === "string" ? errorText.slice(0, 100) : "Provider error";
   const lockUpdate = buildModelLockUpdate(model, cooldownMs);
 
+  // Read-before-write guard: skip redundant DB write if the lock is already
+  // active (avoids a pile of identical SQLite writes under concurrent 429s).
+  const lockKey = Object.keys(lockUpdate)[0];
+  const existingExpiry = conn?.[lockKey];
+  if (existingExpiry && new Date(existingExpiry).getTime() > Date.now()) {
+    return { shouldFallback: true, cooldownMs };
+  }
+
   await updateProviderConnection(connectionId, {
     ...lockUpdate,
     testStatus: "unavailable",
@@ -297,7 +305,6 @@ export async function markAccountUnavailable(
   });
   if (provider) invalidateConnectionsCache(resolveProviderId(provider));
 
-  const lockKey = Object.keys(lockUpdate)[0];
   const connName = conn?.displayName || conn?.name || conn?.email || connectionId.slice(0, 8);
   log.warn("AUTH", `${connName} locked ${lockKey} for ${Math.round(cooldownMs / 1000)}s [${status}]`);
 

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import os from "node:os";
 import { getDatabase } from "@/lib/sqlite/connection.js";
 import { getProviderConnections, getCombos, getApiKeys, getSettings } from "@/lib/localDb.js";
+import { getQueueDepths } from "@/lib/usageDb.js";
 import { AI_PROVIDERS } from "@/shared/constants/providers.js";
 
 const START_TIME = globalThis.__pod_start_time ?? (globalThis.__pod_start_time = Date.now());
@@ -171,6 +172,8 @@ export async function GET() {
 
   const status = database.ok && database.integrity === "ok" ? "healthy" : "issues";
 
+  const queueDepths = getQueueDepths();
+
   return NextResponse.json({
     status,
     timestamp: Date.now(),
@@ -179,6 +182,7 @@ export async function GET() {
     providers,
     tunnel,
     semanticCache,
+    queueDepths,
     providerHealth,
     rateLimitStatus: Object.values(rateLimitByProvider),
     blockedModelStatus: Object.values(blockedByModel),

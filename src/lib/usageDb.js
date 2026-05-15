@@ -7,6 +7,7 @@ import { EventEmitter } from "events";
 import fs from "node:fs";
 import { getDatabase } from "./sqlite/connection.js";
 import { DATA_DIR } from "@/lib/dataDir.js";
+import { LRUCache } from "./cacheLayer.js";
 
 const isCloud = typeof caches !== "undefined" || typeof caches === "object";
 
@@ -302,25 +303,26 @@ function formatLogDate(date = new Date()) {
   return `${pad(date.getDate())}-${pad(date.getMonth() + 1)}-${date.getFullYear()} ${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`;
 }
 
-// Connection-name cache (TTL) — avoids dynamic import + full SELECT per log line
-let connectionNameCache = null;
-let connectionNameCacheTs = 0;
+// Connection-name cache — per-entry LRU so individual entries expire
+// independently and memory is bounded (replaces the old single-object
+// all-or-nothing TTL cache).
 const CONN_CACHE_TTL_MS = 30_000;
+const connectionNameCache = new LRUCache({ maxSize: 500, defaultTTL: CONN_CACHE_TTL_MS });
 
 async function getConnectionName(connectionId) {
   if (!connectionId) return "-";
-  const now = Date.now();
-  if (!connectionNameCache || now - connectionNameCacheTs > CONN_CACHE_TTL_MS) {
-    try {
-      const { getProviderConnections } = await import("@/lib/localDb.js");
-      const list = await getProviderConnections();
-      connectionNameCache = new Map(list.map((c) => [c.id, c.name || c.email || c.id?.slice(0, 8)]));
-      connectionNameCacheTs = now;
-    } catch {
-      connectionNameCache = connectionNameCache || new Map();
+  const cached = connectionNameCache.get(connectionId);
+  if (cached !== undefined) return cached;
+  try {
+    const { getProviderConnections } = await import("@/lib/localDb.js");
+    const list = await getProviderConnections();
+    for (const c of list) {
+      connectionNameCache.set(c.id, c.name || c.email || c.id?.slice(0, 8));
     }
+    return connectionNameCache.get(connectionId) || connectionId.slice(0, 8);
+  } catch {
+    return connectionId.slice(0, 8);
   }
-  return connectionNameCache.get(connectionId) || connectionId.slice(0, 8);
 }
 
 // In-memory log queue, flushed on threshold or interval. Hot path is non-blocking.
@@ -1143,6 +1145,13 @@ export async function getChartData(period = "7d") {
       cost: day ? day.cost || 0 : 0,
     };
   });
+}
+
+export function getQueueDepths() {
+  return {
+    logQueue: logQueue.length,
+    summaryQueue: summaryQueue?.length ?? 0,
+  };
 }
 
 // Re-export request details for back-compat (existing routes import these
