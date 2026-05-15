@@ -4,7 +4,7 @@
 
 - Repo: `github.com/lazuardytech/pod`
 - Branch: `main`
-- Current tagged release: **v0.0.5**
+- Current tagged release: **v0.0.6**
 
 ## Release History
 
@@ -15,6 +15,7 @@
 | `v0.0.3` | Full bun runtime (oven/bun:1.3.14-alpine), bun:sqlite production, Tailscale fix, Codex OAuth fix |
 | `v0.0.4` | Quota grouped table, usage chart 90d, ConfirmModal everywhere, MITM removed, details_id linking |
 | `v0.0.5` | Console logs Live/Refresh, quota no-flicker, SegmentedControl standardized, Button/Badge standardized, system info from API |
+| `v0.0.6` | Request Logs SSE stream, Proxy Logs SSE stream, security on model listing endpoints, headerActionStore, Blackbox + MiniMax providers, semantic cache stream=undefined fix, provider node Identifier field, kebab→camelCase media-provider redirects, "Today" usage period, upstream 9router fixes (role normalization, stall timeout, Ollama usage, Gemini schema, DATA_DIR fallback) |
 
 ## Current Remote Setup
 
@@ -39,5 +40,5 @@ Branch is intentionally customized for Lazuardy Tech needs:
 ## Docker Hub
 
 - Image: `lazuardytech/pod`
-- Tags: `v0.0.1`, `v0.0.2`, `v0.0.3`, `v0.0.4`, `v0.0.5`, `latest`
+- Tags: `v0.0.1`, `v0.0.2`, `v0.0.3`, `v0.0.4`, `v0.0.5`, `v0.0.6`, `latest`
 - Platform: `linux/amd64`

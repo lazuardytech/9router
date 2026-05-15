@@ -101,4 +101,31 @@ Fetch from `/api/settings` which includes `systemInfo: { runtime, platform }`.
 ## 20) SegmentedControl for all tab UIs
 
 Use `<SegmentedControl>` from `@/shared/components/SegmentedControl` for all pill tab navigation.
-Do not create custom inline tab div/button patterns.
+Always use `size="sm"`. Do not create custom inline tab div/button patterns.
+
+## 21) GET /v1/models and /v1beta/models require auth when requireApiKey=true
+
+As of v0.0.6, model listing endpoints enforce API key auth when `settings.requireApiKey` is enabled.
+Do not assume these endpoints are always public. Use timing-safe comparison via `validateApiKey`.
+
+## 22) Semantic cache: stream=undefined is treated as non-streaming
+
+`isCacheableForRead` and `isCacheableForWrite` treat `stream=undefined` as non-streaming (cacheable).
+Previously this was always a cache miss. If you touch the cache eligibility logic, preserve this behavior.
+
+## 23) headerActionStore for page-level header buttons
+
+Page-level action buttons (e.g. "Connected Only" toggle on /providers) are registered via
+`src/store/headerActionStore.js`. Do not render them inline in the Header component.
+Register in a `useEffect` and clean up on unmount.
+
+## 24) Media provider URL segments are camelCase
+
+`/media-providers/webSearch` and `/media-providers/webFetch` use camelCase.
+Kebab-case variants (`web-search`, `web-fetch`) redirect to camelCase.
+Do not create new kebab-case sub-routes under `/media-providers`.
+
+## 25) Blackbox and MiniMax are supported providers
+
+Blackbox (LLM) and MiniMax (TTS) are supported as of v0.0.6.
+Do not treat them as unknown providers when encountered in provider config or routing code.

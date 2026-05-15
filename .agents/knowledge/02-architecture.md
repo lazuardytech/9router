@@ -1,6 +1,6 @@
 # Architecture
 
-This file summarizes the current architecture for `github.com/lazuardytech/pod` (v0.0.5).
+This file summarizes the current architecture for `github.com/lazuardytech/pod` (v0.0.6).
 
 ## Package Layout
 
@@ -46,6 +46,18 @@ Flow:
 3. `request_log.details_id` stores the link
 4. `/api/usage/request-logs/[id]` does direct lookup by `details_id` first, falls back to timestamp fuzzy match
 
+## SSE Live Streams
+
+Three endpoints push Server-Sent Events to the dashboard:
+
+| Endpoint | Added | Description |
+|---|---|---|
+| `GET /api/console-log` | v0.0.1 | Console log stream |
+| `GET /api/usage/request-logs/stream` | v0.0.6 | Request log live stream |
+| `GET /api/proxy-pools/stream` | v0.0.6 | Proxy pool event stream |
+
+All use the `open-sse` stream helpers. The `/logs` page surfaces Refresh/Live toggles for each tab.
+
 ## Cache and Memory Integration
 
 - Semantic cache:
@@ -63,6 +75,12 @@ Flow:
 - `concurrent_requests`
 - `last_access_at`
 
+## Security (v0.0.6)
+
+- `GET /v1/models`, `GET /v1/models/[kind]`, `GET /v1beta/models` now enforce API key auth when `settings.requireApiKey=true`.
+- `validateApiKey` uses timing-safe comparison to prevent timing attacks.
+- Previously these model listing endpoints were always public regardless of `requireApiKey`.
+
 ## Persistence
 
 Primary store is SQLite:
@@ -73,6 +91,8 @@ Primary store is SQLite:
 Schema migrations applied at boot (in `connection.js`):
 - `combo` column on `request_log`
 - `details_id` column on `request_log`
+
+`DATA_DIR` env var: if the resolved data directory is inaccessible (EACCES/EPERM), the app falls back gracefully rather than crashing on boot.
 
 ## Dashboard Surface
 
@@ -99,10 +119,11 @@ All routes are top-level (no `/dashboard` prefix):
 - **Theme**: class-based dark mode (`html.dark`), `@custom-variant dark` in globals.css
 - **Toasts**: Sonner (`sonner@2.0.7`), position bottom-right
 - **Drawers**: Vaul (`vaul@1.1.2`) for log detail drawer
-- **Tabs**: `SegmentedControl` component standardized across all tab UIs
+- **Tabs**: `SegmentedControl` component standardized across all tab UIs, always `size="sm"`
 - **Confirm dialogs**: `ConfirmModal` from `@/shared/components/Modal` — no browser `confirm()`
 - **Icons**: Material Symbols Outlined (Google Fonts)
 - **Logo**: `public/logo.svg` — SVG fill `#000`, `dark:invert` for dark theme
+- **Header action slot**: page-level action buttons (e.g. "Connected Only" toggle) are registered via `src/store/headerActionStore.js` (Zustand). Pages register in `useEffect` and clean up on unmount. Do not render page-specific actions inline in the Header component.
 
 ## Proxy Fetch
 
@@ -112,3 +133,14 @@ All routes are top-level (no `/dashboard` prefix):
 - Vercel relay forwarding via `x-relay-target` / `x-relay-path` headers
 
 No MITM bypass code exists (removed in v0.0.4).
+
+## Upstream Engine Fixes (v0.0.6)
+
+The following fixes were adopted from upstream 9router into `open-sse`:
+
+- **Role normalization**: `developer` role normalized to `system` before upstream dispatch
+- **Stream stall timeout**: 3-minute timeout kills stalled streams
+- **Ollama usage tracking**: token usage now extracted and recorded for Ollama responses
+- **Gemini schema**: `ensureObjectType` applied to fix schema compatibility issues
+- **Blackbox provider**: new LLM provider supported
+- **MiniMax TTS**: new TTS provider supported

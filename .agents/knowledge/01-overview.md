@@ -2,7 +2,7 @@
 
 Pod is Lazuardy Tech's internal AI routing proxy.
 
-Current baseline: **v0.0.5**.
+Current baseline: **v0.0.6**.
 
 ## Core Capabilities
 
@@ -99,6 +99,25 @@ Current baseline: **v0.0.5**.
 - Input+button height alignment (cache maintenance, endpoint copy modal)
 - Endpoint badges min-w-[90px]
 - Settings: removed Migrate to SQLite button
+
+### v0.0.6
+- Upstream 9router fixes: developer role normalization (developer→system), stream stall timeout 3min, Ollama usage tracking, Gemini schema `ensureObjectType`, `DATA_DIR` graceful fallback on EACCES/EPERM
+- Request Logs SSE live stream: `GET /api/usage/request-logs/stream` endpoint
+- Proxy Logs SSE live stream: `GET /api/proxy-pools/stream` endpoint
+- Console Logs: Refresh/Live toggle (already had SSE, now surfaced in UI)
+- Semantic cache fix: `isCacheableForRead/Write` treats `stream=undefined` as non-streaming
+- Provider node Identifier field: optional custom ID on create, read-only on edit
+- Connected Only toggle: moved to header via `headerActionStore` (providers + media-providers pages)
+- `headerActionStore`: new Zustand store at `src/store/headerActionStore.js` for page-level header action buttons
+- kebab-case URL redirects: `/media-providers/web-search/:id*` → `/media-providers/webSearch/:id*`, same for web-fetch
+- Security: `GET /v1/models`, `/v1/models/[kind]`, `/v1beta/models` now enforce API key auth when `requireApiKey=true`; timing-safe key comparison in `validateApiKey`
+- `SegmentedControl` size standardized to `sm` across all tab UIs
+- Usage topology: active line color changed to green
+- Usage Details: Clear Filters button uses `variant=secondary` + delete icon
+- Breadcrumb: webSearch/webFetch href → `/media-providers/web`
+- Blackbox provider support
+- MiniMax TTS support
+- "Today" period added to usage chart
 
 ## Ground Rules
 

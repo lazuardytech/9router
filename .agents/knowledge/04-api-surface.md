@@ -17,7 +17,7 @@ All public compatibility endpoints are routed through rewrites in `next.config.m
 - `POST /v1/audio/transcriptions`
 - `POST /v1/images/generations`
 - `GET /v1/models`
-- `GET /v1/models/{kind}`
+- `GET /v1/models/{kind}` 
 - `POST /v1/search`
 - `POST /v1/web/fetch`
 
@@ -30,6 +30,8 @@ All public compatibility endpoints are routed through rewrites in `next.config.m
 
 - `GET /v1beta/models`
 - `* /v1beta/models/{...path}`
+
+> **Auth note**: `GET /v1/models`, `GET /v1/models/[kind]`, and `GET /v1beta/models` enforce API key auth when `requireApiKey=true`. These were previously unauthenticated.
 
 ### Ollama-compatible
 
@@ -63,6 +65,18 @@ Important groups under `src/app/api/`:
   - `GET|PUT /api/settings/memory`
 - Tunnel/network ops: `tunnel/*`, `proxy-pools/*`
 - Translator/debug: `translator/*`, `console-log`
+
+## SSE Streaming Endpoints
+
+Three live-stream endpoints use Server-Sent Events:
+
+| Endpoint | Description |
+|---|---|
+| `GET /api/usage/request-logs/stream` | Live stream of incoming request log entries |
+| `GET /api/proxy-pools/stream` | Live stream of proxy pool events |
+| `GET /api/console-log` | Console log stream (existing) |
+
+All SSE endpoints follow the same `open-sse` stream helper pattern.
 
 ## API Key Validation Model
 

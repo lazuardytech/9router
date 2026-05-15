@@ -4,9 +4,9 @@ Operational notes for AI agents working on **Pod** (`~/projects/lt/pod`).
 
 ## Current Baseline
 
-- Release baseline: **v0.0.5**
+- Release baseline: **v0.0.6**
 - Package: `pod`
-- Docker: `lazuardytech/pod`
+- Docker: `lazuardytech/pod` (tags v0.0.1–v0.0.6, latest)
 - GitHub: `lazuardytech/pod`, branch `main`
 - Data dir: `~/.pod/pod.sqlite`
 
@@ -19,6 +19,9 @@ Operational notes for AI agents working on **Pod** (`~/projects/lt/pod`).
 5. **No browser `confirm()`** — always use `ConfirmModal` from `@/shared/components/Modal`.
 6. **No `/dashboard` prefix** — all routes are top-level (`/endpoint`, `/providers`, etc.).
 7. **Bump both version fields together** — `package.json` AND `src/shared/constants/config.js` `displayVersion`.
+8. **Page-level header actions go through `headerActionStore`** — register buttons via `src/store/headerActionStore.js`, not inline in page components.
+9. **API key auth on model listing endpoints** — `GET /v1/models`, `GET /v1/models/[kind]`, `GET /v1beta/models` enforce auth when `requireApiKey=true`. Do not bypass.
+10. **SSE endpoints use `open-sse` stream helpers** — `/api/usage/request-logs/stream` and `/api/proxy-pools/stream` follow the same SSE pattern as console logs.
 
 ## Verification Before Push
 

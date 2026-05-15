@@ -57,6 +57,13 @@ Do not convert `open-sse` imports into package dependencies.
 - Sidebar supports collapse to icon-only mode — do not break this behavior
 - All routes are top-level — no `/dashboard` prefix
 - Tab title separator: `✦` (e.g. "Pod ✦ Health")
+- Media provider sub-routes use camelCase segments: `/media-providers/webSearch`, `/media-providers/webFetch` (not kebab-case). Kebab-case variants redirect to camelCase.
+
+### Header Action Slot
+- Page-level action buttons (e.g. "Connected Only" toggle) are registered via `src/store/headerActionStore.js`.
+- In the page component, call the store's register function (typically in a `useEffect`) to mount the button into the Header's action slot.
+- Do not render page-specific action buttons inline inside the Header component itself.
+- Clean up registration on unmount.
 
 ### Logo
 - `public/logo.svg` — SVG fill `#000`, always use `dark:invert` for dark theme compatibility
