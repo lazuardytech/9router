@@ -64,14 +64,12 @@ function ComboBadge({ combo }) {
 
 // ─── Main Component ───────────────────────────────────────────────────────────
 
-export default function RequestLogger() {
+export default function RequestLogger({ sortBy, setSortBy, recording, setRecording, refreshRef }) {
   const [logs, setLogs] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [recording, setRecording] = useState(true);
   const [search, setSearch] = useState("");
   const [filterStatus, setFilterStatus] = useState("all");
   const [filterProvider, setFilterProvider] = useState("all");
-  const [sortBy, setSortBy] = useState("newest");
 
   // Detail drawer state
   const [selectedLog, setSelectedLog] = useState(null);
@@ -101,6 +99,10 @@ export default function RequestLogger() {
     fetchLogs(true);
   }, [fetchLogs]);
 
+  // Expose fetchLogs to parent via refreshRef
+  useEffect(() => {
+    if (refreshRef) refreshRef.current = () => fetchLogs(false);
+  }, [refreshRef, fetchLogs]);
   useEffect(() => {
     if (!recording) return;
     const t = setInterval(() => fetchLogs(false), 3000);
@@ -189,45 +191,6 @@ export default function RequestLogger() {
 
   return (
     <div className="flex flex-col gap-3">
-      {/* Header */}
-      <div className="flex items-center justify-end gap-3 flex-wrap">
-        <div className="flex items-center gap-2">
-          {/* Sort */}
-          <select
-            value={sortBy}
-            onChange={(e) => setSortBy(e.target.value)}
-            className="h-7 px-2 rounded-[6px] border border-charcoal-grey bg-deep-slate text-[12px] text-porcelain focus:outline-none focus:border-porcelain/30 transition-colors duration-100"
-          >
-            <option value="newest">Newest first</option>
-            <option value="oldest">Oldest first</option>
-            <option value="tokens_desc">Most tokens</option>
-            <option value="tokens_asc">Fewest tokens</option>
-          </select>
-
-          <button
-            onClick={() => fetchLogs(false)}
-            className="flex items-center justify-center size-7 rounded-[4px] border border-charcoal-grey text-storm-cloud hover:bg-deep-slate hover:text-porcelain transition-colors duration-100"
-            title="Refresh"
-          >
-            <span className="material-symbols-outlined text-[15px]">refresh</span>
-          </button>
-
-          <button
-            onClick={() => setRecording((v) => !v)}
-            title={recording ? "Pause recording" : "Resume recording"}
-            className={cn(
-              "flex items-center gap-1.5 h-7 px-2.5 rounded-[4px] border text-[11px] font-[510] transition-colors duration-100",
-              recording
-                ? "border-emerald/30 bg-emerald/8 text-emerald hover:bg-emerald/15"
-                : "border-charcoal-grey text-storm-cloud hover:bg-deep-slate hover:text-porcelain",
-            )}
-          >
-            <span className={cn("size-1.5 rounded-full", recording ? "bg-emerald animate-pulse" : "bg-fog-grey")} />
-            {recording ? "Live" : "Paused"}
-          </button>
-        </div>
-      </div>
-
       {/* Filters */}
       <div className="flex flex-wrap items-center gap-2">
         {/* Stats */}
