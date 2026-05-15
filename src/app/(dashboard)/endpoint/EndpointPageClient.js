@@ -1063,12 +1063,15 @@ export default function APIPageClient({ machineId }) {
                       Limit
                     </th>
                     <th className="px-3 py-2 text-[10px] font-[590] uppercase tracking-[0.05em] text-fog-grey border-r border-charcoal-grey">
-                      Created
+                      Created At
                     </th>
                     <th className="px-3 py-2 text-[10px] font-[590] uppercase tracking-[0.05em] text-fog-grey border-r border-charcoal-grey">
+                      Last Access At
+                    </th>
+                    <th className="px-3 py-2 text-[10px] font-[590] uppercase tracking-[0.05em] text-fog-grey border-r border-charcoal-grey w-[100px]">
                       Status
                     </th>
-                    <th className="px-3 py-2 text-[10px] font-[590] uppercase tracking-[0.05em] text-fog-grey">
+                    <th className="px-3 py-2 text-[10px] font-[590] uppercase tracking-[0.05em] text-fog-grey w-[72px] text-end">
                       Actions
                     </th>
                   </tr>
@@ -1124,13 +1127,24 @@ export default function APIPageClient({ machineId }) {
                         )}
                       </td>
 
-                      {/* Created */}
+                      {/* Created At */}
                       <td className="px-3 py-2 border-r border-charcoal-grey/50 text-fog-grey font-mono text-[11px]">
                         {new Date(key.createdAt).toLocaleDateString("en-US", {
                           month: "short",
                           day: "numeric",
                           year: "numeric",
                         })}
+                      </td>
+
+                      {/* Last Access At */}
+                      <td className="px-3 py-2 border-r border-charcoal-grey/50 text-fog-grey font-mono text-[11px]">
+                        {key.lastAccessAt
+                          ? new Date(key.lastAccessAt).toLocaleDateString("en-US", {
+                              month: "short",
+                              day: "numeric",
+                              year: "numeric",
+                            })
+                          : "—"}
                       </td>
 
                       {/* Status */}
@@ -1165,8 +1179,8 @@ export default function APIPageClient({ machineId }) {
                       </td>
 
                       {/* Actions */}
-                      <td className="px-3 py-2">
-                        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-all duration-100">
+                      <td className="px-3 py-2 w-[72px]">
+                        <div className="flex items-center justify-end gap-1">
                           <button
                             onClick={() => handleEditKey(key)}
                             className="flex items-center justify-center size-6 rounded-[4px] text-fog-grey hover:bg-deep-slate hover:text-porcelain transition-colors duration-100"
