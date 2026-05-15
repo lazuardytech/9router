@@ -229,7 +229,7 @@ export default function Sidebar({ onClose, collapsed = false, onToggleCollapse }
               onClick={onClose}
             >
               <div className="flex items-center justify-center size-7 shrink-0">
-                <img src="/logo.svg" alt="Pod" className="size-7 dark:invert" />
+                <img src="/logo.svg" alt="Pod" className="size-7 invert dark:invert-0" />
               </div>
               <div className="flex flex-col min-w-0">
                 <span className="text-[17px] font-[590] text-porcelain tracking-[-0.2px] leading-none truncate">
@@ -246,7 +246,7 @@ export default function Sidebar({ onClose, collapsed = false, onToggleCollapse }
               title={APP_CONFIG.name}
               className="flex items-center justify-center size-7 mx-auto"
             >
-              <img src="/logo.svg" alt="Pod" className="size-7 dark:invert" />
+              <img src="/logo.svg" alt="Pod" className="size-7 invert dark:invert-0" />
             </Link>
           )}
 

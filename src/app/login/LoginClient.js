@@ -81,7 +81,7 @@ export default function LoginClient() {
         {/* Logo */}
         <div className="flex flex-col items-center mb-8">
           <div className="flex items-center justify-center size-10 mb-4">
-            <img src="/logo.svg" alt="Pod" className="size-10 dark:invert" />
+            <img src="/logo.svg" alt="Pod" className="size-10 invert dark:invert-0" />
           </div>
           <h1 className="text-[20px] font-[510] text-porcelain tracking-[-0.22px]">Pod</h1>
           <p className="text-[13px] text-storm-cloud mt-1 tracking-[-0.12px]">Enter your password to continue</p>

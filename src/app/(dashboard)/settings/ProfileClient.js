@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import { Button, Toggle, Input } from "@/shared/components";
 import { useTheme } from "@/shared/hooks/useTheme";
 import { cn } from "@/shared/utils/cn";
+import { APP_CONFIG } from "@/shared/constants/config";
 
 // ─── Section header ───────────────────────────────────────────────────────────
 function SectionHeader({ icon, title }) {
@@ -432,6 +433,63 @@ export default function ProfilePage() {
           </SettingRow>
         </Section>
 
+        {/* ── Data ────────────────────────────────────────────────────────── */}
+        <Section>
+          <SectionHeader icon="database" title="Data" />
+          <div className="flex flex-col gap-4">
+            {/* DB path */}
+            <div className="flex items-center gap-2 px-3 py-2 rounded-[4px] border border-charcoal-grey bg-pitch-black/40">
+              <span className="material-symbols-outlined text-storm-cloud text-[14px]">storage</span>
+              <code className="text-[12px] text-storm-cloud font-mono">~/.pod/pod.sqlite</code>
+            </div>
+
+            {/* Actions */}
+            <div className="flex flex-wrap gap-2">
+              <Button variant="secondary" icon="download" onClick={handleExportDatabase} loading={dbLoading}>
+                Download Backup
+              </Button>
+              <Button
+                variant="outline"
+                icon="upload"
+                onClick={() => importFileRef.current?.click()}
+                disabled={dbLoading}
+              >
+                Import Backup
+              </Button>
+              <Button
+                variant="outline"
+                icon="swap_horiz"
+                onClick={handleMigrateSqlite}
+                loading={migrateLoading}
+                disabled={!legacyInfo.hasLegacyData}
+                title={
+                  legacyInfo.hasLegacyData
+                    ? `Found: ${legacyInfo.legacyFilesFound.join(", ")}`
+                    : "No legacy JSON files detected"
+                }
+              >
+                Migrate JSON → SQLite
+              </Button>
+              <input
+                ref={importFileRef}
+                type="file"
+                accept="application/json,.json"
+                className="hidden"
+                onChange={handleImportDatabase}
+              />
+            </div>
+
+            {legacyInfo.hasLegacyData && (
+              <p className="text-[12px] text-storm-cloud">
+                Legacy files detected: <span className="font-mono">{legacyInfo.legacyFilesFound.join(", ")}</span>
+              </p>
+            )}
+
+            <StatusMsg status={dbStatus} />
+            <StatusMsg status={migrateStatus} />
+          </div>
+        </Section>
+
         {/* ── Security ────────────────────────────────────────────────────── */}
         <Section>
           <SectionHeader icon="shield" title="Security" />
@@ -626,60 +684,24 @@ export default function ProfilePage() {
           </SettingRow>
         </Section>
 
-        {/* ── Data ────────────────────────────────────────────────────────── */}
+        {/* ── System Information ──────────────────────────────────────────── */}
         <Section>
-          <SectionHeader icon="database" title="Data" />
-          <div className="flex flex-col gap-4">
-            {/* DB path */}
-            <div className="flex items-center gap-2 px-3 py-2 rounded-[4px] border border-charcoal-grey bg-pitch-black/40">
-              <span className="material-symbols-outlined text-storm-cloud text-[14px]">storage</span>
-              <code className="text-[12px] text-storm-cloud font-mono">~/.pod/pod.sqlite</code>
-            </div>
-
-            {/* Actions */}
-            <div className="flex flex-wrap gap-2">
-              <Button variant="secondary" icon="download" onClick={handleExportDatabase} loading={dbLoading}>
-                Download Backup
-              </Button>
-              <Button
-                variant="outline"
-                icon="upload"
-                onClick={() => importFileRef.current?.click()}
-                disabled={dbLoading}
+          <SectionHeader icon="info" title="System Information" />
+          <div className="flex flex-col gap-2">
+            {[
+              { label: "App", value: `${APP_CONFIG.name} v${APP_CONFIG.displayVersion}` },
+              { label: "Runtime", value: typeof Bun !== "undefined" ? `Bun ${Bun.version}` : process.version },
+              { label: "Platform", value: `${process.platform} ${process.arch}` },
+              { label: "Database", value: "~/.pod/pod.sqlite" },
+            ].map((row) => (
+              <div
+                key={row.label}
+                className="flex items-center justify-between py-1.5 border-b border-charcoal-grey last:border-0"
               >
-                Import Backup
-              </Button>
-              <Button
-                variant="outline"
-                icon="swap_horiz"
-                onClick={handleMigrateSqlite}
-                loading={migrateLoading}
-                disabled={!legacyInfo.hasLegacyData}
-                title={
-                  legacyInfo.hasLegacyData
-                    ? `Found: ${legacyInfo.legacyFilesFound.join(", ")}`
-                    : "No legacy JSON files detected"
-                }
-              >
-                Migrate JSON → SQLite
-              </Button>
-              <input
-                ref={importFileRef}
-                type="file"
-                accept="application/json,.json"
-                className="hidden"
-                onChange={handleImportDatabase}
-              />
-            </div>
-
-            {legacyInfo.hasLegacyData && (
-              <p className="text-[12px] text-storm-cloud">
-                Legacy files detected: <span className="font-mono">{legacyInfo.legacyFilesFound.join(", ")}</span>
-              </p>
-            )}
-
-            <StatusMsg status={dbStatus} />
-            <StatusMsg status={migrateStatus} />
+                <span className="text-[12px] text-storm-cloud">{row.label}</span>
+                <span className="text-[12px] font-mono text-porcelain">{row.value}</span>
+              </div>
+            ))}
           </div>
         </Section>
       </div>
