@@ -89,6 +89,7 @@ export default function ProvidersPage() {
   const searchQuery = useHeaderSearchStore((s) => s.query);
   const registerSearch = useHeaderSearchStore((s) => s.register);
   const unregisterSearch = useHeaderSearchStore((s) => s.unregister);
+  const [showConnectedOnly, setShowConnectedOnly] = useState(false);
 
   useEffect(() => {
     registerSearch("Search providers...");
@@ -96,6 +97,11 @@ export default function ProvidersPage() {
   }, [registerSearch, unregisterSearch]);
 
   const matchSearch = (name) => !searchQuery.trim() || name.toLowerCase().includes(searchQuery.trim().toLowerCase());
+  const matchConnected = (providerId, authType) => {
+    if (!showConnectedOnly) return true;
+    const stats = getProviderStats(providerId, authType);
+    return stats.connected > 0 && !stats.allDisabled;
+  };
 
   useEffect(() => {
     const fetchData = async () => {
@@ -208,11 +214,18 @@ export default function ProvidersPage() {
     }))
     .filter((p) => matchSearch(p.name));
 
-  const oauthEntries = Object.entries(OAUTH_PROVIDERS).filter(([, info]) => matchSearch(info.name));
-  const freeEntries = Object.entries(FREE_PROVIDERS).filter(([, info]) => matchSearch(info.name));
-  const freeTierEntries = Object.entries(FREE_TIER_PROVIDERS).filter(([, info]) => matchSearch(info.name));
+  const oauthEntries = Object.entries(OAUTH_PROVIDERS).filter(
+    ([id, info]) => matchSearch(info.name) && matchConnected(id, "oauth"),
+  );
+  const freeEntries = Object.entries(FREE_PROVIDERS).filter(
+    ([id, info]) => matchSearch(info.name) && matchConnected(id, "free"),
+  );
+  const freeTierEntries = Object.entries(FREE_TIER_PROVIDERS).filter(
+    ([id, info]) => matchSearch(info.name) && matchConnected(id, "free"),
+  );
   const apikeyEntries = Object.entries(APIKEY_PROVIDERS).filter(
-    ([, info]) => (info.serviceKinds ?? ["llm"]).includes("llm") && matchSearch(info.name),
+    ([id, info]) =>
+      (info.serviceKinds ?? ["llm"]).includes("llm") && matchSearch(info.name) && matchConnected(id, "apikey"),
   );
 
   if (loading) {
@@ -234,6 +247,23 @@ export default function ProvidersPage() {
 
   return (
     <div className="flex min-w-0 flex-col gap-6 px-1 sm:px-0">
+      {/* Toolbar */}
+      <div className="flex items-center gap-2">
+        <button
+          type="button"
+          onClick={() => setShowConnectedOnly((v) => !v)}
+          className={`flex items-center gap-1.5 h-7 px-2.5 rounded-[4px] border text-[11px] font-[510] transition-colors duration-100 ${
+            showConnectedOnly
+              ? "border-emerald/30 bg-emerald/8 text-emerald"
+              : "border-charcoal-grey text-fog-grey hover:bg-deep-slate hover:text-porcelain"
+          }`}
+          title="Show connected providers only"
+        >
+          <span className="material-symbols-outlined text-[13px]">wifi</span>
+          <span className="hidden sm:inline">Connected only</span>
+        </button>
+      </div>
+
       {!hasAnyResult && (
         <div className="text-center py-8 border border-dashed border-border rounded-xl">
           <span className="material-symbols-outlined text-[32px] text-text-muted mb-2">search_off</span>

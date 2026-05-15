@@ -165,6 +165,7 @@ export default function MediaProviderKindPage() {
   const [customNodes, setCustomNodes] = useState([]);
   const [combos, setCombos] = useState([]);
   const [showAddCustomEmbedding, setShowAddCustomEmbedding] = useState(false);
+  const [showConnectedOnly, setShowConnectedOnly] = useState(false);
 
   // webSearch/webFetch listing pages are merged into /web
   useEffect(() => {
@@ -210,7 +211,15 @@ export default function MediaProviderKindPage() {
     textIcon: "CE",
   }));
 
-  const allProviders = [...providers, ...customProviders];
+  const allProviders = [...providers, ...customProviders].filter((p) => {
+    if (!showConnectedOnly) return true;
+    const providerConns = connections.filter((c) => c.provider === p.id);
+    const hasConnected = providerConns.some((c) => {
+      const s = getEffectiveStatus(c);
+      return (s === "active" || s === "success") && c.isActive !== false;
+    });
+    return hasConnected;
+  });
 
   const handleCreateCombo = async () => {
     const base = COMBO_BASE_NAMES[kind] || `${kind}-combo`;
@@ -236,6 +245,23 @@ export default function MediaProviderKindPage() {
 
   return (
     <div className="flex flex-col gap-6">
+      {/* Toolbar */}
+      <div className="flex items-center gap-2">
+        <button
+          type="button"
+          onClick={() => setShowConnectedOnly((v) => !v)}
+          className={`flex items-center gap-1.5 h-7 px-2.5 rounded-[4px] border text-[11px] font-[510] transition-colors duration-100 ${
+            showConnectedOnly
+              ? "border-emerald/30 bg-emerald/8 text-emerald"
+              : "border-charcoal-grey text-fog-grey hover:bg-deep-slate hover:text-porcelain"
+          }`}
+          title="Show connected providers only"
+        >
+          <span className="material-symbols-outlined text-[13px]">wifi</span>
+          <span className="hidden sm:inline">Connected only</span>
+        </button>
+      </div>
+
       {(isEmbedding || supportsCombo) && (
         <div className="flex items-center justify-end gap-2">
           {supportsCombo && (
