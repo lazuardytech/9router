@@ -41,13 +41,15 @@ Do not convert `open-sse` imports into package dependencies.
 ## UI Conventions
 
 - Sidebar taxonomy must stay aligned with:
-  - API: Endpoint, LLM Providers, Media Providers, Combos, Memory, Cache
-  - Analytics: Usage, Quota
-  - System: Proxy Pools, Console Log, Settings
+  - API: Endpoint, Providers, Media Providers, Combos
+  - Analytics: Usage & Analytics, Quota Tracker
+  - System: Proxy Pools, Logs, Settings, Health
 - Reuse shared UI components under `src/shared/components`.
+- Sidebar supports collapse to icon-only mode — do not break this behavior.
+- Theme switcher (light/dark/system) is functional — preserve theme context wiring.
 
 ## Quality Baseline
 
 - Minimum verification for feature-level changes:
-  - `pnpm run test:run`
-  - `pnpm run build`
+  - `bun run test:run`
+  - `bun run build`

@@ -1,6 +1,6 @@
 # Architecture
 
-This file summarizes the current architecture for `/workspace/pod` (v0.3.1).
+This file summarizes the current architecture for `github.com/lazuardytech/pod` (v0.0.1).
 
 ## Package Layout
 
@@ -13,7 +13,7 @@ open-sse/    routing engine (executors, translators, stream handling)
 
 ## Boot and Routing
 
-1. App runs through Next.js scripts (`pnpm run dev`, `pnpm run build`, `pnpm run start`).
+1. App runs through bun scripts (`bun run dev`, `bun run build`, `bun run start`).
 2. `next.config.mjs` rewrites:
    - `/v1/:path*` -> `/api/v1/:path*`
    - `/codex/:path*` -> `/api/v1/responses`
@@ -58,7 +58,7 @@ Limiter is enforced at `/api/v1/*` route layer via wrapper, including streaming-
 ## Persistence
 
 Primary store is SQLite:
-- File: `$DATA_DIR/pod.sqlite` (default `~/.9router/pod.sqlite`)
+- File: `~/.pod/pod.sqlite` (default; overridable via `DATA_DIR` env)
 - Access via `src/lib/localDb.js` and `src/lib/sqlite/connection.js`
 - `connection.js` applies pragmas and runs schema patches/migrations
 
@@ -72,10 +72,18 @@ Core data domains:
 
 ## Dashboard Surface
 
-Main dashboard routes (current):
-- endpoint, providers, media-providers, combos
-- memory, cache
-- usage, quota
-- proxy-pools, console-log, profile (settings)
+Main dashboard routes (no `/dashboard` prefix):
+- `/endpoint` — API keys table (max 15 rows, pagination, edit/remove)
+- `/providers` — LLM Providers
+- `/media-providers` — Media Providers
+- `/combos` — Combos
+- `/memory` — Conversational memory
+- `/cache` — Semantic cache
+- `/usage` — Usage & Analytics
+- `/quota` — Quota Tracker
+- `/proxy-pools` — Proxy Pools
+- `/logs` — multi-tab: Request Logs, Proxy Logs, Console Logs
+- `/settings` — Settings (Linear design, DB path, theme switcher)
+- `/health` — System Health (TelemetryCard sparklines, DB health, Provider Health, Rate Limit Status)
 
-`translator` and `basic-chat` pages still exist, but they are not part of the main sidebar taxonomy.
+`translator` and `basic-chat` pages still exist but are not part of the main sidebar taxonomy.

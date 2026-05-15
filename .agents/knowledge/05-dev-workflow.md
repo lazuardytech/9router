@@ -2,39 +2,36 @@
 
 ## Package Manager
 
-Use **pnpm only**.
+Use **bun only** (v1.3.14).
 
 ```bash
-pnpm install
-pnpm install --frozen-lockfile
+bun install
+bun install --frozen-lockfile
 ```
 
 Repo config:
-- `.npmrc` includes `node-linker=hoisted`
+- `bun.lock` is the lockfile (replaces `pnpm-lock.yaml`)
 - `packageManager` pinned in `package.json`
 
 ## Run / Build
 
 ```bash
-pnpm run dev        # next dev --webpack --port 20128
-pnpm run build      # production build
-pnpm run start      # production start (PORT env or default)
-pnpm run dev:bun
-pnpm run build:bun
-pnpm run start:bun
+bun run dev        # next dev --webpack --port 20128
+bun run build      # production build
+bun run start      # bun /app/server.js (Next.js standalone)
 ```
 
 ## Validation Commands
 
 ```bash
-pnpm run test:run
-pnpm run build
+bun run test:run   # vitest
+bun run build
 ```
 
-Optional lint:
+Optional format:
 
 ```bash
-pnpm exec eslint .
+bun run format     # biome format --write .
 ```
 
 ## Docker (Local)
@@ -46,8 +43,10 @@ Convenience script:
 ```
 
 Main Dockerfile facts:
-- Multi-stage Node 22 Alpine build
-- Uses pnpm via Corepack
+- Multi-stage build:
+  - Builder: `node:22-alpine` (for native module compilation)
+  - Runner: `oven/bun:1.3.14-alpine`
+- CMD: `bun /app/server.js`
 - Runtime port `20128`
 - Data dir defaults to `/app/data` in container
 
@@ -56,13 +55,28 @@ Main Dockerfile facts:
 ### Build & Test
 File: `.github/workflows/ci.yml`
 
-- Trigger: push/pull_request to `master`, and manual dispatch
+- Trigger: push/pull_request to `main`, and manual dispatch
 - Steps:
-  - install pnpm + Node 24
-  - `pnpm install --frozen-lockfile`
-  - `pnpm exec eslint . || true`
-  - `pnpm run test:run`
-  - `pnpm run build`
+  - install bun 1.3.14
+  - `bun install --frozen-lockfile`
+  - `bun x eslint . || true`
+  - `bun run test:run`
+  - `bun run build`
+
+### Format
+File: `.rwx/format.yml`
+
+- Runs `bun run format` via rwx
+
+### Build (rwx)
+File: `.rwx/build.yml`
+
+- Runs `bun run build` via rwx
+
+### Test (rwx)
+File: `.rwx/test.yml`
+
+- Runs `bun run test:run` via rwx
 
 ### Build & Push Docker Image
 File: `.github/workflows/docker-publish.yml`
@@ -74,7 +88,7 @@ File: `.github/workflows/docker-publish.yml`
 
 ## Release Flow
 
-1. Implement + validate (`test:run`, `build`)
+1. Implement + validate (`bun run test:run`, `bun run build`)
 2. Bump version in:
    - `package.json`
    - `src/shared/constants/config.js` (`displayVersion`)
@@ -83,6 +97,6 @@ File: `.github/workflows/docker-publish.yml`
 
 ## Storage / Migration Notes
 
-- SQLite file: `$DATA_DIR/pod.sqlite`
+- SQLite file: `~/.pod/pod.sqlite`
 - First boot auto-runs JSON to SQLite migration when needed
 - Manual migration endpoint: `/api/settings/migrate-sqlite`

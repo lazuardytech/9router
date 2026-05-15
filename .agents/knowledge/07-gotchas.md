@@ -10,9 +10,9 @@ Read this before changing core flow.
 
 `next.config.mjs` rewrites `/v1/*` to `/api/v1/*`. Do not create conflicting Next pages under `/v1`.
 
-## 3) pnpm-only workflow
+## 3) bun-only workflow
 
-Use pnpm for install/build/test/CI parity. Avoid npm command usage in this repo.
+Use bun for install/build/test/CI parity. Do not use npm or pnpm commands in this repo.
 
 ## 4) Public API limiter is route-wrapped
 
@@ -55,9 +55,18 @@ Use `localDb` / sqlite helpers instead of ad-hoc JSON state changes.
 
 ## 10) CI lint step is non-blocking
 
-`ci.yml` currently runs `pnpm exec eslint . || true`. Do not assume lint failure blocks CI.
+`ci.yml` currently runs `bun x eslint . || true`. Do not assume lint failure blocks CI.
 
 ## 11) Docker publishing target
 
 Release images publish to Docker Hub `lazuardytech/pod` via tag `v*`.
 Do not document GHCR for this repo.
+
+## 12) No `/dashboard` prefix on routes
+
+All dashboard routes are top-level (e.g. `/endpoint`, `/providers`, `/logs`, `/health`).
+Do not add or assume a `/dashboard` prefix when linking or redirecting.
+
+## 13) `/logs` replaces `/console-log`
+
+The old `/console-log` route is now consolidated under `/logs` as a multi-tab page (Request Logs, Proxy Logs, Console Logs). Do not create a new standalone `/console-log` page.

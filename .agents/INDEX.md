@@ -2,7 +2,7 @@
 
 Knowledge base entrypoint for pod contributors.
 
-Last synced: **2026-05-14** (baseline **v0.3.1**).
+Last synced: **2026-05-15** (baseline **v0.0.1**).
 
 - [Overview](knowledge/01-overview.md)
 - [Architecture](knowledge/02-architecture.md)
