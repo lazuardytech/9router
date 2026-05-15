@@ -673,7 +673,7 @@ export default function ProviderLimits() {
         {/* Table header */}
         <div className="grid grid-cols-[1fr_200px_64px_120px] bg-pitch-black/40 border-b border-charcoal-grey px-3 py-2">
           <div className="text-[10px] font-[590] uppercase tracking-[0.05em] text-fog-grey">Provider</div>
-          <div className="text-[10px] font-[590] uppercase tracking-[0.05em] text-fog-grey">Progress</div>
+          <div className="text-[10px] font-[590] uppercase tracking-[0.05em] text-fog-grey">Quota</div>
           <div className="text-[10px] font-[590] uppercase tracking-[0.05em] text-fog-grey text-right">%</div>
           <div className="text-[10px] font-[590] uppercase tracking-[0.05em] text-fog-grey text-right">Actions</div>
         </div>
