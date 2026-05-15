@@ -1,7 +1,7 @@
 "use client";
 
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
-import { useState, useCallback, useEffect, useRef, Suspense } from "react";
+import { useState, useCallback, useRef, Suspense } from "react";
 import { cn } from "@/shared/utils/cn";
 import RequestLogger from "@/shared/components/RequestLogger";
 import ConsoleLogClient from "./ConsoleLogClient";
@@ -50,6 +50,33 @@ function RequestLogsToolbar({ sortBy, setSortBy, onRefresh, recording, setRecord
   );
 }
 
+function ConsoleToolbar({ autoScroll, setAutoScroll, onClear }) {
+  return (
+    <div className="flex items-center gap-2">
+      <button
+        onClick={() => setAutoScroll((v) => !v)}
+        title={autoScroll ? "Disable auto-scroll" : "Enable auto-scroll"}
+        className={cn(
+          "flex items-center gap-1.5 h-7 px-2.5 rounded-[4px] border text-[11px] font-[510] transition-colors duration-100",
+          autoScroll
+            ? "border-aether-blue/30 bg-aether-blue/8 text-aether-blue"
+            : "border-charcoal-grey text-fog-grey hover:bg-deep-slate hover:text-porcelain",
+        )}
+      >
+        <span className="material-symbols-outlined text-[13px]">vertical_align_bottom</span>
+        Auto-scroll
+      </button>
+      <button
+        onClick={onClear}
+        className="flex items-center gap-1.5 h-7 px-2.5 rounded-[4px] border border-charcoal-grey text-[11px] text-storm-cloud hover:bg-warning-red/8 hover:border-warning-red/30 hover:text-warning-red transition-colors duration-100"
+      >
+        <span className="material-symbols-outlined text-[13px]">delete</span>
+        Clear
+      </button>
+    </div>
+  );
+}
+
 function LogsInner() {
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -57,10 +84,14 @@ function LogsInner() {
 
   const activeTab = searchParams.get("tab") || "request-logs";
 
-  // Lifted state for RequestLogger toolbar
+  // RequestLogger lifted state
   const [sortBy, setSortBy] = useState("newest");
   const [recording, setRecording] = useState(true);
   const refreshRef = useRef(null);
+
+  // ConsoleLogClient lifted state
+  const [autoScroll, setAutoScroll] = useState(true);
+  const clearRef = useRef(null);
 
   const setTab = (key) => {
     const params = new URLSearchParams(searchParams.toString());
@@ -91,7 +122,7 @@ function LogsInner() {
           ))}
         </div>
 
-        {/* Toolbar — only for request-logs tab */}
+        {/* Toolbar per tab */}
         {activeTab === "request-logs" && (
           <RequestLogsToolbar
             sortBy={sortBy}
@@ -100,6 +131,9 @@ function LogsInner() {
             recording={recording}
             setRecording={setRecording}
           />
+        )}
+        {activeTab === "console" && (
+          <ConsoleToolbar autoScroll={autoScroll} setAutoScroll={setAutoScroll} onClear={() => clearRef.current?.()} />
         )}
       </div>
 
@@ -115,7 +149,9 @@ function LogsInner() {
           />
         )}
         {activeTab === "proxy-logs" && <ProxyLogsTab />}
-        {activeTab === "console" && <ConsoleLogClient />}
+        {activeTab === "console" && (
+          <ConsoleLogClient autoScroll={autoScroll} setAutoScroll={setAutoScroll} clearRef={clearRef} />
+        )}
       </div>
     </div>
   );

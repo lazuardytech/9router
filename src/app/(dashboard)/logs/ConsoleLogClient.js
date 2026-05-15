@@ -22,7 +22,6 @@ function parseLevel(line) {
 }
 
 function parseTimestamp(line) {
-  // Match [HH:MM:SS] or [YYYY-MM-DD HH:MM:SS] at start
   const m = line.match(/^\[(\d{2}:\d{2}:\d{2}(?:\.\d+)?)\]/);
   return m ? m[1] : null;
 }
@@ -38,15 +37,8 @@ function LogLine({ line, idx, onCopy, copied }) {
   const text = stripLevel(line);
 
   return (
-    <div
-      className={cn(
-        "group flex items-start gap-2 px-3 py-1 rounded-[4px] hover:bg-porcelain/4 transition-colors duration-75",
-      )}
-    >
-      {/* Timestamp */}
+    <div className="group flex items-start gap-2 px-3 py-1 rounded-[4px] hover:bg-porcelain/4 transition-colors duration-75">
       <span className="shrink-0 text-[10px] text-fog-grey font-mono mt-0.5 w-[72px]">{ts || "—"}</span>
-
-      {/* Level badge */}
       <span
         className={cn(
           "shrink-0 inline-flex items-center px-1 py-0.5 rounded-[3px] border text-[9px] font-[590] uppercase tracking-[0.05em] mt-0.5 w-[42px] justify-center",
@@ -55,11 +47,7 @@ function LogLine({ line, idx, onCopy, copied }) {
       >
         {level}
       </span>
-
-      {/* Message */}
       <span className={cn("flex-1 text-[11px] font-mono leading-[1.6] break-all", style.text)}>{text}</span>
-
-      {/* Copy button */}
       <button
         onClick={() => onCopy(line, idx)}
         className="shrink-0 opacity-0 group-hover:opacity-100 flex items-center justify-center size-5 rounded-[3px] text-fog-grey hover:text-porcelain hover:bg-deep-slate transition-all duration-100"
@@ -71,23 +59,35 @@ function LogLine({ line, idx, onCopy, copied }) {
   );
 }
 
-export default function ConsoleLogClient() {
+const LEVEL_FILTERS = [
+  { key: "all", label: "All" },
+  { key: "DEBUG", label: "Debug" },
+  { key: "INFO", label: "Info" },
+  { key: "WARN", label: "Warn" },
+  { key: "ERROR", label: "Error" },
+];
+
+export default function ConsoleLogClient({ autoScroll, setAutoScroll, clearRef }) {
   const [logs, setLogs] = useState([]);
   const [connected, setConnected] = useState(false);
   const [initialized, setInitialized] = useState(false);
   const [levelFilter, setLevelFilter] = useState("all");
   const [search, setSearch] = useState("");
-  const [autoScroll, setAutoScroll] = useState(true);
   const [copied, setCopied] = useState(null);
   const [lastUpdated, setLastUpdated] = useState(null);
   const scrollRef = useRef(null);
   const esRef = useRef(null);
 
-  const handleClear = async () => {
+  const handleClear = useCallback(async () => {
     try {
       await fetch("/api/translator/console-logs", { method: "DELETE" });
     } catch {}
-  };
+  }, []);
+
+  // Expose clear to parent via ref
+  useEffect(() => {
+    if (clearRef) clearRef.current = handleClear;
+  }, [clearRef, handleClear]);
 
   const handleCopy = useCallback((line, idx) => {
     navigator.clipboard?.writeText(line).catch(() => {});
@@ -95,7 +95,6 @@ export default function ConsoleLogClient() {
     setTimeout(() => setCopied(null), 2000);
   }, []);
 
-  // SSE connection
   useEffect(() => {
     const es = new EventSource("/api/translator/console-logs/stream");
     esRef.current = es;
@@ -127,23 +126,19 @@ export default function ConsoleLogClient() {
     return () => es.close();
   }, []);
 
-  // Auto-scroll
   useEffect(() => {
     if (autoScroll && scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
   }, [logs, autoScroll]);
 
-  // Filter
   const filtered = logs.filter((line) => {
     const level = parseLevel(line);
     if (levelFilter !== "all") {
       const minOrder = LEVEL_ORDER[levelFilter.toUpperCase()] ?? 0;
       if ((LEVEL_ORDER[level] ?? 0) < minOrder) return false;
     }
-    if (search) {
-      return line.toLowerCase().includes(search.toLowerCase());
-    }
+    if (search) return line.toLowerCase().includes(search.toLowerCase());
     return true;
   });
 
@@ -155,86 +150,64 @@ export default function ConsoleLogClient() {
 
   return (
     <div className="flex flex-col gap-3 h-[calc(100vh-140px)]">
-      {/* Row 1: Auto-scroll + Clear (right-aligned, sejajar tab switcher) */}
-      <div className="flex items-center justify-end gap-2 shrink-0">
-        {/* Auto-scroll toggle */}
-        <button
-          onClick={() => setAutoScroll((v) => !v)}
-          title={autoScroll ? "Disable auto-scroll" : "Enable auto-scroll"}
-          className={cn(
-            "flex items-center gap-1.5 h-7 px-2.5 rounded-[4px] border text-[11px] font-[510] transition-colors duration-100",
-            autoScroll
-              ? "border-aether-blue/30 bg-aether-blue/8 text-aether-blue"
-              : "border-charcoal-grey text-fog-grey hover:bg-deep-slate hover:text-porcelain",
-          )}
-        >
-          <span className="material-symbols-outlined text-[13px]">vertical_align_bottom</span>
-          Auto-scroll
-        </button>
-        {/* Clear */}
-        <button
-          onClick={handleClear}
-          className="flex items-center gap-1.5 h-7 px-2.5 rounded-[4px] border border-charcoal-grey text-[11px] text-storm-cloud hover:bg-warning-red/8 hover:border-warning-red/30 hover:text-warning-red transition-colors duration-100"
-        >
-          <span className="material-symbols-outlined text-[13px]">delete</span>
-          Clear
-        </button>
-      </div>
-
-      {/* Row 2: Search + Level filter + Stats */}
-      <div className="flex flex-wrap items-center gap-2 shrink-0">
-        {/* Level filter */}
-        <select
-          value={levelFilter}
-          onChange={(e) => setLevelFilter(e.target.value)}
-          className="h-7 px-2 rounded-[6px] border border-charcoal-grey bg-deep-slate text-[12px] text-porcelain focus:outline-none focus:border-porcelain/30 transition-colors duration-100"
-        >
-          <option value="all">All Levels</option>
-          <option value="DEBUG">Debug+</option>
-          <option value="INFO">Info+</option>
-          <option value="WARN">Warn+</option>
-          <option value="ERROR">Error only</option>
-        </select>
-
-        {/* Search */}
-        <div className="relative">
-          <span className="absolute left-2 top-1/2 -translate-y-1/2 material-symbols-outlined text-[13px] text-fog-grey">
-            search
-          </span>
-          <input
-            type="text"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search logs..."
-            className="h-7 pl-7 pr-3 w-48 rounded-[6px] border border-charcoal-grey bg-deep-slate text-[12px] text-porcelain placeholder:text-fog-grey focus:outline-none focus:border-porcelain/30 transition-colors duration-100"
-          />
+      {/* Row 2: Search + Level filter pills + Stats */}
+      <div className="flex flex-wrap items-center justify-between gap-2 shrink-0">
+        {/* Left: Search + filter pills */}
+        <div className="flex flex-wrap items-center gap-2">
+          <div className="relative">
+            <span className="absolute left-2 top-1/2 -translate-y-1/2 material-symbols-outlined text-[13px] text-fog-grey">
+              search
+            </span>
+            <input
+              type="text"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search logs..."
+              className="h-7 pl-7 pr-3 w-48 rounded-[6px] border border-charcoal-grey bg-deep-slate text-[12px] text-porcelain placeholder:text-fog-grey focus:outline-none focus:border-porcelain/30 transition-colors duration-100"
+            />
+          </div>
+          <div className="flex items-center gap-1">
+            {LEVEL_FILTERS.map((f) => (
+              <button
+                key={f.key}
+                onClick={() => setLevelFilter(f.key)}
+                className={cn(
+                  "h-6 px-2.5 rounded-[4px] text-[11px] font-[510] transition-colors duration-100",
+                  levelFilter === f.key
+                    ? "bg-porcelain/10 text-porcelain border border-porcelain/20"
+                    : "text-fog-grey hover:text-storm-cloud hover:bg-deep-slate border border-transparent",
+                )}
+              >
+                {f.label}
+              </button>
+            ))}
+          </div>
         </div>
 
-        <div className="w-px h-4 bg-charcoal-grey" />
-
-        {/* Connection status + Stats */}
-        <div className="flex items-center gap-1.5 text-[11px]">
-          <span
-            className={cn(
-              "size-1.5 rounded-full",
-              connected ? "bg-emerald animate-pulse" : initialized ? "bg-warning-red" : "bg-[#f59e0b] animate-pulse",
-            )}
-          />
-          <span className={connected ? "text-emerald" : initialized ? "text-warning-red" : "text-[#f59e0b]"}>
-            {connected ? "Connected" : initialized ? "Disconnected" : "Connecting..."}
-          </span>
-        </div>
-        <div className="flex items-center gap-2 text-[11px] text-fog-grey">
-          <span>{counts.total} lines</span>
-          {counts.error > 0 && <span className="text-warning-red">{counts.error} errors</span>}
-          {counts.warn > 0 && <span className="text-[#f59e0b]">{counts.warn} warnings</span>}
-          {lastUpdated && <span className="text-fog-grey/60">{lastUpdated.toLocaleTimeString()}</span>}
+        {/* Right: Connection status + Stats */}
+        <div className="flex items-center gap-2 text-[11px] shrink-0">
+          <div className="flex items-center gap-1.5">
+            <span
+              className={cn(
+                "size-1.5 rounded-full",
+                connected ? "bg-emerald animate-pulse" : initialized ? "bg-warning-red" : "bg-[#f59e0b] animate-pulse",
+              )}
+            />
+            <span className={connected ? "text-emerald" : initialized ? "text-warning-red" : "text-[#f59e0b]"}>
+              {connected ? "Connected" : initialized ? "Disconnected" : "Connecting..."}
+            </span>
+          </div>
+          <div className="flex items-center gap-2 text-fog-grey">
+            <span>{counts.total} lines</span>
+            {counts.error > 0 && <span className="text-warning-red">{counts.error} errors</span>}
+            {counts.warn > 0 && <span className="text-[#f59e0b]">{counts.warn} warnings</span>}
+            {lastUpdated && <span className="text-fog-grey/60">{lastUpdated.toLocaleTimeString()}</span>}
+          </div>
         </div>
       </div>
 
       {/* Terminal */}
       <div className="flex-1 rounded-[6px] border border-charcoal-grey bg-pitch-black overflow-hidden flex flex-col">
-        {/* Terminal header bar */}
         <div className="flex items-center gap-2 px-3 py-2 border-b border-charcoal-grey bg-graphite shrink-0">
           <span className="text-[11px] text-fog-grey font-mono">console — pod</span>
           <span className="ml-auto text-[10px] text-fog-grey">
@@ -242,7 +215,6 @@ export default function ConsoleLogClient() {
           </span>
         </div>
 
-        {/* Log lines */}
         <div
           ref={scrollRef}
           className="flex-1 overflow-y-auto custom-scrollbar py-2"
