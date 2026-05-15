@@ -25,6 +25,9 @@ import {
   isCacheableForRead,
   isCacheableForWrite,
   setCachedResponse,
+  getInFlight,
+  setInFlight,
+  clearInFlight,
 } from "@/lib/semanticCache.js";
 import { extractFacts } from "@/lib/memory/extraction.js";
 import { injectMemory, shouldInjectMemory } from "@/lib/memory/injection.js";
@@ -215,10 +218,12 @@ export async function handleChatCore({
   reqLogger.logRawRequest(body);
   log?.debug?.("FORMAT", `${sourceFormat} → ${targetFormat} | stream=${stream}`);
 
-  // Semantic cache pre-check
+  // Semantic cache pre-check with thundering herd protection
+  let cacheSignature = null;
+  let resolveInFlight = null;
   if (semanticCacheEnabled && isCacheableForRead(body, clientRawRequest?.headers)) {
-    const signature = generateSignature(model, body.messages ?? body.input, body.temperature, body.top_p);
-    const cached = getCachedResponse(signature);
+    cacheSignature = generateSignature(model, body.messages ?? body.input, body.temperature, body.top_p);
+    const cached = getCachedResponse(cacheSignature);
     if (cached) {
       reqLogger.logConvertedResponse(cached);
       return {
@@ -231,6 +236,34 @@ export async function handleChatCore({
           },
         }),
       };
+    }
+    // Thundering herd: if an identical request is already in-flight, await its result
+    const inFlight = getInFlight(cacheSignature);
+    if (inFlight) {
+      try {
+        const result = await inFlight;
+        if (result) {
+          reqLogger.logConvertedResponse(result);
+          return {
+            success: true,
+            response: new Response(JSON.stringify(result), {
+              headers: {
+                "Content-Type": "application/json",
+                "Access-Control-Allow-Origin": "*",
+                "X-9Router-Cache": "HIT",
+              },
+            }),
+          };
+        }
+      } catch {
+        // in-flight failed — fall through to upstream
+      }
+    } else {
+      // Register this request as in-flight so concurrent duplicates can await it
+      const promise = new Promise((resolve) => {
+        resolveInFlight = resolve;
+      });
+      setInFlight(cacheSignature, promise);
     }
   }
 
@@ -560,6 +593,11 @@ export async function handleChatCore({
         ) {
           const signature = generateSignature(model, body.messages ?? body.input, body.temperature, body.top_p);
           setCachedResponse(signature, model, finalResponse, extractTokensSaved(usage));
+          if (resolveInFlight) {
+            resolveInFlight(finalResponse);
+            resolveInFlight = null;
+          }
+          if (cacheSignature) clearInFlight(cacheSignature);
         }
         if (memoryOwnerId && memorySettings.enabled && memorySettings.maxTokens > 0) {
           const requestMemoryText = extractMemoryTextFromRequestBody(body);
@@ -594,6 +632,11 @@ export async function handleChatCore({
         ) {
           const signature = generateSignature(model, body.messages ?? body.input, body.temperature, body.top_p);
           setCachedResponse(signature, model, translatedResponse, extractTokensSaved(usage));
+          if (resolveInFlight) {
+            resolveInFlight(translatedResponse);
+            resolveInFlight = null;
+          }
+          if (cacheSignature) clearInFlight(cacheSignature);
         }
         if (memoryOwnerId && memorySettings.enabled && memorySettings.maxTokens > 0) {
           const requestMemoryText = extractMemoryTextFromRequestBody(body);

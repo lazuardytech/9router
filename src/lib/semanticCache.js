@@ -1,9 +1,7 @@
-// TODO: Thundering herd / cache stampede protection is not yet implemented.
-// When N concurrent identical requests all miss the cache simultaneously, each
-// will independently hit upstream. A clean fix requires restructuring chatCore
-// so the cache read and write happen within a single coordinated call rather
-// than being split across the pipeline. Track in-flight signatures with a
-// Map<signature, Promise> and await the existing promise on collision.
+// In-flight request deduplication: signature → Promise<response>
+// Prevents N concurrent identical requests from all hitting upstream simultaneously.
+const inFlightRequests = new Map();
+
 import crypto from "crypto";
 import { LRUCache } from "./cacheLayer.js";
 import { getDatabase } from "./sqlite/connection.js";
@@ -269,4 +267,23 @@ export function isCacheableForWrite(body, headers) {
   if (body?.stream === true) return false;
   if ((body?.temperature ?? 0) !== 0) return false;
   return true;
+}
+
+/**
+ * In-flight request tracking for thundering herd protection.
+ * When N concurrent identical requests all miss the cache, only one
+ * should hit upstream — the others await the in-flight promise.
+ */
+export function getInFlight(signature) {
+  return inFlightRequests.get(signature) ?? null;
+}
+
+export function setInFlight(signature, promise) {
+  inFlightRequests.set(signature, promise);
+  // Auto-clear after 60s to prevent memory leak if upstream never resolves
+  setTimeout(() => inFlightRequests.delete(signature), 60000);
+}
+
+export function clearInFlight(signature) {
+  inFlightRequests.delete(signature);
 }
