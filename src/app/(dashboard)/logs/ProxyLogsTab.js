@@ -36,15 +36,15 @@ function StatusBadge({ active }) {
 
 import { LogDrawer, LogDrawerHeader, LogDrawerBody, DetailSection, DetailRow } from "@/shared/components/LogDrawer";
 
-export default function ProxyLogsTab() {
-  const [pools, setPools] = useState([]);
+export default function ProxyLogsTab({ sortBy, setSortBy, live, setLive, onRefresh, onCountChange }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [testing, setTesting] = useState(null);
   const [testResults, setTestResults] = useState({});
   const [selectedPool, setSelectedPool] = useState(null);
-  const [sortBy, setSortBy] = useState("newest");
-  const [live, setLive] = useState(true);
+  const [internalPools, setInternalPools] = useState([]);
+
+  const activePools = internalPools;
 
   const fetchPools = useCallback(async (silent = false) => {
     if (!silent) setLoading(true);
@@ -53,7 +53,9 @@ export default function ProxyLogsTab() {
       const res = await fetch("/api/proxy-pools?includeUsage=true");
       if (!res.ok) throw new Error("Failed to fetch proxy pools");
       const data = await res.json();
-      setPools(data.proxyPools ?? []);
+      const newPools = data.proxyPools ?? [];
+      setInternalPools(newPools);
+      if (onCountChange) onCountChange(newPools.length);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -64,6 +66,11 @@ export default function ProxyLogsTab() {
   useEffect(() => {
     fetchPools();
   }, [fetchPools]);
+
+  // Expose fetchPools to parent
+  useEffect(() => {
+    if (onRefresh) onRefresh.current = () => fetchPools(false);
+  }, [onRefresh, fetchPools]);
 
   useEffect(() => {
     if (!live) return;
@@ -92,44 +99,6 @@ export default function ProxyLogsTab() {
 
   return (
     <div className="flex flex-col gap-3">
-      {/* Header */}
-      <div className="flex items-center justify-between gap-3">
-        <div className="flex items-center gap-2">
-          <span className="text-[11px] text-fog-grey">{pools.length} configured</span>
-          <div className="w-px h-4 bg-charcoal-grey" />
-          <select
-            value={sortBy}
-            onChange={(e) => setSortBy(e.target.value)}
-            className="h-7 px-2 rounded-[6px] border border-charcoal-grey bg-deep-slate text-[12px] text-porcelain focus:outline-none focus:border-porcelain/30 transition-colors duration-100"
-          >
-            <option value="newest">Newest first</option>
-            <option value="oldest">Oldest first</option>
-          </select>
-        </div>
-        <div className="flex items-center gap-2">
-          <button
-            onClick={() => fetchPools()}
-            className="flex items-center justify-center size-7 rounded-[4px] border border-charcoal-grey text-storm-cloud hover:bg-deep-slate hover:text-porcelain transition-colors duration-100"
-            title="Refresh"
-          >
-            <span className={cn("material-symbols-outlined text-[15px]", loading && "animate-spin")}>refresh</span>
-          </button>
-          <button
-            onClick={() => setLive((v) => !v)}
-            title={live ? "Pause live" : "Resume live"}
-            className={cn(
-              "flex items-center gap-1.5 h-7 px-2.5 rounded-[4px] border text-[11px] font-[510] transition-colors duration-100",
-              live
-                ? "border-emerald/30 bg-emerald/8 text-emerald hover:bg-emerald/15"
-                : "border-charcoal-grey text-storm-cloud hover:bg-deep-slate hover:text-porcelain",
-            )}
-          >
-            <span className={cn("size-1.5 rounded-full", live ? "bg-emerald animate-pulse" : "bg-fog-grey")} />
-            {live ? "Live" : "Paused"}
-          </button>
-        </div>
-      </div>
-
       {/* Info banner */}
       <div className="flex items-center gap-2 px-3 py-2.5 rounded-[6px] border border-charcoal-grey bg-deep-slate">
         <span className="material-symbols-outlined text-[14px] text-fog-grey shrink-0">info</span>
@@ -163,7 +132,7 @@ export default function ProxyLogsTab() {
               Retry
             </button>
           </div>
-        ) : pools.length === 0 ? (
+        ) : activePools.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-12 gap-2">
             <span className="material-symbols-outlined text-[28px] text-fog-grey">lan</span>
             <p className="text-[12px] text-fog-grey">No proxy pools configured.</p>
@@ -200,7 +169,7 @@ export default function ProxyLogsTab() {
                 </tr>
               </thead>
               <tbody>
-                {pools.map((pool) => (
+                {activePools.map((pool) => (
                   <>
                     <tr
                       key={pool.id}

@@ -1,7 +1,7 @@
 "use client";
 
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
-import { useState, useCallback, useRef, Suspense } from "react";
+import { useState, useRef, Suspense } from "react";
 import { cn } from "@/shared/utils/cn";
 import RequestLogger from "@/shared/components/RequestLogger";
 import ConsoleLogClient from "./ConsoleLogClient";
@@ -50,6 +50,43 @@ function RequestLogsToolbar({ sortBy, setSortBy, onRefresh, recording, setRecord
   );
 }
 
+function ProxyLogsToolbar({ sortBy, setSortBy, onRefresh, live, setLive, count }) {
+  return (
+    <div className="flex items-center gap-2">
+      <span className="text-[11px] text-fog-grey">{count} configured</span>
+      <div className="w-px h-4 bg-charcoal-grey" />
+      <select
+        value={sortBy}
+        onChange={(e) => setSortBy(e.target.value)}
+        className="h-7 px-2 rounded-[6px] border border-charcoal-grey bg-deep-slate text-[12px] text-porcelain focus:outline-none focus:border-porcelain/30 transition-colors duration-100"
+      >
+        <option value="newest">Newest first</option>
+        <option value="oldest">Oldest first</option>
+      </select>
+      <button
+        onClick={onRefresh}
+        className="flex items-center justify-center size-7 rounded-[4px] border border-charcoal-grey text-storm-cloud hover:bg-deep-slate hover:text-porcelain transition-colors duration-100"
+        title="Refresh"
+      >
+        <span className="material-symbols-outlined text-[15px]">refresh</span>
+      </button>
+      <button
+        onClick={() => setLive((v) => !v)}
+        title={live ? "Pause live" : "Resume live"}
+        className={cn(
+          "flex items-center gap-1.5 h-7 px-2.5 rounded-[4px] border text-[11px] font-[510] transition-colors duration-100",
+          live
+            ? "border-emerald/30 bg-emerald/8 text-emerald hover:bg-emerald/15"
+            : "border-charcoal-grey text-storm-cloud hover:bg-deep-slate hover:text-porcelain",
+        )}
+      >
+        <span className={cn("size-1.5 rounded-full", live ? "bg-emerald animate-pulse" : "bg-fog-grey")} />
+        {live ? "Live" : "Paused"}
+      </button>
+    </div>
+  );
+}
+
 function ConsoleToolbar({ autoScroll, setAutoScroll, onClear }) {
   return (
     <div className="flex items-center gap-2">
@@ -88,6 +125,12 @@ function LogsInner() {
   const [sortBy, setSortBy] = useState("newest");
   const [recording, setRecording] = useState(true);
   const refreshRef = useRef(null);
+
+  // ProxyLogsTab lifted state
+  const [proxySortBy, setProxySortBy] = useState("newest");
+  const [proxyLive, setProxyLive] = useState(true);
+  const [proxyCount, setProxyCount] = useState(0);
+  const proxyRefreshRef = useRef(null);
 
   // ConsoleLogClient lifted state
   const [autoScroll, setAutoScroll] = useState(true);
@@ -132,6 +175,16 @@ function LogsInner() {
             setRecording={setRecording}
           />
         )}
+        {activeTab === "proxy-logs" && (
+          <ProxyLogsToolbar
+            sortBy={proxySortBy}
+            setSortBy={setProxySortBy}
+            onRefresh={() => proxyRefreshRef.current?.()}
+            live={proxyLive}
+            setLive={setProxyLive}
+            count={proxyCount}
+          />
+        )}
         {activeTab === "console" && (
           <ConsoleToolbar autoScroll={autoScroll} setAutoScroll={setAutoScroll} onClear={() => clearRef.current?.()} />
         )}
@@ -148,7 +201,16 @@ function LogsInner() {
             refreshRef={refreshRef}
           />
         )}
-        {activeTab === "proxy-logs" && <ProxyLogsTab />}
+        {activeTab === "proxy-logs" && (
+          <ProxyLogsTab
+            sortBy={proxySortBy}
+            setSortBy={setProxySortBy}
+            live={proxyLive}
+            setLive={setProxyLive}
+            onRefresh={proxyRefreshRef}
+            onCountChange={setProxyCount}
+          />
+        )}
         {activeTab === "console" && (
           <ConsoleLogClient autoScroll={autoScroll} setAutoScroll={setAutoScroll} clearRef={clearRef} />
         )}
