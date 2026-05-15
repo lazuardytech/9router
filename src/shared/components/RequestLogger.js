@@ -297,10 +297,12 @@ export default function RequestLogger({ sortBy, setSortBy, recording, setRecordi
                   <th className="px-3 py-2 text-[10px] font-[590] uppercase tracking-[0.05em] text-fog-grey border-r border-charcoal-grey text-right">
                     Out
                   </th>
-                  <th className="px-3 py-2 text-[10px] font-[590] uppercase tracking-[0.05em] text-fog-grey border-r border-charcoal-grey">
+                  <th className="px-3 py-2 text-[10px] font-[590] uppercase tracking-[0.05em] text-fog-grey border-r border-charcoal-grey w-[90px]">
                     Status
                   </th>
-                  <th className="px-3 py-2 text-[10px] font-[590] uppercase tracking-[0.05em] text-fog-grey">Combo</th>
+                  <th className="px-3 py-2 text-[10px] font-[590] uppercase tracking-[0.05em] text-fog-grey w-[70px]">
+                    Combo
+                  </th>
                 </tr>
               </thead>
               <tbody>
