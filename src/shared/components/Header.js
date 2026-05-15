@@ -23,7 +23,11 @@ const getPageInfo = (pathname) => {
       title: provider?.name || providerId,
       description: "",
       breadcrumbs: [
-        { label: kindConfig?.label || kindId, href: `/media-providers/${kindId}` },
+        {
+          label: kindConfig?.label || kindId,
+          href: `/media-providers/${kindId}`,
+          icon: kindConfig?.icon || "perm_media",
+        },
         { label: provider?.name || providerId, image: `/providers/${providerId}.png` },
       ],
     };
@@ -58,7 +62,7 @@ const getPageInfo = (pathname) => {
         title: providerInfo.name,
         description: "",
         breadcrumbs: [
-          { label: "Providers", href: "/providers" },
+          { label: "Providers", href: "/providers", icon: "dns" },
           { label: providerInfo.name, image: `/providers/${providerInfo.id}.png` },
         ],
       };
@@ -69,7 +73,7 @@ const getPageInfo = (pathname) => {
     return {
       title: "Add New Provider",
       description: "",
-      breadcrumbs: [{ label: "Providers", href: "/providers" }, { label: "New" }],
+      breadcrumbs: [{ label: "Providers", href: "/providers", icon: "dns" }, { label: "New" }],
     };
   if (pathname.includes("/providers") && !pathname.includes("/media-providers"))
     return { title: "Providers", description: "Manage your AI provider connections", icon: "dns", breadcrumbs: [] };
@@ -168,8 +172,9 @@ export default function Header({ onMenuClick, showMenuButton = true, sidebarColl
               {crumb.href ? (
                 <Link
                   href={crumb.href}
-                  className="text-[13px] text-storm-cloud hover:text-porcelain transition-colors duration-100 tracking-[-0.12px]"
+                  className="flex items-center gap-1 text-[13px] text-storm-cloud hover:text-porcelain transition-colors duration-100 tracking-[-0.12px]"
                 >
+                  {crumb.icon && <span className="material-symbols-outlined text-[15px]">{crumb.icon}</span>}
                   {crumb.label}
                 </Link>
               ) : (
@@ -193,7 +198,7 @@ export default function Header({ onMenuClick, showMenuButton = true, sidebarColl
         ) : title ? (
           <div className="flex items-center gap-1.5">
             {icon && <span className="material-symbols-outlined text-storm-cloud text-[16px]">{icon}</span>}
-            <span className="text-[13px] font-[510] text-porcelain tracking-[-0.12px] truncate">{title}</span>
+            <span className="text-[13px] font-[510] text-porcelain tracking-[-0.12px] truncate mt-0.5">{title}</span>
           </div>
         ) : null}
       </div>
