@@ -1384,9 +1384,10 @@ export default function APIPageClient({ machineId }) {
               This is the only time you will see this key. Store it securely.
             </p>
           </div>
-          <div className="flex gap-2">
-            <Input value={createdKey || ""} readOnly className="flex-1 font-mono text-sm" />
+          <div className="flex gap-2 items-end">
+            <Input value={createdKey || ""} readOnly className="flex-1" inputClassName="font-mono text-sm" />
             <Button
+              size="lg"
               variant="secondary"
               icon={copied === "created_key" ? "check" : "content_copy"}
               onClick={() => copy(createdKey, "created_key")}

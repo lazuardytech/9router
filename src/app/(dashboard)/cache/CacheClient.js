@@ -206,61 +206,64 @@ export default function CacheClient() {
       </Card>
 
       <Card title="Maintenance" subtitle="Invalidate cache entries by scope" icon="cleaning_services">
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-          <Input
-            label="Invalidate by Model"
-            placeholder="example: melma/zen"
-            value={maintenance.model}
-            onChange={(event) => setMaintenance((prev) => ({ ...prev, model: event.target.value }))}
-          />
-          <div className="flex items-end">
+        <div className="flex flex-col gap-3">
+          <div className="flex gap-2 items-end">
+            <Input
+              label="Invalidate by Model"
+              placeholder="example: melma/zen"
+              value={maintenance.model}
+              onChange={(event) => setMaintenance((prev) => ({ ...prev, model: event.target.value }))}
+              className="flex-1"
+            />
             <Button
               variant="secondary"
+              size="lg"
               icon="delete_sweep"
               loading={invalidating}
               disabled={!maintenance.model.trim()}
               onClick={() => runInvalidation(`model=${encodeURIComponent(maintenance.model.trim())}`)}
-              className="w-full"
             >
               Invalidate Model
             </Button>
           </div>
 
-          <Input
-            label="Invalidate by Signature"
-            placeholder="sha256 signature"
-            value={maintenance.signature}
-            onChange={(event) => setMaintenance((prev) => ({ ...prev, signature: event.target.value }))}
-          />
-          <div className="flex items-end">
+          <div className="flex gap-2 items-end">
+            <Input
+              label="Invalidate by Signature"
+              placeholder="sha256 signature"
+              value={maintenance.signature}
+              onChange={(event) => setMaintenance((prev) => ({ ...prev, signature: event.target.value }))}
+              className="flex-1"
+            />
             <Button
               variant="secondary"
+              size="lg"
               icon="delete_sweep"
               loading={invalidating}
               disabled={!maintenance.signature.trim()}
               onClick={() => runInvalidation(`signature=${encodeURIComponent(maintenance.signature.trim())}`)}
-              className="w-full"
             >
               Invalidate Signature
             </Button>
           </div>
 
-          <Input
-            label="Invalidate Stale (minutes)"
-            type="number"
-            min="1"
-            value={maintenance.staleMinutes}
-            onChange={(event) => setMaintenance((prev) => ({ ...prev, staleMinutes: event.target.value }))}
-          />
-          <div className="flex items-end">
+          <div className="flex gap-2 items-end">
+            <Input
+              label="Invalidate Stale (minutes)"
+              type="number"
+              min="1"
+              value={maintenance.staleMinutes}
+              onChange={(event) => setMaintenance((prev) => ({ ...prev, staleMinutes: event.target.value }))}
+              className="flex-1"
+            />
             <Button
               variant="secondary"
+              size="lg"
               icon="auto_delete"
               loading={invalidating}
               onClick={() =>
                 runInvalidation(`staleMs=${encodeURIComponent(String(staleMinutesToMs(maintenance.staleMinutes)))}`)
               }
-              className="w-full"
             >
               Invalidate Stale
             </Button>
