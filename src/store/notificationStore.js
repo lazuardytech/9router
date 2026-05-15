@@ -1,45 +1,27 @@
 /**
  * Notification Store — Zustand-based global toast notification system.
- * Centralized feedback for dashboard actions.
+ * Delegates to sonner for rendering.
  */
 
-import { create } from "zustand";
+import { toast } from "sonner";
 
-let idCounter = 0;
-
-export const useNotificationStore = create((set, get) => ({
-  notifications: [],
-
-  addNotification: (notification) => {
-    const id = ++idCounter;
-    const entry = {
-      id,
-      type: notification.type || "info",
-      message: notification.message,
-      title: notification.title || null,
-      duration: notification.duration ?? 5000,
-      dismissible: notification.dismissible ?? true,
-      createdAt: Date.now(),
-    };
-
-    set((s) => ({ notifications: [...s.notifications, entry] }));
-
-    // Auto-dismiss
-    if (entry.duration > 0) {
-      setTimeout(() => get().removeNotification(id), entry.duration);
-    }
-
-    return id;
+export const useNotificationStore = () => ({
+  success: (message, title) => toast.success(title || message, { description: title ? message : undefined }),
+  error: (message, title) =>
+    toast.error(title || message, { description: title ? message : undefined, duration: 8000 }),
+  warning: (message, title) => toast.warning(title || message, { description: title ? message : undefined }),
+  info: (message, title) => toast.info(title || message, { description: title ? message : undefined }),
+  addNotification: ({ type, message, title }) => {
+    const fn = { success: toast.success, error: toast.error, warning: toast.warning, info: toast.info }[type] ?? toast;
+    fn(title || message, { description: title ? message : undefined });
   },
+});
 
-  removeNotification: (id) => {
-    set((s) => ({ notifications: s.notifications.filter((n) => n.id !== id) }));
-  },
-
-  clearAll: () => set({ notifications: [] }),
-
-  success: (message, title) => get().addNotification({ type: "success", message, title }),
-  error: (message, title) => get().addNotification({ type: "error", message, title, duration: 8000 }),
-  warning: (message, title) => get().addNotification({ type: "warning", message, title }),
-  info: (message, title) => get().addNotification({ type: "info", message, title }),
-}));
+// Also export direct toast helpers for non-hook usage
+export const notify = {
+  success: (message, title) => toast.success(title || message, { description: title ? message : undefined }),
+  error: (message, title) =>
+    toast.error(title || message, { description: title ? message : undefined, duration: 8000 }),
+  warning: (message, title) => toast.warning(title || message, { description: title ? message : undefined }),
+  info: (message, title) => toast.info(title || message, { description: title ? message : undefined }),
+};
