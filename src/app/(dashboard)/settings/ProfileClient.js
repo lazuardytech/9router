@@ -62,8 +62,6 @@ export default function ProfilePage() {
   const [passLoading, setPassLoading] = useState(false);
   const [dbLoading, setDbLoading] = useState(false);
   const [dbStatus, setDbStatus] = useState({ type: "", message: "" });
-  const [migrateLoading, setMigrateLoading] = useState(false);
-  const [migrateStatus, setMigrateStatus] = useState({ type: "", message: "" });
   const [confirmDialog, setConfirmDialog] = useState({
     open: false,
     title: "",
@@ -376,37 +374,6 @@ export default function ProfilePage() {
     }
   };
 
-  const handleMigrateSqlite = async () => {
-    setMigrateLoading(true);
-    setMigrateStatus({ type: "", message: "" });
-    try {
-      const res = await fetch("/api/settings/migrate-sqlite", { method: "POST" });
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(data.error || "Migration failed");
-      const rows = data.imported ?? 0;
-      const files =
-        Array.isArray(data.files) && data.files.length
-          ? ` (${data.files.map((f) => `${f.file}: ${f.rows}`).join(", ")})`
-          : "";
-      setMigrateStatus({
-        type: "success",
-        message:
-          rows > 0
-            ? `Imported ${rows} rows into SQLite${files}`
-            : data.message || "No legacy JSON files found to migrate",
-      });
-      const info = await fetch("/api/settings/migrate-sqlite")
-        .then((r) => r.json())
-        .catch(() => null);
-      if (info && !info.error) setLegacyInfo(info);
-      if (rows > 0) await reloadSettings();
-    } catch (err) {
-      setMigrateStatus({ type: "error", message: err.message || "Migration failed" });
-    } finally {
-      setMigrateLoading(false);
-    }
-  };
-
   const observabilityEnabled = settings.enableObservability === true;
 
   return (
@@ -462,22 +429,6 @@ export default function ProfilePage() {
 
             {/* Actions */}
             <div className="flex flex-wrap gap-2">
-              <Button
-                variant="secondary"
-                icon="upload_file"
-                onClick={() =>
-                  openConfirm(
-                    "Migrate SQLite",
-                    "Import legacy JSON files (db.json / usage.json / request-details.json) into SQLite? Originals will be renamed to .bak on success.",
-                    handleMigrateSqlite,
-                    "default",
-                  )
-                }
-                loading={migrateLoading}
-                disabled={!legacyInfo.hasLegacyData}
-              >
-                Migrate to SQLite
-              </Button>
               <Button variant="secondary" icon="download" onClick={handleExportDatabase} loading={dbLoading}>
                 Download Backup
               </Button>
@@ -505,7 +456,6 @@ export default function ProfilePage() {
             )}
 
             <StatusMsg status={dbStatus} />
-            <StatusMsg status={migrateStatus} />
           </div>
         </Section>
 
