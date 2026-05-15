@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { Button, Toggle, Input } from "@/shared/components";
+import { ConfirmModal } from "@/shared/components/Modal";
 import { useTheme } from "@/shared/hooks/useTheme";
 import { cn } from "@/shared/utils/cn";
 import { APP_CONFIG } from "@/shared/constants/config";
@@ -63,6 +64,16 @@ export default function ProfilePage() {
   const [dbStatus, setDbStatus] = useState({ type: "", message: "" });
   const [migrateLoading, setMigrateLoading] = useState(false);
   const [migrateStatus, setMigrateStatus] = useState({ type: "", message: "" });
+  const [confirmDialog, setConfirmDialog] = useState({
+    open: false,
+    title: "",
+    message: "",
+    onConfirm: null,
+    variant: "default",
+  });
+  const openConfirm = (title, message, onConfirm, variant = "default") =>
+    setConfirmDialog({ open: true, title, message, onConfirm, variant });
+  const closeConfirm = () => setConfirmDialog((prev) => ({ ...prev, open: false, onConfirm: null }));
   const [legacyInfo, setLegacyInfo] = useState({ hasLegacyData: false, legacyFilesFound: [] });
   const importFileRef = useRef(null);
   const [proxyForm, setProxyForm] = useState({
@@ -366,13 +377,6 @@ export default function ProfilePage() {
   };
 
   const handleMigrateSqlite = async () => {
-    if (
-      !confirm(
-        "Import legacy JSON files (db.json / usage.json / request-details.json) into SQLite? Originals will be renamed to .bak on success.",
-      )
-    ) {
-      return;
-    }
     setMigrateLoading(true);
     setMigrateStatus({ type: "", message: "" });
     try {
@@ -407,6 +411,19 @@ export default function ProfilePage() {
 
   return (
     <div className="max-w-2xl mx-auto">
+      <ConfirmModal
+        isOpen={confirmDialog.open}
+        title={confirmDialog.title}
+        message={confirmDialog.message}
+        onConfirm={() => {
+          confirmDialog.onConfirm?.();
+          closeConfirm();
+        }}
+        onClose={closeConfirm}
+        confirmText="Confirm"
+        cancelText="Cancel"
+        variant={confirmDialog.variant}
+      />
       <div className="flex flex-col gap-5">
         {/* ── Appearance ──────────────────────────────────────────────────── */}
         <Section>
@@ -445,6 +462,22 @@ export default function ProfilePage() {
 
             {/* Actions */}
             <div className="flex flex-wrap gap-2">
+              <Button
+                variant="secondary"
+                icon="upload_file"
+                onClick={() =>
+                  openConfirm(
+                    "Migrate SQLite",
+                    "Import legacy JSON files (db.json / usage.json / request-details.json) into SQLite? Originals will be renamed to .bak on success.",
+                    handleMigrateSqlite,
+                    "default",
+                  )
+                }
+                loading={migrateLoading}
+                disabled={!legacyInfo.hasLegacyData}
+              >
+                Migrate to SQLite
+              </Button>
               <Button variant="secondary" icon="download" onClick={handleExportDatabase} loading={dbLoading}>
                 Download Backup
               </Button>

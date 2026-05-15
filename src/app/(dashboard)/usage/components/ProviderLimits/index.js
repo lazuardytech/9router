@@ -5,6 +5,7 @@ import ProviderIcon from "@/shared/components/ProviderIcon";
 import Toggle from "@/shared/components/Toggle";
 import { parseQuotaData, calculatePercentage, getStatusColor, formatResetTime } from "./utils";
 import { EditConnectionModal } from "@/shared/components";
+import { ConfirmModal } from "@/shared/components/Modal";
 import { USAGE_SUPPORTED_PROVIDERS, USAGE_APIKEY_PROVIDERS } from "@/shared/constants/providers";
 
 // Connection is eligible for the quota page when it uses OAuth or is an apikey provider whitelisted for quota
@@ -58,6 +59,17 @@ export default function ProviderLimits() {
   const [providerMenuOpen, setProviderMenuOpen] = useState(false);
   const [bulkToggling, setBulkToggling] = useState(false);
   const [expandedRows, setExpandedRows] = useState({});
+
+  const [confirmDialog, setConfirmDialog] = useState({
+    open: false,
+    title: "",
+    message: "",
+    onConfirm: null,
+    variant: "default",
+  });
+  const openConfirm = (title, message, onConfirm, variant = "default") =>
+    setConfirmDialog({ open: true, title, message, onConfirm, variant });
+  const closeConfirm = () => setConfirmDialog((prev) => ({ ...prev, open: false, onConfirm: null }));
 
   const intervalRef = useRef(null);
   const countdownRef = useRef(null);
@@ -158,7 +170,6 @@ export default function ProviderLimits() {
   );
 
   const handleDeleteConnection = useCallback(async (id) => {
-    if (!confirm("Delete this connection?")) return;
     setDeletingId(id);
     try {
       const res = await fetch(`/api/providers/${id}`, { method: "DELETE" });
@@ -752,7 +763,14 @@ export default function ProviderLimits() {
                     </button>
                     <button
                       type="button"
-                      onClick={() => handleDeleteConnection(conn.id)}
+                      onClick={() =>
+                        openConfirm(
+                          "Delete Connection",
+                          "Are you sure you want to delete this connection?",
+                          () => handleDeleteConnection(conn.id),
+                          "danger",
+                        )
+                      }
                       disabled={rowBusy}
                       className="flex items-center justify-center size-6 rounded-[4px] text-fog-grey hover:bg-warning-red/10 hover:text-warning-red transition-colors duration-100 disabled:opacity-40"
                       title="Delete connection"
@@ -867,6 +885,20 @@ export default function ProviderLimits() {
           setShowEditModal(false);
           setSelectedConnection(null);
         }}
+      />
+
+      <ConfirmModal
+        isOpen={confirmDialog.open}
+        title={confirmDialog.title}
+        message={confirmDialog.message}
+        onConfirm={() => {
+          confirmDialog.onConfirm?.();
+          closeConfirm();
+        }}
+        onClose={closeConfirm}
+        confirmText="Confirm"
+        cancelText="Cancel"
+        variant={confirmDialog.variant}
       />
     </div>
   );

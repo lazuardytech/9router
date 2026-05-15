@@ -4,6 +4,7 @@ import { useParams, notFound, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Card, Button, Input, Toggle, ModelSelectModal } from "@/shared/components";
+import { ConfirmModal } from "@/shared/components/Modal";
 import ProviderIcon from "@/shared/components/ProviderIcon";
 import { AI_PROVIDERS, MEDIA_PROVIDER_KINDS } from "@/shared/constants/providers";
 
@@ -61,6 +62,17 @@ export default function ComboDetailPage() {
   const [apiKey, setApiKey] = useState("");
   const [connections, setConnections] = useState([]);
   const [modelAliases, setModelAliases] = useState({});
+
+  const [confirmDialog, setConfirmDialog] = useState({
+    open: false,
+    title: "",
+    message: "",
+    onConfirm: null,
+    variant: "default",
+  });
+  const openConfirm = (title, message, onConfirm, variant = "default") =>
+    setConfirmDialog({ open: true, title, message, onConfirm, variant });
+  const closeConfirm = () => setConfirmDialog((prev) => ({ ...prev, open: false, onConfirm: null }));
 
   const fetchAll = async () => {
     try {
@@ -181,7 +193,6 @@ export default function ComboDetailPage() {
   };
 
   const handleDelete = async () => {
-    if (!confirm(`Delete combo "${combo.name}"?`)) return;
     const res = await fetch(`/api/combos/${id}`, { method: "DELETE" });
     if (res.ok) router.push(getListingHref(combo.kind));
   };
@@ -279,7 +290,9 @@ export default function ComboDetailPage() {
         <Button
           variant="outline"
           icon="delete"
-          onClick={handleDelete}
+          onClick={() =>
+            openConfirm("Delete Combo", `Delete combo "${combo?.name}"? This cannot be undone.`, handleDelete, "danger")
+          }
           className="text-red-500 border-red-200 hover:bg-red-50"
         >
           Delete
@@ -470,6 +483,20 @@ export default function ComboDetailPage() {
         kindFilter={combo.kind}
         addedModelValues={providers}
         closeOnSelect={false}
+      />
+
+      <ConfirmModal
+        isOpen={confirmDialog.open}
+        title={confirmDialog.title}
+        message={confirmDialog.message}
+        onConfirm={() => {
+          confirmDialog.onConfirm?.();
+          closeConfirm();
+        }}
+        onClose={closeConfirm}
+        confirmText="Confirm"
+        cancelText="Cancel"
+        variant={confirmDialog.variant}
       />
     </div>
   );

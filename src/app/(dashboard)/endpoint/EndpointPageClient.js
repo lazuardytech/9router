@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import PropTypes from "prop-types";
 import { Card, Button, Input, Modal, CardSkeleton, Toggle, SegmentedControl } from "@/shared/components";
+import { ConfirmModal } from "@/shared/components/Modal";
 import { useCopyToClipboard } from "@/shared/hooks/useCopyToClipboard";
 
 const TUNNEL_BENEFITS = [
@@ -71,6 +72,17 @@ export default function APIPageClient({ machineId }) {
 
   // API key visibility toggle state
   const [visibleKeys, setVisibleKeys] = useState(new Set());
+
+  const [confirmDialog, setConfirmDialog] = useState({
+    open: false,
+    title: "",
+    message: "",
+    onConfirm: null,
+    variant: "default",
+  });
+  const openConfirm = (title, message, onConfirm, variant = "default") =>
+    setConfirmDialog({ open: true, title, message, onConfirm, variant });
+  const closeConfirm = () => setConfirmDialog((prev) => ({ ...prev, open: false, onConfirm: null }));
 
   const { copied, copy } = useCopyToClipboard();
 
@@ -651,8 +663,6 @@ export default function APIPageClient({ machineId }) {
   };
 
   const handleDeleteKey = async (id) => {
-    if (!confirm("Delete this API key?")) return;
-
     try {
       const res = await fetch(`/api/keys/${id}`, { method: "DELETE" });
       if (res.ok) {
@@ -1162,13 +1172,12 @@ export default function APIPageClient({ machineId }) {
                             checked={key.isActive ?? true}
                             onChange={(checked) => {
                               if (key.isActive && !checked) {
-                                if (
-                                  confirm(
-                                    `Pause API key "${key.name}"?\n\nThis key will stop working immediately but can be resumed later.`,
-                                  )
-                                ) {
-                                  handleToggleKey(key.id, checked);
-                                }
+                                openConfirm(
+                                  "Pause API Key",
+                                  `Pause API key "${key.name}"? This key will stop working immediately but can be resumed later.`,
+                                  () => handleToggleKey(key.id, checked),
+                                  "danger",
+                                );
                               } else {
                                 handleToggleKey(key.id, checked);
                               }
@@ -1189,7 +1198,14 @@ export default function APIPageClient({ machineId }) {
                             <span className="material-symbols-outlined text-[14px]">edit</span>
                           </button>
                           <button
-                            onClick={() => handleDeleteKey(key.id)}
+                            onClick={() =>
+                              openConfirm(
+                                "Delete API Key",
+                                "Are you sure you want to delete this API key? This action cannot be undone.",
+                                () => handleDeleteKey(key.id),
+                                "danger",
+                              )
+                            }
                             className="flex items-center justify-center size-6 rounded-[4px] text-fog-grey hover:bg-warning-red/10 hover:text-warning-red transition-colors duration-100"
                             title="Delete key"
                           >
@@ -1243,6 +1259,20 @@ export default function APIPageClient({ machineId }) {
           </div>
         )}
       </Card>
+
+      <ConfirmModal
+        isOpen={confirmDialog.open}
+        title={confirmDialog.title}
+        message={confirmDialog.message}
+        onConfirm={() => {
+          confirmDialog.onConfirm?.();
+          closeConfirm();
+        }}
+        onClose={closeConfirm}
+        confirmText="Confirm"
+        cancelText="Cancel"
+        variant={confirmDialog.variant}
+      />
 
       {/* Add Key Modal */}
       <Modal

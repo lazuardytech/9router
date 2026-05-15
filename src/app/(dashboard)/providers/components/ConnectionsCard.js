@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import PropTypes from "prop-types";
 import { Card, Badge, Button, Modal, Select, Toggle, EditConnectionModal } from "@/shared/components";
+import { ConfirmModal } from "@/shared/components/Modal";
 
 // ── CooldownTimer ──────────────────────────────────────────────
 function CooldownTimer({ until }) {
@@ -424,6 +425,17 @@ export default function ConnectionsCard({ providerId, isOAuth }) {
   const [providerStrategy, setProviderStrategy] = useState(null);
   const [providerStickyLimit, setProviderStickyLimit] = useState("1");
 
+  const [confirmDialog, setConfirmDialog] = useState({
+    open: false,
+    title: "",
+    message: "",
+    onConfirm: null,
+    variant: "default",
+  });
+  const openConfirm = (title, message, onConfirm, variant = "default") =>
+    setConfirmDialog({ open: true, title, message, onConfirm, variant });
+  const closeConfirm = () => setConfirmDialog((prev) => ({ ...prev, open: false, onConfirm: null }));
+
   const fetch_ = useCallback(async () => {
     try {
       const [connRes, proxyRes, settingsRes] = await Promise.all([
@@ -494,7 +506,7 @@ export default function ConnectionsCard({ providerId, isOAuth }) {
   };
 
   const handleDelete = async (id) => {
-    if (!confirm("Delete this connection?")) return;
+    if (!id) return;
     try {
       const res = await fetch(`/api/providers/${id}`, { method: "DELETE" });
       if (res.ok) setConnections((prev) => prev.filter((c) => c.id !== id));
@@ -635,7 +647,14 @@ export default function ConnectionsCard({ providerId, isOAuth }) {
                     setSelectedConnection(conn);
                     setShowEditModal(true);
                   }}
-                  onDelete={() => handleDelete(conn.id)}
+                  onDelete={() =>
+                    openConfirm(
+                      "Delete Connection",
+                      "Are you sure you want to delete this connection?",
+                      () => handleDelete(conn.id),
+                      "danger",
+                    )
+                  }
                 />
               ))}
             </div>
@@ -661,6 +680,19 @@ export default function ConnectionsCard({ providerId, isOAuth }) {
         proxyPools={proxyPools}
         onSave={handleUpdateConnection}
         onClose={() => setShowEditModal(false)}
+      />
+      <ConfirmModal
+        isOpen={confirmDialog.open}
+        title={confirmDialog.title}
+        message={confirmDialog.message}
+        onConfirm={() => {
+          confirmDialog.onConfirm?.();
+          closeConfirm();
+        }}
+        onClose={closeConfirm}
+        confirmText="Confirm"
+        cancelText="Cancel"
+        variant={confirmDialog.variant}
       />
     </>
   );

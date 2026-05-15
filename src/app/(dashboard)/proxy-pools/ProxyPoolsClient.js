@@ -4,6 +4,7 @@ import { toast } from "sonner";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Badge, Button, Card, CardSkeleton, Input, Modal, Toggle } from "@/shared/components";
+import { ConfirmModal } from "@/shared/components/Modal";
 
 function getStatusVariant(status) {
   if (status === "active") return "success";
@@ -46,6 +47,17 @@ export default function ProxyPoolsPage() {
   const [healthChecking, setHealthChecking] = useState(false);
   const [healthProgress, setHealthProgress] = useState({ current: 0, total: 0 });
   const [bulkBusy, setBulkBusy] = useState(false);
+
+  const [confirmDialog, setConfirmDialog] = useState({
+    open: false,
+    title: "",
+    message: "",
+    onConfirm: null,
+    variant: "default",
+  });
+  const openConfirm = (title, message, onConfirm, variant = "default") =>
+    setConfirmDialog({ open: true, title, message, onConfirm, variant });
+  const closeConfirm = () => setConfirmDialog((prev) => ({ ...prev, open: false, onConfirm: null }));
 
   const fetchProxyPools = useCallback(async () => {
     try {
@@ -122,9 +134,6 @@ export default function ProxyPoolsPage() {
   };
 
   const handleDelete = async (proxyPool) => {
-    const deleting = confirm(`Delete proxy pool \"${proxyPool.name}\"?`);
-    if (!deleting) return;
-
     try {
       const res = await fetch(`/api/proxy-pools/${proxyPool.id}`, { method: "DELETE" });
       if (res.ok) {
@@ -220,7 +229,6 @@ export default function ProxyPoolsPage() {
 
   const bulkDelete = async () => {
     if (selectedIds.length === 0) return;
-    if (!confirm(`Delete ${selectedIds.length} proxy pool(s)?`)) return;
     setBulkBusy(true);
     try {
       let ok = 0;
@@ -278,26 +286,30 @@ export default function ProxyPoolsPage() {
     setHealthChecking(false);
     setHealthProgress({ current: 0, total: 0 });
 
-    if (
-      deadIds.length > 0 &&
-      confirm(`Alive: ${alive}, Dead: ${deadIds.length}.\n\nDisable ${deadIds.length} dead proxies?`)
-    ) {
-      setBulkBusy(true);
-      try {
-        for (const id of deadIds) {
+    if (deadIds.length > 0) {
+      openConfirm(
+        "Disable Dead Proxies",
+        `Alive: ${alive}, Dead: ${deadIds.length}.\n\nDisable ${deadIds.length} dead proxies?`,
+        async () => {
+          setBulkBusy(true);
           try {
-            await fetch(`/api/proxy-pools/${id}`, {
-              method: "PUT",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ isActive: false }),
-            });
-          } catch {}
-        }
-        await fetchProxyPools();
-        toast.success(`Disabled ${deadIds.length} dead proxies`);
-      } finally {
-        setBulkBusy(false);
-      }
+            for (const id of deadIds) {
+              try {
+                await fetch(`/api/proxy-pools/${id}`, {
+                  method: "PUT",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({ isActive: false }),
+                });
+              } catch {}
+            }
+            await fetchProxyPools();
+            toast.success(`Disabled ${deadIds.length} dead proxies`);
+          } finally {
+            setBulkBusy(false);
+          }
+        },
+        "danger",
+      );
     } else {
       toast.success(`Health check done. Alive: ${alive}, Dead: ${deadIds.length}`);
     }
@@ -554,7 +566,14 @@ export default function ProxyPoolsPage() {
                     size="sm"
                     variant="secondary"
                     icon="delete"
-                    onClick={bulkDelete}
+                    onClick={() =>
+                      openConfirm(
+                        "Delete Proxy Pools",
+                        `Delete ${selectedIds.length} proxy pool(s)? This cannot be undone.`,
+                        bulkDelete,
+                        "danger",
+                      )
+                    }
                     disabled={bulkBusy || healthChecking}
                   >
                     Delete
@@ -642,7 +661,14 @@ export default function ProxyPoolsPage() {
                     <span className="material-symbols-outlined text-[18px]">edit</span>
                   </button>
                   <button
-                    onClick={() => handleDelete(pool)}
+                    onClick={() =>
+                      openConfirm(
+                        "Delete Proxy Pool",
+                        `Delete proxy pool "${pool.name}"? This cannot be undone.`,
+                        () => handleDelete(pool),
+                        "danger",
+                      )
+                    }
                     className="p-2 rounded hover:bg-red-500/10 text-red-500"
                     title="Delete"
                   >
@@ -803,6 +829,20 @@ export default function ProxyPoolsPage() {
           </div>
         </div>
       </Modal>
+
+      <ConfirmModal
+        isOpen={confirmDialog.open}
+        title={confirmDialog.title}
+        message={confirmDialog.message}
+        onConfirm={() => {
+          confirmDialog.onConfirm?.();
+          closeConfirm();
+        }}
+        onClose={closeConfirm}
+        confirmText="Confirm"
+        cancelText="Cancel"
+        variant={confirmDialog.variant}
+      />
     </div>
   );
 }

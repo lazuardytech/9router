@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { Card, Button, Modal, Input, CardSkeleton, ModelSelectModal, Toggle } from "@/shared/components";
+import { ConfirmModal } from "@/shared/components/Modal";
 import { useCopyToClipboard } from "@/shared/hooks/useCopyToClipboard";
 import { isOpenAICompatibleProvider, isAnthropicCompatibleProvider } from "@/shared/constants/providers";
 
@@ -16,6 +17,17 @@ export default function CombosPage() {
   const [activeProviders, setActiveProviders] = useState([]);
   const [comboStrategies, setComboStrategies] = useState({});
   const { copied, copy } = useCopyToClipboard();
+
+  const [confirmDialog, setConfirmDialog] = useState({
+    open: false,
+    title: "",
+    message: "",
+    onConfirm: null,
+    variant: "default",
+  });
+  const openConfirm = (title, message, onConfirm, variant = "default") =>
+    setConfirmDialog({ open: true, title, message, onConfirm, variant });
+  const closeConfirm = () => setConfirmDialog((prev) => ({ ...prev, open: false, onConfirm: null }));
 
   useEffect(() => {
     fetchData();
@@ -84,7 +96,6 @@ export default function CombosPage() {
   };
 
   const handleDelete = async (id) => {
-    if (!confirm("Delete this combo?")) return;
     try {
       const res = await fetch(`/api/combos/${id}`, { method: "DELETE" });
       if (res.ok) {
@@ -161,13 +172,34 @@ export default function CombosPage() {
               copied={copied}
               onCopy={copy}
               onEdit={() => setEditingCombo(combo)}
-              onDelete={() => handleDelete(combo.id)}
+              onDelete={() =>
+                openConfirm(
+                  "Delete Combo",
+                  "Are you sure you want to delete this combo?",
+                  () => handleDelete(combo.id),
+                  "danger",
+                )
+              }
               roundRobinEnabled={comboStrategies[combo.name]?.fallbackStrategy === "round-robin"}
               onToggleRoundRobin={(enabled) => handleToggleRoundRobin(combo.name, enabled)}
             />
           ))}
         </div>
       )}
+
+      <ConfirmModal
+        isOpen={confirmDialog.open}
+        title={confirmDialog.title}
+        message={confirmDialog.message}
+        onConfirm={() => {
+          confirmDialog.onConfirm?.();
+          closeConfirm();
+        }}
+        onClose={closeConfirm}
+        confirmText="Confirm"
+        cancelText="Cancel"
+        variant={confirmDialog.variant}
+      />
 
       {/* Create Modal - Use key to force remount and reset state */}
       <ComboFormModal

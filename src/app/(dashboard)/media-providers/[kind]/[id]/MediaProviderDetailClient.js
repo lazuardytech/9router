@@ -4,6 +4,7 @@ import { useParams, notFound, useRouter } from "next/navigation";
 import Link from "next/link";
 import { useState, useEffect } from "react";
 import { Card, Badge, Button, AddCustomEmbeddingModal, NoAuthProxyCard, ProviderInfoCard } from "@/shared/components";
+import { ConfirmModal } from "@/shared/components/Modal";
 import ProviderIcon from "@/shared/components/ProviderIcon";
 import {
   MEDIA_PROVIDER_KINDS,
@@ -1900,7 +1901,6 @@ export default function MediaProviderDetailPage() {
   const isCustom = isCustomEmbeddingProvider(id) && kind === "embedding";
 
   const handleDeleteCustom = async () => {
-    if (!confirm("Delete this Custom Embedding node?")) return;
     try {
       const res = await fetch(`/api/provider-nodes/${id}`, { method: "DELETE" });
       if (res.ok) router.push(`/media-providers/${kind}`);
@@ -1912,6 +1912,17 @@ export default function MediaProviderDetailPage() {
   const [customNode, setCustomNode] = useState(null);
   const [customLoading, setCustomLoading] = useState(isCustom);
   const [showEditModal, setShowEditModal] = useState(false);
+
+  const [confirmDialog, setConfirmDialog] = useState({
+    open: false,
+    title: "",
+    message: "",
+    onConfirm: null,
+    variant: "default",
+  });
+  const openConfirm = (title, message, onConfirm, variant = "default") =>
+    setConfirmDialog({ open: true, title, message, onConfirm, variant });
+  const closeConfirm = () => setConfirmDialog((prev) => ({ ...prev, open: false, onConfirm: null }));
 
   // Fetch custom node info from API for custom embedding nodes
   useEffect(() => {
@@ -2002,7 +2013,19 @@ export default function MediaProviderDetailPage() {
             <Button size="sm" variant="secondary" icon="edit" onClick={() => setShowEditModal(true)}>
               Edit
             </Button>
-            <Button size="sm" variant="secondary" icon="delete" onClick={handleDeleteCustom}>
+            <Button
+              size="sm"
+              variant="secondary"
+              icon="delete"
+              onClick={() =>
+                openConfirm(
+                  "Delete Custom Embedding",
+                  "Delete this Custom Embedding node? This cannot be undone.",
+                  handleDeleteCustom,
+                  "danger",
+                )
+              }
+            >
               Delete
             </Button>
           </div>
@@ -2100,6 +2123,20 @@ export default function MediaProviderDetailPage() {
           }}
         />
       )}
+
+      <ConfirmModal
+        isOpen={confirmDialog.open}
+        title={confirmDialog.title}
+        message={confirmDialog.message}
+        onConfirm={() => {
+          confirmDialog.onConfirm?.();
+          closeConfirm();
+        }}
+        onClose={closeConfirm}
+        confirmText="Confirm"
+        cancelText="Cancel"
+        variant={confirmDialog.variant}
+      />
     </div>
   );
 }

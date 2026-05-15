@@ -160,7 +160,6 @@ export default function MemoryClient() {
 
   const handleDeleteMemory = async (id) => {
     if (!id) return;
-    if (!globalThis.confirm("Delete this memory?")) return;
 
     setDeletingId(id);
     try {
@@ -364,6 +363,20 @@ export default function MemoryClient() {
           </div>
         </div>
       </Card>
+
+      <ConfirmModal
+        isOpen={confirmDialog.open}
+        title={confirmDialog.title}
+        message={confirmDialog.message}
+        onConfirm={() => {
+          confirmDialog.onConfirm?.();
+          closeConfirm();
+        }}
+        onClose={closeConfirm}
+        confirmText="Confirm"
+        cancelText="Cancel"
+        variant={confirmDialog.variant}
+      />
     </div>
   );
 }

@@ -18,6 +18,7 @@ import {
   Toggle,
   Select,
 } from "@/shared/components";
+import { ConfirmModal } from "@/shared/components/Modal";
 import {
   OAUTH_PROVIDERS,
   APIKEY_PROVIDERS,
@@ -50,6 +51,17 @@ export default function ProviderDetailPage() {
   const [showSelectedOnly, setShowSelectedOnly] = useState(false);
   const [headerImgError, setHeaderImgError] = useState(false);
   const { copied, copy } = useCopyToClipboard();
+
+  const [confirmDialog, setConfirmDialog] = useState({
+    open: false,
+    title: "",
+    message: "",
+    onConfirm: null,
+    variant: "default",
+  });
+  const openConfirm = (title, message, onConfirm, variant = "default") =>
+    setConfirmDialog({ open: true, title, message, onConfirm, variant });
+  const closeConfirm = () => setConfirmDialog((prev) => ({ ...prev, open: false, onConfirm: null }));
 
   const providerInfo = providerNode
     ? {
@@ -280,7 +292,6 @@ export default function ProviderDetailPage() {
   };
 
   const handleDelete = async (id) => {
-    if (!confirm("Delete this connection?")) return;
     try {
       const res = await fetch(`/api/providers/${id}`, { method: "DELETE" });
       if (res.ok) {
@@ -625,18 +636,21 @@ export default function ProviderDetailPage() {
                 size="sm"
                 variant="secondary"
                 icon="delete"
-                onClick={async () => {
-                  if (!confirm(`Delete this ${isAnthropicCompatible ? "Anthropic" : "OpenAI"} Compatible node?`))
-                    return;
-                  try {
-                    const res = await fetch(`/api/provider-nodes/${providerId}`, { method: "DELETE" });
-                    if (res.ok) {
-                      router.push("/providers");
-                    }
-                  } catch (error) {
-                    console.log("Error deleting provider node:", error);
-                  }
-                }}
+                onClick={() =>
+                  openConfirm(
+                    "Delete Compatible Node",
+                    `Delete this ${isAnthropicCompatible ? "Anthropic" : "OpenAI"} Compatible node? This cannot be undone.`,
+                    async () => {
+                      try {
+                        const res = await fetch(`/api/provider-nodes/${providerId}`, { method: "DELETE" });
+                        if (res.ok) router.push("/providers");
+                      } catch (error) {
+                        console.log("Error deleting provider node:", error);
+                      }
+                    },
+                    "danger",
+                  )
+                }
               >
                 Delete
               </Button>
@@ -696,7 +710,14 @@ export default function ProviderDetailPage() {
                     setSelectedConnection(conn);
                     setShowEditModal(true);
                   }}
-                  onDelete={() => handleDelete(conn.id)}
+                  onDelete={() =>
+                    openConfirm(
+                      "Delete Connection",
+                      "Are you sure you want to delete this connection?",
+                      () => handleDelete(conn.id),
+                      "danger",
+                    )
+                  }
                 />
               ))}
           </div>
@@ -758,6 +779,20 @@ export default function ProviderDetailPage() {
           isAnthropic={isAnthropicCompatible}
         />
       )}
+
+      <ConfirmModal
+        isOpen={confirmDialog.open}
+        title={confirmDialog.title}
+        message={confirmDialog.message}
+        onConfirm={() => {
+          confirmDialog.onConfirm?.();
+          closeConfirm();
+        }}
+        onClose={closeConfirm}
+        confirmText="Confirm"
+        cancelText="Cancel"
+        variant={confirmDialog.variant}
+      />
     </div>
   );
 }

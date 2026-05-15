@@ -2,11 +2,23 @@
 
 import { useState, useEffect } from "react";
 import { getDefaultPricing, formatCost } from "@/shared/constants/pricing.js";
+import { ConfirmModal } from "@/shared/components/Modal";
 
 export default function PricingModal({ isOpen, onClose, onSave }) {
   const [pricingData, setPricingData] = useState({});
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+
+  const [confirmDialog, setConfirmDialog] = useState({
+    open: false,
+    title: "",
+    message: "",
+    onConfirm: null,
+    variant: "default",
+  });
+  const openConfirm = (title, message, onConfirm, variant = "default") =>
+    setConfirmDialog({ open: true, title, message, onConfirm, variant });
+  const closeConfirm = () => setConfirmDialog((prev) => ({ ...prev, open: false, onConfirm: null }));
 
   useEffect(() => {
     if (isOpen) {
@@ -73,8 +85,6 @@ export default function PricingModal({ isOpen, onClose, onSave }) {
   };
 
   const handleReset = async () => {
-    if (!confirm("Reset all pricing to defaults? This cannot be undone.")) return;
-
     try {
       const response = await fetch("/api/pricing", { method: "DELETE" });
       if (response.ok) {
@@ -172,7 +182,14 @@ export default function PricingModal({ isOpen, onClose, onSave }) {
         {/* Footer */}
         <div className="p-4 border-t border-border flex items-center justify-between gap-2">
           <button
-            onClick={handleReset}
+            onClick={() =>
+              openConfirm(
+                "Reset Pricing",
+                "Reset all pricing to defaults? This cannot be undone.",
+                handleReset,
+                "danger",
+              )
+            }
             className="px-4 py-2 text-sm text-red-500 hover:bg-red-500/10 rounded border border-red-500/20 transition-colors"
             disabled={saving}
           >
@@ -196,6 +213,20 @@ export default function PricingModal({ isOpen, onClose, onSave }) {
           </div>
         </div>
       </div>
+
+      <ConfirmModal
+        isOpen={confirmDialog.open}
+        title={confirmDialog.title}
+        message={confirmDialog.message}
+        onConfirm={() => {
+          confirmDialog.onConfirm?.();
+          closeConfirm();
+        }}
+        onClose={closeConfirm}
+        confirmText="Confirm"
+        cancelText="Cancel"
+        variant={confirmDialog.variant}
+      />
     </div>
   );
 }
