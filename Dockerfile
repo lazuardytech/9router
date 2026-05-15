@@ -17,7 +17,7 @@ COPY . ./
 ENV NEXT_TELEMETRY_DISABLED=1
 RUN bun run build
 
-FROM oven/bun:1.3.14-alpine AS runner
+FROM node:22-alpine AS runner
 WORKDIR /app
 
 LABEL org.opencontainers.image.title="pod"
@@ -52,12 +52,12 @@ RUN apk --no-cache upgrade && apk --no-cache add su-exec curl && \
    rm /tmp/ts.tgz) && \
   which tailscale && tailscale version
 
-RUN mkdir -p /app/data && chown -R bun:bun /app && \
-  mkdir -p /app/data-home && chown bun:bun /app/data-home && \
+RUN mkdir -p /app/data && chown -R node:node /app && \
+  mkdir -p /app/data-home && chown node:node /app/data-home && \
   ln -sf /app/data-home /root/.pod 2>/dev/null || true
 
 # Fix permissions at runtime (handles mounted volumes)
-RUN printf '#!/bin/sh\nchown -R bun:bun /app/data /app/data-home 2>/dev/null\n# Start tailscaled in userspace mode (background)\nmkdir -p /app/data/tailscale\ntailscaled --tun=userspace-networking --socket=/app/data/tailscale/tailscaled.sock --state=/app/data/tailscale/state &\nexec su-exec bun "$@"\n' > /entrypoint.sh && \
+RUN printf '#!/bin/sh\nchown -R node:node /app/data /app/data-home 2>/dev/null\n# Start tailscaled in userspace mode (background)\nmkdir -p /app/data/tailscale\ntailscaled --tun=userspace-networking --socket=/app/data/tailscale/tailscaled.sock --state=/app/data/tailscale/state &\nexec su-exec node "$@"\n' > /entrypoint.sh && \
   chmod +x /entrypoint.sh
 
 WORKDIR /app
