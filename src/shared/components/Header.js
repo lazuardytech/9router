@@ -181,7 +181,7 @@ export default function Header({ onMenuClick, showMenuButton = true, sidebarColl
                   className="flex items-center gap-1 text-[13px] text-storm-cloud hover:text-porcelain transition-colors duration-100 tracking-[-0.12px]"
                 >
                   {crumb.icon && <span className="material-symbols-outlined text-[15px]">{crumb.icon}</span>}
-                  {crumb.label}
+                  <span className="mt-0.5 ms-0.5">{crumb.label}</span>
                 </Link>
               ) : (
                 <div className="flex items-center gap-1.5">
@@ -196,7 +196,7 @@ export default function Header({ onMenuClick, showMenuButton = true, sidebarColl
                       />
                     </div>
                   )}
-                  <span className="text-[13px] font-[510] text-porcelain tracking-[-0.12px] truncate">
+                  <span className="text-[13px] font-[510] text-porcelain tracking-[-0.12px] truncate mt-0.5 ms-0.5">
                     {crumb.label}
                   </span>
                 </div>
