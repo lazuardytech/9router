@@ -31,7 +31,6 @@ export default function DashboardLayout({ children }) {
             closeButton: "text-fog-grey hover:text-porcelain",
           },
         }}
-        closeButton
       />
 
       {/* Mobile overlay */}
