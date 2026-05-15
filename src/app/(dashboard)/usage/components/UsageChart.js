@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import PropTypes from "prop-types";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts";
 import Card from "@/shared/components/Card";
+import SegmentedControl from "@/shared/components/SegmentedControl";
 
 const fmtTokens = (n) => {
   if (n >= 1000000) return `${(n / 1000000).toFixed(1)}M`;
@@ -41,20 +42,16 @@ export default function UsageChart({ period = "7d" }) {
 
   return (
     <Card className="flex min-w-0 flex-col gap-3 p-3 sm:p-4">
-      <div className="grid w-full grid-cols-2 items-center gap-1 rounded-lg border border-border bg-bg-subtle p-1 sm:w-auto sm:self-start">
-        <button
-          onClick={() => setViewMode("tokens")}
-          className={`px-3 py-1 rounded-md text-sm font-medium transition-colors ${viewMode === "tokens" ? "bg-primary text-pitch-black shadow-sm" : "text-text-muted hover:text-text hover:bg-bg-hover"}`}
-        >
-          Tokens
-        </button>
-        <button
-          onClick={() => setViewMode("cost")}
-          className={`px-3 py-1 rounded-md text-sm font-medium transition-colors ${viewMode === "cost" ? "bg-primary text-pitch-black shadow-sm" : "text-text-muted hover:text-text hover:bg-bg-hover"}`}
-        >
-          Cost
-        </button>
-      </div>
+      <SegmentedControl
+        options={[
+          { value: "tokens", label: "Tokens" },
+          { value: "cost", label: "Cost" },
+        ]}
+        value={viewMode}
+        onChange={setViewMode}
+        size="sm"
+        className="w-full sm:w-auto sm:self-start"
+      />
 
       {loading ? (
         <div className="h-48 flex items-center justify-center text-text-muted text-sm">Loading...</div>
