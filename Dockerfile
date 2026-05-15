@@ -1,15 +1,19 @@
 # syntax=docker/dockerfile:1.7
-ARG BUN_IMAGE=oven/bun:1.3.14-alpine
-FROM ${BUN_IMAGE} AS builder
+ARG NODE_IMAGE=node:22-alpine
+FROM ${NODE_IMAGE} AS builder
 WORKDIR /app
+
+RUN apk --no-cache add curl unzip && \
+  curl -fsSL https://bun.sh/install | BUN_INSTALL=/usr/local sh -s "bun-v1.3.14" && \
+  bun --version
 
 COPY package.json bun.lock ./
 RUN --mount=type=cache,target=/root/.bun/install/cache \
-  /usr/local/bin/bun install --frozen-lockfile
+  bun install --frozen-lockfile
 
 COPY . ./
 ENV NEXT_TELEMETRY_DISABLED=1
-RUN /usr/local/bin/bun run build
+RUN bun run build
 
 FROM oven/bun:1.3.14-alpine AS runner
 WORKDIR /app
