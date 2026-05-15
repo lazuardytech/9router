@@ -199,8 +199,6 @@ function importConfigDb(db, data) {
     }
   }
 
-  // Removed MITM import block
-
   if (Array.isArray(data.customModels)) {
     const stmt = db.prepare("INSERT OR IGNORE INTO custom_models (provider_alias, id, type, name) VALUES (?, ?, ?, ?)");
     for (const m of data.customModels) {

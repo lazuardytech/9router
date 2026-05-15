@@ -23,8 +23,6 @@ import {
   NETWORK_CHECK_INTERVAL_MS,
 } from "@/lib/tunnel/tunnelConfig";
 
-// Removed MITM bootstrap block
-
 process.setMaxListeners(20);
 
 // Survive Next.js hot reload

@@ -353,7 +353,7 @@ async function getAntigravityUsage(accessToken, providerSpecificData, proxyOptio
             "Content-Type": "application/json",
             "X-Client-Name": "antigravity",
             "X-Client-Version": "1.107.0",
-            "x-request-source": "local", // MITM bypass
+            "x-request-source": "local",
           },
           body: JSON.stringify({
             ...(projectId ? { project: projectId } : {}),
@@ -468,7 +468,7 @@ async function getAntigravitySubscriptionInfo(accessToken, proxyOptions = null) 
           Authorization: `Bearer ${accessToken}`,
           "User-Agent": ANTIGRAVITY_CONFIG.userAgent,
           "Content-Type": "application/json",
-          "x-request-source": "local", // MITM bypass
+          "x-request-source": "local",
         },
         body: JSON.stringify({ metadata: CLIENT_METADATA, mode: 1 }),
         signal: controller.signal,

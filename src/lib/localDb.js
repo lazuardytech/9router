@@ -6,7 +6,6 @@ import { Low } from "lowdb";
 import { v4 as uuidv4 } from "uuid";
 import { getDatabase } from "./sqlite/connection.js";
 
-const DEFAULT_MITM_ROUTER_BASE = "http://localhost:20128";
 const isCloud = typeof caches !== "undefined" || typeof caches === "object";
 
 const DEFAULT_SETTINGS = {
@@ -847,31 +846,6 @@ export async function deleteCustomModel({ providerAlias, id, type = "llm" }) {
   db()
     .prepare("DELETE FROM custom_models WHERE provider_alias = ? AND id = ? AND type = ?")
     .run(providerAlias, id, type);
-}
-
-// ===== MITM Aliases ======================================================
-
-export async function getMitmAlias(toolName) {
-  if (isCloud) {
-    const d = await getCloudDb();
-    return toolName ? all[toolName] || {} : all;
-  }
-  if (toolName) {
-    return r ? parseExtras(r.data) || {} : {};
-  }
-  const out = {};
-  for (const r of rows) out[r.tool] = parseExtras(r.data);
-  return out;
-}
-
-export async function setMitmAliasAll(toolName, mappings) {
-  if (isCloud) {
-    const d = await getCloudDb();
-    return;
-  }
-  db()
-    .prepare()
-    .run(toolName, JSON.stringify(mappings || {}));
 }
 
 // ===== Combos ============================================================
