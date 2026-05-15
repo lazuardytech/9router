@@ -231,7 +231,8 @@ export default function RequestDetailsTab() {
               Clear
             </span>
             <Button
-              variant="ghost"
+              variant="secondary"
+              icon="delete"
               onClick={handleClearFilters}
               disabled={!filters.provider && !filters.startDate && !filters.endDate}
               className="w-full"
