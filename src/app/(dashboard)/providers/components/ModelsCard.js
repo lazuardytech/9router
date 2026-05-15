@@ -22,13 +22,29 @@ export function ModelRow({
 }) {
   const borderColor =
     testStatus === "ok" ? "border-green-500/40" : testStatus === "error" ? "border-red-500/40" : "border-border";
-  const iconColor = testStatus === "ok" ? "#22c55e" : testStatus === "error" ? "#ef4444" : undefined;
+  const iconColor = isTesting
+    ? undefined
+    : testStatus === "ok"
+      ? "#22c55e"
+      : testStatus === "error"
+        ? "#ef4444"
+        : undefined;
 
   return (
-    <div className={`group px-3 py-2 rounded-lg border ${borderColor} hover:bg-sidebar/50`}>
+    <div
+      className={`group px-3 py-2 rounded-lg border ${
+        isTesting ? "animate-pulse border-border" : borderColor
+      } hover:bg-sidebar/50`}
+    >
       <div className="flex items-center gap-2">
         <span className="material-symbols-outlined text-base" style={iconColor ? { color: iconColor } : undefined}>
-          {testStatus === "ok" ? "check_circle" : testStatus === "error" ? "cancel" : "smart_toy"}
+          {isTesting
+            ? "smart_toy"
+            : testStatus === "ok"
+              ? "check_circle"
+              : testStatus === "error"
+                ? "cancel"
+                : "smart_toy"}
         </span>
         <div className="flex flex-col gap-1">
           <code className="text-xs text-text-muted font-mono bg-sidebar px-1.5 py-0.5 rounded">{fullModel}</code>
@@ -39,7 +55,7 @@ export function ModelRow({
             <button
               onClick={onTest}
               disabled={isTesting}
-              className={`p-0.5 hover:bg-sidebar rounded text-text-muted hover:text-primary transition-opacity ${isTesting ? "opacity-100" : "opacity-0 group-hover:opacity-100"}`}
+              className="p-0.5 hover:bg-sidebar rounded text-text-muted hover:text-primary"
             >
               <span
                 className="material-symbols-outlined text-sm"
@@ -72,7 +88,7 @@ export function ModelRow({
         {isCustom && (
           <button
             onClick={onDeleteAlias}
-            className="p-0.5 hover:bg-red-500/10 rounded text-text-muted hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity ml-auto"
+            className="p-0.5 hover:bg-red-500/10 rounded text-text-muted hover:text-red-500 ml-auto"
             title="Remove custom model"
           >
             <span className="material-symbols-outlined text-sm">close</span>
@@ -147,7 +163,7 @@ export default function ModelsCard({ providerId, kindFilter, providerAliasOverri
   const [modelAliases, setModelAliases] = useState({});
   const [customModels, setCustomModels] = useState([]);
   const [modelTestResults, setModelTestResults] = useState({});
-  const [testingModelId, setTestingModelId] = useState(null);
+  const [testingModelIds, setTestingModelIds] = useState(new Set());
   const [testError, setTestError] = useState("");
   const [showAddCustomModel, setShowAddCustomModel] = useState(false);
   const [connections, setConnections] = useState([]);
@@ -230,8 +246,7 @@ export default function ModelsCard({ providerId, kindFilter, providerAliasOverri
   };
 
   const handleTestModel = async (modelId) => {
-    if (testingModelId) return;
-    setTestingModelId(modelId);
+    setTestingModelIds((prev) => new Set([...prev, modelId]));
     try {
       const res = await fetch("/api/models/test", {
         method: "POST",
@@ -245,7 +260,11 @@ export default function ModelsCard({ providerId, kindFilter, providerAliasOverri
       setModelTestResults((prev) => ({ ...prev, [modelId]: "error" }));
       setTestError("Network error");
     } finally {
-      setTestingModelId(null);
+      setTestingModelIds((prev) => {
+        const next = new Set(prev);
+        next.delete(modelId);
+        return next;
+      });
     }
   };
 
@@ -292,7 +311,7 @@ export default function ModelsCard({ providerId, kindFilter, providerAliasOverri
                 onDeleteAlias={() => handleDeleteAlias(existingAlias)}
                 testStatus={modelTestResults[model.id]}
                 onTest={connections.length > 0 ? () => handleTestModel(model.id) : undefined}
-                isTesting={testingModelId === model.id}
+                isTesting={testingModelIds.has(model.id)}
                 isFree={model.isFree}
               />
             );
@@ -309,7 +328,7 @@ export default function ModelsCard({ providerId, kindFilter, providerAliasOverri
               onDeleteAlias={() => handleDeleteCustomModel(model.id)}
               testStatus={modelTestResults[model.id]}
               onTest={connections.length > 0 ? () => handleTestModel(model.id) : undefined}
-              isTesting={testingModelId === model.id}
+              isTesting={testingModelIds.has(model.id)}
               isCustom
             />
           ))}

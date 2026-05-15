@@ -268,7 +268,7 @@ export default function ProvidersPage() {
         {compatibleProviders.length === 0 && anthropicCompatibleProviders.length === 0 ? (
           <div className="mt-2 flex items-center justify-center gap-2 py-2 border border-dashed border-border rounded-xl text-text-muted text-sm">
             <span className="material-symbols-outlined text-[18px]">extension</span>
-            <span>No custom providers — use buttons above to add OpenAI/Anthropic compatible endpoints</span>
+            <span>No custom providers available</span>
           </div>
         ) : (
           <div className="mt-2 grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3 xl:grid-cols-4">
@@ -512,12 +512,7 @@ function ProviderCard({ providerId, provider, stats, authType, onToggle }) {
       >
         <div className="flex min-w-0 items-center justify-between gap-3">
           <div className="flex min-w-0 items-center gap-3">
-            <div
-              className="size-8 shrink-0 rounded-lg flex items-center justify-center"
-              style={{
-                backgroundColor: `${provider.color?.length > 7 ? provider.color : provider.color + "15"}`,
-              }}
-            >
+            <div className="size-8 shrink-0 rounded-lg flex items-center justify-center bg-white">
               <ProviderIcon
                 src={`/providers/${provider.id}.png`}
                 alt={provider.name}
@@ -625,12 +620,7 @@ function ApiKeyProviderCard({ providerId, provider, stats, authType, onToggle })
       >
         <div className="flex min-w-0 items-center justify-between gap-3">
           <div className="flex min-w-0 items-center gap-3">
-            <div
-              className="size-8 shrink-0 rounded-lg flex items-center justify-center"
-              style={{
-                backgroundColor: `${provider.color?.length > 7 ? provider.color : provider.color + "15"}`,
-              }}
-            >
+            <div className="size-8 shrink-0 rounded-lg flex items-center justify-center bg-white">
               <ProviderIcon
                 src={getIconPath()}
                 alt={provider.name}

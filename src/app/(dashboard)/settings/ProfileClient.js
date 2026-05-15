@@ -1,13 +1,58 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { Card, Button, Toggle, Input } from "@/shared/components";
+import { Button, Toggle, Input } from "@/shared/components";
 import { useTheme } from "@/shared/hooks/useTheme";
 import { cn } from "@/shared/utils/cn";
-import { APP_CONFIG } from "@/shared/constants/config";
+
+// ─── Section header ───────────────────────────────────────────────────────────
+function SectionHeader({ icon, title }) {
+  return (
+    <div className="flex items-center gap-2 mb-4">
+      <span className="material-symbols-outlined text-storm-cloud text-[16px]">{icon}</span>
+      <h3 className="text-[13px] font-[590] text-porcelain uppercase tracking-[0.05em]">{title}</h3>
+    </div>
+  );
+}
+
+// ─── Card wrapper ─────────────────────────────────────────────────────────────
+function Section({ children, className }) {
+  return <div className={cn("rounded-[6px] border border-charcoal-grey bg-graphite p-5", className)}>{children}</div>;
+}
+
+// ─── Row: label + description + right slot ────────────────────────────────────
+function SettingRow({ label, description, children, border = false }) {
+  return (
+    <div
+      className={cn(
+        "flex items-start sm:items-center justify-between gap-4",
+        border && "pt-4 border-t border-charcoal-grey",
+      )}
+    >
+      <div className="flex-1 min-w-0">
+        <p className="text-[13px] font-[510] text-porcelain">{label}</p>
+        {description && <p className="text-[12px] text-storm-cloud mt-0.5">{description}</p>}
+      </div>
+      {children}
+    </div>
+  );
+}
+
+// ─── Status message ───────────────────────────────────────────────────────────
+function StatusMsg({ status }) {
+  if (!status?.message) return null;
+  return (
+    <p className={cn("text-[12px]", status.type === "error" ? "text-warning-red" : "text-emerald")}>{status.message}</p>
+  );
+}
+
+// ─── Label for form fields ────────────────────────────────────────────────────
+function FieldLabel({ children }) {
+  return <label className="text-[13px] font-[510] text-porcelain">{children}</label>;
+}
 
 export default function ProfilePage() {
-  const { theme, setTheme, isDark } = useTheme();
+  const { theme, setTheme } = useTheme();
   const [settings, setSettings] = useState({ fallbackStrategy: "fill-first" });
   const [loading, setLoading] = useState(true);
   const [passwords, setPasswords] = useState({ current: "", new: "", confirm: "" });
@@ -60,7 +105,6 @@ export default function ProfilePage() {
     if (settings.outboundProxyEnabled !== true) return;
     setProxyLoading(true);
     setProxyStatus({ type: "", message: "" });
-
     try {
       const res = await fetch("/api/settings", {
         method: "PATCH",
@@ -70,7 +114,6 @@ export default function ProfilePage() {
           outboundNoProxy: proxyForm.outboundNoProxy,
         }),
       });
-
       const data = await res.json();
       if (res.ok) {
         setSettings((prev) => ({ ...prev, ...data }));
@@ -78,7 +121,7 @@ export default function ProfilePage() {
       } else {
         setProxyStatus({ type: "error", message: data.error || "Failed to update proxy settings" });
       }
-    } catch (err) {
+    } catch {
       setProxyStatus({ type: "error", message: "An error occurred" });
     } finally {
       setProxyLoading(false);
@@ -87,23 +130,19 @@ export default function ProfilePage() {
 
   const testOutboundProxy = async () => {
     if (settings.outboundProxyEnabled !== true) return;
-
     const proxyUrl = (proxyForm.outboundProxyUrl || "").trim();
     if (!proxyUrl) {
       setProxyStatus({ type: "error", message: "Please enter a Proxy URL to test" });
       return;
     }
-
     setProxyTestLoading(true);
     setProxyStatus({ type: "", message: "" });
-
     try {
       const res = await fetch("/api/settings/proxy-test", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ proxyUrl }),
       });
-
       const data = await res.json();
       if (res.ok && data?.ok) {
         setProxyStatus({
@@ -111,12 +150,9 @@ export default function ProfilePage() {
           message: `Proxy test OK (${data.status}) in ${data.elapsedMs}ms`,
         });
       } else {
-        setProxyStatus({
-          type: "error",
-          message: data?.error || "Proxy test failed",
-        });
+        setProxyStatus({ type: "error", message: data?.error || "Proxy test failed" });
       }
-    } catch (err) {
+    } catch {
       setProxyStatus({ type: "error", message: "An error occurred" });
     } finally {
       setProxyTestLoading(false);
@@ -126,14 +162,12 @@ export default function ProfilePage() {
   const updateOutboundProxyEnabled = async (outboundProxyEnabled) => {
     setProxyLoading(true);
     setProxyStatus({ type: "", message: "" });
-
     try {
       const res = await fetch("/api/settings", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ outboundProxyEnabled }),
       });
-
       const data = await res.json();
       if (res.ok) {
         setSettings((prev) => ({ ...prev, ...data }));
@@ -145,7 +179,7 @@ export default function ProfilePage() {
       } else {
         setProxyStatus({ type: "error", message: data.error || "Failed to update proxy settings" });
       }
-    } catch (err) {
+    } catch {
       setProxyStatus({ type: "error", message: "An error occurred" });
     } finally {
       setProxyLoading(false);
@@ -158,10 +192,8 @@ export default function ProfilePage() {
       setPassStatus({ type: "error", message: "Passwords do not match" });
       return;
     }
-
     setPassLoading(true);
     setPassStatus({ type: "", message: "" });
-
     try {
       const res = await fetch("/api/settings", {
         method: "PATCH",
@@ -171,16 +203,14 @@ export default function ProfilePage() {
           newPassword: passwords.new,
         }),
       });
-
       const data = await res.json();
-
       if (res.ok) {
         setPassStatus({ type: "success", message: "Password updated successfully" });
         setPasswords({ current: "", new: "", confirm: "" });
       } else {
         setPassStatus({ type: "error", message: data.error || "Failed to update password" });
       }
-    } catch (err) {
+    } catch {
       setPassStatus({ type: "error", message: "An error occurred" });
     } finally {
       setPassLoading(false);
@@ -194,9 +224,7 @@ export default function ProfilePage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ fallbackStrategy: strategy }),
       });
-      if (res.ok) {
-        setSettings((prev) => ({ ...prev, fallbackStrategy: strategy }));
-      }
+      if (res.ok) setSettings((prev) => ({ ...prev, fallbackStrategy: strategy }));
     } catch (err) {
       console.error("Failed to update settings:", err);
     }
@@ -209,9 +237,7 @@ export default function ProfilePage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ comboStrategy: strategy }),
       });
-      if (res.ok) {
-        setSettings((prev) => ({ ...prev, comboStrategy: strategy }));
-      }
+      if (res.ok) setSettings((prev) => ({ ...prev, comboStrategy: strategy }));
     } catch (err) {
       console.error("Failed to update combo strategy:", err);
     }
@@ -220,16 +246,13 @@ export default function ProfilePage() {
   const updateStickyLimit = async (limit) => {
     const numLimit = parseInt(limit);
     if (isNaN(numLimit) || numLimit < 1) return;
-
     try {
       const res = await fetch("/api/settings", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ stickyRoundRobinLimit: numLimit }),
       });
-      if (res.ok) {
-        setSettings((prev) => ({ ...prev, stickyRoundRobinLimit: numLimit }));
-      }
+      if (res.ok) setSettings((prev) => ({ ...prev, stickyRoundRobinLimit: numLimit }));
     } catch (err) {
       console.error("Failed to update sticky limit:", err);
     }
@@ -238,16 +261,13 @@ export default function ProfilePage() {
   const updateComboStickyLimit = async (limit) => {
     const numLimit = parseInt(limit);
     if (isNaN(numLimit) || numLimit < 1) return;
-
     try {
       const res = await fetch("/api/settings", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ comboStickyRoundRobinLimit: numLimit }),
       });
-      if (res.ok) {
-        setSettings((prev) => ({ ...prev, comboStickyRoundRobinLimit: numLimit }));
-      }
+      if (res.ok) setSettings((prev) => ({ ...prev, comboStickyRoundRobinLimit: numLimit }));
     } catch (err) {
       console.error("Failed to update combo sticky limit:", err);
     }
@@ -260,9 +280,7 @@ export default function ProfilePage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ requireLogin }),
       });
-      if (res.ok) {
-        setSettings((prev) => ({ ...prev, requireLogin }));
-      }
+      if (res.ok) setSettings((prev) => ({ ...prev, requireLogin }));
     } catch (err) {
       console.error("Failed to update require login:", err);
     }
@@ -275,9 +293,7 @@ export default function ProfilePage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ observabilityEnabled: enabled, enableObservability: enabled }),
       });
-      if (res.ok) {
-        setSettings((prev) => ({ ...prev, enableObservability: enabled }));
-      }
+      if (res.ok) setSettings((prev) => ({ ...prev, enableObservability: enabled }));
     } catch (err) {
       console.error("Failed to update enableObservability:", err);
     }
@@ -303,7 +319,6 @@ export default function ProfilePage() {
         const data = await res.json().catch(() => ({}));
         throw new Error(data.error || "Failed to export database");
       }
-
       const payload = await res.json();
       const content = JSON.stringify(payload, null, 2);
       const blob = new Blob([content], { type: "application/json" });
@@ -316,7 +331,6 @@ export default function ProfilePage() {
       anchor.click();
       document.body.removeChild(anchor);
       URL.revokeObjectURL(url);
-
       setDbStatus({ type: "success", message: "Database backup downloaded" });
     } catch (err) {
       setDbStatus({ type: "error", message: err.message || "Failed to export database" });
@@ -328,33 +342,24 @@ export default function ProfilePage() {
   const handleImportDatabase = async (event) => {
     const file = event.target.files?.[0];
     if (!file) return;
-
     setDbLoading(true);
     setDbStatus({ type: "", message: "" });
-
     try {
       const raw = await file.text();
       const payload = JSON.parse(raw);
-
       const res = await fetch("/api/settings/database", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
-
       const data = await res.json().catch(() => ({}));
-      if (!res.ok) {
-        throw new Error(data.error || "Failed to import database");
-      }
-
+      if (!res.ok) throw new Error(data.error || "Failed to import database");
       await reloadSettings();
       setDbStatus({ type: "success", message: "Database imported successfully" });
     } catch (err) {
       setDbStatus({ type: "error", message: err.message || "Invalid backup file" });
     } finally {
-      if (importFileRef.current) {
-        importFileRef.current.value = "";
-      }
+      if (importFileRef.current) importFileRef.current.value = "";
       setDbLoading(false);
     }
   };
@@ -373,7 +378,6 @@ export default function ProfilePage() {
       const res = await fetch("/api/settings/migrate-sqlite", { method: "POST" });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data.error || "Migration failed");
-
       const rows = data.imported ?? 0;
       const files =
         Array.isArray(data.files) && data.files.length
@@ -386,7 +390,6 @@ export default function ProfilePage() {
             ? `Imported ${rows} rows into SQLite${files}`
             : data.message || "No legacy JSON files found to migrate",
       });
-
       const info = await fetch("/api/settings/migrate-sqlite")
         .then((r) => r.json())
         .catch(() => null);
@@ -402,56 +405,240 @@ export default function ProfilePage() {
   const observabilityEnabled = settings.enableObservability === true;
 
   return (
-    <div className="max-w-2xl mx-auto px-4 sm:px-0">
-      <div className="flex flex-col gap-6">
-        {/* Local Mode Info */}
-        <Card>
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
-            <div className="flex items-center gap-3 sm:gap-4">
-              <div className="size-10 sm:size-12 rounded-lg bg-green-500/10 text-green-500 flex items-center justify-center shrink-0">
-                <span className="material-symbols-outlined text-xl sm:text-2xl">computer</span>
-              </div>
-              <div>
-                <h2 className="text-lg sm:text-xl font-semibold">Local Mode</h2>
-                <p className="text-sm text-text-muted">Running on your machine</p>
-              </div>
-            </div>
-            <div className="inline-flex p-1 rounded-lg bg-black/5 dark:bg-white/5 w-full sm:w-auto">
+    <div className="max-w-2xl mx-auto">
+      <div className="flex flex-col gap-5">
+        {/* ── Appearance ──────────────────────────────────────────────────── */}
+        <Section>
+          <SectionHeader icon="contrast" title="Appearance" />
+          <SettingRow label="Theme" description="Choose how the interface looks">
+            <div className="flex items-center gap-1 p-1 rounded-[6px] border border-charcoal-grey bg-pitch-black/60">
               {["light", "dark", "system"].map((option) => (
                 <button
                   key={option}
                   type="button"
                   onClick={() => setTheme(option)}
                   className={cn(
-                    "flex items-center justify-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1.5 rounded-md font-medium transition-all flex-1 sm:flex-initial",
-                    theme === option
-                      ? "bg-white dark:bg-white/10 text-text-main shadow-sm"
-                      : "text-text-muted hover:text-text-main",
+                    "flex items-center gap-1.5 px-2.5 py-1 rounded-[4px] text-[12px] font-[510] transition-colors duration-100 capitalize",
+                    theme === option ? "bg-deep-slate text-porcelain" : "text-fog-grey hover:text-storm-cloud",
                   )}
                 >
-                  <span className="material-symbols-outlined text-[18px]">
+                  <span className="material-symbols-outlined text-[14px]">
                     {option === "light" ? "light_mode" : option === "dark" ? "dark_mode" : "contrast"}
                   </span>
-                  <span className="capitalize text-xs sm:text-sm">{option}</span>
+                  {option}
                 </button>
               ))}
             </div>
+          </SettingRow>
+        </Section>
+
+        {/* ── Security ────────────────────────────────────────────────────── */}
+        <Section>
+          <SectionHeader icon="shield" title="Security" />
+          <div className="flex flex-col gap-4">
+            <SettingRow
+              label="Require login"
+              description="When ON, dashboard requires password. When OFF, access without login."
+            >
+              <Toggle
+                checked={settings.requireLogin === true}
+                onChange={() => updateRequireLogin(!settings.requireLogin)}
+                disabled={loading}
+              />
+            </SettingRow>
+
+            {settings.requireLogin === true && (
+              <form onSubmit={handlePasswordChange} className="flex flex-col gap-4 pt-4 border-t border-charcoal-grey">
+                {settings.hasPassword && (
+                  <div className="flex flex-col gap-1.5">
+                    <FieldLabel>Current Password</FieldLabel>
+                    <Input
+                      type="password"
+                      placeholder="Enter current password"
+                      value={passwords.current}
+                      onChange={(e) => setPasswords({ ...passwords, current: e.target.value })}
+                      required
+                    />
+                  </div>
+                )}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="flex flex-col gap-1.5">
+                    <FieldLabel>New Password</FieldLabel>
+                    <Input
+                      type="password"
+                      placeholder="Enter new password"
+                      value={passwords.new}
+                      onChange={(e) => setPasswords({ ...passwords, new: e.target.value })}
+                      required
+                    />
+                  </div>
+                  <div className="flex flex-col gap-1.5">
+                    <FieldLabel>Confirm New Password</FieldLabel>
+                    <Input
+                      type="password"
+                      placeholder="Confirm new password"
+                      value={passwords.confirm}
+                      onChange={(e) => setPasswords({ ...passwords, confirm: e.target.value })}
+                      required
+                    />
+                  </div>
+                </div>
+                <StatusMsg status={passStatus} />
+                <div>
+                  <Button type="submit" variant="primary" loading={passLoading}>
+                    {settings.hasPassword ? "Update Password" : "Set Password"}
+                  </Button>
+                </div>
+              </form>
+            )}
           </div>
-          <div className="flex flex-col gap-3 pt-4 border-t border-border">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-3 rounded-lg bg-bg border border-border gap-2">
-              <div>
-                <p className="font-medium">Database</p>
-                <p className="text-sm text-text-muted font-mono">SQLite (~/.9router/9router.sqlite)</p>
-              </div>
+        </Section>
+
+        {/* ── Routing Strategy ────────────────────────────────────────────── */}
+        <Section>
+          <SectionHeader icon="route" title="Routing Strategy" />
+          <div className="flex flex-col gap-4">
+            <SettingRow label="Round Robin" description="Cycle through accounts to distribute load">
+              <Toggle
+                checked={settings.fallbackStrategy === "round-robin"}
+                onChange={() =>
+                  updateFallbackStrategy(settings.fallbackStrategy === "round-robin" ? "fill-first" : "round-robin")
+                }
+                disabled={loading}
+              />
+            </SettingRow>
+
+            {settings.fallbackStrategy === "round-robin" && (
+              <SettingRow label="Sticky Limit" description="Calls per account before switching" border>
+                <Input
+                  type="number"
+                  min="1"
+                  max="10"
+                  value={settings.stickyRoundRobinLimit || 3}
+                  onChange={(e) => updateStickyLimit(e.target.value)}
+                  disabled={loading}
+                  className="w-16 text-center shrink-0"
+                />
+              </SettingRow>
+            )}
+
+            <SettingRow
+              label="Combo Round Robin"
+              description="Cycle through providers in combos instead of always starting with first"
+              border
+            >
+              <Toggle
+                checked={settings.comboStrategy === "round-robin"}
+                onChange={() =>
+                  updateComboStrategy(settings.comboStrategy === "round-robin" ? "fallback" : "round-robin")
+                }
+                disabled={loading}
+              />
+            </SettingRow>
+
+            {settings.comboStrategy === "round-robin" && (
+              <SettingRow label="Combo Sticky Limit" description="Calls per combo model before switching" border>
+                <Input
+                  type="number"
+                  min="1"
+                  max="100"
+                  value={settings.comboStickyRoundRobinLimit || 1}
+                  onChange={(e) => updateComboStickyLimit(e.target.value)}
+                  disabled={loading}
+                  className="w-16 text-center shrink-0"
+                />
+              </SettingRow>
+            )}
+
+            <p className="text-[12px] text-storm-cloud pt-3 border-t border-charcoal-grey">
+              {settings.fallbackStrategy === "round-robin"
+                ? `Distributing requests across all available accounts with ${settings.stickyRoundRobinLimit || 3} calls per account.`
+                : "Using accounts in priority order (Fill First)."}
+              {settings.comboStrategy === "round-robin"
+                ? ` Combos rotate after ${settings.comboStickyRoundRobinLimit || 1} call${(settings.comboStickyRoundRobinLimit || 1) === 1 ? "" : "s"} per model.`
+                : " Combos always start with their first model."}
+            </p>
+          </div>
+        </Section>
+
+        {/* ── Network ─────────────────────────────────────────────────────── */}
+        <Section>
+          <SectionHeader icon="wifi" title="Network" />
+          <div className="flex flex-col gap-4">
+            <SettingRow label="Outbound Proxy" description="Enable proxy for OAuth + provider outbound requests.">
+              <Toggle
+                checked={settings.outboundProxyEnabled === true}
+                onChange={() => updateOutboundProxyEnabled(!(settings.outboundProxyEnabled === true))}
+                disabled={loading || proxyLoading}
+              />
+            </SettingRow>
+
+            {settings.outboundProxyEnabled === true && (
+              <form onSubmit={updateOutboundProxy} className="flex flex-col gap-4 pt-4 border-t border-charcoal-grey">
+                <div className="flex flex-col gap-1.5">
+                  <FieldLabel>Proxy URL</FieldLabel>
+                  <Input
+                    placeholder="http://127.0.0.1:7897"
+                    value={proxyForm.outboundProxyUrl}
+                    onChange={(e) => setProxyForm((prev) => ({ ...prev, outboundProxyUrl: e.target.value }))}
+                    disabled={loading || proxyLoading}
+                  />
+                  <p className="text-[12px] text-storm-cloud">Leave empty to inherit existing env proxy (if any).</p>
+                </div>
+
+                <div className="flex flex-col gap-1.5 pt-4 border-t border-charcoal-grey">
+                  <FieldLabel>No Proxy</FieldLabel>
+                  <Input
+                    placeholder="localhost,127.0.0.1"
+                    value={proxyForm.outboundNoProxy}
+                    onChange={(e) => setProxyForm((prev) => ({ ...prev, outboundNoProxy: e.target.value }))}
+                    disabled={loading || proxyLoading}
+                  />
+                  <p className="text-[12px] text-storm-cloud">Comma-separated hostnames/domains to bypass the proxy.</p>
+                </div>
+
+                <div className="flex items-center gap-2 pt-4 border-t border-charcoal-grey">
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    loading={proxyTestLoading}
+                    disabled={loading || proxyLoading}
+                    onClick={testOutboundProxy}
+                  >
+                    Test proxy URL
+                  </Button>
+                  <Button type="submit" variant="primary" loading={proxyLoading}>
+                    Apply
+                  </Button>
+                </div>
+              </form>
+            )}
+
+            <StatusMsg status={proxyStatus} />
+          </div>
+        </Section>
+
+        {/* ── Observability ───────────────────────────────────────────────── */}
+        <Section>
+          <SectionHeader icon="monitoring" title="Observability" />
+          <SettingRow label="Enable Observability" description="Record request details for inspection in the logs view">
+            <Toggle checked={observabilityEnabled} onChange={updateObservabilityEnabled} disabled={loading} />
+          </SettingRow>
+        </Section>
+
+        {/* ── Data ────────────────────────────────────────────────────────── */}
+        <Section>
+          <SectionHeader icon="database" title="Data" />
+          <div className="flex flex-col gap-4">
+            {/* DB path */}
+            <div className="flex items-center gap-2 px-3 py-2 rounded-[4px] border border-charcoal-grey bg-pitch-black/40">
+              <span className="material-symbols-outlined text-storm-cloud text-[14px]">storage</span>
+              <code className="text-[12px] text-storm-cloud font-mono">~/.pod/pod.sqlite</code>
             </div>
-            <div className="flex flex-col sm:flex-row gap-2">
-              <Button
-                variant="secondary"
-                icon="download"
-                onClick={handleExportDatabase}
-                loading={dbLoading}
-                className="w-full sm:w-auto"
-              >
+
+            {/* Actions */}
+            <div className="flex flex-wrap gap-2">
+              <Button variant="secondary" icon="download" onClick={handleExportDatabase} loading={dbLoading}>
                 Download Backup
               </Button>
               <Button
@@ -459,7 +646,6 @@ export default function ProfilePage() {
                 icon="upload"
                 onClick={() => importFileRef.current?.click()}
                 disabled={dbLoading}
-                className="w-full sm:w-auto"
               >
                 Import Backup
               </Button>
@@ -474,7 +660,6 @@ export default function ProfilePage() {
                     ? `Found: ${legacyInfo.legacyFilesFound.join(", ")}`
                     : "No legacy JSON files detected"
                 }
-                className="w-full sm:w-auto"
               >
                 Migrate JSON → SQLite
               </Button>
@@ -486,307 +671,17 @@ export default function ProfilePage() {
                 onChange={handleImportDatabase}
               />
             </div>
+
             {legacyInfo.hasLegacyData && (
-              <p className="text-sm text-text-muted">
+              <p className="text-[12px] text-storm-cloud">
                 Legacy files detected: <span className="font-mono">{legacyInfo.legacyFilesFound.join(", ")}</span>
               </p>
             )}
-            {dbStatus.message && (
-              <p
-                className={`text-sm ${dbStatus.type === "error" ? "text-red-500" : "text-green-600 dark:text-green-400"}`}
-              >
-                {dbStatus.message}
-              </p>
-            )}
-            {migrateStatus.message && (
-              <p
-                className={`text-sm ${migrateStatus.type === "error" ? "text-red-500" : "text-green-600 dark:text-green-400"}`}
-              >
-                {migrateStatus.message}
-              </p>
-            )}
+
+            <StatusMsg status={dbStatus} />
+            <StatusMsg status={migrateStatus} />
           </div>
-        </Card>
-
-        {/* Security */}
-        <Card>
-          <div className="flex items-center gap-3 mb-4">
-            <div className="p-2 rounded-lg bg-primary/10 text-primary shrink-0">
-              <span className="material-symbols-outlined text-[20px]">shield</span>
-            </div>
-            <h3 className="text-base sm:text-lg font-semibold">Security</h3>
-          </div>
-          <div className="flex flex-col gap-4">
-            <div className="flex items-start sm:items-center justify-between gap-4">
-              <div className="flex-1 min-w-0">
-                <p className="font-medium text-sm sm:text-base">Require login</p>
-                <p className="text-xs sm:text-sm text-text-muted">
-                  When ON, dashboard requires password. When OFF, access without login.
-                </p>
-              </div>
-              <Toggle
-                checked={settings.requireLogin === true}
-                onChange={() => updateRequireLogin(!settings.requireLogin)}
-                disabled={loading}
-              />
-            </div>
-            {settings.requireLogin === true && (
-              <form onSubmit={handlePasswordChange} className="flex flex-col gap-4 pt-4 border-t border-border/50">
-                {settings.hasPassword && (
-                  <div className="flex flex-col gap-2">
-                    <label className="text-xs sm:text-sm font-medium">Current Password</label>
-                    <Input
-                      type="password"
-                      placeholder="Enter current password"
-                      value={passwords.current}
-                      onChange={(e) => setPasswords({ ...passwords, current: e.target.value })}
-                      required
-                    />
-                  </div>
-                )}
-                {/* {!settings.hasPassword && (
-                  <div className="p-3 rounded-lg bg-blue-500/10 border border-blue-500/20">
-                    <p className="text-sm text-blue-600 dark:text-blue-400">
-                      Setting password for the first time. Leave current password empty or use default: <code className="bg-blue-500/20 px-1 rounded">123456</code>
-                    </p>
-                  </div>
-                )} */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div className="flex flex-col gap-2">
-                    <label className="text-xs sm:text-sm font-medium">New Password</label>
-                    <Input
-                      type="password"
-                      placeholder="Enter new password"
-                      value={passwords.new}
-                      onChange={(e) => setPasswords({ ...passwords, new: e.target.value })}
-                      required
-                    />
-                  </div>
-                  <div className="flex flex-col gap-2">
-                    <label className="text-xs sm:text-sm font-medium">Confirm New Password</label>
-                    <Input
-                      type="password"
-                      placeholder="Confirm new password"
-                      value={passwords.confirm}
-                      onChange={(e) => setPasswords({ ...passwords, confirm: e.target.value })}
-                      required
-                    />
-                  </div>
-                </div>
-
-                {passStatus.message && (
-                  <p
-                    className={`text-xs sm:text-sm ${passStatus.type === "error" ? "text-red-500" : "text-green-500"}`}
-                  >
-                    {passStatus.message}
-                  </p>
-                )}
-
-                <div className="pt-2">
-                  <Button type="submit" variant="primary" loading={passLoading} className="w-full sm:w-auto">
-                    {settings.hasPassword ? "Update Password" : "Set Password"}
-                  </Button>
-                </div>
-              </form>
-            )}
-          </div>
-        </Card>
-
-        {/* Routing Preferences */}
-        <Card>
-          <div className="flex items-center gap-3 mb-4">
-            <div className="p-2 rounded-lg bg-blue-500/10 text-blue-500 shrink-0">
-              <span className="material-symbols-outlined text-[20px]">route</span>
-            </div>
-            <h3 className="text-base sm:text-lg font-semibold">Routing Strategy</h3>
-          </div>
-          <div className="flex flex-col gap-4">
-            <div className="flex items-start sm:items-center justify-between gap-4">
-              <div className="flex-1 min-w-0">
-                <p className="font-medium text-sm sm:text-base">Round Robin</p>
-                <p className="text-xs sm:text-sm text-text-muted">Cycle through accounts to distribute load</p>
-              </div>
-              <Toggle
-                checked={settings.fallbackStrategy === "round-robin"}
-                onChange={() =>
-                  updateFallbackStrategy(settings.fallbackStrategy === "round-robin" ? "fill-first" : "round-robin")
-                }
-                disabled={loading}
-              />
-            </div>
-
-            {/* Sticky Round Robin Limit */}
-            {settings.fallbackStrategy === "round-robin" && (
-              <div className="flex items-start sm:items-center justify-between gap-4 pt-2 border-t border-border/50">
-                <div className="flex-1 min-w-0">
-                  <p className="font-medium text-sm sm:text-base">Sticky Limit</p>
-                  <p className="text-xs sm:text-sm text-text-muted">Calls per account before switching</p>
-                </div>
-                <Input
-                  type="number"
-                  min="1"
-                  max="10"
-                  value={settings.stickyRoundRobinLimit || 3}
-                  onChange={(e) => updateStickyLimit(e.target.value)}
-                  disabled={loading}
-                  className="w-16 sm:w-20 text-center shrink-0"
-                />
-              </div>
-            )}
-
-            {/* Combo Round Robin */}
-            <div className="flex items-start sm:items-center justify-between gap-4 pt-4 border-t border-border/50">
-              <div className="flex-1 min-w-0">
-                <p className="font-medium text-sm sm:text-base">Combo Round Robin</p>
-                <p className="text-xs sm:text-sm text-text-muted">
-                  Cycle through providers in combos instead of always starting with first
-                </p>
-              </div>
-              <Toggle
-                checked={settings.comboStrategy === "round-robin"}
-                onChange={() =>
-                  updateComboStrategy(settings.comboStrategy === "round-robin" ? "fallback" : "round-robin")
-                }
-                disabled={loading}
-              />
-            </div>
-
-            {/* Combo Sticky Round Robin Limit */}
-            {settings.comboStrategy === "round-robin" && (
-              <div className="flex items-center justify-between pt-2 border-t border-border/50">
-                <div>
-                  <p className="font-medium">Combo Sticky Limit</p>
-                  <p className="text-sm text-text-muted">Calls per combo model before switching</p>
-                </div>
-                <Input
-                  type="number"
-                  min="1"
-                  max="100"
-                  value={settings.comboStickyRoundRobinLimit || 1}
-                  onChange={(e) => updateComboStickyLimit(e.target.value)}
-                  disabled={loading}
-                  className="w-20 text-center"
-                />
-              </div>
-            )}
-
-            <p className="text-xs text-text-muted italic pt-2 border-t border-border/50">
-              {settings.fallbackStrategy === "round-robin"
-                ? `Currently distributing requests across all available accounts with ${settings.stickyRoundRobinLimit || 3} calls per account.`
-                : "Currently using accounts in priority order (Fill First)."}
-              {settings.comboStrategy === "round-robin"
-                ? ` Combos rotate after ${settings.comboStickyRoundRobinLimit || 1} call${(settings.comboStickyRoundRobinLimit || 1) === 1 ? "" : "s"} per model.`
-                : " Combos always start with their first model."}
-            </p>
-          </div>
-        </Card>
-
-        {/* Network */}
-        <Card>
-          <div className="flex items-center gap-3 mb-4">
-            <div className="p-2 rounded-lg bg-purple-500/10 text-purple-500 shrink-0">
-              <span className="material-symbols-outlined text-[20px]">wifi</span>
-            </div>
-            <h3 className="text-base sm:text-lg font-semibold">Network</h3>
-          </div>
-
-          <div className="flex flex-col gap-4">
-            <div className="flex items-start sm:items-center justify-between gap-4">
-              <div className="flex-1 min-w-0">
-                <p className="font-medium text-sm sm:text-base">Outbound Proxy</p>
-                <p className="text-xs sm:text-sm text-text-muted">
-                  Enable proxy for OAuth + provider outbound requests.
-                </p>
-              </div>
-              <Toggle
-                checked={settings.outboundProxyEnabled === true}
-                onChange={() => updateOutboundProxyEnabled(!(settings.outboundProxyEnabled === true))}
-                disabled={loading || proxyLoading}
-              />
-            </div>
-
-            {settings.outboundProxyEnabled === true && (
-              <form onSubmit={updateOutboundProxy} className="flex flex-col gap-4 pt-2 border-t border-border/50">
-                <div className="flex flex-col gap-2">
-                  <label className="font-medium text-sm sm:text-base">Proxy URL</label>
-                  <Input
-                    placeholder="http://127.0.0.1:7897"
-                    value={proxyForm.outboundProxyUrl}
-                    onChange={(e) => setProxyForm((prev) => ({ ...prev, outboundProxyUrl: e.target.value }))}
-                    disabled={loading || proxyLoading}
-                  />
-                  <p className="text-xs sm:text-sm text-text-muted">
-                    Leave empty to inherit existing env proxy (if any).
-                  </p>
-                </div>
-
-                <div className="flex flex-col gap-2 pt-2 border-t border-border/50">
-                  <label className="font-medium text-sm sm:text-base">No Proxy</label>
-                  <Input
-                    placeholder="localhost,127.0.0.1"
-                    value={proxyForm.outboundNoProxy}
-                    onChange={(e) => setProxyForm((prev) => ({ ...prev, outboundNoProxy: e.target.value }))}
-                    disabled={loading || proxyLoading}
-                  />
-                  <p className="text-xs sm:text-sm text-text-muted">
-                    Comma-separated hostnames/domains to bypass the proxy.
-                  </p>
-                </div>
-
-                <div className="pt-2 border-t border-border/50 flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
-                  <Button
-                    type="button"
-                    variant="secondary"
-                    loading={proxyTestLoading}
-                    disabled={loading || proxyLoading}
-                    onClick={testOutboundProxy}
-                    className="w-full sm:w-auto"
-                  >
-                    Test proxy URL
-                  </Button>
-                  <Button type="submit" variant="primary" loading={proxyLoading} className="w-full sm:w-auto">
-                    Apply
-                  </Button>
-                </div>
-              </form>
-            )}
-
-            {proxyStatus.message && (
-              <p
-                className={`text-xs sm:text-sm ${proxyStatus.type === "error" ? "text-red-500" : "text-green-500"} pt-2 border-t border-border/50`}
-              >
-                {proxyStatus.message}
-              </p>
-            )}
-          </div>
-        </Card>
-
-        {/* Observability Settings */}
-        <Card>
-          <div className="flex items-center gap-3 mb-4">
-            <div className="p-2 rounded-lg bg-orange-500/10 text-orange-500 shrink-0">
-              <span className="material-symbols-outlined text-[20px]">monitoring</span>
-            </div>
-            <h3 className="text-base sm:text-lg font-semibold">Observability</h3>
-          </div>
-          <div className="flex items-start sm:items-center justify-between gap-4">
-            <div className="flex-1 min-w-0">
-              <p className="font-medium text-sm sm:text-base">Enable Observability</p>
-              <p className="text-xs sm:text-sm text-text-muted">
-                Record request details for inspection in the logs view
-              </p>
-            </div>
-            <Toggle checked={observabilityEnabled} onChange={updateObservabilityEnabled} disabled={loading} />
-          </div>
-        </Card>
-
-        {/* App Info */}
-        <div className="text-center text-xs sm:text-sm text-text-muted py-4">
-          <p>
-            {APP_CONFIG.name} v{APP_CONFIG.displayVersion}
-          </p>
-          <p className="mt-1">Local Mode - All data stored on your machine</p>
-        </div>
+        </Section>
       </div>
     </div>
   );

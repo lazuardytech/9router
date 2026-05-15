@@ -180,13 +180,15 @@ export default function Header({ onMenuClick, showMenuButton = true, sidebarColl
               ) : (
                 <div className="flex items-center gap-1.5">
                   {crumb.image && (
-                    <ProviderIcon
-                      src={crumb.image}
-                      alt={crumb.label}
-                      size={18}
-                      className="rounded-[3px]"
-                      fallbackText={crumb.label.slice(0, 2).toUpperCase()}
-                    />
+                    <div className="flex items-center justify-center size-[18px] rounded-[3px] bg-white shrink-0">
+                      <ProviderIcon
+                        src={crumb.image}
+                        alt={crumb.label}
+                        size={18}
+                        className="rounded-[3px]"
+                        fallbackText={crumb.label.slice(0, 2).toUpperCase()}
+                      />
+                    </div>
                   )}
                   <span className="text-[13px] font-[510] text-porcelain tracking-[-0.12px] truncate">
                     {crumb.label}

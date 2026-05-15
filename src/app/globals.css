@@ -114,9 +114,56 @@ button:disabled,
 }
 
 html {
-  color-scheme: dark;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+html.dark {
+  color-scheme: dark;
+}
+html:not(.dark) {
+  color-scheme: light;
+  --color-pitch-black: #ffffff;
+  --color-graphite: #f5f5f5;
+  --color-deep-slate: #ebebeb;
+  --color-charcoal-grey: #d4d4d4;
+  --color-muted-ash: #c0c0c0;
+  --color-gunmetal: #e8e8e8;
+  --color-porcelain: #111111;
+  --color-storm-cloud: #555555;
+  --color-fog-grey: #888888;
+  --color-bg: #ffffff;
+  --color-bg-alt: #f5f5f5;
+  --color-surface: #f5f5f5;
+  --color-surface-2: #ebebeb;
+  --color-surface-3: #d4d4d4;
+  --color-sidebar: #f5f5f5;
+  --color-border: #d4d4d4;
+  --color-border-subtle: #c0c0c0;
+  --color-text: #111111;
+  --color-text-main: #111111;
+  --color-text-muted: #555555;
+  --color-text-subtle: #888888;
+  --color-primary: #111111;
+  --color-primary-hover: #000000;
+  --color-primary-fg: #ffffff;
+  --shadow-sm: rgba(0, 0, 0, 0.1) 0px 2px 4px 0px;
+  --shadow-md: rgba(0, 0, 0, 0.05) 0px 0px 12px 0px inset;
+  --shadow-subtle: rgb(212, 212, 212) 0px 0px 0px 1px inset;
+  --shadow-elev: rgb(212, 212, 212) 0px 0px 0px 1px inset;
+  --shadow-xl: rgba(0, 0, 0, 0.15) 0px 4px 32px 0px;
+  --shadow-subtle-2: rgba(0, 0, 0, 0.08) 0px 0px 0px 1px;
+  --shadow-subtle-3:
+    rgba(0, 0, 0, 0.01) 0px 5px 2px 0px, rgba(0, 0, 0, 0.03) 0px 3px 2px 0px,
+    rgba(0, 0, 0, 0.05) 0px 1px 1px 0px, rgba(0, 0, 0, 0.06) 0px 0px 1px 0px;
+  --shadow-subtle-4: rgba(0, 0, 0, 0.08) 0px 0px 0px 2px;
+  --shadow-subtle-5: rgba(0, 0, 0, 0.15) 0px 0px 0px 1px;
+  --shadow-subtle-6:
+    rgba(0, 0, 0, 0.06) 0px 0px 0px 1px inset, rgba(0, 0, 0, 0.04) 0px 1px 0px 0px inset,
+    rgba(0, 0, 0, 0.12) 0px 0px 0px 1px, rgba(0, 0, 0, 0.06) 0px 4px 4px 0px;
+  --shadow-focus: rgba(17, 17, 17, 0.2) 0px 0px 0px 2px;
+  --shadow-soft: rgba(0, 0, 0, 0.1) 0px 2px 4px 0px;
+  --shadow-warm: rgba(0, 0, 0, 0.1) 0px 2px 4px 0px;
+  --shadow-elevated: rgba(0, 0, 0, 0.15) 0px 4px 32px 0px;
 }
 
 body {

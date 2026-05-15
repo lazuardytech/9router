@@ -76,12 +76,11 @@ export default function CompatibleModelsSection({
   const [newModel, setNewModel] = useState("");
   const [adding, setAdding] = useState(false);
   const [importing, setImporting] = useState(false);
-  const [testingModelId, setTestingModelId] = useState(null);
+  const [testingModelIds, setTestingModelIds] = useState(new Set());
   const [modelTestResults, setModelTestResults] = useState({});
 
   const handleTestModel = async (modelId) => {
-    if (testingModelId) return;
-    setTestingModelId(modelId);
+    setTestingModelIds((prev) => new Set([...prev, modelId]));
     try {
       const res = await fetch("/api/models/test", {
         method: "POST",
@@ -93,7 +92,11 @@ export default function CompatibleModelsSection({
     } catch {
       setModelTestResults((prev) => ({ ...prev, [modelId]: "error" }));
     } finally {
-      setTestingModelId(null);
+      setTestingModelIds((prev) => {
+        const next = new Set(prev);
+        next.delete(modelId);
+        return next;
+      });
     }
   };
 
@@ -225,7 +228,7 @@ export default function CompatibleModelsSection({
               onDeleteAlias={() => onDeleteAlias(alias)}
               onTest={connections.length > 0 ? () => handleTestModel(modelId) : undefined}
               testStatus={modelTestResults[modelId]}
-              isTesting={testingModelId === modelId}
+              isTesting={testingModelIds.has(modelId)}
             />
           ))}
         </div>

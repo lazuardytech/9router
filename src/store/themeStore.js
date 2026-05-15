@@ -43,8 +43,10 @@ function applyTheme(theme) {
 
   if (effectiveTheme === "dark") {
     root.classList.add("dark");
+    root.classList.remove("light");
   } else {
     root.classList.remove("dark");
+    root.classList.add("light");
   }
 }
 

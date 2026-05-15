@@ -14,19 +14,40 @@ export default function ModelRow({
   isTesting,
   onDisable,
 }) {
-  const borderColor =
-    testStatus === "ok" ? "border-green-500/40" : testStatus === "error" ? "border-red-500/40" : "border-border";
+  const borderColor = isTesting
+    ? "border-border"
+    : testStatus === "ok"
+      ? "border-green-500/40"
+      : testStatus === "error"
+        ? "border-red-500/40"
+        : "border-border";
 
-  const iconColor = testStatus === "ok" ? "#22c55e" : testStatus === "error" ? "#ef4444" : undefined;
+  const iconColor = isTesting
+    ? undefined
+    : testStatus === "ok"
+      ? "#22c55e"
+      : testStatus === "error"
+        ? "#ef4444"
+        : undefined;
 
   return (
-    <div className={`group min-w-0 max-w-full rounded-lg border px-3 py-2 ${borderColor} hover:bg-sidebar/50`}>
+    <div
+      className={`group min-w-0 max-w-full rounded-lg border px-3 py-2 ${
+        isTesting ? "animate-pulse " + borderColor : borderColor
+      } hover:bg-sidebar/50`}
+    >
       <div className="flex min-w-0 items-start gap-2 sm:items-center">
         <span
           className="material-symbols-outlined shrink-0 text-base"
           style={iconColor ? { color: iconColor } : undefined}
         >
-          {testStatus === "ok" ? "check_circle" : testStatus === "error" ? "cancel" : "smart_toy"}
+          {isTesting
+            ? "smart_toy"
+            : testStatus === "ok"
+              ? "check_circle"
+              : testStatus === "error"
+                ? "cancel"
+                : "smart_toy"}
         </span>
         <div className="flex min-w-0 flex-1 flex-col gap-1">
           <code className="max-w-[72vw] truncate rounded bg-sidebar px-1.5 py-0.5 font-mono text-xs text-text-muted sm:max-w-[360px]">
@@ -39,7 +60,7 @@ export default function ModelRow({
             <button
               onClick={onTest}
               disabled={isTesting}
-              className={`rounded p-0.5 text-text-muted transition-opacity hover:bg-sidebar hover:text-primary ${isTesting ? "opacity-100" : "opacity-100 sm:opacity-0 sm:group-hover:opacity-100"}`}
+              className="rounded p-0.5 text-text-muted hover:bg-sidebar hover:text-primary"
             >
               <span
                 className="material-symbols-outlined text-sm"
@@ -69,7 +90,7 @@ export default function ModelRow({
         {isCustom ? (
           <button
             onClick={onDeleteAlias}
-            className="ml-auto rounded p-0.5 text-text-muted opacity-100 transition-opacity hover:bg-red-500/10 hover:text-red-500 sm:opacity-0 sm:group-hover:opacity-100"
+            className="ml-auto rounded p-0.5 text-text-muted hover:bg-red-500/10 hover:text-red-500"
             title="Remove custom model"
           >
             <span className="material-symbols-outlined text-sm">close</span>
@@ -77,7 +98,7 @@ export default function ModelRow({
         ) : onDisable ? (
           <button
             onClick={onDisable}
-            className="ml-auto rounded p-0.5 text-text-muted opacity-100 transition-opacity hover:bg-red-500/10 hover:text-red-500 sm:opacity-0 sm:group-hover:opacity-100"
+            className="ml-auto rounded p-0.5 text-text-muted hover:bg-red-500/10 hover:text-red-500"
             title="Disable this model"
           >
             <span className="material-symbols-outlined text-sm">close</span>
