@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import { Button, Card, CardSkeleton, Input, Select, Toggle } from "@/shared/components";
+import { ConfirmModal } from "@/shared/components/Modal";
 
 const MEMORY_TYPE_OPTIONS = [
   { value: "factual", label: "Factual" },
