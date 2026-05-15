@@ -192,69 +192,72 @@ export default function RequestLogger({ sortBy, setSortBy, recording, setRecordi
   return (
     <div className="flex flex-col gap-3">
       {/* Filters */}
-      <div className="flex flex-wrap items-center gap-2">
-        {/* Stats */}
-        <div className="flex items-center gap-2 text-[11px] text-fog-grey mr-1">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        {/* Left: Search + filters */}
+        <div className="flex flex-wrap items-center gap-2">
+          {/* Search */}
+          <div className="relative flex-1 min-w-[180px] max-w-xs">
+            <span className="absolute left-2.5 top-1/2 -translate-y-1/2 material-symbols-outlined text-[14px] text-fog-grey">
+              search
+            </span>
+            <input
+              type="text"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search model, provider, account..."
+              className="w-full h-7 pl-9 pr-3 rounded-[6px] border border-charcoal-grey bg-deep-slate text-[12px] text-porcelain placeholder:text-fog-grey focus:outline-none focus:border-porcelain/30 transition-colors duration-100"
+            />
+          </div>
+
+          {/* Status pills */}
+          <div className="flex items-center gap-1">
+            {[
+              { key: "all", label: "All" },
+              { key: "ok", label: "Success" },
+              { key: "failed", label: "Failed" },
+              { key: "pending", label: "Pending" },
+              { key: "combo", label: "Combo" },
+            ].map((f) => (
+              <button
+                key={f.key}
+                onClick={() => setFilterStatus(f.key)}
+                className={cn(
+                  "h-6 px-2.5 rounded-[4px] text-[11px] font-[510] transition-colors duration-100",
+                  filterStatus === f.key
+                    ? "bg-porcelain/10 text-porcelain border border-porcelain/20"
+                    : "text-fog-grey hover:text-storm-cloud hover:bg-deep-slate border border-transparent",
+                )}
+              >
+                {f.label}
+              </button>
+            ))}
+          </div>
+
+          {/* Provider filter */}
+          {providers.length > 0 && (
+            <select
+              value={filterProvider}
+              onChange={(e) => setFilterProvider(e.target.value)}
+              className="h-7 px-2 rounded-[6px] border border-charcoal-grey bg-deep-slate text-[12px] text-porcelain focus:outline-none focus:border-porcelain/30 transition-colors duration-100"
+            >
+              <option value="all">All Providers</option>
+              {providers.map((p) => (
+                <option key={p} value={p}>
+                  {p}
+                </option>
+              ))}
+            </select>
+          )}
+        </div>
+
+        {/* Right: Stats */}
+        <div className="flex items-center gap-2 text-[11px] text-fog-grey shrink-0">
           <span className="text-storm-cloud">{counts.total}</span> total
           <span className="text-emerald">{counts.ok}</span> ok
           {counts.failed > 0 && <span className="text-warning-red">{counts.failed} failed</span>}
           {counts.pending > 0 && <span className="text-aether-blue animate-pulse">{counts.pending} pending</span>}
           {counts.combo > 0 && <span className="text-amethyst">{counts.combo} combo</span>}
         </div>
-        <div className="w-px h-4 bg-charcoal-grey" />
-        {/* Search */}
-        <div className="relative flex-1 min-w-[180px] max-w-xs">
-          <span className="absolute left-2.5 top-1/2 -translate-y-1/2 material-symbols-outlined text-[14px] text-fog-grey">
-            search
-          </span>
-          <input
-            type="text"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search model, provider, account..."
-            className="w-full h-7 pl-9 pr-3 rounded-[6px] border border-charcoal-grey bg-deep-slate text-[12px] text-porcelain placeholder:text-fog-grey focus:outline-none focus:border-porcelain/30 transition-colors duration-100"
-          />
-        </div>
-
-        {/* Status pills */}
-        <div className="flex items-center gap-1">
-          {[
-            { key: "all", label: "All" },
-            { key: "ok", label: "Success" },
-            { key: "failed", label: "Failed" },
-            { key: "pending", label: "Pending" },
-            { key: "combo", label: "Combo" },
-          ].map((f) => (
-            <button
-              key={f.key}
-              onClick={() => setFilterStatus(f.key)}
-              className={cn(
-                "h-6 px-2.5 rounded-[4px] text-[11px] font-[510] transition-colors duration-100",
-                filterStatus === f.key
-                  ? "bg-porcelain/10 text-porcelain border border-porcelain/20"
-                  : "text-fog-grey hover:text-storm-cloud hover:bg-deep-slate border border-transparent",
-              )}
-            >
-              {f.label}
-            </button>
-          ))}
-        </div>
-
-        {/* Provider filter */}
-        {providers.length > 0 && (
-          <select
-            value={filterProvider}
-            onChange={(e) => setFilterProvider(e.target.value)}
-            className="h-7 px-2 rounded-[6px] border border-charcoal-grey bg-deep-slate text-[12px] text-porcelain focus:outline-none focus:border-porcelain/30 transition-colors duration-100"
-          >
-            <option value="all">All Providers</option>
-            {providers.map((p) => (
-              <option key={p} value={p}>
-                {p}
-              </option>
-            ))}
-          </select>
-        )}
       </div>
 
       {/* Table */}
