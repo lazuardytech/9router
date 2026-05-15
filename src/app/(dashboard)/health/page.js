@@ -1,7 +1,7 @@
 import HealthClient from "./HealthClient";
 
 export const metadata = {
-  title: "Pod • Health",
+  title: "Pod ✦ Health",
 };
 
 export default function HealthPage() {
