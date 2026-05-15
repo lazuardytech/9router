@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import PropTypes from "prop-types";
+import { toast } from "sonner";
 import { Card, Button, Input, Modal, CardSkeleton, Toggle, SegmentedControl } from "@/shared/components";
 import { ConfirmModal } from "@/shared/components/Modal";
 import { useCopyToClipboard } from "@/shared/hooks/useCopyToClipboard";
@@ -61,6 +62,13 @@ export default function APIPageClient({ machineId }) {
   const [tsLoading, setTsLoading] = useState(false);
   const [tsProgress, setTsProgress] = useState("");
   const [tsStatus, setTsStatus] = useState(null);
+  const setTsError = (msg) => {
+    if (typeof msg === "string" && msg.includes("exited with code")) {
+      toast.error("Failed to start Tailscale");
+    } else {
+      setTsStatus({ type: "error", message: msg });
+    }
+  };
   const [tsInstalled, setTsInstalled] = useState(null); // null=checking, true/false
   const [tsInstalling, setTsInstalling] = useState(false);
   const [tsInstallLog, setTsInstallLog] = useState([]);
@@ -447,12 +455,12 @@ export default function APIPageClient({ machineId }) {
             setTsInstalling(false);
             return;
           } else if (event === "error") {
-            setTsStatus({ type: "error", message: data.error || "Install failed" });
+            setTsError(data.error || "Install failed");
           }
         }
       }
     } catch (e) {
-      setTsStatus({ type: "error", message: e.message });
+      setTsError(e.message);
     } finally {
       setTsInstalling(false);
     }
@@ -529,7 +537,7 @@ export default function APIPageClient({ machineId }) {
                 } else if (data2.funnelNotEnabled && data2.enableUrl) {
                   await pollFunnelEnable(data2.enableUrl, tab);
                 } else {
-                  setTsStatus({ type: "error", message: data2.error || "Failed to start funnel" });
+                  setTsError(data2.error || "Failed to start funnel");
                 }
                 return;
               }
@@ -549,10 +557,10 @@ export default function APIPageClient({ machineId }) {
       }
 
       if (tab) tab.close();
-      setTsStatus({ type: "error", message: data.error || "Failed to connect" });
+      setTsError(data.error || "Failed to connect");
     } catch (error) {
       if (tab) tab.close();
-      setTsStatus({ type: "error", message: error.message });
+      setTsError(error.message);
     } finally {
       setTsLoading(false);
       setTsConnecting(false);
@@ -584,7 +592,7 @@ export default function APIPageClient({ machineId }) {
         }
         if (data.funnelNotEnabled) continue;
         if (data.error) {
-          setTsStatus({ type: "error", message: data.error });
+          setTsError(data.error);
           return;
         }
       } catch {
@@ -606,10 +614,10 @@ export default function APIPageClient({ machineId }) {
         setShowDisableTsModal(false);
         setTsStatus({ type: "success", message: "Tailscale disabled" });
       } else {
-        setTsStatus({ type: "error", message: data.error || "Failed to disable Tailscale" });
+        setTsError(data.error || "Failed to disable Tailscale");
       }
     } catch (e) {
-      setTsStatus({ type: "error", message: e.message });
+      setTsError(e.message);
     } finally {
       setTsLoading(false);
     }
