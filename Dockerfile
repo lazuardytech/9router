@@ -1,16 +1,10 @@
 # syntax=docker/dockerfile:1.7
 ARG BUN_IMAGE=oven/bun:1.3.14-alpine
-ARG NODE_IMAGE=node:22-alpine
-FROM ${NODE_IMAGE} AS base
+FROM ${BUN_IMAGE} AS builder
 WORKDIR /app
-
-FROM base AS builder
-
-RUN apk --no-cache upgrade && apk --no-cache add python3 make g++ linux-headers
 
 COPY package.json bun.lock ./
 RUN --mount=type=cache,target=/root/.bun/install/cache \
-  npm install -g bun@1.3.14 && \
   bun install --frozen-lockfile
 
 COPY . ./
