@@ -10,7 +10,7 @@ import ProxyLogsTab from "./ProxyLogsTab";
 const TABS = [
   { key: "request-logs", label: "Request Logs", icon: "receipt_long" },
   { key: "proxy-logs", label: "Proxy Logs", icon: "lan" },
-  { key: "console", label: "Console", icon: "terminal" },
+  { key: "console", label: "Console Logs", icon: "terminal" },
 ];
 
 function LogsInner() {
@@ -28,11 +28,19 @@ function LogsInner() {
 
   return (
     <div className="flex flex-col gap-4">
-      {/* Page header: title left, tabs right */}
+      {/* Page header: active tab title left, tabs right */}
       <div className="flex items-center justify-between gap-3 flex-wrap">
-        <div className="flex items-center gap-2">
-          <span className="material-symbols-outlined text-storm-cloud text-[16px]">folder_open</span>
-          <h1 className="text-[14px] font-[510] text-porcelain tracking-[-0.13px]">Logs</h1>
+        <div className="flex items-center gap-1.5">
+          {TABS.find((t) => t.key === activeTab) && (
+            <>
+              <span className="material-symbols-outlined text-storm-cloud text-[16px]">
+                {TABS.find((t) => t.key === activeTab).icon}
+              </span>
+              <h1 className="text-[14px] font-[510] text-porcelain tracking-[-0.13px] mt-0.5">
+                {TABS.find((t) => t.key === activeTab).label}
+              </h1>
+            </>
+          )}
         </div>
 
         {/* Pill tabs */}

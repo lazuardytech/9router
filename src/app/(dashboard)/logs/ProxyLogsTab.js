@@ -43,6 +43,8 @@ export default function ProxyLogsTab() {
   const [testing, setTesting] = useState(null);
   const [testResults, setTestResults] = useState({});
   const [selectedPool, setSelectedPool] = useState(null);
+  const [sortBy, setSortBy] = useState("newest");
+  const [live, setLive] = useState(true);
 
   const fetchPools = useCallback(async () => {
     setLoading(true);
@@ -62,6 +64,12 @@ export default function ProxyLogsTab() {
   useEffect(() => {
     fetchPools();
   }, [fetchPools]);
+
+  useEffect(() => {
+    if (!live) return;
+    const t = setInterval(() => fetchPools(), 5000);
+    return () => clearInterval(t);
+  }, [live, fetchPools]);
 
   const handleTest = async (pool) => {
     setTesting(pool.id);
@@ -87,16 +95,38 @@ export default function ProxyLogsTab() {
       {/* Header */}
       <div className="flex items-center justify-between gap-3">
         <div className="flex items-center gap-2">
-          <h2 className="text-[14px] font-[510] text-porcelain tracking-[-0.13px]">Proxy Pools</h2>
           {!loading && <span className="text-[11px] text-fog-grey">{pools.length} configured</span>}
         </div>
-        <button
-          onClick={fetchPools}
-          className="flex items-center justify-center size-7 rounded-[4px] border border-charcoal-grey text-storm-cloud hover:bg-deep-slate hover:text-porcelain transition-colors duration-100"
-          title="Refresh"
-        >
-          <span className={cn("material-symbols-outlined text-[15px]", loading && "animate-spin")}>refresh</span>
-        </button>
+        <div className="flex items-center gap-2">
+          <select
+            value={sortBy}
+            onChange={(e) => setSortBy(e.target.value)}
+            className="h-7 px-2 rounded-[6px] border border-charcoal-grey bg-deep-slate text-[12px] text-porcelain focus:outline-none focus:border-porcelain/30 transition-colors duration-100"
+          >
+            <option value="newest">Newest first</option>
+            <option value="oldest">Oldest first</option>
+          </select>
+          <button
+            onClick={() => fetchPools()}
+            className="flex items-center justify-center size-7 rounded-[4px] border border-charcoal-grey text-storm-cloud hover:bg-deep-slate hover:text-porcelain transition-colors duration-100"
+            title="Refresh"
+          >
+            <span className={cn("material-symbols-outlined text-[15px]", loading && "animate-spin")}>refresh</span>
+          </button>
+          <button
+            onClick={() => setLive((v) => !v)}
+            title={live ? "Pause live" : "Resume live"}
+            className={cn(
+              "flex items-center gap-1.5 h-7 px-2.5 rounded-[4px] border text-[11px] font-[510] transition-colors duration-100",
+              live
+                ? "border-emerald/30 bg-emerald/8 text-emerald hover:bg-emerald/15"
+                : "border-charcoal-grey text-storm-cloud hover:bg-deep-slate hover:text-porcelain",
+            )}
+          >
+            <span className={cn("size-1.5 rounded-full", live ? "bg-emerald animate-pulse" : "bg-fog-grey")} />
+            {live ? "Live" : "Paused"}
+          </button>
+        </div>
       </div>
 
       {/* Info banner */}

@@ -74,6 +74,7 @@ function LogLine({ line, idx, onCopy, copied }) {
 export default function ConsoleLogClient() {
   const [logs, setLogs] = useState([]);
   const [connected, setConnected] = useState(false);
+  const [initialized, setInitialized] = useState(false);
   const [levelFilter, setLevelFilter] = useState("all");
   const [search, setSearch] = useState("");
   const [autoScroll, setAutoScroll] = useState(true);
@@ -101,6 +102,7 @@ export default function ConsoleLogClient() {
 
     es.onopen = () => {
       setConnected(true);
+      setInitialized(true);
       setLastUpdated(new Date());
     };
 
@@ -157,9 +159,14 @@ export default function ConsoleLogClient() {
       <div className="flex flex-wrap items-center gap-2 shrink-0">
         {/* Connection status */}
         <div className="flex items-center gap-1.5 text-[11px]">
-          <span className={cn("size-1.5 rounded-full", connected ? "bg-emerald animate-pulse" : "bg-warning-red")} />
-          <span className={connected ? "text-emerald" : "text-warning-red"}>
-            {connected ? "Connected" : "Disconnected"}
+          <span
+            className={cn(
+              "size-1.5 rounded-full",
+              connected ? "bg-emerald animate-pulse" : initialized ? "bg-warning-red" : "bg-[#f59e0b] animate-pulse",
+            )}
+          />
+          <span className={connected ? "text-emerald" : initialized ? "text-warning-red" : "text-[#f59e0b]"}>
+            {connected ? "Connected" : initialized ? "Disconnected" : "Connecting..."}
           </span>
         </div>
 

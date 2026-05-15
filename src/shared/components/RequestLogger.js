@@ -229,11 +229,11 @@ export default function RequestLogger() {
             className={cn(
               "flex items-center gap-1.5 h-7 px-2.5 rounded-[4px] border text-[11px] font-[510] transition-colors duration-100",
               recording
-                ? "border-warning-red/30 bg-warning-red/8 text-warning-red hover:bg-warning-red/15"
+                ? "border-emerald/30 bg-emerald/8 text-emerald hover:bg-emerald/15"
                 : "border-charcoal-grey text-storm-cloud hover:bg-deep-slate hover:text-porcelain",
             )}
           >
-            <span className={cn("size-1.5 rounded-full", recording ? "bg-warning-red animate-pulse" : "bg-fog-grey")} />
+            <span className={cn("size-1.5 rounded-full", recording ? "bg-emerald animate-pulse" : "bg-fog-grey")} />
             {recording ? "Live" : "Paused"}
           </button>
         </div>
@@ -251,7 +251,7 @@ export default function RequestLogger() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search model, provider, account..."
-            className="w-full h-7 pl-7 pr-3 rounded-[6px] border border-charcoal-grey bg-deep-slate text-[12px] text-porcelain placeholder:text-fog-grey focus:outline-none focus:border-porcelain/30 transition-colors duration-100"
+            className="w-full h-7 pl-9 pr-3 rounded-[6px] border border-charcoal-grey bg-deep-slate text-[12px] text-porcelain placeholder:text-fog-grey focus:outline-none focus:border-porcelain/30 transition-colors duration-100"
           />
         </div>
 
