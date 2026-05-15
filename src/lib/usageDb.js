@@ -481,7 +481,7 @@ export async function getRecentLogsStructured(limit = 300) {
     const db = getDatabase();
     const rows = db
       .prepare(
-        `SELECT id, timestamp, model, provider, account, prompt_tokens, completion_tokens, status, combo
+        `SELECT id, timestamp, model, provider, account, prompt_tokens, completion_tokens, status, combo, details_id
          FROM request_log ORDER BY id DESC LIMIT ?`,
       )
       .all(limit);
@@ -495,6 +495,7 @@ export async function getRecentLogsStructured(limit = 300) {
       completionTokens: r.completion_tokens ?? null,
       status: r.status || "",
       combo: r.combo || null,
+      detailsId: r.details_id || null,
     }));
   } catch {
     return [];

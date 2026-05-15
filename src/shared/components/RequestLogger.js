@@ -15,13 +15,6 @@ const fmtTokens = (n) => {
   return num.toLocaleString();
 };
 
-const fmtLatency = (ms) => {
-  if (ms == null) return "—";
-  if (ms >= 60000) return `${(ms / 60000).toFixed(1)}m`;
-  if (ms >= 1000) return `${(ms / 1000).toFixed(1)}s`;
-  return `${ms}ms`;
-};
-
 // ─── Badges ───────────────────────────────────────────────────────────────────
 
 function StatusBadge({ status }) {
@@ -78,24 +71,28 @@ export default function RequestLogger({
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [filterStatus, setFilterStatus] = useState("all");
+  const [connected, setConnected] = useState(false);
 
   // Detail drawer state
   const [selectedLog, setSelectedLog] = useState(null);
   const [detailData, setDetailData] = useState(null);
   const [detailLoading, setDetailLoading] = useState(false);
 
-  const prevSigRef = useRef("");
+  const esRef = useRef(null);
+  const recordingRef = useRef(recording);
 
+  // Keep recordingRef in sync
+  useEffect(() => {
+    recordingRef.current = recording;
+  }, [recording]);
+
+  // Fetch logs via REST (for manual refresh)
   const fetchLogs = useCallback(async (showLoading = false) => {
     if (showLoading) setLoading(true);
     try {
       const res = await fetch("/api/usage/request-logs?limit=300");
       if (!res.ok) return;
       const data = await res.json();
-      // Skip re-render if IDs haven't changed
-      const sig = JSON.stringify((data || []).slice(0, 20).map((l) => l.id));
-      if (sig === prevSigRef.current) return;
-      prevSigRef.current = sig;
       setLogs(Array.isArray(data) ? data : []);
     } catch {
     } finally {
@@ -103,21 +100,60 @@ export default function RequestLogger({
     }
   }, []);
 
-  useEffect(() => {
-    fetchLogs(true);
-  }, [fetchLogs]);
-
   // Expose fetchLogs to parent via refreshRef
   useEffect(() => {
     if (refreshRef) refreshRef.current = () => fetchLogs(false);
   }, [refreshRef, fetchLogs]);
-  useEffect(() => {
-    if (!recording) return;
-    const t = setInterval(() => fetchLogs(false), 3000);
-    return () => clearInterval(t);
-  }, [recording, fetchLogs]);
 
-  // Open detail drawer — fetch matched request_details
+  // SSE connection for live updates
+  useEffect(() => {
+    const connect = () => {
+      if (esRef.current) {
+        esRef.current.close();
+        esRef.current = null;
+      }
+
+      const es = new EventSource("/api/usage/request-logs/stream");
+      esRef.current = es;
+
+      es.onopen = () => {
+        setConnected(true);
+        setLoading(false);
+      };
+
+      es.onmessage = (e) => {
+        if (!recordingRef.current) return;
+        try {
+          const msg = JSON.parse(e.data);
+          if (msg.type === "init" || msg.type === "update") {
+            setLogs(Array.isArray(msg.logs) ? msg.logs : []);
+            if (loading) setLoading(false);
+          }
+        } catch {}
+      };
+
+      es.onerror = () => {
+        setConnected(false);
+        es.close();
+        esRef.current = null;
+        // Reconnect after 5s
+        setTimeout(() => {
+          if (esRef.current === null) connect();
+        }, 5000);
+      };
+    };
+
+    connect();
+
+    return () => {
+      if (esRef.current) {
+        esRef.current.close();
+        esRef.current = null;
+      }
+    };
+  }, []);
+
+  // Open detail drawer
   const openDetail = useCallback(async (log) => {
     setSelectedLog(log);
     setDetailData(null);
@@ -166,7 +202,6 @@ export default function RequestLogger({
       return true;
     });
 
-    // Sort
     result = [...result];
     switch (sortBy) {
       case "oldest":
@@ -184,7 +219,6 @@ export default function RequestLogger({
             (a.promptTokens ?? 0) + (a.completionTokens ?? 0) - ((b.promptTokens ?? 0) + (b.completionTokens ?? 0)),
         );
         break;
-      // newest is default (already ordered by id DESC from API)
     }
 
     return result;
@@ -209,7 +243,7 @@ export default function RequestLogger({
         <div className="flex flex-wrap items-center gap-2">
           {/* Search */}
           <div className="relative flex-1 min-w-[180px] max-w-xs">
-            <span className="absolute left-2.5 top-1/2 -translate-y-1/2 material-symbols-outlined text-[14px] text-fog-grey pr-2">
+            <span className="absolute left-2.5 top-1/2 -translate-y-1/2 material-symbols-outlined text-[14px] text-fog-grey">
               search
             </span>
             <input
@@ -246,8 +280,15 @@ export default function RequestLogger({
           </div>
         </div>
 
-        {/* Right: Stats */}
+        {/* Right: connection status + Stats */}
         <div className="flex items-center gap-2 text-[11px] text-fog-grey shrink-0">
+          <div className="flex items-center gap-1.5">
+            <span className={cn("size-1.5 rounded-full", connected ? "bg-emerald animate-pulse" : "bg-warning-red")} />
+            <span className={connected ? "text-emerald" : "text-warning-red"}>
+              {connected ? "Connected" : "Disconnected"}
+            </span>
+          </div>
+          <div className="w-px h-3 bg-charcoal-grey" />
           <span className="text-storm-cloud">{counts.total}</span> total
           <span className="text-emerald">{counts.ok}</span> ok
           {counts.failed > 0 && <span className="text-warning-red">{counts.failed} failed</span>}
@@ -359,7 +400,7 @@ export default function RequestLogger({
       </div>
 
       <p className="text-[10px] text-fog-grey italic">
-        Showing {filtered.length} of {counts.total} logs · Polling every 3s when live
+        Showing {filtered.length} of {counts.total} logs · Live via SSE
       </p>
 
       {/* Detail Drawer */}
