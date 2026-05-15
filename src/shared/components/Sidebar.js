@@ -232,7 +232,7 @@ export default function Sidebar({ onClose, collapsed = false, onToggleCollapse }
                 <img src="/logo.svg" alt="Pod" className="size-7 dark:invert" />
               </div>
               <div className="flex flex-col min-w-0">
-                <span className="text-[17px] font-[590] text-porcelain tracking-[-0.2px] leading-none truncate">
+                <span className="text-xl font-[590] text-porcelain tracking-[-0.2px] leading-none truncate">
                   {APP_CONFIG.name}
                 </span>
               </div>
