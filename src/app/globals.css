@@ -423,11 +423,11 @@ body {
 .react-flow__controls-button {
   border-radius: 0 !important;
   border-bottom: 1px solid var(--color-border) !important;
-  background: var(--color-graphite) !important;
+  background: #e5e5e6 !important;
 }
 .react-flow__controls-button:last-child {
   border-bottom: none !important;
 }
 .react-flow__controls-button:hover {
-  background: var(--color-deep-slate) !important;
+  background: #ffffff !important;
 }
