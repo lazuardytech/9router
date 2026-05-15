@@ -77,29 +77,37 @@ export async function GET() {
     ttlMs: cfg.semanticCacheTTL ?? 1800000,
   };
 
-  // ── Provider Health (per connection) ──────────────────────────────────────
+  // ── Provider Health (grouped by provider, worst state wins) ────────────────
   const now = Date.now();
-  const providerHealth = conns.map((c) => {
+  const providerHealthMap = {};
+  for (const c of conns) {
     const isRateLimited = c.rateLimitedUntil && new Date(c.rateLimitedUntil).getTime() > now;
     const retryAfterMs = isRateLimited ? new Date(c.rateLimitedUntil).getTime() - now : 0;
     let state = "CLOSED";
     if (isRateLimited) state = "OPEN";
     else if (c.testStatus === "error") state = "HALF_OPEN";
     const providerInfo = AI_PROVIDERS[c.provider];
-    return {
-      connectionId: c.id,
-      connectionName: c.name || c.provider,
-      provider: c.provider,
-      providerName: providerInfo?.name || c.provider,
-      state,
-      testStatus: c.testStatus,
-      lastError: c.lastError || null,
-      lastErrorAt: c.lastErrorAt || null,
-      rateLimitedUntil: c.rateLimitedUntil || null,
-      retryAfterMs,
-      isActive: c.isActive !== false,
-    };
-  });
+    const key = c.provider;
+    if (!providerHealthMap[key]) {
+      providerHealthMap[key] = {
+        provider: c.provider,
+        providerName: providerInfo?.name || c.provider,
+        state: "CLOSED",
+        retryAfterMs: 0,
+        rateLimitedUntil: null,
+        connectionCount: 0,
+      };
+    }
+    const entry = providerHealthMap[key];
+    entry.connectionCount += 1;
+    const stateRank = { OPEN: 2, HALF_OPEN: 1, CLOSED: 0 };
+    if (stateRank[state] > stateRank[entry.state]) {
+      entry.state = state;
+      entry.retryAfterMs = retryAfterMs;
+      entry.rateLimitedUntil = c.rateLimitedUntil || null;
+    }
+  }
+  const providerHealth = Object.values(providerHealthMap);
 
   // ── Rate Limit Status (grouped by provider) ───────────────────────────────
   const rateLimitByProvider = {};

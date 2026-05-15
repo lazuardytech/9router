@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import TelemetryCard from "./TelemetryCard";
+import ProviderIcon from "@/shared/components/ProviderIcon";
 
 function formatBytes(bytes = 0) {
   if (bytes < 1024) return `${bytes} B`;
@@ -340,7 +341,7 @@ export default function HealthPage() {
                     <p className="text-[10px] font-[590] text-warning-red uppercase tracking-[0.05em]">Issues</p>
                     {unhealthy.map((p) => (
                       <div
-                        key={p.connectionId}
+                        key={p.provider}
                         className={`rounded-[6px] p-3 border flex items-start gap-3 ${
                           p.state === "OPEN"
                             ? "bg-warning-red/5 border-warning-red/20"
@@ -354,8 +355,15 @@ export default function HealthPage() {
                         />
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2 flex-wrap">
-                            <span className="text-[13px] font-[510] text-porcelain">{p.connectionName}</span>
-                            <span className="text-[10px] text-fog-grey">{p.providerName}</span>
+                            <div className="w-4 h-4 shrink-0 rounded-[3px] bg-white flex items-center justify-center overflow-hidden">
+                              <ProviderIcon
+                                src={`/providers/${p.provider}.png`}
+                                alt={p.providerName}
+                                size={16}
+                                fallbackText={p.providerName?.slice(0, 2).toUpperCase()}
+                              />
+                            </div>
+                            <span className="text-[13px] font-[510] text-porcelain">{p.providerName}</span>
                             <span
                               className={`text-[10px] font-[590] px-1.5 py-0.5 rounded-[4px] ${
                                 p.state === "OPEN"
@@ -365,8 +373,10 @@ export default function HealthPage() {
                             >
                               {p.state === "OPEN" ? "Rate Limited" : "Error"}
                             </span>
+                            {p.connectionCount > 1 && (
+                              <span className="text-[10px] text-fog-grey">{p.connectionCount} accounts</span>
+                            )}
                           </div>
-                          {p.lastError && <p className="text-[11px] text-storm-cloud mt-0.5 truncate">{p.lastError}</p>}
                           {p.rateLimitedUntil && (
                             <p className="text-[11px] text-fog-grey mt-0.5">
                               Retry in {Math.max(0, Math.round(p.retryAfterMs / 1000))}s
@@ -387,12 +397,20 @@ export default function HealthPage() {
                     <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2">
                       {healthy.map((p) => (
                         <div
-                          key={p.connectionId}
+                          key={p.provider}
                           className="rounded-[6px] p-2.5 bg-emerald/5 border border-charcoal-grey flex items-center gap-2"
                         >
                           <span className="size-2 rounded-full bg-emerald shrink-0" />
-                          <span className="text-[12px] text-porcelain truncate" title={p.connectionName}>
-                            {p.connectionName}
+                          <div className="w-4 h-4 shrink-0 rounded-[3px] bg-white flex items-center justify-center overflow-hidden">
+                            <ProviderIcon
+                              src={`/providers/${p.provider}.png`}
+                              alt={p.providerName}
+                              size={16}
+                              fallbackText={p.providerName?.slice(0, 2).toUpperCase()}
+                            />
+                          </div>
+                          <span className="text-[12px] text-porcelain truncate" title={p.providerName}>
+                            {p.providerName}
                           </span>
                         </div>
                       ))}
