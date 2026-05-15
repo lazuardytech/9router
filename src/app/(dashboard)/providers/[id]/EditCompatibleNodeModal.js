@@ -79,6 +79,13 @@ export default function EditCompatibleNodeModal({ isOpen, node, onSave, onClose,
     <Modal isOpen={isOpen} title={`Edit ${isAnthropic ? "Anthropic" : "OpenAI"} Compatible`} onClose={onClose}>
       <div className="flex flex-col gap-4">
         <Input
+          label="Identifier"
+          value={node.id || ""}
+          readOnly
+          hint="Provider identifier (read-only after creation)."
+          inputClassName="font-mono text-[12px] opacity-70"
+        />
+        <Input
           label="Name"
           value={formData.name}
           onChange={(e) => setFormData({ ...formData, name: e.target.value })}

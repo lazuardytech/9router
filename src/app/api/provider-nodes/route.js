@@ -36,7 +36,7 @@ export async function GET() {
 export async function POST(request) {
   try {
     const body = await request.json();
-    const { name, prefix, apiType, baseUrl, type } = body;
+    const { name, prefix, apiType, baseUrl, type, identifier } = body;
 
     if (!name?.trim()) {
       return NextResponse.json({ error: "Name is required" }, { status: 400 });
@@ -55,7 +55,7 @@ export async function POST(request) {
       }
 
       const node = await createProviderNode({
-        id: `${OPENAI_COMPATIBLE_PREFIX}${apiType}-${generateId()}`,
+        id: identifier?.trim() ? identifier.trim() : `${OPENAI_COMPATIBLE_PREFIX}${apiType}-${generateId()}`,
         type: "openai-compatible",
         prefix: prefix.trim(),
         apiType,
@@ -73,7 +73,7 @@ export async function POST(request) {
       }
 
       const node = await createProviderNode({
-        id: `${CUSTOM_EMBEDDING_PREFIX}${generateId()}`,
+        id: identifier?.trim() ? identifier.trim() : `${CUSTOM_EMBEDDING_PREFIX}${generateId()}`,
         type: "custom-embedding",
         prefix: prefix.trim(),
         baseUrl: sanitizedBaseUrl,
@@ -91,7 +91,7 @@ export async function POST(request) {
       }
 
       const node = await createProviderNode({
-        id: `${ANTHROPIC_COMPATIBLE_PREFIX}${generateId()}`,
+        id: identifier?.trim() ? identifier.trim() : `${ANTHROPIC_COMPATIBLE_PREFIX}${generateId()}`,
         type: "anthropic-compatible",
         prefix: prefix.trim(),
         baseUrl: sanitizedBaseUrl,

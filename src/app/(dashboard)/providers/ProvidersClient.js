@@ -739,6 +739,7 @@ function AddOpenAICompatibleModal({ isOpen, onClose, onCreated }) {
     prefix: "",
     apiType: "chat",
     baseUrl: "https://api.openai.com/v1",
+    identifier: "",
   });
   const [submitting, setSubmitting] = useState(false);
   const [checkKey, setCheckKey] = useState("");
@@ -769,6 +770,7 @@ function AddOpenAICompatibleModal({ isOpen, onClose, onCreated }) {
           apiType: formData.apiType,
           baseUrl: formData.baseUrl,
           type: "openai-compatible",
+          identifier: formData.identifier,
         }),
       });
       const data = await res.json();
@@ -779,6 +781,7 @@ function AddOpenAICompatibleModal({ isOpen, onClose, onCreated }) {
           prefix: "",
           apiType: "chat",
           baseUrl: "https://api.openai.com/v1",
+          identifier: "",
         });
         setCheckKey("");
         setValidationResult(null);
@@ -864,6 +867,13 @@ function AddOpenAICompatibleModal({ isOpen, onClose, onCreated }) {
           hint="Use the base URL (ending in /v1) for your OpenAI-compatible API."
         />
         <Input
+          label="Identifier"
+          value={formData.identifier}
+          onChange={(e) => setFormData({ ...formData, identifier: e.target.value })}
+          placeholder="my-openai-prod"
+          hint="Optional. Custom ID for this provider. Auto-generated if left empty."
+        />
+        <Input
           label="API Key (for Check)"
           type="password"
           value={checkKey}
@@ -915,6 +925,7 @@ function AddAnthropicCompatibleModal({ isOpen, onClose, onCreated }) {
     name: "",
     prefix: "",
     baseUrl: "https://api.anthropic.com/v1",
+    identifier: "",
   });
   const [submitting, setSubmitting] = useState(false);
   const [checkKey, setCheckKey] = useState("");
@@ -942,6 +953,7 @@ function AddAnthropicCompatibleModal({ isOpen, onClose, onCreated }) {
           prefix: formData.prefix,
           baseUrl: formData.baseUrl,
           type: "anthropic-compatible",
+          identifier: formData.identifier,
         }),
       });
       const data = await res.json();
@@ -951,6 +963,7 @@ function AddAnthropicCompatibleModal({ isOpen, onClose, onCreated }) {
           name: "",
           prefix: "",
           baseUrl: "https://api.anthropic.com/v1",
+          identifier: "",
         });
         setCheckKey("");
         setValidationResult(null);
@@ -1028,6 +1041,13 @@ function AddAnthropicCompatibleModal({ isOpen, onClose, onCreated }) {
           onChange={(e) => setFormData({ ...formData, baseUrl: e.target.value })}
           placeholder="https://api.anthropic.com/v1"
           hint="Use the base URL (ending in /v1) for your Anthropic-compatible API. The system will append /messages."
+        />
+        <Input
+          label="Identifier"
+          value={formData.identifier}
+          onChange={(e) => setFormData({ ...formData, identifier: e.target.value })}
+          placeholder="my-anthropic-prod"
+          hint="Optional. Custom ID for this provider. Auto-generated if left empty."
         />
         <Input
           label="API Key (for Check)"
