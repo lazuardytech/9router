@@ -3,15 +3,13 @@ ARG BUN_IMAGE=oven/bun:1.3.14-alpine
 FROM ${BUN_IMAGE} AS builder
 WORKDIR /app
 
-ENV PATH="/root/.bun/bin:${PATH}"
-
 COPY package.json bun.lock ./
 RUN --mount=type=cache,target=/root/.bun/install/cache \
-  bun install --frozen-lockfile
+  /usr/local/bin/bun install --frozen-lockfile
 
 COPY . ./
 ENV NEXT_TELEMETRY_DISABLED=1
-RUN bun run build
+RUN /usr/local/bin/bun run build
 
 FROM oven/bun:1.3.14-alpine AS runner
 WORKDIR /app
