@@ -28,21 +28,27 @@ function Sparkline({ samples, field, fmt }) {
   const min = Math.min(...values);
   const max = Math.max(...values);
   const range = Math.max(1, max - min);
-  const W = 100;
+  const W = 200;
   const H = 40;
-  const PAD = 2;
+  const PAD = 0;
   const points = values
     .map((v, i) => {
       const x = PAD + (i / Math.max(1, values.length - 1)) * (W - PAD * 2);
-      const y = H - PAD - ((v - min) / range) * (H - PAD * 2);
+      const y = H - 1 - ((v - min) / range) * (H - 2);
       return `${x.toFixed(2)},${y.toFixed(2)}`;
     })
     .join(" ");
-  const areaPoints = `${PAD},${H - PAD} ${points} ${W - PAD},${H - PAD}`;
+  const areaPoints = `${PAD},${H} ${points} ${W - PAD},${H}`;
 
   return (
     <div className="relative">
-      <svg viewBox={`0 0 ${W} ${H}`} aria-hidden="true" className="h-10 w-full" onMouseLeave={() => setHovered(null)}>
+      <svg
+        viewBox={`0 0 ${W} ${H}`}
+        aria-hidden="true"
+        className="h-10 w-full block"
+        preserveAspectRatio="none"
+        onMouseLeave={() => setHovered(null)}
+      >
         <polygon points={areaPoints} fill="currentColor" fillOpacity="0.06" className="text-porcelain" />
         <polyline
           fill="none"
@@ -183,12 +189,12 @@ const TelemetryCard = forwardRef(function TelemetryCard(_, ref) {
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        <div className="rounded-[6px] border border-charcoal-grey bg-deep-slate p-3">
-          <p className="text-[10px] text-fog-grey mb-2">Memory RSS trend</p>
+        <div className="rounded-[6px] border border-charcoal-grey bg-deep-slate overflow-hidden">
+          <p className="text-[10px] text-fog-grey px-3 pt-3 pb-2">Memory RSS trend</p>
           <Sparkline samples={samples} field="memoryBytes" fmt={formatBytes} />
         </div>
-        <div className="rounded-[6px] border border-charcoal-grey bg-deep-slate p-3">
-          <p className="text-[10px] text-fog-grey mb-2">Heap used trend</p>
+        <div className="rounded-[6px] border border-charcoal-grey bg-deep-slate overflow-hidden">
+          <p className="text-[10px] text-fog-grey px-3 pt-3 pb-2">Heap used trend</p>
           <Sparkline samples={samples} field="heapUsed" fmt={formatBytes} />
         </div>
       </div>

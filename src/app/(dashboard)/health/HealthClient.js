@@ -198,7 +198,7 @@ export default function HealthPage() {
               <p
                 className={`text-[13px] font-[510] ${database.integrity === "ok" ? "text-emerald" : "text-warning-red"}`}
               >
-                {database.integrity}
+                {database.integrity?.toUpperCase()}
               </p>
             </div>
             <div className="rounded-[6px] border border-charcoal-grey bg-deep-slate p-3">
