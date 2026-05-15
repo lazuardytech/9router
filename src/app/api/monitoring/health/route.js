@@ -125,6 +125,42 @@ export async function GET() {
     });
   }
 
+  // ── Blocked Model Status (modelLock_* fields on connections) ──────────────
+  const MODEL_LOCK_PREFIX = "modelLock_";
+  const blockedByModel = {};
+  for (const c of conns) {
+    const providerInfo = AI_PROVIDERS[c.provider];
+    for (const [key, val] of Object.entries(c)) {
+      if (!key.startsWith(MODEL_LOCK_PREFIX) || !val) continue;
+      const expiry = new Date(val).getTime();
+      if (expiry <= now) continue;
+      const modelName = key.slice(MODEL_LOCK_PREFIX.length);
+      if (!blockedByModel[modelName]) {
+        blockedByModel[modelName] = {
+          model: modelName,
+          blockedCount: 0,
+          connections: [],
+          earliestUnblockAt: null,
+        };
+      }
+      blockedByModel[modelName].blockedCount += 1;
+      blockedByModel[modelName].connections.push({
+        connectionId: c.id,
+        connectionName: c.name || c.provider,
+        provider: c.provider,
+        providerName: providerInfo?.name || c.provider,
+        blockedUntil: val,
+        retryAfterMs: expiry - now,
+      });
+      if (
+        !blockedByModel[modelName].earliestUnblockAt ||
+        expiry < new Date(blockedByModel[modelName].earliestUnblockAt).getTime()
+      ) {
+        blockedByModel[modelName].earliestUnblockAt = val;
+      }
+    }
+  }
+
   const status = database.ok && database.integrity === "ok" ? "healthy" : "issues";
 
   return NextResponse.json({
@@ -137,5 +173,6 @@ export async function GET() {
     semanticCache,
     providerHealth,
     rateLimitStatus: Object.values(rateLimitByProvider),
+    blockedModelStatus: Object.values(blockedByModel),
   });
 }

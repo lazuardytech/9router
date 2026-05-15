@@ -437,6 +437,52 @@ export default function HealthPage() {
           </div>
         </div>
       )}
+
+      {/* Blocked Model Status */}
+      {data.blockedModelStatus?.length > 0 && (
+        <div className="rounded-[6px] border border-charcoal-grey bg-graphite p-5">
+          <SectionHeader icon="block" title="Blocked Model Status">
+            <span className="text-[11px] text-fog-grey">
+              {data.blockedModelStatus.length} model{data.blockedModelStatus.length !== 1 ? "s" : ""} blocked
+            </span>
+          </SectionHeader>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            {data.blockedModelStatus.map((bm) => (
+              <div key={bm.model} className="rounded-[6px] border border-warning-red/20 bg-warning-red/5 p-3">
+                <div className="flex items-center justify-between mb-2">
+                  <span
+                    className="text-[12px] font-[510] text-porcelain font-mono truncate max-w-[160px]"
+                    title={bm.model}
+                  >
+                    {bm.model === "__all" ? "(all models)" : bm.model}
+                  </span>
+                  <span className="text-[11px] font-[590] px-1.5 py-0.5 rounded-[4px] bg-warning-red/10 text-warning-red shrink-0">
+                    {bm.blockedCount} blocked
+                  </span>
+                </div>
+                <div className="space-y-1">
+                  {bm.connections.map((c) => (
+                    <div key={c.connectionId} className="flex items-center justify-between text-[11px]">
+                      <div className="flex flex-col min-w-0">
+                        <span className="text-storm-cloud truncate max-w-[140px]">{c.connectionName}</span>
+                        <span className="text-fog-grey/70 text-[10px]">{c.providerName}</span>
+                      </div>
+                      <span className="text-fog-grey shrink-0">
+                        unblocks in {Math.max(0, Math.round(c.retryAfterMs / 1000))}s
+                      </span>
+                    </div>
+                  ))}
+                </div>
+                {bm.earliestUnblockAt && (
+                  <p className="text-[10px] text-fog-grey mt-2 pt-2 border-t border-charcoal-grey">
+                    Earliest unblock: {new Date(bm.earliestUnblockAt).toLocaleTimeString()}
+                  </p>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
