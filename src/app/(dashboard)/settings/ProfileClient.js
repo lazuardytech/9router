@@ -456,20 +456,6 @@ export default function ProfilePage() {
               >
                 Import Backup
               </Button>
-              <Button
-                variant="outline"
-                icon="swap_horiz"
-                onClick={handleMigrateSqlite}
-                loading={migrateLoading}
-                disabled={!legacyInfo.hasLegacyData}
-                title={
-                  legacyInfo.hasLegacyData
-                    ? `Found: ${legacyInfo.legacyFilesFound.join(", ")}`
-                    : "No legacy JSON files detected"
-                }
-              >
-                Migrate JSON → SQLite
-              </Button>
               <input
                 ref={importFileRef}
                 type="file"

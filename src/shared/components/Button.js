@@ -6,9 +6,9 @@ const variants = {
   primary:
     "bg-porcelain hover:bg-white text-pitch-black font-[590] shadow-[var(--shadow-sm)] disabled:opacity-40 disabled:cursor-not-allowed btn-cta",
   secondary:
-    "bg-gunmetal hover:bg-charcoal-grey text-porcelain border border-charcoal-grey hover:border-muted-ash disabled:opacity-40 disabled:cursor-not-allowed",
+    "bg-gunmetal hover:bg-charcoal-grey text-porcelain border border-charcoal-grey hover:border-muted-ash disabled:opacity-40 disabled:cursor-not-allowed html:not(.dark):bg-[#e8e8e8] html:not(.dark):hover:bg-[#d4d4d4] html:not(.dark):text-[#111111] html:not(.dark):border-[#d4d4d4]",
   outline:
-    "border border-charcoal-grey text-light-steel hover:bg-deep-slate hover:border-muted-ash disabled:opacity-40 disabled:cursor-not-allowed",
+    "border border-charcoal-grey text-porcelain hover:bg-deep-slate hover:border-muted-ash disabled:opacity-40 disabled:cursor-not-allowed html:not(.dark):border-[#d4d4d4] html:not(.dark):text-[#111111] html:not(.dark):hover:bg-[#ebebeb]",
   ghost: "text-storm-cloud hover:bg-deep-slate hover:text-porcelain disabled:opacity-40 disabled:cursor-not-allowed",
   danger:
     "bg-warning-red hover:bg-[#d94f4f] text-porcelain shadow-[var(--shadow-sm)] disabled:opacity-40 disabled:cursor-not-allowed",
