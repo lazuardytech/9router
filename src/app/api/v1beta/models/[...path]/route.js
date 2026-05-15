@@ -1,5 +1,7 @@
 import { handleChat } from "@/sse/handlers/chat.js";
 import { initTranslators } from "open-sse/translator/index.js";
+import { getSettings, validateApiKey } from "@/lib/localDb";
+import { extractApiKey } from "@/sse/services/auth.js";
 
 let initialized = false;
 
@@ -42,6 +44,24 @@ export async function POST(request, { params }) {
   await ensureInitialized();
 
   try {
+    const settings = await getSettings();
+    if (settings.requireApiKey) {
+      const apiKey = extractApiKey(request);
+      if (!apiKey) {
+        return Response.json(
+          { error: { message: "Missing API key", code: 401 } },
+          { status: 401, headers: { "Access-Control-Allow-Origin": "*" } },
+        );
+      }
+      const valid = await validateApiKey(apiKey);
+      if (!valid) {
+        return Response.json(
+          { error: { message: "Invalid API key", code: 401 } },
+          { status: 401, headers: { "Access-Control-Allow-Origin": "*" } },
+        );
+      }
+    }
+
     const { path } = await params;
     // path = ["provider", "model:action"] or ["model:action"]
 

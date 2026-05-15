@@ -1,4 +1,6 @@
 import { buildModelsList } from "../route.js";
+import { getSettings, validateApiKey } from "@/lib/localDb";
+import { extractApiKey } from "@/sse/services/auth.js";
 
 // URL slug → service kind(s). `web` covers both webSearch and webFetch.
 const KIND_SLUG_MAP = {
@@ -24,8 +26,26 @@ export async function OPTIONS() {
  * GET /v1/models/{kind} - OpenAI-compatible models list filtered by capability.
  * Supported kinds: image, tts, stt, embedding, image-to-text, web.
  */
-export async function GET(_request, { params }) {
+export async function GET(request, { params }) {
   try {
+    const settings = await getSettings();
+    if (settings.requireApiKey) {
+      const apiKey = extractApiKey(request);
+      if (!apiKey) {
+        return Response.json(
+          { error: { message: "Missing API key", type: "authentication_error" } },
+          { status: 401, headers: { "Access-Control-Allow-Origin": "*" } },
+        );
+      }
+      const valid = await validateApiKey(apiKey);
+      if (!valid) {
+        return Response.json(
+          { error: { message: "Invalid API key", type: "authentication_error" } },
+          { status: 401, headers: { "Access-Control-Allow-Origin": "*" } },
+        );
+      }
+    }
+
     const { kind } = await params;
     const kindFilter = KIND_SLUG_MAP[kind];
 

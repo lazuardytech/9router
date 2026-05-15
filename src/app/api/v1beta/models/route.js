@@ -1,4 +1,6 @@
 import { PROVIDER_MODELS } from "@/shared/constants/models";
+import { getSettings, validateApiKey } from "@/lib/localDb";
+import { extractApiKey } from "@/sse/services/auth.js";
 
 /**
  * Handle CORS preflight
@@ -17,7 +19,25 @@ export async function OPTIONS() {
  * GET /v1beta/models - Gemini compatible models list
  * Returns models in Gemini API format
  */
-export async function GET() {
+export async function GET(request) {
+  const settings = await getSettings();
+  if (settings.requireApiKey) {
+    const apiKey = extractApiKey(request);
+    if (!apiKey) {
+      return Response.json(
+        { error: { message: "Missing API key", code: 401 } },
+        { status: 401, headers: { "Access-Control-Allow-Origin": "*" } },
+      );
+    }
+    const valid = await validateApiKey(apiKey);
+    if (!valid) {
+      return Response.json(
+        { error: { message: "Invalid API key", code: 401 } },
+        { status: 401, headers: { "Access-Control-Allow-Origin": "*" } },
+      );
+    }
+  }
+
   try {
     // Collect all models from all providers
     const models = [];

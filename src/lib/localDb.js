@@ -5,6 +5,7 @@
 import { Low } from "lowdb";
 import { v4 as uuidv4 } from "uuid";
 import { getDatabase } from "./sqlite/connection.js";
+import { timingSafeEqual } from "crypto";
 
 const isCloud = typeof caches !== "undefined" || typeof caches === "object";
 
@@ -1055,14 +1056,44 @@ export async function updateApiKey(id, data) {
   return merged;
 }
 
+/**
+ * Compare two strings in constant time to prevent timing attacks.
+ */
+function safeCompare(a, b) {
+  try {
+    const aBuf = Buffer.from(String(a));
+    const bBuf = Buffer.from(String(b));
+    if (aBuf.length !== bBuf.length) {
+      // Still run timingSafeEqual on equal-length buffers to avoid short-circuit,
+      // then return false so length difference doesn't leak via timing.
+      timingSafeEqual(aBuf, aBuf);
+      return false;
+    }
+    return timingSafeEqual(aBuf, bBuf);
+  } catch {
+    return false;
+  }
+}
+
 export async function validateApiKey(key) {
+  if (!key) return false;
   if (isCloud) {
     const d = await getCloudDb();
-    const found = (d.data.apiKeys || []).find((k) => k.key === key);
-    return !!(found && found.isActive !== false);
+    const activeKeys = (d.data.apiKeys || []).filter((k) => k.isActive !== false);
+    // Use safeCompare against every active key to avoid timing leaks
+    let found = false;
+    for (const k of activeKeys) {
+      if (safeCompare(k.key, key)) found = true;
+    }
+    return found;
   }
-  const r = db().prepare("SELECT 1 FROM api_keys WHERE key = ? AND is_active != 0").get(key);
-  return !!r;
+  // Fetch the stored key by a non-secret lookup (id/active), then compare in constant time
+  const r = db().prepare("SELECT key FROM api_keys WHERE is_active != 0").all();
+  let found = false;
+  for (const row of r) {
+    if (safeCompare(row.key, key)) found = true;
+  }
+  return found;
 }
 
 export async function getApiKeyByKey(key) {
