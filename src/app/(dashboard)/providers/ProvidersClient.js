@@ -17,6 +17,7 @@ import {
 import Link from "next/link";
 import { getErrorCode, getRelativeTime } from "@/shared/utils";
 import { useHeaderSearchStore } from "@/store/headerSearchStore";
+import { useHeaderActionStore } from "@/store/headerActionStore";
 import ModelAvailabilityBadge from "./components/ModelAvailabilityBadge";
 
 function getStatusDisplay(connected, error, errorCode) {
@@ -89,12 +90,25 @@ export default function ProvidersPage() {
   const searchQuery = useHeaderSearchStore((s) => s.query);
   const registerSearch = useHeaderSearchStore((s) => s.register);
   const unregisterSearch = useHeaderSearchStore((s) => s.unregister);
+  const registerAction = useHeaderActionStore((s) => s.register);
+  const unregisterAction = useHeaderActionStore((s) => s.unregister);
   const [showConnectedOnly, setShowConnectedOnly] = useState(false);
 
   useEffect(() => {
     registerSearch("Search providers...");
     return () => unregisterSearch();
   }, [registerSearch, unregisterSearch]);
+
+  useEffect(() => {
+    registerAction({
+      label: "Connected only",
+      icon: "wifi",
+      active: showConnectedOnly,
+      title: "Show connected providers only",
+      onClick: () => setShowConnectedOnly((v) => !v),
+    });
+    return () => unregisterAction();
+  }, [showConnectedOnly, registerAction, unregisterAction]);
 
   const matchSearch = (name) => !searchQuery.trim() || name.toLowerCase().includes(searchQuery.trim().toLowerCase());
   const matchConnected = (providerId, authType) => {
@@ -247,23 +261,6 @@ export default function ProvidersPage() {
 
   return (
     <div className="flex min-w-0 flex-col gap-6 px-1 sm:px-0">
-      {/* Toolbar */}
-      <div className="flex items-center gap-2">
-        <button
-          type="button"
-          onClick={() => setShowConnectedOnly((v) => !v)}
-          className={`flex items-center gap-1.5 h-7 px-2.5 rounded-[4px] border text-[11px] font-[510] transition-colors duration-100 ${
-            showConnectedOnly
-              ? "border-emerald/30 bg-emerald/8 text-emerald"
-              : "border-charcoal-grey text-fog-grey hover:bg-deep-slate hover:text-porcelain"
-          }`}
-          title="Show connected providers only"
-        >
-          <span className="material-symbols-outlined text-[13px]">wifi</span>
-          <span className="hidden sm:inline">Connected only</span>
-        </button>
-      </div>
-
       {!hasAnyResult && (
         <div className="text-center py-8 border border-dashed border-border rounded-xl">
           <span className="material-symbols-outlined text-[32px] text-text-muted mb-2">search_off</span>

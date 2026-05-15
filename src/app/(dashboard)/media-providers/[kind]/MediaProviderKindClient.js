@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import { Card, Badge, Button, AddCustomEmbeddingModal } from "@/shared/components";
 import ProviderIcon from "@/shared/components/ProviderIcon";
 import { MEDIA_PROVIDER_KINDS, AI_PROVIDERS, getProvidersByKind } from "@/shared/constants/providers";
+import { useHeaderActionStore } from "@/store/headerActionStore";
 
 // Kinds that support combos (currently disabled for image/tts — temporarily hidden).
 // webSearch/webFetch handled by /web page.
@@ -166,6 +167,19 @@ export default function MediaProviderKindPage() {
   const [combos, setCombos] = useState([]);
   const [showAddCustomEmbedding, setShowAddCustomEmbedding] = useState(false);
   const [showConnectedOnly, setShowConnectedOnly] = useState(false);
+  const registerAction = useHeaderActionStore((s) => s.register);
+  const unregisterAction = useHeaderActionStore((s) => s.unregister);
+
+  useEffect(() => {
+    registerAction({
+      label: "Connected only",
+      icon: "wifi",
+      active: showConnectedOnly,
+      title: "Show connected providers only",
+      onClick: () => setShowConnectedOnly((v) => !v),
+    });
+    return () => unregisterAction();
+  }, [showConnectedOnly, registerAction, unregisterAction]);
 
   // webSearch/webFetch listing pages are merged into /web
   useEffect(() => {
@@ -245,23 +259,6 @@ export default function MediaProviderKindPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      {/* Toolbar */}
-      <div className="flex items-center gap-2">
-        <button
-          type="button"
-          onClick={() => setShowConnectedOnly((v) => !v)}
-          className={`flex items-center gap-1.5 h-7 px-2.5 rounded-[4px] border text-[11px] font-[510] transition-colors duration-100 ${
-            showConnectedOnly
-              ? "border-emerald/30 bg-emerald/8 text-emerald"
-              : "border-charcoal-grey text-fog-grey hover:bg-deep-slate hover:text-porcelain"
-          }`}
-          title="Show connected providers only"
-        >
-          <span className="material-symbols-outlined text-[13px]">wifi</span>
-          <span className="hidden sm:inline">Connected only</span>
-        </button>
-      </div>
-
       {(isEmbedding || supportsCombo) && (
         <div className="flex items-center justify-end gap-2">
           {supportsCombo && (

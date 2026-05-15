@@ -7,6 +7,7 @@ import PropTypes from "prop-types";
 import ProviderIcon from "@/shared/components/ProviderIcon";
 import HeaderMenu from "@/shared/components/HeaderMenu";
 import { useHeaderSearchStore } from "@/store/headerSearchStore";
+import { useHeaderActionStore } from "@/store/headerActionStore";
 import { OAUTH_PROVIDERS, APIKEY_PROVIDERS } from "@/shared/constants/config";
 import { MEDIA_PROVIDER_KINDS, AI_PROVIDERS } from "@/shared/constants/providers";
 
@@ -211,12 +212,33 @@ export default function Header({ onMenuClick, showMenuButton = true, sidebarColl
         ) : null}
       </div>
 
-      {/* Right: search + menu */}
+      {/* Right: action + search + menu */}
       <div className="flex items-center gap-1 shrink-0">
+        <HeaderAction />
         <HeaderSearch />
         <HeaderMenu onLogout={handleLogout} />
       </div>
     </header>
+  );
+}
+
+function HeaderAction() {
+  const action = useHeaderActionStore((s) => s.action);
+  if (!action) return null;
+  return (
+    <button
+      type="button"
+      onClick={action.onClick}
+      title={action.title || action.label}
+      className={`flex items-center gap-1.5 h-7 px-2.5 rounded-[4px] border text-[11px] font-[510] transition-colors duration-100 ${
+        action.active
+          ? "border-emerald/30 bg-emerald/8 text-emerald"
+          : "border-charcoal-grey text-fog-grey hover:bg-deep-slate hover:text-porcelain"
+      }`}
+    >
+      {action.icon && <span className="material-symbols-outlined text-[13px]">{action.icon}</span>}
+      <span className="hidden sm:inline">{action.label}</span>
+    </button>
   );
 }
 
