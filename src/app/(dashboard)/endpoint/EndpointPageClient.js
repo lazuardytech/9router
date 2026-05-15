@@ -781,7 +781,7 @@ export default function APIPageClient({ machineId }) {
           {/* Cloudflare Tunnel */}
           <div className="flex items-center gap-2">
             <span
-              className={`text-sm font-mono py-0.5 shrink-0 min-w-[80px] text-start ${
+              className={`text-sm font-mono py-0.5 shrink-0 min-w-[90px] text-start ${
                 tunnelEnabled ? "bg-primary/10 text-primary" : ""
               }`}
             >
@@ -869,7 +869,7 @@ export default function APIPageClient({ machineId }) {
           {/* Tailscale */}
           <div className="flex items-center gap-2">
             <span
-              className={`text-sm font-mono py-0.5 shrink-0 min-w-[80px] text-start ${
+              className={`text-sm font-mono py-0.5 shrink-0 min-w-[90px] text-start ${
                 tsEnabled ? "bg-porcelain/10 text-porcelain" : ""
               }`}
             >
@@ -1578,7 +1578,7 @@ function EndpointRow({ label, url, copyId, copied, onCopy, badge, actions }) {
   return (
     <div className="flex items-center gap-2">
       <span
-        className={`text-sm font-mono py-0.5 shrink-0 min-w-[80px] text-start ${
+        className={`text-sm font-mono py-0.5 shrink-0 min-w-[90px] text-start ${
           badge === "CF" || badge === "TS" ? "bg-primary/10 text-primary" : ""
         }`}
       >
