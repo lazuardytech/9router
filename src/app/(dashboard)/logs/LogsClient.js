@@ -28,21 +28,8 @@ function LogsInner() {
 
   return (
     <div className="flex flex-col gap-4">
-      {/* Page header: active tab title left, tabs right */}
+      {/* Page header: tabs left, content right */}
       <div className="flex items-center justify-between gap-3 flex-wrap">
-        <div className="flex items-center gap-1.5">
-          {TABS.find((t) => t.key === activeTab) && (
-            <>
-              <span className="material-symbols-outlined text-storm-cloud text-[16px]">
-                {TABS.find((t) => t.key === activeTab).icon}
-              </span>
-              <h1 className="text-[14px] font-[510] text-porcelain tracking-[-0.13px] mt-0.5">
-                {TABS.find((t) => t.key === activeTab).label}
-              </h1>
-            </>
-          )}
-        </div>
-
         {/* Pill tabs */}
         <div className="flex items-center gap-1 p-1 rounded-[8px] bg-graphite border border-charcoal-grey">
           {TABS.map((tab) => (

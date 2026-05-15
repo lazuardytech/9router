@@ -190,18 +190,7 @@ export default function RequestLogger() {
   return (
     <div className="flex flex-col gap-3">
       {/* Header */}
-      <div className="flex items-center justify-between gap-3 flex-wrap">
-        <div className="flex items-center gap-3">
-          <h2 className="text-[14px] font-[510] text-porcelain tracking-[-0.13px]">Request Logs</h2>
-          <div className="flex items-center gap-2 text-[11px] text-fog-grey">
-            <span className="text-storm-cloud">{counts.total}</span> total
-            <span className="text-emerald">{counts.ok}</span> ok
-            {counts.failed > 0 && <span className="text-warning-red">{counts.failed} failed</span>}
-            {counts.pending > 0 && <span className="text-aether-blue animate-pulse">{counts.pending} pending</span>}
-            {counts.combo > 0 && <span className="text-amethyst">{counts.combo} combo</span>}
-          </div>
-        </div>
-
+      <div className="flex items-center justify-end gap-3 flex-wrap">
         <div className="flex items-center gap-2">
           {/* Sort */}
           <select
@@ -241,6 +230,15 @@ export default function RequestLogger() {
 
       {/* Filters */}
       <div className="flex flex-wrap items-center gap-2">
+        {/* Stats */}
+        <div className="flex items-center gap-2 text-[11px] text-fog-grey mr-1">
+          <span className="text-storm-cloud">{counts.total}</span> total
+          <span className="text-emerald">{counts.ok}</span> ok
+          {counts.failed > 0 && <span className="text-warning-red">{counts.failed} failed</span>}
+          {counts.pending > 0 && <span className="text-aether-blue animate-pulse">{counts.pending} pending</span>}
+          {counts.combo > 0 && <span className="text-amethyst">{counts.combo} combo</span>}
+        </div>
+        <div className="w-px h-4 bg-charcoal-grey" />
         {/* Search */}
         <div className="relative flex-1 min-w-[180px] max-w-xs">
           <span className="absolute left-2.5 top-1/2 -translate-y-1/2 material-symbols-outlined text-[14px] text-fog-grey">
@@ -336,10 +334,7 @@ export default function RequestLogger() {
                   <th className="px-3 py-2 text-[10px] font-[590] uppercase tracking-[0.05em] text-fog-grey border-r border-charcoal-grey">
                     Status
                   </th>
-                  <th className="px-3 py-2 text-[10px] font-[590] uppercase tracking-[0.05em] text-fog-grey border-r border-charcoal-grey">
-                    Combo
-                  </th>
-                  <th className="px-3 py-2 text-[10px] font-[590] uppercase tracking-[0.05em] text-fog-grey">Detail</th>
+                  <th className="px-3 py-2 text-[10px] font-[590] uppercase tracking-[0.05em] text-fog-grey">Combo</th>
                 </tr>
               </thead>
               <tbody>
@@ -387,18 +382,8 @@ export default function RequestLogger() {
                       <td className="px-3 py-2 border-r border-charcoal-grey/50">
                         <StatusBadge status={log.status} />
                       </td>
-                      <td className="px-3 py-2 border-r border-charcoal-grey/50">
-                        <ComboBadge combo={log.combo} />
-                      </td>
                       <td className="px-3 py-2">
-                        <span
-                          className={cn(
-                            "material-symbols-outlined text-[14px] transition-colors duration-100",
-                            isSelected ? "text-porcelain" : "text-fog-grey/40 group-hover:text-fog-grey",
-                          )}
-                        >
-                          {isSelected ? "chevron_right" : "open_in_new"}
-                        </span>
+                        <ComboBadge combo={log.combo} />
                       </td>
                     </tr>
                   );
