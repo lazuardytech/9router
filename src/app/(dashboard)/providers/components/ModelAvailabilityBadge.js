@@ -162,7 +162,7 @@ export default function ModelAvailabilityBadge() {
                                 variant="ghost"
                                 onClick={() => handleClearCooldown(m.provider, m.model)}
                                 disabled={isClearing}
-                                className="text-[10px] px-1.5! py-0.5! ml-2"
+                                className="text-[10px] ml-2"
                               >
                                 {isClearing ? "..." : "Clear"}
                               </Button>

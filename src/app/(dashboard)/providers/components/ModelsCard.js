@@ -2,7 +2,7 @@
 
 import { useState, useCallback, useEffect } from "react";
 import PropTypes from "prop-types";
-import { Card, Button, Modal } from "@/shared/components";
+import { Badge, Card, Button, Modal } from "@/shared/components";
 import { getModelsByProviderId } from "@/shared/constants/models";
 import { getProviderAlias } from "@/shared/constants/providers";
 import { useCopyToClipboard } from "@/shared/hooks/useCopyToClipboard";
@@ -83,7 +83,9 @@ export function ModelRow({
           </span>
         </div>
         {isFree && (
-          <span className="text-[10px] font-bold text-green-500 bg-green-500/10 px-1.5 py-0.5 rounded">FREE</span>
+          <Badge variant="success" size="sm">
+            FREE
+          </Badge>
         )}
         {isCustom && (
           <button

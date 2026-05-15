@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import TelemetryCard from "./TelemetryCard";
 import ProviderIcon from "@/shared/components/ProviderIcon";
+import { Badge, Button } from "@/shared/components";
 
 function formatBytes(bytes = 0) {
   if (bytes < 1024) return `${bytes} B`;
@@ -86,12 +87,9 @@ export default function HealthPage() {
         <div className="rounded-[6px] border border-warning-red/30 bg-warning-red/8 p-5 text-center">
           <span className="material-symbols-outlined text-[28px] text-warning-red mb-2">error</span>
           <p className="text-[13px] text-warning-red">{error}</p>
-          <button
-            onClick={fetchHealth}
-            className="mt-3 h-7 px-4 rounded-[6px] border border-charcoal-grey bg-graphite text-[12px] text-porcelain hover:bg-deep-slate"
-          >
+          <Button size="sm" variant="secondary" onClick={fetchHealth} className="mt-3">
             Retry
-          </button>
+          </Button>
         </div>
       </div>
     );
@@ -115,15 +113,15 @@ export default function HealthPage() {
               Updated {lastRefresh.toLocaleTimeString()}
             </span>
           )}
-          <button
+          <Button
+            size="sm"
+            variant="outline"
+            icon="refresh"
             onClick={() => {
               fetchHealth();
               telemetryRef.current?.refresh();
             }}
-            className="flex items-center justify-center size-7 rounded-[4px] border border-charcoal-grey text-storm-cloud hover:bg-deep-slate hover:text-porcelain"
-          >
-            <span className="material-symbols-outlined text-[15px]">refresh</span>
-          </button>
+          />
         </div>
       </div>
 
@@ -178,15 +176,9 @@ export default function HealthPage() {
       {/* Database */}
       <div className="rounded-[6px] border border-charcoal-grey bg-graphite p-5">
         <SectionHeader icon="database" title="Database">
-          <span
-            className={`text-[11px] font-[590] px-2 py-0.5 rounded-[4px] ${
-              database.ok && database.integrity === "ok"
-                ? "bg-emerald/10 text-emerald"
-                : "bg-warning-red/10 text-warning-red"
-            }`}
-          >
+          <Badge variant={database.ok && database.integrity === "ok" ? "success" : "error"} size="sm">
             {database.ok && database.integrity === "ok" ? "Healthy" : "Issues"}
-          </span>
+          </Badge>
         </SectionHeader>
         {database.ok ? (
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
@@ -261,13 +253,9 @@ export default function HealthPage() {
               >
                 <span className="text-[12px] text-storm-cloud">{t.label}</span>
                 <div className="text-right">
-                  <span
-                    className={`text-[11px] font-[590] px-1.5 py-0.5 rounded-[4px] ${
-                      t.active ? "bg-emerald/10 text-emerald" : "bg-deep-slate text-fog-grey"
-                    }`}
-                  >
+                  <Badge variant={t.active ? "success" : "default"} size="sm">
                     {t.active ? "Active" : "Inactive"}
-                  </span>
+                  </Badge>
                   {t.active && t.url && (
                     <p className="text-[10px] text-fog-grey font-mono mt-0.5 truncate max-w-[140px]">{t.url}</p>
                   )}
@@ -280,13 +268,9 @@ export default function HealthPage() {
         {/* Semantic Cache */}
         <div className="rounded-[6px] border border-charcoal-grey bg-graphite p-5">
           <SectionHeader icon="cached" title="Semantic Cache">
-            <span
-              className={`text-[11px] font-[590] px-2 py-0.5 rounded-[4px] ${
-                semanticCache.enabled ? "bg-emerald/10 text-emerald" : "bg-deep-slate text-fog-grey"
-              }`}
-            >
+            <Badge variant={semanticCache.enabled ? "success" : "default"} size="sm">
               {semanticCache.enabled ? "Enabled" : "Disabled"}
-            </span>
+            </Badge>
           </SectionHeader>
           <div className="space-y-2">
             {[
@@ -364,15 +348,9 @@ export default function HealthPage() {
                               />
                             </div>
                             <span className="text-[13px] font-[510] text-porcelain">{p.providerName}</span>
-                            <span
-                              className={`text-[10px] font-[590] px-1.5 py-0.5 rounded-[4px] ${
-                                p.state === "OPEN"
-                                  ? "bg-warning-red/10 text-warning-red"
-                                  : "bg-[#f59e0b]/10 text-[#f59e0b]"
-                              }`}
-                            >
+                            <Badge variant={p.state === "OPEN" ? "error" : "warning"} size="sm">
                               {p.state === "OPEN" ? "Rate Limited" : "Error"}
-                            </span>
+                            </Badge>
                             {p.connectionCount > 1 && (
                               <span className="text-[10px] text-fog-grey">{p.connectionCount} accounts</span>
                             )}
@@ -440,9 +418,9 @@ export default function HealthPage() {
               <div key={rl.provider} className="rounded-[6px] border border-[#f59e0b]/20 bg-[#f59e0b]/5 p-3">
                 <div className="flex items-center justify-between mb-2">
                   <span className="text-[13px] font-[510] text-porcelain">{rl.providerName}</span>
-                  <span className="text-[11px] font-[590] px-1.5 py-0.5 rounded-[4px] bg-[#f59e0b]/10 text-[#f59e0b]">
+                  <Badge variant="warning" size="sm">
                     {rl.rateLimitedCount} limited
-                  </span>
+                  </Badge>
                 </div>
                 <div className="space-y-1">
                   {rl.connections.map((c) => (
@@ -482,9 +460,9 @@ export default function HealthPage() {
                   >
                     {bm.model === "__all" ? "(all models)" : bm.model}
                   </span>
-                  <span className="text-[11px] font-[590] px-1.5 py-0.5 rounded-[4px] bg-warning-red/10 text-warning-red shrink-0">
+                  <Badge variant="error" size="sm">
                     {bm.blockedCount} locked
-                  </span>
+                  </Badge>
                 </div>
                 <div className="space-y-1">
                   {bm.connections.map((c) => (

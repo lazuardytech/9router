@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
-import { Button, Card, CardSkeleton, Input, Select, Toggle } from "@/shared/components";
+import { Badge, Button, Card, CardSkeleton, Input, Select, Toggle } from "@/shared/components";
 import { ConfirmModal } from "@/shared/components/Modal";
 
 const MEMORY_TYPE_OPTIONS = [
@@ -329,9 +329,9 @@ export default function MemoryClient() {
                 {memoryData.data.map((entry) => (
                   <tr key={entry.id} className="border-t border-border-subtle align-top">
                     <td className="px-3 py-2">
-                      <span className="inline-flex rounded-md bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">
+                      <Badge variant="primary" size="sm">
                         {entry.type}
-                      </span>
+                      </Badge>
                     </td>
                     <td className="px-3 py-2 text-sm font-mono text-text-main">{entry.key || "-"}</td>
                     <td className="px-3 py-2 text-sm text-text-main">

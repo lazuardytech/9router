@@ -3,6 +3,7 @@
 import { useEffect } from "react";
 import { cn } from "@/shared/utils/cn";
 import { LogDrawer, LogDrawerHeader, LogDrawerBody, DetailSection, DetailRow, JsonBlock } from "./LogDrawer";
+import Badge from "./Badge";
 
 function PayloadSection({ title, icon, data }) {
   if (!data || (typeof data === "object" && Object.keys(data).length === 0)) return null;
@@ -90,9 +91,9 @@ export default function RequestLogDetail({ log, detail, loading, onClose }) {
             <DetailRow
               label="Combo"
               value={
-                <span className="inline-flex items-center px-1.5 py-0.5 rounded-[4px] bg-amethyst/10 border border-amethyst/20 text-[10px] text-amethyst">
+                <Badge variant="violet" size="sm">
                   {log.combo}
-                </span>
+                </Badge>
               }
             />
           )}

@@ -1072,12 +1072,8 @@ function ProviderTestResultsView({ results }) {
       {summary && (
         <div className="flex flex-wrap items-center gap-2 text-xs mb-1 sm:gap-3">
           <span className="text-text-muted">{modeLabel} Test</span>
-          <span className="px-2 py-0.5 rounded bg-emerald-500/15 text-emerald-400 font-medium">
-            {summary.passed} passed
-          </span>
-          {summary.failed > 0 && (
-            <span className="px-2 py-0.5 rounded bg-red-500/15 text-red-400 font-medium">{summary.failed} failed</span>
-          )}
+          <Badge variant="success">{summary.passed} passed</Badge>
+          {summary.failed > 0 && <Badge variant="error">{summary.failed} failed</Badge>}
           <span className="text-text-muted sm:ml-auto">{summary.total} tested</span>
         </div>
       )}
@@ -1096,13 +1092,9 @@ function ProviderTestResultsView({ results }) {
           {r.latencyMs !== undefined && (
             <span className="shrink-0 text-text-muted font-mono tabular-nums">{r.latencyMs}ms</span>
           )}
-          <span
-            className={`shrink-0 text-[10px] uppercase font-bold px-1.5 py-0.5 rounded ${
-              r.valid ? "bg-emerald-500/15 text-emerald-400" : "bg-red-500/15 text-red-400"
-            }`}
-          >
+          <Badge variant={r.valid ? "success" : "error"} size="sm">
             {r.valid ? "OK" : r.diagnosis?.type || "ERROR"}
-          </span>
+          </Badge>
         </div>
       ))}
       {items.length === 0 && (

@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import PropTypes from "prop-types";
 import { toast } from "sonner";
-import { Card, Button, Input, Modal, CardSkeleton, Toggle, SegmentedControl } from "@/shared/components";
+import { Badge, Card, Button, Input, Modal, CardSkeleton, Toggle, SegmentedControl } from "@/shared/components";
 import { ConfirmModal } from "@/shared/components/Modal";
 import { useCopyToClipboard } from "@/shared/hooks/useCopyToClipboard";
 
@@ -1168,13 +1168,9 @@ export default function APIPageClient({ machineId }) {
                       {/* Status */}
                       <td className="px-3 py-2 border-r border-charcoal-grey/50">
                         <div className="flex items-center gap-2">
-                          <span
-                            className={`text-[11px] font-[510] ${
-                              key.isActive !== false ? "text-emerald" : "text-warning-red"
-                            }`}
-                          >
+                          <Badge variant={key.isActive !== false ? "success" : "error"} size="sm">
                             {key.isActive !== false ? "Enabled" : "Disabled"}
-                          </span>
+                          </Badge>
                           <Toggle
                             size="sm"
                             checked={key.isActive ?? true}
