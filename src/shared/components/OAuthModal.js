@@ -179,7 +179,9 @@ export default function OAuthModal({ isOpen, provider, providerInfo, onSuccess, 
       const appPort = window.location.port || (window.location.protocol === "https:" ? "443" : "80");
       let redirectUri;
       if (provider === "codex") {
-        redirectUri = "http://localhost:1455/auth/callback";
+        // Use CLOUD_URL if set, otherwise fall back to current origin
+        const cloudBase = process.env.NEXT_PUBLIC_CLOUD_URL || window.location.origin;
+        redirectUri = `${cloudBase}/auth/callback`;
       } else {
         redirectUri = `http://localhost:${appPort}/callback`;
       }
