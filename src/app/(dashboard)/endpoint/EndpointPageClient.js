@@ -764,7 +764,7 @@ export default function APIPageClient({ machineId }) {
           <div className="flex items-center gap-2">
             <span
               className={`text-sm font-mono py-0.5 shrink-0 min-w-[80px] text-start ${
-                tunnelEnabled ? "bg-primary/10 text-primary" : "bg-surface-2 text-text-muted"
+                tunnelEnabled ? "bg-primary/10 text-primary" : ""
               }`}
             >
               Tunnel
@@ -852,7 +852,7 @@ export default function APIPageClient({ machineId }) {
           <div className="flex items-center gap-2">
             <span
               className={`text-sm font-mono py-0.5 shrink-0 min-w-[80px] text-start ${
-                tsEnabled ? "bg-porcelain/10 text-porcelain" : "bg-surface-2 text-text-muted"
+                tsEnabled ? "bg-porcelain/10 text-porcelain" : ""
               }`}
             >
               Tailscale
@@ -1530,7 +1530,7 @@ function EndpointRow({ label, url, copyId, copied, onCopy, badge, actions }) {
     <div className="flex items-center gap-2">
       <span
         className={`text-sm font-mono py-0.5 shrink-0 min-w-[80px] text-start ${
-          badge === "CF" || badge === "TS" ? "bg-primary/10 text-primary" : "bg-surface-2 text-text-muted"
+          badge === "CF" || badge === "TS" ? "bg-primary/10 text-primary" : ""
         }`}
       >
         {label}
