@@ -1,6 +1,6 @@
 # Architecture
 
-This file summarizes the current architecture for `github.com/lazuardytech/pod` (v0.0.1).
+This file summarizes the current architecture for `github.com/lazuardytech/pod` (v0.0.5).
 
 ## Package Layout
 
@@ -15,18 +15,17 @@ open-sse/    routing engine (executors, translators, stream handling)
 
 1. App runs through bun scripts (`bun run dev`, `bun run build`, `bun run start`).
 2. `next.config.mjs` rewrites:
-   - `/v1/:path*` -> `/api/v1/:path*`
-   - `/codex/:path*` -> `/api/v1/responses`
-3. Middleware/auth gateway is handled by `src/dashboardGuard.js` via `src/proxy.js`.
+   - `/v1/:path*` → `/api/v1/:path*`
+   - `/codex/:path*` → `/api/v1/responses`
+3. Middleware/auth gateway: `src/dashboardGuard.js` via `src/proxy.js`.
 
 ## Request Path (Chat)
 
 `POST /v1/chat/completions` flow:
 
 1. Rewritten to `/api/v1/chat/completions`
-2. Route handler wraps request with per-key limiter:
-   - `withApiKeyRateLimit` (`src/app/api/v1/_utils/apiKeyRateLimit.js`)
-3. `src/sse/handlers/chat.js` resolves target model/provider and account
+2. Route handler wraps with `withApiKeyRateLimit`
+3. `src/sse/handlers/chat.js` resolves target model/provider/account
 4. `open-sse/handlers/chatCore.js` executes core pipeline:
    - format detect + translation
    - optional RTK/caveman token processing
@@ -34,56 +33,82 @@ open-sse/    routing engine (executors, translators, stream handling)
    - memory retrieval + injection
    - upstream execution (streaming or non-streaming)
    - memory extraction from request/response content
+   - `details_id` pre-generated and linked to `request_log` for reliable detail lookup
+
+## Request Detail Linking
+
+`request_log` has a `details_id` column (added v0.0.4) that directly references `request_details.id`.
+This eliminates fuzzy timestamp matching for the request detail drawer in `/logs`.
+
+Flow:
+1. `generateDetailId(model)` called before `appendLog` and `saveRequestDetail`
+2. `detailsId` passed to both calls
+3. `request_log.details_id` stores the link
+4. `/api/usage/request-logs/[id]` does direct lookup by `details_id` first, falls back to timestamp fuzzy match
 
 ## Cache and Memory Integration
 
 - Semantic cache:
-  - Storage tables: `semantic_cache`, `cache_metrics`
+  - Tables: `semantic_cache`, `cache_metrics`
   - API: `/api/cache`, `/api/settings/cache-config`
-  - Request behavior controlled by body/headers and cache settings
 - Conversational memory:
-  - Storage tables: `memories` + `memory_fts`
+  - Tables: `memories`, `memory_fts`
   - API: `/api/memory`, `/api/memory/[id]`, `/api/settings/memory`
-  - `chatCore` injects retrieved memory and extracts new facts asynchronously
 
 ## API Key Limit Model
 
-`api_keys` now stores:
+`api_keys` stores:
 - `limit_type` (`unlimited` or `limited`)
 - `requests_per_minute`
 - `concurrent_requests`
-
-Limiter is enforced at `/api/v1/*` route layer via wrapper, including streaming-safe release of concurrent permits.
+- `last_access_at`
 
 ## Persistence
 
 Primary store is SQLite:
 - File: `~/.pod/pod.sqlite` (default; overridable via `DATA_DIR` env)
 - Access via `src/lib/localDb.js` and `src/lib/sqlite/connection.js`
-- `connection.js` applies pragmas and runs schema patches/migrations
+- `connection.js` applies pragmas and runs schema patches/migrations on boot
 
-Core data domains:
-- providers, nodes, proxy pools, combos
-- API keys
-- settings/pricing
-- usage logs/details
-- semantic cache
-- memories
+Schema migrations applied at boot (in `connection.js`):
+- `combo` column on `request_log`
+- `details_id` column on `request_log`
 
 ## Dashboard Surface
 
-Main dashboard routes (no `/dashboard` prefix):
-- `/endpoint` — API keys table (max 15 rows, pagination, edit/remove)
-- `/providers` — LLM Providers
-- `/media-providers` — Media Providers
-- `/combos` — Combos
-- `/memory` — Conversational memory
-- `/cache` — Semantic cache
-- `/usage` — Usage & Analytics
-- `/quota` — Quota Tracker
-- `/proxy-pools` — Proxy Pools
-- `/logs` — multi-tab: Request Logs, Proxy Logs, Console Logs
-- `/settings` — Settings (Linear design, DB path, theme switcher)
-- `/health` — System Health (TelemetryCard sparklines, DB health, Provider Health, Rate Limit Status)
+All routes are top-level (no `/dashboard` prefix):
 
-`translator` and `basic-chat` pages still exist but are not part of the main sidebar taxonomy.
+| Route | Description |
+|---|---|
+| `/endpoint` | API keys table, OpenAI/Anthropic/Tunnel/Tailscale endpoint config |
+| `/providers` | LLM provider connections |
+| `/media-providers` | Media provider connections (embedding, TTS, STT, image) |
+| `/combos` | Model combos with fallback/round-robin, Test button per combo |
+| `/memory` | Conversational memory entries |
+| `/cache` | Semantic cache config and maintenance |
+| `/usage` | Usage & Analytics (overview, request logs, provider topology) |
+| `/quota` | Quota Tracker — grouped by provider, 3-level expand/collapse |
+| `/proxy-pools` | Proxy pool management with Vercel relay deploy |
+| `/logs` | Multi-tab: Request Logs, Proxy Logs, Console Logs |
+| `/health` | System Health: telemetry, DB, provider health, rate limits, model lockouts |
+| `/settings` | App settings (appearance, data, security, routing, network, observability, system info) |
+
+## UI Architecture
+
+- **Design system**: Linear (dark/light theme via CSS variables)
+- **Theme**: class-based dark mode (`html.dark`), `@custom-variant dark` in globals.css
+- **Toasts**: Sonner (`sonner@2.0.7`), position bottom-right
+- **Drawers**: Vaul (`vaul@1.1.2`) for log detail drawer
+- **Tabs**: `SegmentedControl` component standardized across all tab UIs
+- **Confirm dialogs**: `ConfirmModal` from `@/shared/components/Modal` — no browser `confirm()`
+- **Icons**: Material Symbols Outlined (Google Fonts)
+- **Logo**: `public/logo.svg` — SVG fill `#000`, `dark:invert` for dark theme
+
+## Proxy Fetch
+
+`open-sse/utils/proxyFetch.js` patches global `fetch` with:
+- Env proxy support (`HTTPS_PROXY`, `HTTP_PROXY`, `NO_PROXY`)
+- Connection-level proxy (per-provider proxy config)
+- Vercel relay forwarding via `x-relay-target` / `x-relay-path` headers
+
+No MITM bypass code exists (removed in v0.0.4).

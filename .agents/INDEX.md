@@ -1,8 +1,8 @@
 # .agents Index
 
-Knowledge base entrypoint for pod contributors.
+Knowledge base entrypoint for Pod contributors.
 
-Last synced: **2026-05-15** (baseline **v0.0.1**).
+Last synced: **2026-05-15** (baseline **v0.0.5**).
 
 - [Overview](knowledge/01-overview.md)
 - [Architecture](knowledge/02-architecture.md)

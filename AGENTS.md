@@ -1,51 +1,51 @@
 # AGENTS.md
 
-Operational notes for AI agents working on **9router** (`/workspace/9router`).
+Operational notes for AI agents working on **Pod** (`~/projects/lt/pod`).
 
 ## Current Baseline
 
-- Release baseline: **v0.3.1**
-- Key recent features:
-  - Semantic cache (`semantic_cache`, `cache_metrics`)
-  - Conversational memory (`memories`, `memory_fts`)
-  - Per-API-key rate limit modes (`unlimited` / `limited`)
-  - Dashboard IA update:
-    - API: Endpoint, LLM Providers, Media Providers, Combos, Memory, Cache
-    - Analytics: Usage, Quota
-    - System: Proxy Pools, Console Log, Settings
+- Release baseline: **v0.0.5**
+- Package: `pod`
+- Docker: `lazuardytech/pod`
+- GitHub: `lazuardytech/pod`, branch `main`
+- Data dir: `~/.pod/pod.sqlite`
 
 ## Non-Negotiable Rules
 
-1. **pnpm only**
-   - Use `pnpm` for install/run/test/build.
-   - Do not use `npm` commands in this repo workflow.
-2. **Keep internal naming as `9router`**
-   - Package, DB filename, and data dir conventions remain `9router`.
-3. **`open-sse` is local source**
-   - Imported through `jsconfig.json` aliases.
-   - Do not install `open-sse` from npm.
-4. **Use storage facade**
-   - Prefer `src/lib/localDb.js` and `src/lib/sqlite/connection.js`.
-   - Avoid direct hard-coupled imports of `better-sqlite3` in feature code.
+1. **bun only** — use `bun` for install/run/test/build. Never npm or pnpm.
+2. **Keep internal naming as `pod`** — package, DB filename, data dir, Docker image.
+3. **`open-sse` is local source** — imported via `jsconfig.json` aliases. Do not install from npm.
+4. **Use storage facade** — prefer `src/lib/localDb.js` and `src/lib/sqlite/connection.js`.
+5. **No browser `confirm()`** — always use `ConfirmModal` from `@/shared/components/Modal`.
+6. **No `/dashboard` prefix** — all routes are top-level (`/endpoint`, `/providers`, etc.).
+7. **Bump both version fields together** — `package.json` AND `src/shared/constants/config.js` `displayVersion`.
 
 ## Verification Before Push
 
-- `pnpm run test:run`
-- `pnpm run build`
-
-Run lint when touching broad UI/shared code:
-- `pnpm exec eslint .`
+```bash
+bun run format     # biome format --write .
+bun x eslint .     # lint check
+bun run test:run   # vitest
+bun run build      # next build
+```
 
 ## CI / Release
 
-- CI workflow name: **Build & Test**
-- Docker workflow name: **Build & Push Docker Image**
-- Docker image target: `docker.io/lazuardytech/9router`
-- Publish trigger: push tag `v*` (example: `v0.3.1`)
+- CI workflow: `.github/workflows/ci.yml` — **Build & Test**
+- Docker workflow: `.github/workflows/docker-publish.yml` — **Build & Push Docker Image**
+- Docker image: `docker.io/lazuardytech/pod`
+- Publish trigger: push tag `v*` (e.g. `v0.0.5`)
+- RWX build: `rwx run .rwx/build.yml`
 
 ## Docs Map
 
 - Entry: `.agents/INDEX.md`
+- Overview: `.agents/knowledge/01-overview.md`
 - Architecture: `.agents/knowledge/02-architecture.md`
-- API map: `.agents/knowledge/04-api-surface.md`
+- Providers & Routing: `.agents/knowledge/03-providers-and-routing.md`
+- API Surface: `.agents/knowledge/04-api-surface.md`
+- Dev Workflow: `.agents/knowledge/05-dev-workflow.md`
+- Conventions: `.agents/knowledge/06-conventions.md`
 - Gotchas: `.agents/knowledge/07-gotchas.md`
+- Skills System: `.agents/knowledge/08-skills-system.md`
+- Fork Status: `.agents/knowledge/09-fork-status.md`

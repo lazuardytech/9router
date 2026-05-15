@@ -18,20 +18,15 @@ Use bun for install/build/test/CI parity. Do not use npm or pnpm commands in thi
 
 `withApiKeyRateLimit` is applied on `/api/v1/*` routes. If you add a new public POST endpoint, wire the wrapper unless explicitly exempt.
 
-## 5) API key model now has limit fields
+## 5) API key model has limit fields
 
-`api_keys` includes `limit_type`, `requests_per_minute`, `concurrent_requests`.
+`api_keys` includes `limit_type`, `requests_per_minute`, `concurrent_requests`, `last_access_at`.
 Do not assume all keys are unlimited.
 
 ## 6) Cache and memory are first-class features
 
-- Cache config/state:
-  - `/api/cache`
-  - `/api/settings/cache-config`
-- Memory config/data:
-  - `/api/memory`
-  - `/api/memory/[id]`
-  - `/api/settings/memory`
+- Cache: `/api/cache`, `/api/settings/cache-config`
+- Memory: `/api/memory`, `/api/memory/[id]`, `/api/settings/memory`
 
 If you touch chat pipeline, validate cache/memory behavior.
 
@@ -42,11 +37,11 @@ Keep the grouped menu layout:
 - Analytics
 - System
 
-Route pages can exist without sidebar exposure (example: translator/basic-chat).
+Route pages can exist without sidebar exposure (e.g. translator/basic-chat).
 
 ## 8) SQLite is the source of truth
 
-Default file is `~/.pod/pod.sqlite`.
+Default file: `~/.pod/pod.sqlite`.
 Use `localDb` / sqlite helpers instead of ad-hoc JSON state changes.
 
 ## 9) `log.warn()` caveat
@@ -55,7 +50,7 @@ Use `localDb` / sqlite helpers instead of ad-hoc JSON state changes.
 
 ## 10) CI lint step is non-blocking
 
-`ci.yml` currently runs `bun x eslint . || true`. Do not assume lint failure blocks CI.
+`ci.yml` runs `bun x eslint . || true`. Do not assume lint failure blocks CI.
 
 ## 11) Docker publishing target
 
@@ -67,6 +62,43 @@ Do not document GHCR for this repo.
 All dashboard routes are top-level (e.g. `/endpoint`, `/providers`, `/logs`, `/health`).
 Do not add or assume a `/dashboard` prefix when linking or redirecting.
 
-## 13) `/logs` replaces `/console-log`
+## 13) `/logs` is the consolidated log page
 
-The old `/console-log` route is now consolidated under `/logs` as a multi-tab page (Request Logs, Proxy Logs, Console Logs). Do not create a new standalone `/console-log` page.
+Multi-tab: Request Logs, Proxy Logs, Console Logs.
+Do not create standalone `/console-log` or `/proxy-logs` pages.
+
+## 14) No browser `confirm()`
+
+Always use `<ConfirmModal>` from `@/shared/components/Modal`.
+All existing `confirm()` calls have been replaced as of v0.0.4.
+
+## 15) No MITM bypass code
+
+MITM DNS bypass was removed in v0.0.4. Do not re-add `MITM_BYPASS_HOSTS`, `resolveRealIP`, `createBypassRequest`, or `getMitmAlias`/`setMitmAliasAll`.
+
+## 16) `request_log.details_id` links to `request_details`
+
+As of v0.0.5, `request_log` has a `details_id` column.
+When saving a completed request, pre-generate the ID with `generateDetailId(model)` and pass it to both `appendRequestLog` and `saveRequestDetail`.
+The `/api/usage/request-logs/[id]` route does direct lookup by `details_id` first.
+
+## 17) `better-sqlite3` is devDependency only
+
+Production uses `bun:sqlite`. `better-sqlite3` is only for tests (Node/vitest).
+Do not import `better-sqlite3` in production code paths.
+
+## 18) Version bump requires two files
+
+Always bump both:
+- `package.json` → `"version"`
+- `src/shared/constants/config.js` → `displayVersion`
+
+## 19) System info must come from server-side API
+
+`process.platform`, `process.arch`, `Bun.version` are not available in client components.
+Fetch from `/api/settings` which includes `systemInfo: { runtime, platform }`.
+
+## 20) SegmentedControl for all tab UIs
+
+Use `<SegmentedControl>` from `@/shared/components/SegmentedControl` for all pill tab navigation.
+Do not create custom inline tab div/button patterns.
