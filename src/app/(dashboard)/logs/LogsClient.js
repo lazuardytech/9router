@@ -19,7 +19,7 @@ function RequestLogsToolbar({ sortBy, setSortBy, onRefresh, recording, setRecord
       <select
         value={sortBy}
         onChange={(e) => setSortBy(e.target.value)}
-        className="h-7 px-2 rounded-[6px] border border-charcoal-grey bg-deep-slate text-[12px] text-porcelain focus:outline-none focus:border-porcelain/30 transition-colors duration-100"
+        className="h-7 px-2 rounded-[6px] border border-charcoal-grey bg-deep-slate text-[12px] text-porcelain focus:outline-none focus:border-porcelain/30 transition-colors duration-100 w-[120px]"
       >
         <option value="newest">Newest first</option>
         <option value="oldest">Oldest first</option>
@@ -58,7 +58,7 @@ function ProxyLogsToolbar({ sortBy, setSortBy, onRefresh, live, setLive, count }
       <select
         value={sortBy}
         onChange={(e) => setSortBy(e.target.value)}
-        className="h-7 px-2 rounded-[6px] border border-charcoal-grey bg-deep-slate text-[12px] text-porcelain focus:outline-none focus:border-porcelain/30 transition-colors duration-100"
+        className="h-7 px-2 rounded-[6px] border border-charcoal-grey bg-deep-slate text-[12px] text-porcelain focus:outline-none focus:border-porcelain/30 transition-colors duration-100 w-[120px]"
       >
         <option value="newest">Newest first</option>
         <option value="oldest">Oldest first</option>
