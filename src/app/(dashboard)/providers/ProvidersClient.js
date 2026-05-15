@@ -510,7 +510,7 @@ function ProviderCard({ providerId, provider, stats, authType, onToggle }) {
         padding="xs"
         className={`h-full hover:bg-black/[0.01] dark:hover:bg-white/[0.01] transition-colors cursor-pointer ${allDisabled ? "opacity-50" : ""}`}
       >
-        <div className="flex min-w-0 items-center justify-between gap-3">
+        <div className="flex min-w-0 items-center justify-between gap-3 h-full">
           <div className="flex min-w-0 items-center gap-3">
             <div className="size-8 shrink-0 rounded-lg flex items-center justify-center bg-white">
               <ProviderIcon
@@ -618,7 +618,7 @@ function ApiKeyProviderCard({ providerId, provider, stats, authType, onToggle })
         padding="xs"
         className={`h-full hover:bg-black/[0.01] dark:hover:bg-white/[0.01] transition-colors cursor-pointer ${allDisabled ? "opacity-50" : ""}`}
       >
-        <div className="flex min-w-0 items-center justify-between gap-3">
+        <div className="flex min-w-0 items-center justify-between gap-3 h-full">
           <div className="flex min-w-0 items-center gap-3">
             <div className="size-8 shrink-0 rounded-lg flex items-center justify-center bg-white">
               <ProviderIcon
