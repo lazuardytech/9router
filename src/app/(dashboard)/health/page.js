@@ -406,13 +406,17 @@ export default function HealthPage() {
       </div>
 
       {/* Rate Limit Status */}
-      {data.rateLimitStatus?.length > 0 && (
-        <div className="rounded-[6px] border border-charcoal-grey bg-graphite p-5">
-          <SectionHeader icon="speed" title="Rate Limit Status">
+      <div className="rounded-[6px] border border-charcoal-grey bg-graphite p-5">
+        <SectionHeader icon="speed" title="Rate Limit Status">
+          {data.rateLimitStatus?.length > 0 && (
             <span className="text-[11px] text-fog-grey">
               {data.rateLimitStatus.length} provider{data.rateLimitStatus.length !== 1 ? "s" : ""} affected
             </span>
-          </SectionHeader>
+          )}
+        </SectionHeader>
+        {!data.rateLimitStatus?.length ? (
+          <p className="text-[12px] text-fog-grey text-center py-4">No rate limited requests available.</p>
+        ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
             {data.rateLimitStatus.map((rl) => (
               <div key={rl.provider} className="rounded-[6px] border border-[#f59e0b]/20 bg-[#f59e0b]/5 p-3">
@@ -435,17 +439,21 @@ export default function HealthPage() {
               </div>
             ))}
           </div>
-        </div>
-      )}
+        )}
+      </div>
 
-      {/* Blocked Model Status */}
-      {data.blockedModelStatus?.length > 0 && (
-        <div className="rounded-[6px] border border-charcoal-grey bg-graphite p-5">
-          <SectionHeader icon="block" title="Blocked Model Status">
+      {/* Model Lockout Status */}
+      <div className="rounded-[6px] border border-charcoal-grey bg-graphite p-5">
+        <SectionHeader icon="lock" title="Model Lockout Status">
+          {data.blockedModelStatus?.length > 0 && (
             <span className="text-[11px] text-fog-grey">
-              {data.blockedModelStatus.length} model{data.blockedModelStatus.length !== 1 ? "s" : ""} blocked
+              {data.blockedModelStatus.length} model{data.blockedModelStatus.length !== 1 ? "s" : ""} locked
             </span>
-          </SectionHeader>
+          )}
+        </SectionHeader>
+        {!data.blockedModelStatus?.length ? (
+          <p className="text-[12px] text-fog-grey text-center py-4">No model lockouts available.</p>
+        ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
             {data.blockedModelStatus.map((bm) => (
               <div key={bm.model} className="rounded-[6px] border border-warning-red/20 bg-warning-red/5 p-3">
@@ -457,7 +465,7 @@ export default function HealthPage() {
                     {bm.model === "__all" ? "(all models)" : bm.model}
                   </span>
                   <span className="text-[11px] font-[590] px-1.5 py-0.5 rounded-[4px] bg-warning-red/10 text-warning-red shrink-0">
-                    {bm.blockedCount} blocked
+                    {bm.blockedCount} locked
                   </span>
                 </div>
                 <div className="space-y-1">
@@ -481,8 +489,8 @@ export default function HealthPage() {
               </div>
             ))}
           </div>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 }
