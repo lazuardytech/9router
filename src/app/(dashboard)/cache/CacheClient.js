@@ -1,8 +1,9 @@
 "use client";
 
+import { toast } from "sonner";
+
 import { useCallback, useEffect, useState } from "react";
 import { Button, Card, CardSkeleton, Input, Toggle } from "@/shared/components";
-import { useNotificationStore } from "@/store/notificationStore";
 
 function staleMinutesToMs(value) {
   const parsed = Number.parseInt(String(value || ""), 10);
@@ -11,8 +12,6 @@ function staleMinutesToMs(value) {
 }
 
 export default function CacheClient() {
-  const notify = useNotificationStore();
-
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -39,44 +38,41 @@ export default function CacheClient() {
     staleMinutes: "60",
   });
 
-  const loadData = useCallback(
-    async (isInitial = false) => {
-      if (isInitial) setLoading(true);
-      else setRefreshing(true);
-      try {
-        const res = await fetch("/api/cache", { cache: "no-store" });
-        if (!res.ok) {
-          const payload = await res.json().catch(() => ({}));
-          throw new Error(payload.error || "Failed to load cache data");
-        }
-
-        const payload = await res.json();
-        const cacheStats = payload.semanticCache || {};
-        const cacheConfig = payload.config || {};
-
-        setStats({
-          memoryEntries: Number(cacheStats.memoryEntries || 0),
-          dbEntries: Number(cacheStats.dbEntries || 0),
-          hits: Number(cacheStats.hits || 0),
-          misses: Number(cacheStats.misses || 0),
-          hitRate: String(cacheStats.hitRate || "0.0"),
-          tokensSaved: Number(cacheStats.tokensSaved || 0),
-        });
-
-        setConfig({
-          semanticCacheEnabled: cacheConfig.semanticCacheEnabled !== false,
-          semanticCacheMaxSize: String(cacheConfig.semanticCacheMaxSize ?? 100),
-          semanticCacheTTLMinutes: String(Math.max(1, Math.round((cacheConfig.semanticCacheTTL ?? 1800000) / 60000))),
-        });
-      } catch (error) {
-        notify.error(error?.message || "Failed to load cache data");
-      } finally {
-        if (isInitial) setLoading(false);
-        else setRefreshing(false);
+  const loadData = useCallback(async (isInitial = false) => {
+    if (isInitial) setLoading(true);
+    else setRefreshing(true);
+    try {
+      const res = await fetch("/api/cache", { cache: "no-store" });
+      if (!res.ok) {
+        const payload = await res.json().catch(() => ({}));
+        throw new Error(payload.error || "Failed to load cache data");
       }
-    },
-    [notify],
-  );
+
+      const payload = await res.json();
+      const cacheStats = payload.semanticCache || {};
+      const cacheConfig = payload.config || {};
+
+      setStats({
+        memoryEntries: Number(cacheStats.memoryEntries || 0),
+        dbEntries: Number(cacheStats.dbEntries || 0),
+        hits: Number(cacheStats.hits || 0),
+        misses: Number(cacheStats.misses || 0),
+        hitRate: String(cacheStats.hitRate || "0.0"),
+        tokensSaved: Number(cacheStats.tokensSaved || 0),
+      });
+
+      setConfig({
+        semanticCacheEnabled: cacheConfig.semanticCacheEnabled !== false,
+        semanticCacheMaxSize: String(cacheConfig.semanticCacheMaxSize ?? 100),
+        semanticCacheTTLMinutes: String(Math.max(1, Math.round((cacheConfig.semanticCacheTTL ?? 1800000) / 60000))),
+      });
+    } catch (error) {
+      toast.error(error?.message || "Failed to load cache data");
+    } finally {
+      if (isInitial) setLoading(false);
+      else setRefreshing(false);
+    }
+  }, []);
 
   useEffect(() => {
     loadData(true);
@@ -87,11 +83,11 @@ export default function CacheClient() {
     const ttlMinutes = Number.parseInt(config.semanticCacheTTLMinutes, 10);
 
     if (!Number.isInteger(maxSize) || maxSize <= 0) {
-      notify.error("Cache max size harus integer positif");
+      toast.error("Cache max size harus integer positif");
       return;
     }
     if (!Number.isInteger(ttlMinutes) || ttlMinutes <= 0) {
-      notify.error("Cache TTL minutes harus integer positif");
+      toast.error("Cache TTL minutes harus integer positif");
       return;
     }
 
@@ -112,10 +108,10 @@ export default function CacheClient() {
         throw new Error(payload.error || "Failed to update cache config");
       }
 
-      notify.success("Cache config updated");
+      toast.success("Cache config updated");
       await loadData(false);
     } catch (error) {
-      notify.error(error?.message || "Failed to update cache config");
+      toast.error(error?.message || "Failed to update cache config");
     } finally {
       setSaving(false);
     }
@@ -130,10 +126,10 @@ export default function CacheClient() {
         const payload = await res.json().catch(() => ({}));
         throw new Error(payload.error || "Cache invalidation failed");
       }
-      notify.success("Cache invalidated");
+      toast.success("Cache invalidated");
       await loadData(false);
     } catch (error) {
-      notify.error(error?.message || "Cache invalidation failed");
+      toast.error(error?.message || "Cache invalidation failed");
     } finally {
       setInvalidating(false);
     }

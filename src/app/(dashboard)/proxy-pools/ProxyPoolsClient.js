@@ -1,8 +1,9 @@
 "use client";
 
+import { toast } from "sonner";
+
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Badge, Button, Card, CardSkeleton, Input, Modal, Toggle } from "@/shared/components";
-import { useNotificationStore } from "@/store/notificationStore";
 
 function getStatusVariant(status) {
   if (status === "active") return "success";
@@ -45,7 +46,6 @@ export default function ProxyPoolsPage() {
   const [healthChecking, setHealthChecking] = useState(false);
   const [healthProgress, setHealthProgress] = useState({ current: 0, total: 0 });
   const [bulkBusy, setBulkBusy] = useState(false);
-  const notify = useNotificationStore();
 
   const fetchProxyPools = useCallback(async () => {
     try {
@@ -109,10 +109,10 @@ export default function ProxyPoolsPage() {
       if (res.ok) {
         await fetchProxyPools();
         closeFormModal();
-        notify.success(editingProxyPool ? "Proxy pool updated" : "Proxy pool created");
+        toast.success(editingProxyPool ? "Proxy pool updated" : "Proxy pool created");
       } else {
         const data = await res.json();
-        notify.error(data.error || "Failed to save proxy pool");
+        toast.error(data.error || "Failed to save proxy pool");
       }
     } catch (error) {
       console.log("Error saving proxy pool:", error);
@@ -129,19 +129,19 @@ export default function ProxyPoolsPage() {
       const res = await fetch(`/api/proxy-pools/${proxyPool.id}`, { method: "DELETE" });
       if (res.ok) {
         setProxyPools((prev) => prev.filter((item) => item.id !== proxyPool.id));
-        notify.success("Proxy pool deleted");
+        toast.success("Proxy pool deleted");
         return;
       }
 
       const data = await res.json();
       if (res.status === 409) {
-        notify.warning(`Cannot delete: ${data.boundConnectionCount || 0} connection(s) are still using this pool.`);
+        toast.warning(`Cannot delete: ${data.boundConnectionCount || 0} connection(s) are still using this pool.`);
       } else {
-        notify.error(data.error || "Failed to delete proxy pool");
+        toast.error(data.error || "Failed to delete proxy pool");
       }
     } catch (error) {
       console.log("Error deleting proxy pool:", error);
-      notify.error("Failed to delete proxy pool");
+      toast.error("Failed to delete proxy pool");
     }
   };
 
@@ -152,15 +152,15 @@ export default function ProxyPoolsPage() {
       const data = await res.json();
 
       if (!res.ok) {
-        notify.error(data.error || "Failed to test proxy");
+        toast.error(data.error || "Failed to test proxy");
         return;
       }
 
       await fetchProxyPools();
-      notify.success(data.ok ? "Proxy test passed" : "Proxy test failed");
+      toast.success(data.ok ? "Proxy test passed" : "Proxy test failed");
     } catch (error) {
       console.log("Error testing proxy pool:", error);
-      notify.error("Failed to test proxy");
+      toast.error("Failed to test proxy");
     } finally {
       setTestingId(null);
     }
@@ -177,7 +177,7 @@ export default function ProxyPoolsPage() {
       });
       if (!res.ok) {
         setProxyPools((prev) => prev.map((p) => (p.id === pool.id ? { ...p, isActive: pool.isActive } : p)));
-        notify.error("Failed to update active state");
+        toast.error("Failed to update active state");
       }
     } catch (error) {
       console.log("Error toggling active:", error);
@@ -212,7 +212,7 @@ export default function ProxyPoolsPage() {
         }
       }
       await fetchProxyPools();
-      notify.success(`${isActive ? "Activated" : "Deactivated"} ${ok}${failed ? `, failed ${failed}` : ""}`);
+      toast.success(`${isActive ? "Activated" : "Deactivated"} ${ok}${failed ? `, failed ${failed}` : ""}`);
     } finally {
       setBulkBusy(false);
     }
@@ -238,7 +238,7 @@ export default function ProxyPoolsPage() {
       }
       await fetchProxyPools();
       clearSelection();
-      notify.success(`Deleted ${ok}${blocked ? `, ${blocked} bound` : ""}${failed ? `, ${failed} failed` : ""}`);
+      toast.success(`Deleted ${ok}${blocked ? `, ${blocked} bound` : ""}${failed ? `, ${failed} failed` : ""}`);
     } finally {
       setBulkBusy(false);
     }
@@ -294,12 +294,12 @@ export default function ProxyPoolsPage() {
           } catch {}
         }
         await fetchProxyPools();
-        notify.success(`Disabled ${deadIds.length} dead proxies`);
+        toast.success(`Disabled ${deadIds.length} dead proxies`);
       } finally {
         setBulkBusy(false);
       }
     } else {
-      notify.success(`Health check done. Alive: ${alive}, Dead: ${deadIds.length}`);
+      toast.success(`Health check done. Alive: ${alive}, Dead: ${deadIds.length}`);
     }
   };
 
@@ -341,13 +341,13 @@ export default function ProxyPoolsPage() {
       if (res.ok) {
         await fetchProxyPools();
         closeVercelModal();
-        notify.success(`Deployed: ${data.deployUrl}`);
+        toast.success(`Deployed: ${data.deployUrl}`);
       } else {
-        notify.error(data.error || "Deploy failed");
+        toast.error(data.error || "Deploy failed");
       }
     } catch (error) {
       console.log("Error deploying Vercel relay:", error);
-      notify.error("Deploy failed");
+      toast.error("Deploy failed");
     } finally {
       setDeploying(false);
     }
@@ -391,7 +391,7 @@ export default function ProxyPoolsPage() {
       .filter(Boolean);
 
     if (lines.length === 0) {
-      notify.warning("Please paste at least one proxy line.");
+      toast.warning("Please paste at least one proxy line.");
       return;
     }
 
@@ -413,7 +413,7 @@ export default function ProxyPoolsPage() {
     });
 
     if (invalidLines.length > 0) {
-      notify.error(`Invalid proxy format:\n${invalidLines.join("\n")}`);
+      toast.error(`Invalid proxy format:\n${invalidLines.join("\n")}`);
       return;
     }
 
@@ -455,10 +455,10 @@ export default function ProxyPoolsPage() {
 
       await fetchProxyPools();
       setShowBatchImportModal(false);
-      notify.success(`Batch import completed: Created ${created}, Skipped ${skipped}, Failed ${failed}`);
+      toast.success(`Batch import completed: Created ${created}, Skipped ${skipped}, Failed ${failed}`);
     } catch (error) {
       console.log("Error batch importing proxies:", error);
-      notify.error("Batch import failed");
+      toast.error("Batch import failed");
     } finally {
       setImporting(false);
     }

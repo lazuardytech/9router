@@ -1,5 +1,7 @@
 "use client";
 
+import { toast } from "sonner";
+
 /**
  * ModelAvailabilityBadge — compact inline status indicator
  *
@@ -9,7 +11,6 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import { Button } from "@/shared/components";
-import { useNotificationStore } from "@/store/notificationStore";
 
 const STATUS_CONFIG = {
   available: { icon: "check_circle", color: "#22c55e", label: "Available" },
@@ -24,7 +25,6 @@ export default function ModelAvailabilityBadge() {
   const [expanded, setExpanded] = useState(false);
   const [clearing, setClearing] = useState(null);
   const ref = useRef(null);
-  const notify = useNotificationStore();
 
   const fetchStatus = useCallback(async () => {
     try {
@@ -64,13 +64,13 @@ export default function ModelAvailabilityBadge() {
         body: JSON.stringify({ action: "clearCooldown", provider, model }),
       });
       if (res.ok) {
-        notify.success(`Cooldown cleared for ${model}`);
+        toast.success(`Cooldown cleared for ${model}`);
         await fetchStatus();
       } else {
-        notify.error("Failed to clear cooldown");
+        toast.error("Failed to clear cooldown");
       }
     } catch {
-      notify.error("Failed to clear cooldown");
+      toast.error("Failed to clear cooldown");
     } finally {
       setClearing(null);
     }
