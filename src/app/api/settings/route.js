@@ -25,6 +25,9 @@ export async function GET() {
     // - AND INITIAL_PASSWORD env is not set (custom password via env)
     const isDefaultPassword = !password && !hasCustomInitialPassword;
 
+    const runtime = typeof Bun !== "undefined" ? `Bun ${Bun.version}` : `Node.js ${process.version}`;
+    const platform = `${process.platform} ${process.arch}`;
+
     return NextResponse.json(
       {
         ...safeSettings,
@@ -32,6 +35,7 @@ export async function GET() {
         enableTranslator,
         hasPassword: !!password,
         isDefaultPassword,
+        systemInfo: { runtime, platform },
       },
       { headers: SETTINGS_RESPONSE_HEADERS },
     );

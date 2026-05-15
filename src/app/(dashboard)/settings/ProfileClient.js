@@ -709,8 +709,8 @@ export default function ProfilePage() {
           <div className="flex flex-col gap-2">
             {[
               { label: "App", value: `${APP_CONFIG.name} v${APP_CONFIG.displayVersion}` },
-              { label: "Runtime", value: typeof Bun !== "undefined" ? `Bun ${Bun.version}` : process.version },
-              { label: "Platform", value: `${process.platform} ${process.arch}` },
+              { label: "Runtime", value: settings.systemInfo?.runtime || "—" },
+              { label: "Platform", value: settings.systemInfo?.platform || "—" },
               { label: "Database", value: "~/.pod/pod.sqlite" },
             ].map((row) => (
               <div
