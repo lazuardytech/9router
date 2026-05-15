@@ -3,6 +3,7 @@
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import { useState, useRef, Suspense } from "react";
 import { cn } from "@/shared/utils/cn";
+import SegmentedControl from "@/shared/components/SegmentedControl";
 import RequestLogger from "@/shared/components/RequestLogger";
 import ConsoleLogClient from "./ConsoleLogClient";
 import ProxyLogsTab from "./ProxyLogsTab";
@@ -169,23 +170,13 @@ function LogsInner() {
       {/* Page header: tabs left, toolbar right */}
       <div className="flex items-center justify-between gap-3 flex-wrap">
         {/* Pill tabs */}
-        <div className="flex items-center gap-1 p-1 rounded-[8px] bg-graphite border border-charcoal-grey">
-          {TABS.map((tab) => (
-            <button
-              key={tab.key}
-              onClick={() => setTab(tab.key)}
-              className={cn(
-                "flex items-center gap-1.5 h-7 px-3 rounded-[6px] text-[12px] font-[510] transition-colors duration-100",
-                activeTab === tab.key
-                  ? "bg-deep-slate text-porcelain shadow-[var(--shadow-sm)]"
-                  : "text-fog-grey hover:text-storm-cloud hover:bg-deep-slate/50",
-              )}
-            >
-              <span className="material-symbols-outlined text-[13px]">{tab.icon}</span>
-              {tab.label}
-            </button>
-          ))}
-        </div>
+        <SegmentedControl
+          options={TABS.map((tab) => ({ value: tab.key, label: tab.label, icon: tab.icon }))}
+          value={activeTab}
+          onChange={setTab}
+          size="sm"
+          className="w-full sm:w-auto"
+        />
 
         {/* Toolbar per tab */}
         {activeTab === "request-logs" && (
