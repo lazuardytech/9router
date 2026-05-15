@@ -4,7 +4,7 @@ FROM --platform=linux/amd64 ${BUN_IMAGE} AS builder
 WORKDIR /app
 
 COPY package.json bun.lock ./
-RUN bun install --frozen-lockfile
+RUN bun install --frozen-lockfile --ignore-scripts
 
 COPY . ./
 ENV NEXT_TELEMETRY_DISABLED=1
