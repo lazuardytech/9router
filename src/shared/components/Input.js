@@ -27,7 +27,7 @@ export default function Input({
       )}
       <div className="relative">
         {icon && (
-          <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-storm-cloud">
+          <div className="absolute inset-y-0 left-0 flex items-center pl-3 pr-2 pointer-events-none text-storm-cloud">
             <span className="material-symbols-outlined text-[16px]">{icon}</span>
           </div>
         )}
