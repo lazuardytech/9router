@@ -32,6 +32,16 @@ export default function MemoryClient() {
   const [refreshing, setRefreshing] = useState(false);
   const [savingSettings, setSavingSettings] = useState(false);
   const [deletingId, setDeletingId] = useState(null);
+  const [confirmDialog, setConfirmDialog] = useState({
+    open: false,
+    title: "",
+    message: "",
+    onConfirm: null,
+    variant: "default",
+  });
+  const openConfirm = (title, message, onConfirm, variant = "default") =>
+    setConfirmDialog({ open: true, title, message, onConfirm, variant });
+  const closeConfirm = () => setConfirmDialog((prev) => ({ ...prev, open: false, onConfirm: null }));
 
   const [settings, setSettings] = useState({
     enabled: true,
@@ -334,7 +344,14 @@ export default function MemoryClient() {
                         size="sm"
                         variant="danger"
                         icon="delete"
-                        onClick={() => handleDeleteMemory(entry.id)}
+                        onClick={() =>
+                          openConfirm(
+                            "Delete memory",
+                            "Are you sure you want to delete this memory entry?",
+                            () => handleDeleteMemory(entry.id),
+                            "danger",
+                          )
+                        }
                         loading={deletingId === entry.id}
                       />
                     </td>
