@@ -683,7 +683,7 @@ export default function ProxyPoolsPage() {
 
       <Modal isOpen={showVercelModal} title="Deploy Vercel Relay" onClose={closeVercelModal}>
         <div className="flex flex-col gap-4">
-          <div className="rounded-lg bg-blue-500/5 border border-blue-500/10 p-3 flex flex-col gap-1.5">
+          <div className="rounded-[6px] bg-deep-slate border border-charcoal-grey p-3 flex flex-col gap-1.5">
             <p className="text-sm text-text-main font-medium">What is Vercel Relay?</p>
             <p className="text-xs text-text-muted">
               Deploys an edge relay function to Vercel. All AI provider requests will be forwarded through Vercel&apos;s
