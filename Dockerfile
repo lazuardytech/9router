@@ -3,12 +3,11 @@ ARG NODE_IMAGE=node:22-alpine
 FROM ${NODE_IMAGE} AS builder
 WORKDIR /app
 
-RUN apk --no-cache add curl unzip && \
-  curl -fsSL https://bun.sh/install | BUN_INSTALL=/usr/local sh -s "bun-v1.3.14" && \
-  bun --version
+RUN apk --no-cache upgrade && apk --no-cache add python3 make g++ linux-headers
 
 COPY package.json bun.lock ./
 RUN --mount=type=cache,target=/root/.bun/install/cache \
+  npm install -g bun@1.3.14 && \
   bun install --frozen-lockfile
 
 COPY . ./
