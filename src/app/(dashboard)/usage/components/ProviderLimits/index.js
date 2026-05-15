@@ -2,10 +2,8 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import ProviderIcon from "@/shared/components/ProviderIcon";
-import QuotaTable from "./QuotaTable";
 import Toggle from "@/shared/components/Toggle";
-import { parseQuotaData, calculatePercentage } from "./utils";
-import Card from "@/shared/components/Card";
+import { parseQuotaData, calculatePercentage, getStatusColor, formatResetTime } from "./utils";
 import { EditConnectionModal } from "@/shared/components";
 import { USAGE_SUPPORTED_PROVIDERS, USAGE_APIKEY_PROVIDERS } from "@/shared/constants/providers";
 
@@ -59,6 +57,7 @@ export default function ProviderLimits() {
   const [expiringFirst, setExpiringFirst] = useState(false);
   const [providerMenuOpen, setProviderMenuOpen] = useState(false);
   const [bulkToggling, setBulkToggling] = useState(false);
+  const [expandedRows, setExpandedRows] = useState({});
 
   const intervalRef = useRef(null);
   const countdownRef = useRef(null);
@@ -449,219 +448,293 @@ export default function ProviderLimits() {
     return count + (hasLowQuota ? 1 : 0);
   }, 0);
 
+  // Accumulated progress for a connection: sum used / sum total
+  const getAccumulatedProgress = (conn) => {
+    const quotas = quotaData[conn.id]?.quotas || [];
+    const totalUsed = quotas.reduce((s, q) => s + (q.used || 0), 0);
+    const totalLimit = quotas.reduce((s, q) => s + (q.total || 0), 0);
+    const pct = calculatePercentage(totalUsed, totalLimit);
+    return { totalUsed, totalLimit, pct };
+  };
+
+  // Color classes from status color name
+  const colorClasses = (color) => {
+    if (color === "green") return { bar: "bg-green-500", track: "bg-green-500/15", text: "text-green-400" };
+    if (color === "yellow") return { bar: "bg-yellow-500", track: "bg-yellow-500/15", text: "text-yellow-400" };
+    return { bar: "bg-red-500", track: "bg-red-500/15", text: "text-red-400" };
+  };
+
   // Empty state
   if (!connectionsLoading && sortedConnections.length === 0) {
     return (
-      <Card padding="lg">
-        <div className="text-center py-12">
-          <span className="material-symbols-outlined text-[64px] text-text-muted opacity-20">cloud_off</span>
-          <h3 className="mt-4 text-lg font-semibold text-text-primary">No Providers Connected</h3>
-          <p className="mt-2 text-sm text-text-muted max-w-md mx-auto">
+      <div className="rounded-[6px] border border-charcoal-grey overflow-hidden">
+        <div className="text-center py-16">
+          <span className="material-symbols-outlined text-[48px] text-storm-cloud opacity-30">cloud_off</span>
+          <h3 className="mt-3 text-[13px] font-[510] text-porcelain">No Providers Connected</h3>
+          <p className="mt-1 text-[11px] text-storm-cloud max-w-xs mx-auto">
             Connect to providers with OAuth to track your API quota limits and usage.
           </p>
         </div>
-      </Card>
+      </div>
     );
   }
 
   return (
-    <div className="space-y-6">
-      {/* Header Controls */}
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:gap-3">
-          <h2 className="text-xl font-semibold text-text-primary">Provider Limits</h2>
-        </div>
+    <div className="space-y-4">
+      {/* Toolbar */}
+      <div className="flex flex-wrap items-center gap-1.5">
+        {/* Provider filter */}
+        <div className="relative">
+          <button
+            type="button"
+            onClick={() => setProviderMenuOpen((prev) => !prev)}
+            className="h-7 px-2.5 rounded-[4px] border border-charcoal-grey text-[11px] text-storm-cloud hover:text-porcelain hover:bg-deep-slate transition-colors flex items-center gap-1.5"
+            aria-haspopup="menu"
+            aria-expanded={providerMenuOpen}
+            title="Filter quota providers"
+          >
+            {providerFilter === "all" ? (
+              <span className="material-symbols-outlined text-[13px]">apps</span>
+            ) : (
+              <ProviderIcon
+                src={`/providers/${providerFilter}.png`}
+                alt={providerFilter}
+                size={14}
+                className="size-[14px] rounded object-contain"
+                fallbackText={providerFilter.slice(0, 2).toUpperCase()}
+              />
+            )}
+            <span className="capitalize hidden lg:inline">{selectedProviderLabel}</span>
+            <span className="material-symbols-outlined text-[13px]">expand_more</span>
+          </button>
 
-        <div className="flex flex-wrap items-center gap-1.5">
-          <div className="relative">
-            <button
-              type="button"
-              onClick={() => setProviderMenuOpen((prev) => !prev)}
-              className="flex h-8 items-center justify-between gap-1 rounded-lg border border-black/10 bg-black/[0.02] px-2 text-xs text-text-primary transition-colors hover:bg-black/5 dark:border-white/10 dark:bg-white/[0.03] dark:hover:bg-white/10"
-              aria-haspopup="menu"
-              aria-expanded={providerMenuOpen}
-              title="Filter quota providers"
-            >
-              <span className="flex min-w-0 items-center gap-1.5">
-                {providerFilter === "all" ? (
-                  <span className="material-symbols-outlined text-[14px] text-text-muted">apps</span>
-                ) : (
-                  <ProviderIcon
-                    src={`/providers/${providerFilter}.png`}
-                    alt={providerFilter}
-                    size={18}
-                    className="size-[18px] rounded object-contain"
-                    fallbackText={providerFilter.slice(0, 2).toUpperCase()}
-                  />
-                )}
-                <span className="truncate capitalize hidden lg:inline">{selectedProviderLabel}</span>
-              </span>
-              <span className="material-symbols-outlined text-[14px] text-text-muted">expand_more</span>
-            </button>
-
-            {providerMenuOpen && (
-              <>
+          {providerMenuOpen && (
+            <>
+              <button
+                type="button"
+                className="fixed inset-0 z-30 bg-transparent"
+                aria-label="Close provider filter"
+                onClick={() => setProviderMenuOpen(false)}
+              />
+              <div className="absolute left-0 z-40 mt-1 w-52 overflow-hidden rounded-[6px] border border-charcoal-grey bg-graphite p-1 shadow-xl shadow-black/30">
                 <button
                   type="button"
-                  className="fixed inset-0 z-30 bg-transparent"
-                  aria-label="Close provider filter"
-                  onClick={() => setProviderMenuOpen(false)}
-                />
-                <div className="absolute left-0 z-40 mt-2 w-64 overflow-hidden rounded-2xl border border-black/10 bg-surface/95 p-1.5 shadow-xl shadow-black/10 backdrop-blur dark:border-white/10 dark:bg-surface/95 sm:w-72">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setProviderFilter("all");
-                      setProviderMenuOpen(false);
-                    }}
-                    className={`flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm transition-colors ${providerFilter === "all" ? "bg-primary/10 text-primary" : "text-text-primary hover:bg-black/5 dark:hover:bg-white/10"}`}
-                  >
-                    <span className="material-symbols-outlined text-[22px]">apps</span>
-                    <span className="font-medium">All providers</span>
-                    {providerFilter === "all" && (
-                      <span className="material-symbols-outlined ml-auto text-[20px]">check</span>
-                    )}
-                  </button>
-                  <div className="my-1 h-px bg-black/10 dark:bg-white/10" />
-                  <div className="max-h-72 overflow-y-auto pr-1">
-                    {providerOptions.map((provider) => (
-                      <button
-                        key={provider}
-                        type="button"
-                        onClick={() => {
-                          setProviderFilter(provider);
-                          setProviderMenuOpen(false);
-                        }}
-                        className={`flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm transition-colors ${providerFilter === provider ? "bg-primary/10 text-primary" : "text-text-primary hover:bg-black/5 dark:hover:bg-white/10"}`}
-                      >
-                        <ProviderIcon
-                          src={`/providers/${provider}.png`}
-                          alt={provider}
-                          size={24}
-                          className="size-6 rounded-md object-contain"
-                          fallbackText={provider.slice(0, 2).toUpperCase()}
-                        />
-                        <span className="font-medium capitalize">{provider}</span>
-                        {providerFilter === provider && (
-                          <span className="material-symbols-outlined ml-auto text-[20px]">check</span>
-                        )}
-                      </button>
-                    ))}
-                  </div>
+                  onClick={() => {
+                    setProviderFilter("all");
+                    setProviderMenuOpen(false);
+                  }}
+                  className={`flex w-full items-center gap-2 rounded-[4px] px-2.5 py-1.5 text-left text-[12px] transition-colors ${
+                    providerFilter === "all"
+                      ? "bg-deep-slate text-porcelain"
+                      : "text-storm-cloud hover:bg-deep-slate hover:text-porcelain"
+                  }`}
+                >
+                  <span className="material-symbols-outlined text-[14px]">apps</span>
+                  <span>All providers</span>
+                  {providerFilter === "all" && (
+                    <span className="material-symbols-outlined ml-auto text-[13px]">check</span>
+                  )}
+                </button>
+                <div className="my-1 h-px bg-charcoal-grey" />
+                <div className="max-h-60 overflow-y-auto">
+                  {providerOptions.map((provider) => (
+                    <button
+                      key={provider}
+                      type="button"
+                      onClick={() => {
+                        setProviderFilter(provider);
+                        setProviderMenuOpen(false);
+                      }}
+                      className={`flex w-full items-center gap-2 rounded-[4px] px-2.5 py-1.5 text-left text-[12px] transition-colors ${
+                        providerFilter === provider
+                          ? "bg-deep-slate text-porcelain"
+                          : "text-storm-cloud hover:bg-deep-slate hover:text-porcelain"
+                      }`}
+                    >
+                      <ProviderIcon
+                        src={`/providers/${provider}.png`}
+                        alt={provider}
+                        size={16}
+                        className="size-4 rounded object-contain"
+                        fallbackText={provider.slice(0, 2).toUpperCase()}
+                      />
+                      <span className="capitalize">{provider}</span>
+                      {providerFilter === provider && (
+                        <span className="material-symbols-outlined ml-auto text-[13px]">check</span>
+                      )}
+                    </button>
+                  ))}
                 </div>
-              </>
-            )}
-          </div>
-          <button
-            type="button"
-            onClick={() => setExpiringFirst((prev) => !prev)}
-            className={`flex h-8 shrink-0 items-center gap-1 rounded-lg border px-2 text-xs transition-colors ${expiringFirst ? "border-amber-500/40 bg-amber-500/10 text-amber-500" : "border-black/10 text-text-primary hover:bg-black/5 dark:border-white/10 dark:hover:bg-white/5"}`}
-            title="Sort accounts by earliest quota reset time"
-          >
-            <span className="material-symbols-outlined text-[14px]">hourglass_top</span>
-            <span className="hidden sm:inline">Expiring first</span>
-          </button>
-
-          {/* Bulk: disable depleted */}
-          <button
-            type="button"
-            onClick={handleDisableDepleted}
-            disabled={bulkToggling}
-            className="flex h-8 shrink-0 items-center gap-1 rounded-lg border border-red-500/30 px-2 text-xs text-red-500 transition-colors hover:bg-red-500/10 disabled:opacity-50"
-            title="Disable connections with depleted quota (within current filter)"
-          >
-            <span className="material-symbols-outlined text-[14px]">block</span>
-            <span className="hidden sm:inline">Turn off Empty</span>
-          </button>
-
-          {/* Bulk: enable available */}
-          <button
-            type="button"
-            onClick={handleEnableAvailable}
-            disabled={bulkToggling}
-            className="flex h-8 shrink-0 items-center gap-1 rounded-lg border border-emerald-500/30 px-2 text-xs text-emerald-500 transition-colors hover:bg-emerald-500/10 disabled:opacity-50"
-            title="Enable connections that still have quota (within current filter)"
-          >
-            <span className="material-symbols-outlined text-[14px]">check_circle</span>
-            <span className="hidden sm:inline">Turn on Available</span>
-          </button>
-
-          {/* Auto-refresh toggle */}
-          <button
-            onClick={() => setAutoRefresh((prev) => !prev)}
-            className="flex h-8 shrink-0 items-center gap-1 rounded-lg border border-black/10 px-2 text-xs transition-colors hover:bg-black/5 dark:border-white/10 dark:hover:bg-white/5"
-            title={autoRefresh ? "Disable auto-refresh" : "Enable auto-refresh"}
-          >
-            <span
-              className={`material-symbols-outlined text-[14px] ${autoRefresh ? "text-primary" : "text-text-muted"}`}
-            >
-              {autoRefresh ? "toggle_on" : "toggle_off"}
-            </span>
-            <span className="hidden text-text-primary sm:inline">Auto-refresh</span>
-            {autoRefresh && <span className="text-[10px] text-text-muted tabular-nums">({countdown}s)</span>}
-          </button>
-
-          {/* Refresh all button */}
-          <button
-            type="button"
-            onClick={refreshAll}
-            disabled={refreshingAll}
-            className="flex h-8 shrink-0 items-center gap-1 rounded-lg border border-black/10 px-2 text-xs text-text-primary transition-colors hover:bg-black/5 dark:border-white/10 dark:hover:bg-white/5 disabled:opacity-50"
-            title="Refresh all"
-          >
-            <span className={`material-symbols-outlined text-[14px] ${refreshingAll ? "animate-spin" : ""}`}>
-              refresh
-            </span>
-          </button>
+              </div>
+            </>
+          )}
         </div>
+
+        {/* Expiring first */}
+        <button
+          type="button"
+          onClick={() => setExpiringFirst((prev) => !prev)}
+          className={`h-7 px-2.5 rounded-[4px] border text-[11px] transition-colors flex items-center gap-1 ${
+            expiringFirst
+              ? "border-amber-500/40 bg-amber-500/10 text-amber-400"
+              : "border-charcoal-grey text-storm-cloud hover:text-porcelain hover:bg-deep-slate"
+          }`}
+          title="Sort accounts by earliest quota reset time"
+        >
+          <span className="material-symbols-outlined text-[13px]">hourglass_top</span>
+          <span className="hidden sm:inline">Expiring first</span>
+        </button>
+
+        {/* Bulk: disable depleted */}
+        <button
+          type="button"
+          onClick={handleDisableDepleted}
+          disabled={bulkToggling}
+          className="h-7 px-2.5 rounded-[4px] border border-red-500/30 text-[11px] text-red-400 hover:bg-red-500/10 transition-colors flex items-center gap-1 disabled:opacity-50"
+          title="Disable connections with depleted quota"
+        >
+          <span className="material-symbols-outlined text-[13px]">block</span>
+          <span className="hidden sm:inline">Turn off Empty</span>
+        </button>
+
+        {/* Bulk: enable available */}
+        <button
+          type="button"
+          onClick={handleEnableAvailable}
+          disabled={bulkToggling}
+          className="h-7 px-2.5 rounded-[4px] border border-emerald-500/30 text-[11px] text-emerald-400 hover:bg-emerald-500/10 transition-colors flex items-center gap-1 disabled:opacity-50"
+          title="Enable connections that still have quota"
+        >
+          <span className="material-symbols-outlined text-[13px]">check_circle</span>
+          <span className="hidden sm:inline">Turn on Available</span>
+        </button>
+
+        {/* Auto-refresh toggle */}
+        <button
+          onClick={() => setAutoRefresh((prev) => !prev)}
+          className="h-7 px-2.5 rounded-[4px] border border-charcoal-grey text-[11px] text-storm-cloud hover:text-porcelain hover:bg-deep-slate transition-colors flex items-center gap-1"
+          title={autoRefresh ? "Disable auto-refresh" : "Enable auto-refresh"}
+        >
+          <span
+            className={`material-symbols-outlined text-[13px] ${autoRefresh ? "text-aether-blue" : "text-storm-cloud"}`}
+          >
+            {autoRefresh ? "toggle_on" : "toggle_off"}
+          </span>
+          <span className="hidden text-storm-cloud sm:inline">Auto-refresh</span>
+          {autoRefresh && <span className="text-[10px] text-storm-cloud tabular-nums">({countdown}s)</span>}
+        </button>
+
+        {/* Refresh all button */}
+        <button
+          type="button"
+          onClick={refreshAll}
+          disabled={refreshingAll}
+          className="h-7 px-2.5 rounded-[4px] border border-charcoal-grey text-[11px] text-storm-cloud hover:text-porcelain hover:bg-deep-slate transition-colors disabled:opacity-50 flex items-center gap-1"
+          title="Refresh all"
+        >
+          <span className={`material-symbols-outlined text-[13px] ${refreshingAll ? "animate-spin" : ""}`}>
+            refresh
+          </span>
+        </button>
       </div>
 
-      {/* Provider cards: 2 columns, compact */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-        {sortedConnections.map((conn) => {
-          const quota = quotaData[conn.id];
-          const isLoading = loading[conn.id];
-          const error = errors[conn.id];
+      {/* Grouped table */}
+      <div className="rounded-[6px] border border-charcoal-grey overflow-hidden">
+        {/* Table header */}
+        <div className="grid grid-cols-[1fr_200px_64px_120px] bg-pitch-black/40 border-b border-charcoal-grey px-3 py-2">
+          <div className="text-[10px] font-[590] uppercase tracking-[0.05em] text-fog-grey">Provider</div>
+          <div className="text-[10px] font-[590] uppercase tracking-[0.05em] text-fog-grey">Progress</div>
+          <div className="text-[10px] font-[590] uppercase tracking-[0.05em] text-fog-grey text-right">%</div>
+          <div className="text-[10px] font-[590] uppercase tracking-[0.05em] text-fog-grey text-right">Actions</div>
+        </div>
 
-          // Use table layout for all providers
-          const isInactive = conn.isActive === false;
-          const rowBusy = deletingId === conn.id || togglingId === conn.id;
+        {connectionsLoading ? (
+          <div className="flex items-center justify-center py-10">
+            <span className="material-symbols-outlined text-[28px] text-storm-cloud animate-spin">
+              progress_activity
+            </span>
+          </div>
+        ) : (
+          sortedConnections.map((conn) => {
+            const quota = quotaData[conn.id];
+            const isLoading = loading[conn.id];
+            const error = errors[conn.id];
+            const isInactive = conn.isActive === false;
+            const rowBusy = deletingId === conn.id || togglingId === conn.id;
+            const expanded = expandedRows[conn.id] ?? true;
+            const { totalUsed, totalLimit, pct } = getAccumulatedProgress(conn);
+            const color = getStatusColor(pct);
+            const cc = colorClasses(color);
+            const isEmail = (v) => typeof v === "string" && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
+            const accountLabel = isEmail(conn.email) ? conn.email : conn.name || null;
 
-          return (
-            <Card key={conn.id} padding="none" className={`min-w-0 ${isInactive ? "opacity-60" : ""}`}>
-              <div className="px-3 py-2 border-b border-black/10 dark:border-white/10">
-                <div className="flex items-center justify-between gap-2">
-                  <div className="flex items-center gap-2 min-w-0">
-                    <div className="w-8 h-8 shrink-0 rounded-md flex items-center justify-center overflow-hidden">
+            return (
+              <div
+                key={conn.id}
+                className={`border-b border-charcoal-grey/60 last:border-0 ${isInactive ? "opacity-60" : ""}`}
+              >
+                {/* Provider header row */}
+                <div
+                  className="grid grid-cols-[1fr_200px_64px_120px] items-center px-3 py-2.5 bg-graphite hover:bg-deep-slate cursor-pointer transition-colors duration-100"
+                  onClick={() => setExpandedRows((prev) => ({ ...prev, [conn.id]: !(prev[conn.id] ?? true) }))}
+                >
+                  {/* Provider identity */}
+                  <div className="flex items-center gap-2.5 min-w-0">
+                    <span className="material-symbols-outlined text-[13px] text-fog-grey shrink-0">
+                      {expanded ? "expand_more" : "chevron_right"}
+                    </span>
+                    <div className="w-5 h-5 shrink-0 rounded-[4px] bg-white flex items-center justify-center overflow-hidden">
                       <ProviderIcon
                         src={`/providers/${conn.provider}.png`}
                         alt={conn.provider}
-                        size={32}
+                        size={20}
                         className="object-contain"
                         fallbackText={conn.provider?.slice(0, 2).toUpperCase() || "PR"}
                       />
                     </div>
                     <div className="min-w-0">
-                      <h3 className="text-sm font-semibold text-text-primary capitalize truncate">{conn.provider}</h3>
-                      {(() => {
-                        const isEmail = (v) => typeof v === "string" && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
-                        const label = isEmail(conn.email) ? conn.email : isEmail(conn.name) ? conn.name : conn.name;
-                        return label ? <p className="text-xs text-text-muted truncate">{label}</p> : null;
-                      })()}
+                      <span className="text-[13px] font-[510] text-porcelain capitalize tracking-[-0.12px]">
+                        {conn.provider}
+                      </span>
+                      {accountLabel && (
+                        <span className="ml-2 text-[11px] text-storm-cloud truncate">{accountLabel}</span>
+                      )}
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-1 shrink-0">
+                  {/* Accumulated progress bar */}
+                  <div className="pr-3" onClick={(e) => e.stopPropagation()}>
+                    {totalLimit > 0 ? (
+                      <div className={`h-1.5 rounded-full overflow-hidden ${cc.track}`}>
+                        <div
+                          className={`h-full rounded-full transition-all duration-300 ${cc.bar}`}
+                          style={{ width: `${Math.min(pct, 100)}%` }}
+                        />
+                      </div>
+                    ) : (
+                      <div className="h-1.5 rounded-full bg-charcoal-grey/40" />
+                    )}
+                  </div>
+
+                  {/* Percentage badge */}
+                  <div className="text-right" onClick={(e) => e.stopPropagation()}>
+                    {totalLimit > 0 ? (
+                      <span className={`text-[11px] font-[510] tabular-nums ${cc.text}`}>{pct}%</span>
+                    ) : (
+                      <span className="text-[11px] text-storm-cloud">—</span>
+                    )}
+                  </div>
+
+                  {/* Actions */}
+                  <div className="flex items-center justify-end gap-0.5" onClick={(e) => e.stopPropagation()}>
                     <button
                       type="button"
                       onClick={() => refreshProvider(conn.id, conn.provider)}
                       disabled={isLoading || rowBusy}
-                      className="p-1.5 rounded-lg hover:bg-black/5 dark:hover:bg-white/5 transition-colors disabled:opacity-50"
+                      className="flex items-center justify-center size-6 rounded-[4px] text-fog-grey hover:bg-charcoal-grey hover:text-porcelain transition-colors duration-100 disabled:opacity-40"
                       title="Refresh quota"
                     >
-                      <span
-                        className={`material-symbols-outlined text-[18px] text-text-muted ${isLoading ? "animate-spin" : ""}`}
-                      >
+                      <span className={`material-symbols-outlined text-[14px] ${isLoading ? "animate-spin" : ""}`}>
                         refresh
                       </span>
                     </button>
@@ -672,28 +745,25 @@ export default function ProviderLimits() {
                         setShowEditModal(true);
                       }}
                       disabled={rowBusy}
-                      className="p-1.5 rounded-lg hover:bg-black/5 dark:hover:bg-white/5 text-text-muted hover:text-primary transition-colors disabled:opacity-50"
+                      className="flex items-center justify-center size-6 rounded-[4px] text-fog-grey hover:bg-charcoal-grey hover:text-porcelain transition-colors duration-100 disabled:opacity-40"
                       title="Edit connection"
                     >
-                      <span className="material-symbols-outlined text-[18px]">edit</span>
+                      <span className="material-symbols-outlined text-[14px]">edit</span>
                     </button>
                     <button
                       type="button"
                       onClick={() => handleDeleteConnection(conn.id)}
                       disabled={rowBusy}
-                      className="p-1.5 rounded-lg hover:bg-red-500/10 text-red-500 transition-colors disabled:opacity-50"
+                      className="flex items-center justify-center size-6 rounded-[4px] text-fog-grey hover:bg-warning-red/10 hover:text-warning-red transition-colors duration-100 disabled:opacity-40"
                       title="Delete connection"
                     >
                       <span
-                        className={`material-symbols-outlined text-[18px] ${deletingId === conn.id ? "animate-pulse" : ""}`}
+                        className={`material-symbols-outlined text-[14px] ${deletingId === conn.id ? "animate-pulse" : ""}`}
                       >
                         delete
                       </span>
                     </button>
-                    <div
-                      className="inline-flex items-center pl-0.5"
-                      title={(conn.isActive ?? true) ? "Disable connection" : "Enable connection"}
-                    >
+                    <div className="pl-0.5">
                       <Toggle
                         size="sm"
                         checked={conn.isActive ?? true}
@@ -703,29 +773,89 @@ export default function ProviderLimits() {
                     </div>
                   </div>
                 </div>
-              </div>
 
-              <div className="px-2 py-1.5">
-                {isLoading ? (
-                  <div className="text-center py-5 text-text-muted">
-                    <span className="material-symbols-outlined text-[28px] animate-spin">progress_activity</span>
+                {/* Model sub-rows */}
+                {expanded && (
+                  <div className="border-t border-charcoal-grey/40">
+                    {isLoading ? (
+                      <div className="flex items-center gap-2 px-10 py-3">
+                        <span className="material-symbols-outlined text-[16px] text-storm-cloud animate-spin">
+                          progress_activity
+                        </span>
+                        <span className="text-[11px] text-storm-cloud">Loading quota…</span>
+                      </div>
+                    ) : error ? (
+                      <div className="flex items-center gap-2 px-10 py-3">
+                        <span className="material-symbols-outlined text-[16px] text-red-400">error</span>
+                        <span className="text-[11px] text-storm-cloud">{error}</span>
+                      </div>
+                    ) : quota?.message ? (
+                      <div className="px-10 py-3">
+                        <span className="text-[11px] text-storm-cloud">{quota.message}</span>
+                      </div>
+                    ) : !quota?.quotas?.length ? (
+                      <div className="px-10 py-3">
+                        <span className="text-[11px] text-storm-cloud">No quota data</span>
+                      </div>
+                    ) : (
+                      quota.quotas.map((q, idx) => {
+                        const remaining =
+                          q.remainingPercentage !== undefined
+                            ? Math.round(q.remainingPercentage)
+                            : calculatePercentage(q.used, q.total);
+                        const qColor = getStatusColor(remaining);
+                        const qcc = colorClasses(qColor);
+                        const countdown = formatResetTime(q.resetAt);
+
+                        return (
+                          <div
+                            key={idx}
+                            className="grid grid-cols-[1fr_200px_64px_120px] items-center px-3 py-2 bg-pitch-black/20 hover:bg-deep-slate/50 border-b border-charcoal-grey/30 last:border-0 transition-colors duration-100"
+                          >
+                            {/* Model name — indented */}
+                            <div className="flex items-center gap-2 pl-8 min-w-0">
+                              <span className={`text-[9px] shrink-0 ${qcc.text}`}>●</span>
+                              <span className="text-[12px] text-storm-cloud truncate">{q.name}</span>
+                            </div>
+
+                            {/* Progress bar */}
+                            <div className="pr-3">
+                              <div className={`h-1 rounded-full overflow-hidden ${qcc.track}`}>
+                                <div
+                                  className={`h-full rounded-full transition-all duration-300 ${qcc.bar}`}
+                                  style={{ width: `${Math.min(remaining, 100)}%` }}
+                                />
+                              </div>
+                              <div className="flex items-center justify-between mt-0.5">
+                                <span className="text-[10px] text-storm-cloud tabular-nums">
+                                  {q.used.toLocaleString()} / {q.total > 0 ? q.total.toLocaleString() : "∞"}
+                                </span>
+                              </div>
+                            </div>
+
+                            {/* Remaining % */}
+                            <div className="text-right">
+                              <span className={`text-[11px] font-[510] tabular-nums ${qcc.text}`}>{remaining}%</span>
+                            </div>
+
+                            {/* Resets in */}
+                            <div className="text-right pr-1">
+                              {countdown !== "-" ? (
+                                <span className="text-[11px] text-storm-cloud tabular-nums">in {countdown}</span>
+                              ) : (
+                                <span className="text-[11px] text-storm-cloud/40">—</span>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })
+                    )}
                   </div>
-                ) : error ? (
-                  <div className="text-center py-5">
-                    <span className="material-symbols-outlined text-[28px] text-red-500">error</span>
-                    <p className="mt-1.5 text-xs text-text-muted">{error}</p>
-                  </div>
-                ) : quota?.message ? (
-                  <div className="text-center py-5">
-                    <p className="text-xs text-text-muted">{quota.message}</p>
-                  </div>
-                ) : (
-                  <QuotaTable quotas={quota?.quotas} compact />
                 )}
               </div>
-            </Card>
-          );
-        })}
+            );
+          })
+        )}
       </div>
 
       <EditConnectionModal
