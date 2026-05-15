@@ -60,7 +60,9 @@ RUN mkdir -p /app/data && chown -R bun:bun /app && \
 RUN printf '#!/bin/sh\nchown -R bun:bun /app/data /app/data-home 2>/dev/null\n# Start tailscaled in userspace mode (background)\nmkdir -p /app/data/tailscale\ntailscaled --tun=userspace-networking --socket=/app/data/tailscale/tailscaled.sock --state=/app/data/tailscale/state &\nexec su-exec bun "$@"\n' > /entrypoint.sh && \
   chmod +x /entrypoint.sh
 
+WORKDIR /app
+
 EXPOSE 20128
 
 ENTRYPOINT ["/entrypoint.sh"]
-CMD ["bun", "run", "start"]
+CMD ["node", "server.js"]
