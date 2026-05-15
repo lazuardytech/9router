@@ -10,30 +10,43 @@ const fmtNum = (n) => {
 
 const fmtCost = (n) => `$${(n || 0).toFixed(4)}`;
 
+const PERIOD_UNIT = {
+  "24h": "per Day",
+  "7d": "per Week",
+  "30d": "per Month",
+  "90d": "per Quarter",
+};
+
 function Sparkline({ data, field, color, fmt }) {
   const values = data.map((d) => d[field] ?? 0);
   const min = Math.min(...values);
   const max = Math.max(...values);
   const range = Math.max(1, max - min);
-  const W = 100;
+  const W = 200;
   const H = 40;
-  const PAD = 2;
+  const PAD = 0;
 
   const points = values
     .map((v, i) => {
       const x = PAD + (i / Math.max(1, values.length - 1)) * (W - PAD * 2);
-      const y = H - PAD - ((v - min) / range) * (H - PAD * 2);
+      const y = H - PAD - ((v - min) / range) * (H - PAD * 2 - 2) - 1;
       return `${x.toFixed(2)},${y.toFixed(2)}`;
     })
     .join(" ");
 
-  const areaPoints = `${PAD},${H - PAD} ${points} ${W - PAD},${H - PAD}`;
+  const areaPoints = `${PAD},${H} ${points} ${W - PAD},${H}`;
 
   const [hovered, setHovered] = useState(null);
 
   return (
-    <div className="relative">
-      <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-10" aria-hidden="true" onMouseLeave={() => setHovered(null)}>
+    <div className="relative w-full">
+      <svg
+        viewBox={`0 0 ${W} ${H}`}
+        className="w-full h-10 block"
+        preserveAspectRatio="none"
+        aria-hidden="true"
+        onMouseLeave={() => setHovered(null)}
+      >
         {/* Area fill */}
         <polygon points={areaPoints} fill={color} fillOpacity="0.08" />
         {/* Line */}
@@ -41,7 +54,7 @@ function Sparkline({ data, field, color, fmt }) {
         {/* Hover dots */}
         {values.map((v, i) => {
           const x = PAD + (i / Math.max(1, values.length - 1)) * (W - PAD * 2);
-          const y = H - PAD - ((v - min) / range) * (H - PAD * 2);
+          const y = H - PAD - ((v - min) / range) * (H - PAD * 2 - 2) - 1;
           return (
             <circle
               key={i}
@@ -142,6 +155,8 @@ export default function MetricsLineChart({ period = "7d" }) {
     { requests: 0, promptTokens: 0, completionTokens: 0, cost: 0 },
   );
 
+  const unit = PERIOD_UNIT[period] || "per Week";
+
   return (
     <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
       {METRICS.map((m) => (
@@ -158,17 +173,20 @@ export default function MetricsLineChart({ period = "7d" }) {
           </div>
 
           {/* Value */}
-          <p className="text-lg font-mono font-[510] text-porcelain tracking-[-0.13px] px-3 pb-2">
+          <p className="text-lg font-mono font-[510] text-porcelain tracking-[-0.13px] px-3">
             {loading ? "—" : m.fmt(totals[m.key])}
           </p>
 
-          {/* Sparkline flush to bottom */}
+          {/* Unit */}
+          <p className="text-[10px] text-fog-grey px-3 pb-2">{unit}</p>
+
+          {/* Sparkline flush to bottom, full width */}
           {loading ? (
-            <div className="h-10 bg-deep-slate animate-pulse" />
+            <div className="h-10 bg-deep-slate animate-pulse mt-auto" />
           ) : data.length < 2 ? (
-            <div className="h-10 flex items-center justify-center text-[10px] text-fog-grey">No data</div>
+            <div className="h-10 flex items-center justify-center text-[10px] text-fog-grey mt-auto">No data</div>
           ) : (
-            <div className="mt-auto">
+            <div className="mt-auto w-full">
               <Sparkline data={data} field={m.key} color={m.color} fmt={m.fmt} />
             </div>
           )}

@@ -611,7 +611,7 @@ export async function getActiveRequests() {
   return { activeRequests, recentRequests, errorProvider };
 }
 
-const PERIOD_MS = { "24h": 86400000, "7d": 604800000, "30d": 2592000000, "60d": 5184000000 };
+const PERIOD_MS = { "24h": 86400000, "7d": 604800000, "30d": 2592000000, "90d": 7776000000 };
 
 export async function getUsageStats(period = "all") {
   if (isCloud) {
@@ -722,7 +722,7 @@ export async function getUsageStats(period = "all") {
   const useDailySummary = period !== "24h";
 
   if (useDailySummary) {
-    const periodDays = { "7d": 7, "30d": 30, "60d": 60 };
+    const periodDays = { "7d": 7, "30d": 30, "90d": 90 };
     const maxDays = periodDays[period] || null;
     let whereClause = "";
     const params = [];
@@ -1108,7 +1108,7 @@ export async function getChartData(period = "7d") {
     return buckets;
   }
 
-  const bucketCount = period === "7d" ? 7 : period === "30d" ? 30 : 60;
+  const bucketCount = period === "7d" ? 7 : period === "30d" ? 30 : 90;
   const today = new Date();
   const labelFn = (d) => d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
 
