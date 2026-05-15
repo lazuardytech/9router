@@ -59,6 +59,7 @@ export default function ProviderLimits() {
   const [providerMenuOpen, setProviderMenuOpen] = useState(false);
   const [bulkToggling, setBulkToggling] = useState(false);
   const [expandedRows, setExpandedRows] = useState({});
+  const [expandedProviders, setExpandedProviders] = useState({});
 
   const [confirmDialog, setConfirmDialog] = useState({
     open: false,
@@ -666,213 +667,294 @@ export default function ProviderLimits() {
             </span>
           </div>
         ) : (
-          sortedConnections.map((conn) => {
-            const quota = quotaData[conn.id];
-            const isLoading = loading[conn.id];
-            const error = errors[conn.id];
-            const isInactive = conn.isActive === false;
-            const rowBusy = deletingId === conn.id || togglingId === conn.id;
-            const expanded = expandedRows[conn.id] ?? true;
-            const { totalUsed, totalLimit, pct } = getAccumulatedProgress(conn);
-            const color = getStatusColor(pct);
-            const cc = colorClasses(color);
+          (() => {
+            // Group connections by provider
+            const groupedByProvider = sortedConnections.reduce((acc, conn) => {
+              if (!acc[conn.provider]) acc[conn.provider] = [];
+              acc[conn.provider].push(conn);
+              return acc;
+            }, {});
+            const providerGroups = Object.entries(groupedByProvider);
+
             const isEmail = (v) => typeof v === "string" && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
-            const accountLabel = isEmail(conn.email) ? conn.email : conn.name || null;
 
-            return (
-              <div
-                key={conn.id}
-                className={`border-b border-charcoal-grey/60 last:border-0 ${isInactive ? "opacity-60" : ""}`}
-              >
-                {/* Provider header row */}
-                <div
-                  className="grid grid-cols-[1fr_200px_64px_120px] items-center px-3 py-2.5 bg-graphite hover:bg-deep-slate cursor-pointer transition-colors duration-100"
-                  onClick={() => setExpandedRows((prev) => ({ ...prev, [conn.id]: !(prev[conn.id] ?? true) }))}
-                >
-                  {/* Provider identity */}
-                  <div className="flex items-center gap-2.5 min-w-0">
-                    <span className="material-symbols-outlined text-[13px] text-fog-grey shrink-0">
-                      {expanded ? "expand_more" : "chevron_right"}
-                    </span>
-                    <div className="w-5 h-5 shrink-0 rounded-[4px] bg-white flex items-center justify-center overflow-hidden">
-                      <ProviderIcon
-                        src={`/providers/${conn.provider}.png`}
-                        alt={conn.provider}
-                        size={20}
-                        className="object-contain"
-                        fallbackText={conn.provider?.slice(0, 2).toUpperCase() || "PR"}
-                      />
-                    </div>
-                    <div className="min-w-0">
-                      <span className="text-[13px] font-[510] text-porcelain capitalize tracking-[-0.12px]">
-                        {conn.provider}
+            return providerGroups.map(([provider, conns]) => {
+              const providerExpanded = expandedProviders[provider] ?? true;
+
+              // Accumulated progress across all connections in this provider group
+              const providerTotalUsed = conns.reduce((s, c) => s + getAccumulatedProgress(c).totalUsed, 0);
+              const providerTotalLimit = conns.reduce((s, c) => s + getAccumulatedProgress(c).totalLimit, 0);
+              const providerPct = calculatePercentage(providerTotalUsed, providerTotalLimit);
+              const providerColor = getStatusColor(providerPct);
+              const providerCc = colorClasses(providerColor);
+
+              return (
+                <div key={provider} className="border-b border-charcoal-grey/60 last:border-0">
+                  {/* Provider group row (top level) */}
+                  <div
+                    className="grid grid-cols-[1fr_200px_64px_120px] items-center px-3 py-2.5 bg-graphite hover:bg-deep-slate cursor-pointer transition-colors duration-100"
+                    onClick={() => setExpandedProviders((prev) => ({ ...prev, [provider]: !(prev[provider] ?? true) }))}
+                  >
+                    {/* Provider identity */}
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <span className="material-symbols-outlined text-[13px] text-fog-grey shrink-0">
+                        {providerExpanded ? "expand_more" : "chevron_right"}
                       </span>
-                      {accountLabel && (
-                        <span className="ml-2 text-[11px] text-storm-cloud truncate">{accountLabel}</span>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Accumulated progress bar */}
-                  <div className="pr-3" onClick={(e) => e.stopPropagation()}>
-                    {totalLimit > 0 ? (
-                      <div className={`h-1.5 rounded-full overflow-hidden ${cc.track}`}>
-                        <div
-                          className={`h-full rounded-full transition-all duration-300 ${cc.bar}`}
-                          style={{ width: `${Math.min(pct, 100)}%` }}
+                      <div className="w-5 h-5 shrink-0 rounded-[4px] bg-white flex items-center justify-center overflow-hidden">
+                        <ProviderIcon
+                          src={`/providers/${provider}.png`}
+                          alt={provider}
+                          size={20}
+                          className="object-contain"
+                          fallbackText={provider?.slice(0, 2).toUpperCase() || "PR"}
                         />
                       </div>
-                    ) : (
-                      <div className="h-1.5 rounded-full bg-charcoal-grey/40" />
-                    )}
-                  </div>
-
-                  {/* Percentage badge */}
-                  <div className="text-right" onClick={(e) => e.stopPropagation()}>
-                    {totalLimit > 0 ? (
-                      <span className={`text-[11px] font-[510] tabular-nums ${cc.text}`}>{pct}%</span>
-                    ) : (
-                      <span className="text-[11px] text-storm-cloud">—</span>
-                    )}
-                  </div>
-
-                  {/* Actions */}
-                  <div className="flex items-center justify-end gap-0.5" onClick={(e) => e.stopPropagation()}>
-                    <button
-                      type="button"
-                      onClick={() => refreshProvider(conn.id, conn.provider)}
-                      disabled={isLoading || rowBusy}
-                      className="flex items-center justify-center size-6 rounded-[4px] text-fog-grey hover:bg-charcoal-grey hover:text-porcelain transition-colors duration-100 disabled:opacity-40"
-                      title="Refresh quota"
-                    >
-                      <span className={`material-symbols-outlined text-[14px] ${isLoading ? "animate-spin" : ""}`}>
-                        refresh
+                      <span className="text-[13px] font-[510] text-porcelain capitalize tracking-[-0.12px]">
+                        {provider}
                       </span>
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setSelectedConnection(conn);
-                        setShowEditModal(true);
-                      }}
-                      disabled={rowBusy}
-                      className="flex items-center justify-center size-6 rounded-[4px] text-fog-grey hover:bg-charcoal-grey hover:text-porcelain transition-colors duration-100 disabled:opacity-40"
-                      title="Edit connection"
-                    >
-                      <span className="material-symbols-outlined text-[14px]">edit</span>
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() =>
-                        openConfirm(
-                          "Delete Connection",
-                          "Are you sure you want to delete this connection?",
-                          () => handleDeleteConnection(conn.id),
-                          "danger",
-                        )
-                      }
-                      disabled={rowBusy}
-                      className="flex items-center justify-center size-6 rounded-[4px] text-fog-grey hover:bg-warning-red/10 hover:text-warning-red transition-colors duration-100 disabled:opacity-40"
-                      title="Delete connection"
-                    >
-                      <span
-                        className={`material-symbols-outlined text-[14px] ${deletingId === conn.id ? "animate-pulse" : ""}`}
-                      >
-                        delete
+                      <span className="text-[11px] text-storm-cloud">
+                        {conns.length} {conns.length === 1 ? "account" : "accounts"}
                       </span>
-                    </button>
-                    <div className="pl-0.5">
-                      <Toggle
-                        size="sm"
-                        checked={conn.isActive ?? true}
-                        disabled={rowBusy}
-                        onChange={(nextActive) => handleToggleConnectionActive(conn.id, nextActive)}
-                      />
                     </div>
-                  </div>
-                </div>
 
-                {/* Model sub-rows */}
-                {expanded && (
-                  <div className="border-t border-charcoal-grey/40">
-                    {isLoading ? (
-                      <div className="flex items-center gap-2 px-10 py-3">
-                        <span className="material-symbols-outlined text-[16px] text-storm-cloud animate-spin">
-                          progress_activity
-                        </span>
-                        <span className="text-[11px] text-storm-cloud">Loading quota…</span>
-                      </div>
-                    ) : error ? (
-                      <div className="flex items-center gap-2 px-10 py-3">
-                        <span className="material-symbols-outlined text-[16px] text-red-400">error</span>
-                        <span className="text-[11px] text-storm-cloud">{error}</span>
-                      </div>
-                    ) : quota?.message ? (
-                      <div className="px-10 py-3">
-                        <span className="text-[11px] text-storm-cloud">{quota.message}</span>
-                      </div>
-                    ) : !quota?.quotas?.length ? (
-                      <div className="px-10 py-3">
-                        <span className="text-[11px] text-storm-cloud">No quota data</span>
-                      </div>
-                    ) : (
-                      quota.quotas.map((q, idx) => {
-                        const remaining =
-                          q.remainingPercentage !== undefined
-                            ? Math.round(q.remainingPercentage)
-                            : calculatePercentage(q.used, q.total);
-                        const qColor = getStatusColor(remaining);
-                        const qcc = colorClasses(qColor);
-                        const countdown = formatResetTime(q.resetAt);
-
-                        return (
+                    {/* Accumulated progress bar */}
+                    <div className="pr-3" onClick={(e) => e.stopPropagation()}>
+                      {providerTotalLimit > 0 ? (
+                        <div className={`h-1.5 rounded-full overflow-hidden ${providerCc.track}`}>
                           <div
-                            key={idx}
-                            className="grid grid-cols-[1fr_200px_64px_120px] items-center px-3 py-2 bg-pitch-black/20 hover:bg-deep-slate/50 border-b border-charcoal-grey/30 last:border-0 transition-colors duration-100"
+                            className={`h-full rounded-full transition-all duration-300 ${providerCc.bar}`}
+                            style={{ width: `${Math.min(providerPct, 100)}%` }}
+                          />
+                        </div>
+                      ) : (
+                        <div className="h-1.5 rounded-full bg-charcoal-grey/40" />
+                      )}
+                    </div>
+
+                    {/* Percentage badge */}
+                    <div className="text-right" onClick={(e) => e.stopPropagation()}>
+                      {providerTotalLimit > 0 ? (
+                        <span className={`text-[11px] font-[510] tabular-nums ${providerCc.text}`}>{providerPct}%</span>
+                      ) : (
+                        <span className="text-[11px] text-storm-cloud">—</span>
+                      )}
+                    </div>
+
+                    {/* No actions on provider row */}
+                    <div />
+                  </div>
+
+                  {/* Account rows (second level) */}
+                  {providerExpanded &&
+                    conns.map((conn) => {
+                      const quota = quotaData[conn.id];
+                      const isLoading = loading[conn.id];
+                      const error = errors[conn.id];
+                      const isInactive = conn.isActive === false;
+                      const rowBusy = deletingId === conn.id || togglingId === conn.id;
+                      const accountExpanded = expandedRows[conn.id] ?? true;
+                      const { totalUsed, totalLimit, pct } = getAccumulatedProgress(conn);
+                      const color = getStatusColor(pct);
+                      const cc = colorClasses(color);
+                      const accountLabel = isEmail(conn.email) ? conn.email : conn.name || conn.id.slice(0, 8);
+
+                      return (
+                        <div
+                          key={conn.id}
+                          className={`border-t border-charcoal-grey/40 ${isInactive ? "opacity-60" : ""}`}
+                        >
+                          {/* Account row */}
+                          <div
+                            className="grid grid-cols-[1fr_200px_64px_120px] items-center px-3 py-2.5 bg-pitch-black/30 hover:bg-deep-slate/60 cursor-pointer transition-colors duration-100"
+                            onClick={() =>
+                              setExpandedRows((prev) => ({ ...prev, [conn.id]: !(prev[conn.id] ?? true) }))
+                            }
                           >
-                            {/* Model name — indented */}
-                            <div className="flex items-center gap-2 pl-8 min-w-0">
-                              <span className={`text-[9px] shrink-0 ${qcc.text}`}>●</span>
-                              <span className="text-[12px] text-storm-cloud truncate">{q.name}</span>
+                            {/* Account identity */}
+                            <div className="flex items-center gap-2 pl-6 min-w-0">
+                              <span className="material-symbols-outlined text-[12px] text-fog-grey/70 shrink-0">
+                                {accountExpanded ? "expand_more" : "chevron_right"}
+                              </span>
+                              <span
+                                className={`w-1.5 h-1.5 rounded-full shrink-0 ${
+                                  isInactive ? "bg-storm-cloud" : "bg-emerald-400"
+                                }`}
+                              />
+                              <span className="text-[12px] text-porcelain/80 truncate">{accountLabel}</span>
                             </div>
 
-                            {/* Progress bar */}
-                            <div className="pr-3">
-                              <div className={`h-1 rounded-full overflow-hidden ${qcc.track}`}>
-                                <div
-                                  className={`h-full rounded-full transition-all duration-300 ${qcc.bar}`}
-                                  style={{ width: `${Math.min(remaining, 100)}%` }}
-                                />
-                              </div>
-                              <div className="flex items-center justify-between mt-0.5">
-                                <span className="text-[10px] text-storm-cloud tabular-nums">
-                                  {q.used.toLocaleString()} / {q.total > 0 ? q.total.toLocaleString() : "∞"}
-                                </span>
-                              </div>
-                            </div>
-
-                            {/* Remaining % */}
-                            <div className="text-right">
-                              <span className={`text-[11px] font-[510] tabular-nums ${qcc.text}`}>{remaining}%</span>
-                            </div>
-
-                            {/* Resets in */}
-                            <div className="text-right pr-1">
-                              {countdown !== "-" ? (
-                                <span className="text-[11px] text-storm-cloud tabular-nums">in {countdown}</span>
+                            {/* Accumulated progress bar */}
+                            <div className="pr-3" onClick={(e) => e.stopPropagation()}>
+                              {totalLimit > 0 ? (
+                                <div className={`h-1.5 rounded-full overflow-hidden ${cc.track}`}>
+                                  <div
+                                    className={`h-full rounded-full transition-all duration-300 ${cc.bar}`}
+                                    style={{ width: `${Math.min(pct, 100)}%` }}
+                                  />
+                                </div>
                               ) : (
-                                <span className="text-[11px] text-storm-cloud/40">—</span>
+                                <div className="h-1.5 rounded-full bg-charcoal-grey/40" />
                               )}
                             </div>
+
+                            {/* Percentage badge */}
+                            <div className="text-right" onClick={(e) => e.stopPropagation()}>
+                              {totalLimit > 0 ? (
+                                <span className={`text-[11px] font-[510] tabular-nums ${cc.text}`}>{pct}%</span>
+                              ) : (
+                                <span className="text-[11px] text-storm-cloud">—</span>
+                              )}
+                            </div>
+
+                            {/* Actions */}
+                            <div className="flex items-center justify-end gap-0.5" onClick={(e) => e.stopPropagation()}>
+                              <button
+                                type="button"
+                                onClick={() => refreshProvider(conn.id, conn.provider)}
+                                disabled={isLoading || rowBusy}
+                                className="flex items-center justify-center size-6 rounded-[4px] text-fog-grey hover:bg-charcoal-grey hover:text-porcelain transition-colors duration-100 disabled:opacity-40"
+                                title="Refresh quota"
+                              >
+                                <span
+                                  className={`material-symbols-outlined text-[14px] ${isLoading ? "animate-spin" : ""}`}
+                                >
+                                  refresh
+                                </span>
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setSelectedConnection(conn);
+                                  setShowEditModal(true);
+                                }}
+                                disabled={rowBusy}
+                                className="flex items-center justify-center size-6 rounded-[4px] text-fog-grey hover:bg-charcoal-grey hover:text-porcelain transition-colors duration-100 disabled:opacity-40"
+                                title="Edit connection"
+                              >
+                                <span className="material-symbols-outlined text-[14px]">edit</span>
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  openConfirm(
+                                    "Delete Connection",
+                                    "Are you sure you want to delete this connection?",
+                                    () => handleDeleteConnection(conn.id),
+                                    "danger",
+                                  )
+                                }
+                                disabled={rowBusy}
+                                className="flex items-center justify-center size-6 rounded-[4px] text-fog-grey hover:bg-warning-red/10 hover:text-warning-red transition-colors duration-100 disabled:opacity-40"
+                                title="Delete connection"
+                              >
+                                <span
+                                  className={`material-symbols-outlined text-[14px] ${
+                                    deletingId === conn.id ? "animate-pulse" : ""
+                                  }`}
+                                >
+                                  delete
+                                </span>
+                              </button>
+                              <div className="pl-0.5">
+                                <Toggle
+                                  size="sm"
+                                  checked={conn.isActive ?? true}
+                                  disabled={rowBusy}
+                                  onChange={(nextActive) => handleToggleConnectionActive(conn.id, nextActive)}
+                                />
+                              </div>
+                            </div>
                           </div>
-                        );
-                      })
-                    )}
-                  </div>
-                )}
-              </div>
-            );
-          })
+
+                          {/* Model sub-rows (third level) */}
+                          {accountExpanded && (
+                            <div className="border-t border-charcoal-grey/30">
+                              {isLoading ? (
+                                <div className="flex items-center gap-2 px-14 py-3">
+                                  <span className="material-symbols-outlined text-[16px] text-storm-cloud animate-spin">
+                                    progress_activity
+                                  </span>
+                                  <span className="text-[11px] text-storm-cloud">Loading quota…</span>
+                                </div>
+                              ) : error ? (
+                                <div className="flex items-center gap-2 px-14 py-3">
+                                  <span className="material-symbols-outlined text-[16px] text-red-400">error</span>
+                                  <span className="text-[11px] text-storm-cloud">{error}</span>
+                                </div>
+                              ) : quota?.message ? (
+                                <div className="px-14 py-3">
+                                  <span className="text-[11px] text-storm-cloud">{quota.message}</span>
+                                </div>
+                              ) : !quota?.quotas?.length ? (
+                                <div className="px-14 py-3">
+                                  <span className="text-[11px] text-storm-cloud">No quota data</span>
+                                </div>
+                              ) : (
+                                quota.quotas.map((q, idx) => {
+                                  const remaining =
+                                    q.remainingPercentage !== undefined
+                                      ? Math.round(q.remainingPercentage)
+                                      : calculatePercentage(q.used, q.total);
+                                  const qColor = getStatusColor(remaining);
+                                  const qcc = colorClasses(qColor);
+                                  const resetCountdown = formatResetTime(q.resetAt);
+
+                                  return (
+                                    <div
+                                      key={idx}
+                                      className="grid grid-cols-[1fr_200px_64px_120px] items-center px-3 py-2 bg-pitch-black/20 hover:bg-deep-slate/50 border-b border-charcoal-grey/30 last:border-0 transition-colors duration-100"
+                                    >
+                                      {/* Model name — indented */}
+                                      <div className="flex items-center gap-2 pl-14 min-w-0">
+                                        <span className={`text-[9px] shrink-0 ${qcc.text}`}>●</span>
+                                        <span className="text-[12px] text-storm-cloud truncate">{q.name}</span>
+                                      </div>
+
+                                      {/* Progress bar */}
+                                      <div className="pr-3">
+                                        <div className={`h-1 rounded-full overflow-hidden ${qcc.track}`}>
+                                          <div
+                                            className={`h-full rounded-full transition-all duration-300 ${qcc.bar}`}
+                                            style={{ width: `${Math.min(remaining, 100)}%` }}
+                                          />
+                                        </div>
+                                        <div className="flex items-center justify-between mt-0.5">
+                                          <span className="text-[10px] text-storm-cloud tabular-nums">
+                                            {q.used.toLocaleString()} / {q.total > 0 ? q.total.toLocaleString() : "∞"}
+                                          </span>
+                                        </div>
+                                      </div>
+
+                                      {/* Remaining % */}
+                                      <div className="text-right">
+                                        <span className={`text-[11px] font-[510] tabular-nums ${qcc.text}`}>
+                                          {remaining}%
+                                        </span>
+                                      </div>
+
+                                      {/* Resets in */}
+                                      <div className="text-right pr-1">
+                                        {resetCountdown !== "-" ? (
+                                          <span className="text-[11px] text-storm-cloud tabular-nums">
+                                            in {resetCountdown}
+                                          </span>
+                                        ) : (
+                                          <span className="text-[11px] text-storm-cloud/40">—</span>
+                                        )}
+                                      </div>
+                                    </div>
+                                  );
+                                })
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                </div>
+              );
+            });
+          })()
         )}
       </div>
 
