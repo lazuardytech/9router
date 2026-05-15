@@ -1,14 +1,10 @@
 # syntax=docker/dockerfile:1.7
-ARG NODE_IMAGE=node:22-alpine
-FROM ${NODE_IMAGE} AS builder
+ARG BUN_IMAGE=oven/bun:1.3.14-alpine
+FROM --platform=linux/amd64 ${BUN_IMAGE} AS builder
 WORKDIR /app
 
-RUN apk --no-cache upgrade && apk --no-cache add python3 make g++ linux-headers
-
 COPY package.json bun.lock ./
-RUN --mount=type=cache,target=/root/.bun/install/cache \
-  npm install -g bun@1.3.14 && \
-  bun install --frozen-lockfile
+RUN bun install --frozen-lockfile
 
 COPY . ./
 ENV NEXT_TELEMETRY_DISABLED=1
