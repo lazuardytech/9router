@@ -431,3 +431,11 @@ body {
 .react-flow__controls-button:hover {
   background: #ffffff !important;
 }
+
+/* ── Checkbox accent ── */
+input[type="checkbox"] {
+  accent-color: #e5e5e6;
+}
+html:not(.dark) input[type="checkbox"] {
+  accent-color: #111111;
+}
