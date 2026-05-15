@@ -94,11 +94,11 @@ export default function GetStarted() {
                   <div className="text-storm-cloud">Data Location:</div>
                   <div>
                     <span className="text-fog-grey"> macOS/Linux:</span>{" "}
-                    <span className="text-alabaster">~/.9router/db.json</span>
+                    <span className="text-alabaster">~/.pod/db.json</span>
                   </div>
                   <div>
                     <span className="text-fog-grey"> Windows:</span>{" "}
-                    <span className="text-alabaster">%APPDATA%/9router/db.json</span>
+                    <span className="text-alabaster">%APPDATA%/pod/db.json</span>
                   </div>
                 </div>
               </div>

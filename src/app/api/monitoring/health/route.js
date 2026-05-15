@@ -4,7 +4,7 @@ import { getDatabase } from "@/lib/sqlite/connection.js";
 import { getProviderConnections, getCombos, getApiKeys, getSettings } from "@/lib/localDb.js";
 import { AI_PROVIDERS } from "@/shared/constants/providers.js";
 
-const START_TIME = globalThis.__9router_start_time ?? (globalThis.__9router_start_time = Date.now());
+const START_TIME = globalThis.__pod_start_time ?? (globalThis.__pod_start_time = Date.now());
 
 function getSystemInfo() {
   const mem = process.memoryUsage();
