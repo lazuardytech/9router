@@ -232,10 +232,9 @@ export default function Sidebar({ onClose, collapsed = false, onToggleCollapse }
                 <img src="/logo.svg" alt="Pod" className="size-7 dark:invert" />
               </div>
               <div className="flex flex-col min-w-0">
-                <span className="text-[13px] font-[510] text-porcelain tracking-[-0.12px] leading-none truncate">
+                <span className="text-[17px] font-[590] text-porcelain tracking-[-0.2px] leading-none truncate">
                   {APP_CONFIG.name}
                 </span>
-                <span className="text-[10px] text-fog-grey leading-none mt-0.5">v{APP_CONFIG.displayVersion}</span>
               </div>
             </Link>
           )}
@@ -362,49 +361,52 @@ export default function Sidebar({ onClose, collapsed = false, onToggleCollapse }
         </nav>
 
         {/* Footer actions */}
-        <div
-          className={cn(
-            "flex items-center border-t border-charcoal-grey",
-            collapsed ? "flex-col gap-1 p-1.5" : "gap-1.5 p-2",
+        <div className={cn("flex flex-col border-t border-charcoal-grey", collapsed ? "p-1.5 gap-1" : "p-2 gap-1.5")}>
+          {/* Version label — expanded only */}
+          {!collapsed && (
+            <p className="text-[11px] text-fog-grey px-1 pb-0.5">
+              {APP_CONFIG.name} v{APP_CONFIG.displayVersion}
+            </p>
           )}
-        >
-          {collapsed && onToggleCollapse && (
+          <div className={cn("flex items-center", collapsed ? "flex-col gap-1" : "gap-1.5")}>
+            {collapsed && onToggleCollapse && (
+              <button
+                type="button"
+                onClick={onToggleCollapse}
+                title="Expand sidebar"
+                className="hidden lg:flex items-center justify-center size-8 rounded-[6px] border border-charcoal-grey text-fog-grey hover:bg-deep-slate hover:text-porcelain transition-colors duration-100"
+              >
+                <span className="material-symbols-outlined text-[14px]">left_panel_open</span>
+              </button>
+            )}
             <button
-              type="button"
-              onClick={onToggleCollapse}
-              title="Expand sidebar"
-              className="hidden lg:flex items-center justify-center size-8 rounded-[6px] border border-charcoal-grey text-fog-grey hover:bg-deep-slate hover:text-porcelain transition-colors duration-100"
+              onClick={handleRestart}
+              disabled={isRestarting}
+              title="Restart"
+              className={cn(
+                "flex items-center justify-center gap-1.5 rounded-[6px] border border-charcoal-grey text-storm-cloud hover:bg-deep-slate hover:text-porcelain disabled:opacity-40 transition-colors duration-100 text-[12px]",
+                collapsed ? "size-8" : "flex-1 h-7",
+              )}
             >
-              <span className="material-symbols-outlined text-[14px]">left_panel_open</span>
+              {isRestarting ? (
+                <span className="material-symbols-outlined text-[14px] animate-spin">progress_activity</span>
+              ) : (
+                <span className="material-symbols-outlined text-[14px]">restart_alt</span>
+              )}
+              {!collapsed && "Restart"}
             </button>
-          )}
-          <button
-            onClick={handleRestart}
-            disabled={isRestarting}
-            title="Restart"
-            className={cn(
-              "flex items-center justify-center gap-1.5 rounded-[6px] border border-charcoal-grey text-storm-cloud hover:bg-deep-slate hover:text-porcelain disabled:opacity-40 transition-colors duration-100 text-[12px]",
-              collapsed ? "size-8" : "flex-1 h-7",
-            )}
-          >
-            {isRestarting ? (
-              <span className="material-symbols-outlined text-[14px] animate-spin">progress_activity</span>
-            ) : (
-              <span className="material-symbols-outlined text-[14px]">restart_alt</span>
-            )}
-            {!collapsed && "Restart"}
-          </button>
-          <button
-            onClick={() => setShowShutdownModal(true)}
-            title="Shutdown"
-            className={cn(
-              "flex items-center justify-center gap-1.5 rounded-[6px] border border-charcoal-grey text-storm-cloud hover:bg-warning-red/10 hover:border-warning-red/30 hover:text-warning-red transition-colors duration-100 text-[12px]",
-              collapsed ? "size-8" : "flex-1 h-7",
-            )}
-          >
-            <span className="material-symbols-outlined text-[14px]">power_settings_new</span>
-            {!collapsed && "Shutdown"}
-          </button>
+            <button
+              onClick={() => setShowShutdownModal(true)}
+              title="Shutdown"
+              className={cn(
+                "flex items-center justify-center gap-1.5 rounded-[6px] border border-charcoal-grey text-storm-cloud hover:bg-warning-red/10 hover:border-warning-red/30 hover:text-warning-red transition-colors duration-100 text-[12px]",
+                collapsed ? "size-8" : "flex-1 h-7",
+              )}
+            >
+              <span className="material-symbols-outlined text-[14px]">power_settings_new</span>
+              {!collapsed && "Shutdown"}
+            </button>
+          </div>
         </div>
       </aside>
 
