@@ -661,10 +661,27 @@ export default function ProviderLimits() {
         </div>
 
         {connectionsLoading ? (
-          <div className="flex items-center justify-center py-10">
-            <span className="material-symbols-outlined text-[28px] text-storm-cloud animate-spin">
-              progress_activity
-            </span>
+          <div className="divide-y divide-charcoal-grey/40">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="grid grid-cols-[1fr_200px_64px_120px] items-center px-3 py-2.5 bg-graphite">
+                <div className="flex items-center gap-2.5">
+                  <div className="size-4 rounded bg-charcoal-grey/40 animate-pulse" />
+                  <div className="size-5 rounded-[4px] bg-charcoal-grey/40 animate-pulse" />
+                  <div className="h-3 w-24 rounded bg-charcoal-grey/40 animate-pulse" />
+                </div>
+                <div className="pr-3">
+                  <div className="h-1.5 rounded-full bg-charcoal-grey/40 animate-pulse" />
+                </div>
+                <div className="flex justify-end">
+                  <div className="h-3 w-8 rounded bg-charcoal-grey/40 animate-pulse" />
+                </div>
+                <div className="flex justify-end gap-1">
+                  {[1, 2, 3].map((j) => (
+                    <div key={j} className="size-6 rounded-[4px] bg-charcoal-grey/40 animate-pulse" />
+                  ))}
+                </div>
+              </div>
+            ))}
           </div>
         ) : (
           (() => {
@@ -868,15 +885,10 @@ export default function ProviderLimits() {
 
                           {/* Model sub-rows (third level) */}
                           {accountExpanded && (
-                            <div className="border-t border-charcoal-grey/30">
-                              {isLoading ? (
-                                <div className="flex items-center gap-2 px-14 py-3">
-                                  <span className="material-symbols-outlined text-[16px] text-storm-cloud animate-spin">
-                                    progress_activity
-                                  </span>
-                                  <span className="text-[11px] text-storm-cloud">Loading quota…</span>
-                                </div>
-                              ) : error ? (
+                            <div
+                              className={`border-t border-charcoal-grey/30 transition-opacity duration-200 ${isLoading ? "opacity-40 pointer-events-none" : "opacity-100"}`}
+                            >
+                              {error ? (
                                 <div className="flex items-center gap-2 px-14 py-3">
                                   <span className="material-symbols-outlined text-[16px] text-red-400">error</span>
                                   <span className="text-[11px] text-storm-cloud">{error}</span>
