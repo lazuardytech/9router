@@ -141,7 +141,7 @@ function buildLayout(providers, activeSet, lastSet, errorSet) {
     if (error) return { stroke: "#ef4444", strokeWidth: 2.5, opacity: 0.9 };
     if (active) return { stroke: "#22c55e", strokeWidth: 2.5, opacity: 0.9 };
     if (last) return { stroke: "#f59e0b", strokeWidth: 2, opacity: 0.7 };
-    return { stroke: "var(--color-border)", strokeWidth: 1, opacity: 0.3 };
+    return { stroke: "var(--color-porcelain, #E5E5E6)", strokeWidth: 1, opacity: 0.4 };
   };
 
   providers.forEach((p, i) => {
