@@ -155,33 +155,34 @@ export default function ConsoleLogClient() {
 
   return (
     <div className="flex flex-col gap-3 h-[calc(100vh-140px)]">
-      {/* Toolbar */}
+      {/* Row 1: Auto-scroll + Clear (right-aligned, sejajar tab switcher) */}
+      <div className="flex items-center justify-end gap-2 shrink-0">
+        {/* Auto-scroll toggle */}
+        <button
+          onClick={() => setAutoScroll((v) => !v)}
+          title={autoScroll ? "Disable auto-scroll" : "Enable auto-scroll"}
+          className={cn(
+            "flex items-center gap-1.5 h-7 px-2.5 rounded-[4px] border text-[11px] font-[510] transition-colors duration-100",
+            autoScroll
+              ? "border-aether-blue/30 bg-aether-blue/8 text-aether-blue"
+              : "border-charcoal-grey text-fog-grey hover:bg-deep-slate hover:text-porcelain",
+          )}
+        >
+          <span className="material-symbols-outlined text-[13px]">vertical_align_bottom</span>
+          Auto-scroll
+        </button>
+        {/* Clear */}
+        <button
+          onClick={handleClear}
+          className="flex items-center gap-1.5 h-7 px-2.5 rounded-[4px] border border-charcoal-grey text-[11px] text-storm-cloud hover:bg-warning-red/8 hover:border-warning-red/30 hover:text-warning-red transition-colors duration-100"
+        >
+          <span className="material-symbols-outlined text-[13px]">delete</span>
+          Clear
+        </button>
+      </div>
+
+      {/* Row 2: Search + Level filter + Stats */}
       <div className="flex flex-wrap items-center gap-2 shrink-0">
-        {/* Connection status */}
-        <div className="flex items-center gap-1.5 text-[11px]">
-          <span
-            className={cn(
-              "size-1.5 rounded-full",
-              connected ? "bg-emerald animate-pulse" : initialized ? "bg-warning-red" : "bg-[#f59e0b] animate-pulse",
-            )}
-          />
-          <span className={connected ? "text-emerald" : initialized ? "text-warning-red" : "text-[#f59e0b]"}>
-            {connected ? "Connected" : initialized ? "Disconnected" : "Connecting..."}
-          </span>
-        </div>
-
-        <div className="w-px h-4 bg-charcoal-grey" />
-
-        {/* Stats */}
-        <div className="flex items-center gap-2 text-[11px] text-fog-grey">
-          <span>{counts.total} lines</span>
-          {counts.error > 0 && <span className="text-warning-red">{counts.error} errors</span>}
-          {counts.warn > 0 && <span className="text-[#f59e0b]">{counts.warn} warnings</span>}
-          {lastUpdated && <span className="text-fog-grey/60">{lastUpdated.toLocaleTimeString()}</span>}
-        </div>
-
-        <div className="flex-1" />
-
         {/* Level filter */}
         <select
           value={levelFilter}
@@ -209,29 +210,26 @@ export default function ConsoleLogClient() {
           />
         </div>
 
-        {/* Auto-scroll toggle */}
-        <button
-          onClick={() => setAutoScroll((v) => !v)}
-          title={autoScroll ? "Disable auto-scroll" : "Enable auto-scroll"}
-          className={cn(
-            "flex items-center gap-1.5 h-7 px-2.5 rounded-[4px] border text-[11px] font-[510] transition-colors duration-100",
-            autoScroll
-              ? "border-aether-blue/30 bg-aether-blue/8 text-aether-blue"
-              : "border-charcoal-grey text-fog-grey hover:bg-deep-slate hover:text-porcelain",
-          )}
-        >
-          <span className="material-symbols-outlined text-[13px]">vertical_align_bottom</span>
-          Auto-scroll
-        </button>
+        <div className="w-px h-4 bg-charcoal-grey" />
 
-        {/* Clear */}
-        <button
-          onClick={handleClear}
-          className="flex items-center gap-1.5 h-7 px-2.5 rounded-[4px] border border-charcoal-grey text-[11px] text-storm-cloud hover:bg-warning-red/8 hover:border-warning-red/30 hover:text-warning-red transition-colors duration-100"
-        >
-          <span className="material-symbols-outlined text-[13px]">delete</span>
-          Clear
-        </button>
+        {/* Connection status + Stats */}
+        <div className="flex items-center gap-1.5 text-[11px]">
+          <span
+            className={cn(
+              "size-1.5 rounded-full",
+              connected ? "bg-emerald animate-pulse" : initialized ? "bg-warning-red" : "bg-[#f59e0b] animate-pulse",
+            )}
+          />
+          <span className={connected ? "text-emerald" : initialized ? "text-warning-red" : "text-[#f59e0b]"}>
+            {connected ? "Connected" : initialized ? "Disconnected" : "Connecting..."}
+          </span>
+        </div>
+        <div className="flex items-center gap-2 text-[11px] text-fog-grey">
+          <span>{counts.total} lines</span>
+          {counts.error > 0 && <span className="text-warning-red">{counts.error} errors</span>}
+          {counts.warn > 0 && <span className="text-[#f59e0b]">{counts.warn} warnings</span>}
+          {lastUpdated && <span className="text-fog-grey/60">{lastUpdated.toLocaleTimeString()}</span>}
+        </div>
       </div>
 
       {/* Terminal */}

@@ -95,9 +95,12 @@ export default function ProxyLogsTab() {
       {/* Header */}
       <div className="flex items-center justify-between gap-3">
         <div className="flex items-center gap-2">
-          {!loading && <span className="text-[11px] text-fog-grey">{pools.length} configured</span>}
-        </div>
-        <div className="flex items-center gap-2">
+          {!loading && (
+            <>
+              <span className="text-[11px] text-fog-grey">{pools.length} configured</span>
+              <div className="w-px h-4 bg-charcoal-grey" />
+            </>
+          )}
           <select
             value={sortBy}
             onChange={(e) => setSortBy(e.target.value)}
@@ -106,6 +109,8 @@ export default function ProxyLogsTab() {
             <option value="newest">Newest first</option>
             <option value="oldest">Oldest first</option>
           </select>
+        </div>
+        <div className="flex items-center gap-2">
           <button
             onClick={() => fetchPools()}
             className="flex items-center justify-center size-7 rounded-[4px] border border-charcoal-grey text-storm-cloud hover:bg-deep-slate hover:text-porcelain transition-colors duration-100"
@@ -130,8 +135,8 @@ export default function ProxyLogsTab() {
       </div>
 
       {/* Info banner */}
-      <div className="flex items-start gap-2 px-3 py-2.5 rounded-[6px] border border-charcoal-grey bg-deep-slate">
-        <span className="material-symbols-outlined text-[14px] text-fog-grey shrink-0 mt-0.5">info</span>
+      <div className="flex items-center gap-2 px-3 py-2.5 rounded-[6px] border border-charcoal-grey bg-deep-slate">
+        <span className="material-symbols-outlined text-[14px] text-fog-grey shrink-0">info</span>
         <p className="text-[11px] text-fog-grey leading-[1.5]">
           Live proxy request logging is not available. Showing configured proxy pools. Manage pools in{" "}
           <a
