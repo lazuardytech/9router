@@ -17,6 +17,8 @@ export default function CombosPage() {
   const [activeProviders, setActiveProviders] = useState([]);
   const [comboStrategies, setComboStrategies] = useState({});
   const { copied, copy } = useCopyToClipboard();
+  const [testingComboId, setTestingComboId] = useState(null);
+  const [comboTestResults, setComboTestResults] = useState({});
 
   const [confirmDialog, setConfirmDialog] = useState({
     open: false,
@@ -106,6 +108,31 @@ export default function CombosPage() {
     }
   };
 
+  const handleTestCombo = async (combo) => {
+    if (!combo.models?.length) return;
+    setTestingComboId(combo.id);
+    setComboTestResults((prev) => ({ ...prev, [combo.id]: null }));
+    try {
+      // Use the first model in the combo to test
+      const model = combo.models[0];
+      const res = await fetch("/api/providers/test-batch", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ models: [model] }),
+      });
+      const data = await res.json();
+      const result = data.results?.[0];
+      setComboTestResults((prev) => ({
+        ...prev,
+        [combo.id]: result?.ok ? "ok" : "error",
+      }));
+    } catch {
+      setComboTestResults((prev) => ({ ...prev, [combo.id]: "error" }));
+    } finally {
+      setTestingComboId(null);
+    }
+  };
+
   const handleToggleRoundRobin = async (comboName, enabled) => {
     try {
       const updated = { ...comboStrategies };
@@ -182,6 +209,9 @@ export default function CombosPage() {
               }
               roundRobinEnabled={comboStrategies[combo.name]?.fallbackStrategy === "round-robin"}
               onToggleRoundRobin={(enabled) => handleToggleRoundRobin(combo.name, enabled)}
+              onTest={() => handleTestCombo(combo)}
+              isTesting={testingComboId === combo.id}
+              testStatus={comboTestResults[combo.id]}
             />
           ))}
         </div>
@@ -223,7 +253,18 @@ export default function CombosPage() {
   );
 }
 
-function ComboCard({ combo, copied, onCopy, onEdit, onDelete, roundRobinEnabled, onToggleRoundRobin }) {
+function ComboCard({
+  combo,
+  copied,
+  onCopy,
+  onEdit,
+  onDelete,
+  roundRobinEnabled,
+  onToggleRoundRobin,
+  onTest,
+  isTesting,
+  testStatus,
+}) {
   return (
     <Card padding="sm" className="group">
       <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -261,7 +302,33 @@ function ComboCard({ combo, copied, onCopy, onEdit, onDelete, roundRobinEnabled,
             <Toggle size="sm" checked={roundRobinEnabled} onChange={onToggleRoundRobin} />
           </div>
 
-          <div className="grid grid-cols-3 gap-1 sm:flex">
+          <div className="grid grid-cols-4 gap-1 sm:flex">
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onTest?.();
+              }}
+              disabled={isTesting || !combo.models?.length}
+              className={`flex flex-col items-center rounded px-2 py-1 transition-colors disabled:opacity-50 ${
+                testStatus === "ok"
+                  ? "text-emerald hover:bg-emerald/10"
+                  : testStatus === "error"
+                    ? "text-warning-red hover:bg-warning-red/10"
+                    : "text-text-muted hover:bg-black/5 hover:text-primary dark:hover:bg-white/5"
+              }`}
+              title="Test combo"
+            >
+              <span className={`material-symbols-outlined text-[18px] ${isTesting ? "animate-pulse" : ""}`}>
+                {isTesting
+                  ? "hourglass_top"
+                  : testStatus === "ok"
+                    ? "check_circle"
+                    : testStatus === "error"
+                      ? "error"
+                      : "play_arrow"}
+              </span>
+              <span className="text-[10px] leading-tight">Test</span>
+            </button>
             <button
               onClick={(e) => {
                 e.stopPropagation();
