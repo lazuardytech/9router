@@ -197,14 +197,14 @@ export default function RequestLogger({ sortBy, setSortBy, recording, setRecordi
         <div className="flex flex-wrap items-center gap-2">
           {/* Search */}
           <div className="relative flex-1 min-w-[180px] max-w-xs">
-            <span className="absolute left-2.5 top-1/2 -translate-y-1/2 material-symbols-outlined text-[14px] text-fog-grey">
+            <span className="absolute left-2.5 top-1/2 -translate-y-1/2 material-symbols-outlined text-[14px] text-fog-grey pr-2">
               search
             </span>
             <input
               type="text"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search model, provider, account..."
+              placeholder="Search request logs..."
               className="w-full h-7 pl-9 pr-3 rounded-[6px] border border-charcoal-grey bg-deep-slate text-[12px] text-porcelain placeholder:text-fog-grey focus:outline-none focus:border-porcelain/30 transition-colors duration-100"
             />
           </div>
