@@ -51,6 +51,7 @@ function UsageContent() {
           ]}
           value={activeTab}
           onChange={handleTabChange}
+          size="sm"
           className="w-full sm:w-auto"
         />
         {activeTab === "overview" && (
