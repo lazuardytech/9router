@@ -316,7 +316,7 @@ export default function RequestLogger({
             <table className="w-full text-left border-collapse whitespace-nowrap text-[12px]">
               <thead className="sticky top-0 z-10 bg-pitch-black border-b border-charcoal-grey">
                 <tr>
-                  <th className="px-3 py-2 text-[10px] font-[590] uppercase tracking-[0.05em] text-fog-grey border-r border-charcoal-grey">
+                  <th className="px-3 py-2 text-[10px] font-[590] uppercase tracking-[0.05em] text-fog-grey border-r border-charcoal-grey w-[130px]">
                     Time
                   </th>
                   <th className="px-3 py-2 text-[10px] font-[590] uppercase tracking-[0.05em] text-fog-grey border-r border-charcoal-grey">
