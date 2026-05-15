@@ -597,6 +597,24 @@ export default function ProviderLimits() {
           <span className="hidden sm:inline">Expiring first</span>
         </button>
 
+        {/* Collapse All */}
+        <button
+          type="button"
+          onClick={() => {
+            const allProviderKeys = sortedConnections.map((c) => c.provider);
+            const allConnIds = sortedConnections.map((c) => c.id);
+            const collapseProviders = Object.fromEntries(allProviderKeys.map((k) => [k, false]));
+            const collapseRows = Object.fromEntries(allConnIds.map((id) => [id, false]));
+            setExpandedProviders(collapseProviders);
+            setExpandedRows(collapseRows);
+          }}
+          className="h-7 px-2.5 rounded-[4px] border border-charcoal-grey text-[11px] text-storm-cloud hover:text-porcelain hover:bg-deep-slate transition-colors flex items-center gap-1"
+          title="Collapse all rows"
+        >
+          <span className="material-symbols-outlined text-[13px]">unfold_less</span>
+          <span className="hidden sm:inline">Collapse all</span>
+        </button>
+
         {/* Bulk: disable depleted */}
         <button
           type="button"
