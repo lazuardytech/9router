@@ -25,7 +25,7 @@ const getPageInfo = (pathname) => {
       breadcrumbs: [
         {
           label: kindConfig?.label || kindId,
-          href: `/media-providers/${kindId}`,
+          href: kindId === "webSearch" || kindId === "webFetch" ? "/media-providers/web" : `/media-providers/${kindId}`,
           icon: kindConfig?.icon || "perm_media",
         },
         { label: provider?.name || providerId, image: `/providers/${providerId}.png` },
