@@ -3,6 +3,8 @@ ARG BUN_IMAGE=oven/bun:1.3.14-alpine
 FROM ${BUN_IMAGE} AS builder
 WORKDIR /app
 
+ENV PATH="/root/.bun/bin:${PATH}"
+
 COPY package.json bun.lock ./
 RUN --mount=type=cache,target=/root/.bun/install/cache \
   bun install --frozen-lockfile
