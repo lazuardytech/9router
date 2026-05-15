@@ -23,7 +23,7 @@ export default function LoginPage() {
         if (res.ok) {
           const data = await res.json();
           if (data.requireLogin === false) {
-            router.push("/dashboard");
+            router.push("/endpoint");
             router.refresh();
             return;
           }
@@ -51,7 +51,7 @@ export default function LoginPage() {
         body: JSON.stringify({ password }),
       });
       if (res.ok) {
-        router.push("/dashboard");
+        router.push("/endpoint");
         router.refresh();
       } else {
         const data = await res.json();
