@@ -46,8 +46,8 @@ export default function ProxyLogsTab() {
   const [sortBy, setSortBy] = useState("newest");
   const [live, setLive] = useState(true);
 
-  const fetchPools = useCallback(async () => {
-    setLoading(true);
+  const fetchPools = useCallback(async (silent = false) => {
+    if (!silent) setLoading(true);
     setError(null);
     try {
       const res = await fetch("/api/proxy-pools?includeUsage=true");
@@ -67,7 +67,7 @@ export default function ProxyLogsTab() {
 
   useEffect(() => {
     if (!live) return;
-    const t = setInterval(() => fetchPools(), 5000);
+    const t = setInterval(() => fetchPools(true), 5000);
     return () => clearInterval(t);
   }, [live, fetchPools]);
 
@@ -95,12 +95,8 @@ export default function ProxyLogsTab() {
       {/* Header */}
       <div className="flex items-center justify-between gap-3">
         <div className="flex items-center gap-2">
-          {!loading && (
-            <>
-              <span className="text-[11px] text-fog-grey">{pools.length} configured</span>
-              <div className="w-px h-4 bg-charcoal-grey" />
-            </>
-          )}
+          <span className="text-[11px] text-fog-grey">{pools.length} configured</span>
+          <div className="w-px h-4 bg-charcoal-grey" />
           <select
             value={sortBy}
             onChange={(e) => setSortBy(e.target.value)}
