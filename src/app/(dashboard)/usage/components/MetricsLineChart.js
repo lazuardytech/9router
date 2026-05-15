@@ -145,27 +145,33 @@ export default function MetricsLineChart({ period = "7d" }) {
   return (
     <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
       {METRICS.map((m) => (
-        <div key={m.key} className="rounded-[6px] border border-charcoal-grey bg-graphite p-3 flex flex-col gap-2">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-1.5">
-              <span className="material-symbols-outlined text-[14px]" style={{ color: m.color }}>
-                {m.icon}
-              </span>
-              <span className="text-[10px] font-[590] uppercase tracking-[0.05em] text-fog-grey">{m.label}</span>
-            </div>
+        <div
+          key={m.key}
+          className="rounded-[6px] border border-charcoal-grey bg-graphite overflow-hidden flex flex-col"
+        >
+          {/* Header */}
+          <div className="flex items-center gap-1.5 px-3 pt-3 pb-1">
+            <span className="material-symbols-outlined text-[14px]" style={{ color: m.color }}>
+              {m.icon}
+            </span>
+            <span className="text-[10px] font-[590] uppercase tracking-[0.05em] text-fog-grey">{m.label}</span>
           </div>
 
+          {/* Value */}
+          <p className="text-lg font-mono font-[510] text-porcelain tracking-[-0.13px] px-3 pb-2">
+            {loading ? "—" : m.fmt(totals[m.key])}
+          </p>
+
+          {/* Sparkline flush to bottom */}
           {loading ? (
-            <div className="h-10 rounded-[4px] bg-deep-slate animate-pulse" />
+            <div className="h-10 bg-deep-slate animate-pulse" />
           ) : data.length < 2 ? (
             <div className="h-10 flex items-center justify-center text-[10px] text-fog-grey">No data</div>
           ) : (
-            <Sparkline data={data} field={m.key} color={m.color} fmt={m.fmt} />
+            <div className="mt-auto">
+              <Sparkline data={data} field={m.key} color={m.color} fmt={m.fmt} />
+            </div>
           )}
-
-          <p className="text-[15px] font-[510] text-porcelain tracking-[-0.13px]">
-            {loading ? "—" : m.fmt(totals[m.key])}
-          </p>
         </div>
       ))}
     </div>

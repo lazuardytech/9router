@@ -253,7 +253,6 @@ export default function RequestDetailsTab() {
                 <th className="text-right p-4 text-sm font-semibold text-text-main">Input Tokens</th>
                 <th className="text-right p-4 text-sm font-semibold text-text-main">Output Tokens</th>
                 <th className="text-left p-4 text-sm font-semibold text-text-main">Latency</th>
-                <th className="text-center p-4 text-sm font-semibold text-text-main">Action</th>
               </tr>
             </thead>
             <tbody>
@@ -276,7 +275,8 @@ export default function RequestDetailsTab() {
                 details.map((detail, index) => (
                   <tr
                     key={`${detail.id}-${index}`}
-                    className="border-b border-black/5 dark:border-white/5 last:border-b-0 hover:bg-black/[0.02] dark:hover:bg-white/[0.02] transition-colors"
+                    onClick={() => handleViewDetail(detail)}
+                    className="border-b border-black/5 dark:border-white/5 last:border-b-0 hover:bg-black/[0.02] dark:hover:bg-white/[0.02] transition-colors cursor-pointer"
                   >
                     <td className="whitespace-nowrap p-4 text-sm text-text-main">
                       {new Date(detail.timestamp).toLocaleString()}
@@ -300,11 +300,6 @@ export default function RequestDetailsTab() {
                           Total: <span className="font-mono">{detail.latency?.total || 0}ms</span>
                         </div>
                       </div>
-                    </td>
-                    <td className="p-4 text-center">
-                      <Button variant="outline" size="sm" onClick={() => handleViewDetail(detail)}>
-                        Detail
-                      </Button>
                     </td>
                   </tr>
                 ))
