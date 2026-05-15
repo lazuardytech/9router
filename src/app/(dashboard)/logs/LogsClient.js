@@ -14,9 +14,32 @@ const TABS = [
   { key: "console", label: "Console Logs", icon: "terminal" },
 ];
 
-function RequestLogsToolbar({ sortBy, setSortBy, onRefresh, recording, setRecording }) {
+function RequestLogsToolbar({
+  sortBy,
+  setSortBy,
+  onRefresh,
+  recording,
+  setRecording,
+  filterProvider,
+  setFilterProvider,
+  providerOptions,
+}) {
   return (
     <div className="flex items-center gap-2">
+      {providerOptions.length > 0 && (
+        <select
+          value={filterProvider}
+          onChange={(e) => setFilterProvider(e.target.value)}
+          className="h-7 px-2 rounded-[6px] border border-charcoal-grey bg-deep-slate text-[12px] text-porcelain focus:outline-none focus:border-porcelain/30 transition-colors duration-100 w-[130px]"
+        >
+          <option value="all">All Providers</option>
+          {providerOptions.map((p) => (
+            <option key={p} value={p}>
+              {p}
+            </option>
+          ))}
+        </select>
+      )}
       <select
         value={sortBy}
         onChange={(e) => setSortBy(e.target.value)}
@@ -145,6 +168,8 @@ function LogsInner() {
   // RequestLogger lifted state
   const [sortBy, setSortBy] = useState("newest");
   const [recording, setRecording] = useState(true);
+  const [filterProvider, setFilterProvider] = useState("all");
+  const [providerOptions, setProviderOptions] = useState([]);
   const refreshRef = useRef(null);
 
   // ProxyLogsTab lifted state
@@ -186,6 +211,9 @@ function LogsInner() {
             onRefresh={() => refreshRef.current?.()}
             recording={recording}
             setRecording={setRecording}
+            filterProvider={filterProvider}
+            setFilterProvider={setFilterProvider}
+            providerOptions={providerOptions}
           />
         )}
         {activeTab === "proxy-logs" && (
@@ -219,6 +247,9 @@ function LogsInner() {
             recording={recording}
             setRecording={setRecording}
             refreshRef={refreshRef}
+            filterProvider={filterProvider}
+            setFilterProvider={setFilterProvider}
+            onProvidersChange={setProviderOptions}
           />
         )}
         {activeTab === "proxy-logs" && (

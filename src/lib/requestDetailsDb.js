@@ -82,6 +82,8 @@ function generateDetailId(model) {
   return `${timestamp}-${random}-${modelPart}`;
 }
 
+export { generateDetailId };
+
 function truncateIfLarge(obj, maxSize) {
   const str = JSON.stringify(obj);
   if (str.length > maxSize) {

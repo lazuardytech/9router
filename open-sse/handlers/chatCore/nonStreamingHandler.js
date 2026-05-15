@@ -6,7 +6,7 @@ import { createErrorResult } from "../../utils/error.js";
 import { HTTP_STATUS } from "../../config/runtimeConfig.js";
 import { parseSSEToOpenAIResponse } from "./sseToJsonHandler.js";
 import { buildRequestDetail, extractRequestConfig, extractUsageFromResponse, saveUsageStats } from "./requestDetail.js";
-import { appendRequestLog, saveRequestDetail } from "@/lib/usageDb.js";
+import { appendRequestLog, saveRequestDetail, generateDetailId } from "@/lib/usageDb.js";
 import { decloakToolNames } from "../../utils/claudeCloaking.js";
 
 /**
@@ -194,7 +194,8 @@ export async function handleNonStreamingResponse({
   responseBody = decloakToolNames(responseBody, toolNameMap);
 
   const usage = extractUsageFromResponse(responseBody);
-  appendLog({ tokens: usage, status: "SUCCESS" });
+  const detailsId = generateDetailId(model);
+  appendLog({ tokens: usage, status: "SUCCESS", detailsId });
   saveUsageStats({ provider, model, tokens: usage, connectionId, apiKey, endpoint: clientRawRequest?.endpoint });
 
   const translatedResponse = needsTranslation(targetFormat, sourceFormat)
@@ -239,6 +240,7 @@ export async function handleNonStreamingResponse({
   saveRequestDetail(
     buildRequestDetail(
       {
+        id: detailsId,
         provider,
         model,
         connectionId,

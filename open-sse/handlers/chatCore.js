@@ -698,9 +698,10 @@ export async function handleChatCore({
     }
   }
 
-  const { onStreamComplete: baseOnStreamComplete } = buildOnStreamComplete({ ...sharedCtx });
+  const { onStreamComplete: baseOnStreamComplete, streamDetailId } = buildOnStreamComplete({ ...sharedCtx });
   const onStreamComplete = (contentObj, usage, ttftAt) => {
     baseOnStreamComplete?.(contentObj, usage, ttftAt);
+    appendLog({ tokens: usage, status: "SUCCESS", detailsId: streamDetailId });
     if (memoryOwnerId && memorySettings.enabled && memorySettings.maxTokens > 0) {
       const requestMemoryText = extractMemoryTextFromRequestBody(body);
       if (requestMemoryText) extractFacts(requestMemoryText, memoryOwnerId, pipelineSessionId);

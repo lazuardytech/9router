@@ -3,7 +3,7 @@ import { createErrorResult } from "../../utils/error.js";
 import { HTTP_STATUS } from "../../config/runtimeConfig.js";
 import { FORMATS } from "../../translator/formats.js";
 import { buildRequestDetail, extractRequestConfig, saveUsageStats } from "./requestDetail.js";
-import { saveRequestDetail, appendRequestLog } from "@/lib/usageDb.js";
+import { saveRequestDetail, appendRequestLog, generateDetailId } from "@/lib/usageDb.js";
 
 function textFromResponsesMessageItem(item) {
   if (!item?.content || !Array.isArray(item.content)) return "";
@@ -150,7 +150,8 @@ export async function handleForcedSSEToJson({
       if (onRequestSuccess) await onRequestSuccess();
 
       const usage = jsonResponse.usage || {};
-      appendLog({ tokens: usage, status: "SUCCESS" });
+      const detailsId1 = generateDetailId(model);
+      appendLog({ tokens: usage, status: "SUCCESS", detailsId: detailsId1 });
       saveUsageStats({ provider, model, tokens: usage, connectionId, apiKey, endpoint: clientRawRequest?.endpoint });
 
       const { msgItem, textContent } = pickAssistantMessageForChatCompletion(jsonResponse.output);
@@ -159,6 +160,7 @@ export async function handleForcedSSEToJson({
       saveRequestDetail(
         buildRequestDetail(
           {
+            id: detailsId1,
             ...ctx,
             latency: { ttft: totalLatency, total: totalLatency },
             tokens: { prompt_tokens: usage.input_tokens || 0, completion_tokens: usage.output_tokens || 0 },
@@ -265,13 +267,15 @@ export async function handleForcedSSEToJson({
     if (onRequestSuccess) await onRequestSuccess();
 
     const usage = parsed.usage || {};
-    appendLog({ tokens: usage, status: "SUCCESS" });
+    const detailsId2 = generateDetailId(model);
+    appendLog({ tokens: usage, status: "SUCCESS", detailsId: detailsId2 });
     saveUsageStats({ provider, model, tokens: usage, connectionId, apiKey, endpoint: clientRawRequest?.endpoint });
 
     const totalLatency = Date.now() - requestStartTime;
     saveRequestDetail(
       buildRequestDetail(
         {
+          id: detailsId2,
           ...ctx,
           latency: { ttft: totalLatency, total: totalLatency },
           tokens: usage,

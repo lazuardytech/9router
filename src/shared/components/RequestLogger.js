@@ -64,12 +64,20 @@ function ComboBadge({ combo }) {
 
 // ─── Main Component ───────────────────────────────────────────────────────────
 
-export default function RequestLogger({ sortBy, setSortBy, recording, setRecording, refreshRef }) {
+export default function RequestLogger({
+  sortBy,
+  setSortBy,
+  recording,
+  setRecording,
+  refreshRef,
+  filterProvider,
+  setFilterProvider,
+  onProvidersChange,
+}) {
   const [logs, setLogs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [filterStatus, setFilterStatus] = useState("all");
-  const [filterProvider, setFilterProvider] = useState("all");
 
   // Detail drawer state
   const [selectedLog, setSelectedLog] = useState(null);
@@ -133,6 +141,10 @@ export default function RequestLogger({ sortBy, setSortBy, recording, setRecordi
 
   // Derived data
   const providers = useMemo(() => [...new Set(logs.map((l) => l.provider).filter((p) => p && p !== "-"))], [logs]);
+
+  useEffect(() => {
+    onProvidersChange?.(providers);
+  }, [providers, onProvidersChange]);
 
   const filtered = useMemo(() => {
     let result = logs.filter((l) => {
@@ -232,22 +244,6 @@ export default function RequestLogger({ sortBy, setSortBy, recording, setRecordi
               </button>
             ))}
           </div>
-
-          {/* Provider filter */}
-          {providers.length > 0 && (
-            <select
-              value={filterProvider}
-              onChange={(e) => setFilterProvider(e.target.value)}
-              className="h-7 px-2 rounded-[6px] border border-charcoal-grey bg-deep-slate text-[12px] text-porcelain focus:outline-none focus:border-porcelain/30 transition-colors duration-100"
-            >
-              <option value="all">All Providers</option>
-              {providers.map((p) => (
-                <option key={p} value={p}>
-                  {p}
-                </option>
-              ))}
-            </select>
-          )}
         </div>
 
         {/* Right: Stats */}

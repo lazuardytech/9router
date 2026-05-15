@@ -81,6 +81,11 @@ function ensureSchemaPatches(db) {
   if (!hasColumn(db, "request_log", "combo")) {
     db.exec("ALTER TABLE request_log ADD COLUMN combo TEXT");
   }
+
+  // Add details_id column to request_log if missing
+  if (!hasColumn(db, "request_log", "details_id")) {
+    db.exec("ALTER TABLE request_log ADD COLUMN details_id TEXT");
+  }
 }
 
 function readMeta(db, key) {

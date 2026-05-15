@@ -348,11 +348,11 @@ function flushLogs() {
   try {
     const db = getDatabase();
     const insertStmt = db.prepare(
-      `INSERT INTO request_log (timestamp, model, provider, account, prompt_tokens, completion_tokens, status, combo)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+      `INSERT INTO request_log (timestamp, model, provider, account, prompt_tokens, completion_tokens, status, combo, details_id)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     );
     const updateStmt = db.prepare(
-      `UPDATE request_log SET prompt_tokens = ?, completion_tokens = ?, status = ?, combo = COALESCE(?, combo)
+      `UPDATE request_log SET prompt_tokens = ?, completion_tokens = ?, status = ?, combo = COALESCE(?, combo), details_id = COALESCE(?, details_id)
        WHERE id = (
          SELECT id FROM request_log
          WHERE model = ? AND provider = ? AND status = 'PENDING'
@@ -368,6 +368,7 @@ function flushLogs() {
             r.completion_tokens,
             r.status,
             r.combo ?? null,
+            r.details_id ?? null,
             r.model,
             r.provider,
           );
@@ -382,6 +383,7 @@ function flushLogs() {
               r.completion_tokens,
               r.status,
               r.combo ?? null,
+              r.details_id ?? null,
             );
           }
         } else {
@@ -394,6 +396,7 @@ function flushLogs() {
             r.completion_tokens,
             r.status,
             r.combo ?? null,
+            r.details_id ?? null,
           );
         }
       }
@@ -428,7 +431,7 @@ if (!isCloud && !global._flushHooksRegistered) {
   process.on("exit", flushAll);
 }
 
-export async function appendRequestLog({ model, provider, connectionId, tokens, status, combo }) {
+export async function appendRequestLog({ model, provider, connectionId, tokens, status, combo, detailsId }) {
   if (isCloud) return;
   try {
     const account = await getConnectionName(connectionId);
@@ -443,6 +446,7 @@ export async function appendRequestLog({ model, provider, connectionId, tokens, 
       completion_tokens: completionTokens,
       status: String(status ?? ""),
       combo: combo || null,
+      details_id: detailsId || null,
     });
     if (logQueue.length >= LOG_BATCH_SIZE) flushLogs();
     else scheduleLogFlush();
@@ -1142,4 +1146,4 @@ export async function getChartData(period = "7d") {
 
 // Re-export request details for back-compat (existing routes import these
 // names from @/lib/usageDb)
-export { saveRequestDetail, getRequestDetails, getRequestDetailById } from "./requestDetailsDb.js";
+export { saveRequestDetail, getRequestDetails, getRequestDetailById, generateDetailId } from "./requestDetailsDb.js";
