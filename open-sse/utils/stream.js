@@ -88,6 +88,8 @@ const STREAM_MODE = {
  * @param {function} options.onStreamComplete - Callback when stream completes (content, usage)
  * @param {string} options.apiKey - API key for usage tracking
  */
+const STALL_TIMEOUT_MS = 180_000; // 3 minutes
+
 export function createSSEStream(options = {}) {
   const {
     mode = STREAM_MODE.TRANSLATE,
@@ -105,6 +107,8 @@ export function createSSEStream(options = {}) {
 
   let buffer = "";
   let usage = null;
+  let stallTimer = null;
+  let stallController = null;
 
   // Per-stream decoder with stream:true to correctly handle multi-byte chars split across chunks
   const decoder = new TextDecoder("utf-8", { fatal: false });
@@ -125,7 +129,30 @@ export function createSSEStream(options = {}) {
   }
 
   return new TransformStream({
+    start(controller) {
+      stallController = controller;
+      const resetStall = () => {
+        if (stallTimer) clearTimeout(stallTimer);
+        stallTimer = setTimeout(() => {
+          const errChunk = `data: ${JSON.stringify({ error: { message: "Stream stalled: no data received for 3 minutes", type: "stream_stall", code: "stream_stall" } })}`;
+          try {
+            controller.enqueue(sharedEncoder.encode(errChunk + "\n\ndata: [DONE]\n\n"));
+          } catch {}
+          try {
+            controller.terminate();
+          } catch {}
+        }, STALL_TIMEOUT_MS);
+        stallTimer.unref?.();
+      };
+      resetStall();
+      // Expose reset so transform can call it
+      stallController._resetStall = resetStall;
+    },
+
     transform(chunk, controller) {
+      // Reset stall timer on each received chunk
+      stallController?._resetStall?.();
+
       if (!ttftAt) {
         ttftAt = Date.now();
       }
@@ -340,6 +367,10 @@ export function createSSEStream(options = {}) {
     },
 
     flush(controller) {
+      if (stallTimer) {
+        clearTimeout(stallTimer);
+        stallTimer = null;
+      }
       trackPendingRequest(model, provider, connectionId, false);
       try {
         const remaining = decoder.decode();

@@ -7,7 +7,7 @@ import MetricsLineChart from "./components/MetricsLineChart";
 import RequestDetailsTab from "./components/RequestDetailsTab";
 
 const PERIODS = [
-  { value: "24h", label: "24h" },
+  { value: "24h", label: "Today" },
   { value: "7d", label: "7D" },
   { value: "30d", label: "30D" },
   { value: "90d", label: "90D" },

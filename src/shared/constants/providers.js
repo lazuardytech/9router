@@ -379,8 +379,20 @@ export const APIKEY_PROVIDERS = {
     textIcon: "MM",
     website: "https://www.minimaxi.com",
     notice: { apiKeyUrl: "https://platform.minimaxi.com/user-center/basic-information/interface-key" },
-    serviceKinds: ["llm", "image", "imageToText", "webSearch"],
+    serviceKinds: ["llm", "image", "imageToText", "webSearch", "tts"],
     searchViaChat: { defaultModel: "MiniMax-M2.7", pricingUrl: "https://www.minimaxi.com/document/price" },
+    ttsConfig: {
+      baseUrl: "https://api.minimax.io/v1/t2a_v2",
+      authType: "apikey",
+      authHeader: "bearer",
+      format: "minimax-tts",
+      models: [
+        { id: "speech-02-hd", name: "Speech 02 HD" },
+        { id: "speech-02-turbo", name: "Speech 02 Turbo" },
+        { id: "speech-01-hd", name: "Speech 01 HD" },
+        { id: "speech-01-turbo", name: "Speech 01 Turbo" },
+      ],
+    },
   },
   "minimax-cn": {
     id: "minimax-cn",

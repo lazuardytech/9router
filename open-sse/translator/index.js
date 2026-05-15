@@ -65,6 +65,17 @@ function stripContentTypes(body, stripList = []) {
   }
 }
 
+// Normalize 'developer' role to 'system' for providers that don't accept it
+// (DeepSeek, Groq, and other OpenAI-format providers)
+function normalizeDeveloperRole(body) {
+  if (!body.messages || !Array.isArray(body.messages)) return;
+  for (const msg of body.messages) {
+    if (msg.role === "developer") {
+      msg.role = "system";
+    }
+  }
+}
+
 // Translate request: source -> openai -> target
 export function translateRequest(
   sourceFormat,
@@ -84,6 +95,9 @@ export function translateRequest(
 
   // Strip explicit content types (opt-in via strip[] in PROVIDER_MODELS entry)
   stripContentTypes(result, stripList);
+
+  // Normalize 'developer' role → 'system' for providers that don't accept it
+  normalizeDeveloperRole(result);
 
   // Normalize thinking config: remove if lastMessage is not user
   normalizeThinkingConfig(result);

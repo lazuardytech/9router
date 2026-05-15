@@ -26,7 +26,27 @@ function getDataDir() {
   return path.join(homeDir, `.${APP_NAME}`);
 }
 
-export const DATA_DIR = getDataDir();
+function tryEnsureDir(dirPath) {
+  try {
+    if (!fs.existsSync(dirPath)) fs.mkdirSync(dirPath, { recursive: true });
+    // Verify we can actually write to it
+    fs.accessSync(dirPath, fs.constants.W_OK);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+export const DATA_DIR = (() => {
+  const primary = getDataDir();
+  if (tryEnsureDir(primary)) return primary;
+  // Fallback to ~/.pod if primary is inaccessible (EACCES/EPERM)
+  const fallback = path.join(os.homedir(), ".pod");
+  console.warn(`[sqlite] DATA_DIR ${primary} not accessible, falling back to ${fallback}`);
+  tryEnsureDir(fallback);
+  return fallback;
+})();
+
 export const SQLITE_FILE = path.join(DATA_DIR, SQLITE_FILE_NAME);
 
 let dbInstance = null;
@@ -113,9 +133,7 @@ function runInitialMigration(db) {
 export function getDatabase() {
   if (dbInstance) return dbInstance;
 
-  if (!fs.existsSync(DATA_DIR)) {
-    fs.mkdirSync(DATA_DIR, { recursive: true });
-  }
+  // DATA_DIR is already ensured at module load time via tryEnsureDir
 
   // Under Bun, better-sqlite3 (native N-API) is unsupported — use the
   // built-in `bun:sqlite` instead. Both modules are kept external in

@@ -68,6 +68,14 @@ export function extractUsageFromResponse(responseBody) {
     };
   }
 
+  // Ollama format (non-streaming response with prompt_eval_count/eval_count)
+  if (responseBody.prompt_eval_count !== undefined || responseBody.eval_count !== undefined) {
+    return {
+      prompt_tokens: responseBody.prompt_eval_count || 0,
+      completion_tokens: responseBody.eval_count || 0,
+    };
+  }
+
   return null;
 }
 

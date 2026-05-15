@@ -750,6 +750,13 @@ export const PROVIDER_MODELS = {
     { id: "gen4_turbo", name: "Gen-4 Turbo", type: "video", params: [] },
     { id: "gen3a_turbo", name: "Gen-3 Alpha Turbo", type: "video", params: [] },
   ],
+  blackbox: [
+    { id: "blackboxai/gemini-2.5-flash", name: "Gemini 2.5 Flash (Blackbox)" },
+    { id: "blackboxai/gemini-2.5-pro", name: "Gemini 2.5 Pro (Blackbox)" },
+    { id: "blackboxai/claude-sonnet-4-5", name: "Claude Sonnet 4.5 (Blackbox)" },
+    { id: "blackboxai/gpt-4o", name: "GPT-4o (Blackbox)" },
+    { id: "blackboxai/deepseek-v3", name: "DeepSeek V3 (Blackbox)" },
+  ],
 };
 
 // Helper functions

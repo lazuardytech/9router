@@ -231,6 +231,14 @@ export function extractUsage(chunk) {
     });
   }
 
+  // Ollama format (done=true chunk with prompt_eval_count/eval_count)
+  if (chunk.done === true && (chunk.prompt_eval_count !== undefined || chunk.eval_count !== undefined)) {
+    return normalizeUsage({
+      prompt_tokens: chunk.prompt_eval_count || 0,
+      completion_tokens: chunk.eval_count || 0,
+    });
+  }
+
   // Gemini format (Antigravity)
   // Antigravity wraps usageMetadata inside response: { response: { usageMetadata: {...} } }
   const usageMeta = chunk.usageMetadata || chunk.response?.usageMetadata;

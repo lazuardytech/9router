@@ -11,7 +11,7 @@ const fmtNum = (n) => {
 const fmtCost = (n) => `$${(n || 0).toFixed(4)}`;
 
 const PERIOD_UNIT = {
-  "24h": "per Day",
+  "24h": "Today",
   "7d": "per Week",
   "30d": "per Month",
   "90d": "per Quarter",

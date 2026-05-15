@@ -314,6 +314,10 @@ export const PROVIDERS = {
     baseUrl: "https://api.nanobananaapi.ai/v1/chat/completions",
     format: "openai",
   },
+  blackbox: {
+    baseUrl: "https://www.blackbox.ai/api",
+    format: "openai",
+  },
   chutes: {
     baseUrl: "https://llm.chutes.ai/v1/chat/completions",
     format: "openai",

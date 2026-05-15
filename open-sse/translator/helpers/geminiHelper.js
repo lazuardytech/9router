@@ -327,12 +327,34 @@ function flattenTypeArrays(obj) {
   }
 }
 
+// Ensure schemas with properties but no type get type:"object"
+// Prevents Gemini API errors with tool schemas that omit the type field
+function ensureObjectType(obj) {
+  if (!obj || typeof obj !== "object") return;
+
+  if (Array.isArray(obj)) {
+    for (const item of obj) ensureObjectType(item);
+    return;
+  }
+
+  if (obj.properties && !obj.type) {
+    obj.type = "object";
+  }
+
+  for (const value of Object.values(obj)) {
+    if (value && typeof value === "object") ensureObjectType(value);
+  }
+}
+
 // Clean JSON Schema for Antigravity API compatibility - removes unsupported keywords recursively
 export function cleanJSONSchemaForAntigravity(schema) {
   if (!schema || typeof schema !== "object") return schema;
 
   // Mutate directly (schema is only used once per request)
   let cleaned = schema;
+
+  // Phase 0: Ensure schemas with properties have type:"object"
+  ensureObjectType(cleaned);
 
   // Phase 1: Convert and prepare
   convertConstToEnum(cleaned);
