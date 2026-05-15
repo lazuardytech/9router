@@ -67,27 +67,48 @@ const LEVEL_FILTERS = [
   { key: "ERROR", label: "Error" },
 ];
 
-export default function ConsoleLogClient({ autoScroll, setAutoScroll, clearRef }) {
+export default function ConsoleLogClient({ autoScroll, setAutoScroll, clearRef, live = true, refreshRef }) {
   const [logs, setLogs] = useState([]);
   const [connected, setConnected] = useState(false);
-  const [initialized, setInitialized] = useState(false);
   const [levelFilter, setLevelFilter] = useState("all");
   const [search, setSearch] = useState("");
   const [copied, setCopied] = useState(null);
   const [lastUpdated, setLastUpdated] = useState(null);
   const scrollRef = useRef(null);
   const esRef = useRef(null);
+  const liveRef = useRef(live);
+
+  // Keep liveRef in sync
+  useEffect(() => {
+    liveRef.current = live;
+  }, [live]);
 
   const handleClear = useCallback(async () => {
     try {
       await fetch("/api/translator/console-logs", { method: "DELETE" });
+      setLogs([]);
     } catch {}
   }, []);
 
-  // Expose clear to parent via ref
+  const handleRefresh = useCallback(async () => {
+    try {
+      const res = await fetch("/api/translator/console-logs");
+      if (res.ok) {
+        const data = await res.json();
+        setLogs((data.logs || []).slice(-CONSOLE_LOG_CONFIG.maxLines));
+        setLastUpdated(new Date());
+      }
+    } catch {}
+  }, []);
+
+  // Expose clear and refresh to parent via refs
   useEffect(() => {
     if (clearRef) clearRef.current = handleClear;
   }, [clearRef, handleClear]);
+
+  useEffect(() => {
+    if (refreshRef) refreshRef.current = handleRefresh;
+  }, [refreshRef, handleRefresh]);
 
   const handleCopy = useCallback((line, idx) => {
     navigator.clipboard?.writeText(line).catch(() => {});
@@ -101,7 +122,6 @@ export default function ConsoleLogClient({ autoScroll, setAutoScroll, clearRef }
 
     es.onopen = () => {
       setConnected(true);
-      setInitialized(true);
       setLastUpdated(new Date());
     };
 
@@ -111,6 +131,7 @@ export default function ConsoleLogClient({ autoScroll, setAutoScroll, clearRef }
         setLogs(msg.logs.slice(-CONSOLE_LOG_CONFIG.maxLines));
         setLastUpdated(new Date());
       } else if (msg.type === "line") {
+        if (!liveRef.current) return;
         setLogs((prev) => {
           const next = [...prev, msg.line];
           return next.length > CONSOLE_LOG_CONFIG.maxLines ? next.slice(-CONSOLE_LOG_CONFIG.maxLines) : next;
@@ -187,14 +208,9 @@ export default function ConsoleLogClient({ autoScroll, setAutoScroll, clearRef }
         {/* Right: Connection status + Stats */}
         <div className="flex items-center gap-2 text-[11px] shrink-0">
           <div className="flex items-center gap-1.5">
-            <span
-              className={cn(
-                "size-1.5 rounded-full",
-                connected ? "bg-emerald animate-pulse" : initialized ? "bg-warning-red" : "bg-[#f59e0b] animate-pulse",
-              )}
-            />
-            <span className={connected ? "text-emerald" : initialized ? "text-warning-red" : "text-[#f59e0b]"}>
-              {connected ? "Connected" : initialized ? "Disconnected" : "Connecting..."}
+            <span className={cn("size-1.5 rounded-full", connected ? "bg-emerald animate-pulse" : "bg-warning-red")} />
+            <span className={connected ? "text-emerald" : "text-warning-red"}>
+              {connected ? "Connected" : "Disconnected"}
             </span>
           </div>
           <div className="flex items-center gap-2 text-fog-grey">

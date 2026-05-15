@@ -87,9 +87,29 @@ function ProxyLogsToolbar({ sortBy, setSortBy, onRefresh, live, setLive, count }
   );
 }
 
-function ConsoleToolbar({ autoScroll, setAutoScroll, onClear }) {
+function ConsoleToolbar({ autoScroll, setAutoScroll, onClear, onRefresh, live, setLive }) {
   return (
     <div className="flex items-center gap-2">
+      <button
+        onClick={onRefresh}
+        className="flex items-center gap-1.5 h-7 px-2.5 rounded-[4px] border border-charcoal-grey text-[11px] text-storm-cloud hover:bg-deep-slate hover:text-porcelain transition-colors duration-100"
+        title="Refresh"
+      >
+        <span className="material-symbols-outlined text-[15px]">refresh</span>
+      </button>
+      <button
+        onClick={() => setLive((v) => !v)}
+        title={live ? "Pause live" : "Resume live"}
+        className={cn(
+          "flex items-center gap-1.5 h-7 px-2.5 rounded-[4px] border text-[11px] font-[510] transition-colors duration-100",
+          live
+            ? "border-emerald/30 bg-emerald/8 text-emerald"
+            : "border-charcoal-grey text-fog-grey hover:bg-deep-slate hover:text-porcelain",
+        )}
+      >
+        <span className={cn("size-1.5 rounded-full", live ? "bg-emerald animate-pulse" : "bg-fog-grey")} />
+        {live ? "Live" : "Paused"}
+      </button>
       <button
         onClick={() => setAutoScroll((v) => !v)}
         title={autoScroll ? "Disable auto-scroll" : "Enable auto-scroll"}
@@ -134,7 +154,9 @@ function LogsInner() {
 
   // ConsoleLogClient lifted state
   const [autoScroll, setAutoScroll] = useState(true);
+  const [consoleLive, setConsoleLive] = useState(true);
   const clearRef = useRef(null);
+  const consoleRefreshRef = useRef(null);
 
   const setTab = (key) => {
     const params = new URLSearchParams(searchParams.toString());
@@ -186,7 +208,14 @@ function LogsInner() {
           />
         )}
         {activeTab === "console" && (
-          <ConsoleToolbar autoScroll={autoScroll} setAutoScroll={setAutoScroll} onClear={() => clearRef.current?.()} />
+          <ConsoleToolbar
+            autoScroll={autoScroll}
+            setAutoScroll={setAutoScroll}
+            onClear={() => clearRef.current?.()}
+            onRefresh={() => consoleRefreshRef.current?.()}
+            live={consoleLive}
+            setLive={setConsoleLive}
+          />
         )}
       </div>
 
@@ -212,7 +241,13 @@ function LogsInner() {
           />
         )}
         {activeTab === "console" && (
-          <ConsoleLogClient autoScroll={autoScroll} setAutoScroll={setAutoScroll} clearRef={clearRef} />
+          <ConsoleLogClient
+            autoScroll={autoScroll}
+            setAutoScroll={setAutoScroll}
+            clearRef={clearRef}
+            live={consoleLive}
+            refreshRef={consoleRefreshRef}
+          />
         )}
       </div>
     </div>
