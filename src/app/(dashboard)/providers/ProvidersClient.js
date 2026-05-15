@@ -307,7 +307,7 @@ export default function ProvidersPage() {
                 <span
                   className={`material-symbols-outlined text-[14px]${testingMode === "oauth" ? " animate-spin" : ""}`}
                 >
-                  play_arrow
+                  {testingMode === "oauth" ? "progress_activity" : "play_arrow"}
                 </span>
                 {testingMode === "oauth" ? "Testing..." : "Test All"}
               </button>
@@ -347,7 +347,7 @@ export default function ProvidersPage() {
               aria-label="Test all Free provider connections"
             >
               <span className={`material-symbols-outlined text-[14px]${testingMode === "free" ? " animate-spin" : ""}`}>
-                play_arrow
+                {testingMode === "free" ? "progress_activity" : "play_arrow"}
               </span>
               {testingMode === "free" ? "Testing..." : "Test All"}
             </button>
@@ -398,7 +398,7 @@ export default function ProvidersPage() {
               <span
                 className={`material-symbols-outlined text-[14px]${testingMode === "apikey" ? " animate-spin" : ""}`}
               >
-                play_arrow
+                {testingMode === "apikey" ? "progress_activity" : "play_arrow"}
               </span>
               {testingMode === "apikey" ? "Testing..." : "Test All"}
             </button>

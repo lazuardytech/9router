@@ -56,17 +56,23 @@ const getPageInfo = (pathname) => {
   const providerMatch = pathname.match(/\/providers\/([^/]+)$/);
   if (providerMatch) {
     const providerId = providerMatch[1];
-    const providerInfo = OAUTH_PROVIDERS[providerId] || APIKEY_PROVIDERS[providerId];
+    const providerInfo = OAUTH_PROVIDERS[providerId] || APIKEY_PROVIDERS[providerId] || AI_PROVIDERS[providerId];
     if (providerInfo) {
       return {
         title: providerInfo.name,
         description: "",
         breadcrumbs: [
           { label: "Providers", href: "/providers", icon: "dns" },
-          { label: providerInfo.name, image: `/providers/${providerInfo.id}.png` },
+          { label: providerInfo.name, image: `/providers/${providerInfo.id || providerId}.png` },
         ],
       };
     }
+    // Fallback for unknown provider IDs
+    return {
+      title: providerId,
+      description: "",
+      breadcrumbs: [{ label: "Providers", href: "/providers", icon: "dns" }, { label: providerId }],
+    };
   }
 
   if (pathname.includes("/providers/new"))
