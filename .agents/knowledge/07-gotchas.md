@@ -204,7 +204,50 @@ Do not re-add `--smol` — it throttles the heap globally and hurts throughput u
 The previous guard (`temperature !== 0`) caused near-zero cache hit rates because most clients send `temperature: 1` by default.
 Do not revert to `!== 0`.
 
-## 37) `previousIds[]` must not be cleared
+## 38) Semantic cache write must use pre-injection signature
+
+`generateSignature()` is called **before** `injectMemory()` mutates `body.messages`.
+All write paths in `chatCore.js` must reuse `cacheSignature` (computed at read time),
+not recompute from `body.messages` — which by write time contains injected memory.
+Recomputing causes read/write signature mismatch → 0% hit rate.
+
+## 39) Custom provider nodes support multiple API keys
+
+As of v0.0.17, the single-connection limit for `openai-compatible-*`, `anthropic-compatible-*`,
+and `custom-embedding-*` nodes has been removed. Multiple connections (API keys) per node
+are now allowed, same as built-in providers like Kiro and Codex.
+
+## 40) Combos and provider connections support drag-to-reorder
+
+`/combos` list and `/providers/[id]` connection list both support drag-to-reorder via `@dnd-kit`.
+- Combos: `PATCH /api/combos` with `{ order: string[] }` saves sort order to `sort_order` column.
+- Connections: `PUT /api/providers/:id` with `{ priority: number }` per connection.
+
+## 41) Minimum lockout time is configurable
+
+`settings.minimumLockoutMinutes` (default `0` = disabled) sets a floor for model lockout duration.
+When set, `markAccountUnavailable` applies `Math.max(minimumLockoutMs * backoffLevel, cooldownMs)`.
+Backoff multiplier: 1x on first failure, 2x on second, 3x on third, etc.
+Configured via Settings → Routing Strategy → Minimum Lockout Time.
+
+## 42) Refresh buttons use size-7 square style
+
+All Refresh buttons across the app use the `/logs` standard:
+```jsx
+<button className="flex items-center justify-center size-7 rounded-[4px] border border-charcoal-grey
+  text-storm-cloud hover:bg-deep-slate hover:text-porcelain transition-colors duration-100
+  disabled:opacity-50 disabled:cursor-not-allowed">
+  <span className={`material-symbols-outlined text-[15px] ${refreshing ? 'animate-spin' : ''}`}>refresh</span>
+</button>
+```
+Do not use `<Button size="sm" icon="refresh" />` for standalone refresh actions.
+
+## 43) `node:` protocol imports break webpack bundling
+
+Next.js webpack cannot resolve `node:os`, `node:path`, etc. in files that are imported
+by client-side or shared code. Use bare specifiers (`"os"`, `"path"`) in `open-sse/config/*`
+and any file that may be bundled by webpack. `node:` protocol is fine in pure server-side
+API routes and Node.js-only modules.
 
 `renameProviderNode` appends the old id to `node.data.previousIds[]` on every rename.
 `ProviderDetailClient` uses this array to redirect stale bookmark URLs to the current id via `router.replace`.

@@ -1,6 +1,6 @@
 # Architecture
 
-This file summarizes the current architecture for `github.com/lazuardytech/pod` (v0.0.14).
+This file summarizes the current architecture for `github.com/lazuardytech/pod` (v0.0.20).
 
 ## Package Layout
 
@@ -68,6 +68,7 @@ All use the `open-sse` stream helpers. The `/logs` page surfaces Refresh/Live to
   - Tables: `semantic_cache`, `cache_metrics`
   - API: `/api/cache`, `/api/settings/cache-config`
   - Streaming requests (`stream: true`) are cached. After `onStreamComplete`, the assembled response is written to cache. Cache hits for streaming clients are served as SSE chunks via `buildCacheHitSSEResponse` in `open-sse/handlers/chatCore.js`.
+  - **Critical**: `cacheSignature` is computed from original `body.messages` BEFORE `injectMemory()` mutates the body. All write paths reuse this pre-computed signature. Never recompute from `body.messages` at write time.
 - Temperature threshold for cache eligibility: `temperature > 1` (changed from `temperature !== 0` in v0.0.13 — most clients send `temperature: 1` by default, which was incorrectly bypassing cache).
 - Conversational memory:
   - Tables: `memories`, `memory_fts`
@@ -99,6 +100,7 @@ Primary store is SQLite:
 Schema migrations applied at boot (in `connection.js`):
 - `combo` column on `request_log`
 - `details_id` column on `request_log`
+- `sort_order` column on `combos` (backfilled from `rowid`)
 
 `LOG_MAX_ROWS` in `src/lib/usageDb.js` is set to **10 000**. The `/api/usage/request-logs` endpoint serves up to 10 000 rows.
 

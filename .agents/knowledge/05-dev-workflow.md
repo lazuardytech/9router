@@ -36,10 +36,10 @@ Always run in this order before release: `bun run check` → `bun run test:run` 
 ## Docker (Local)
 
 ```bash
-./start.sh
+docker run -d --name pod -p 20128:20128 --env-file .env -v pod-data:/app/data lazuardytech/pod:latest
 ```
 
-What `start.sh` does: stop + remove existing `pod` container, pull `lazuardytech/pod:latest`, run with `--env-file .env` and volume `pod-data:/app/data`.
+(`start.sh` was removed in v0.0.20.)
 
 Dockerfile facts:
 - Multi-stage build:
