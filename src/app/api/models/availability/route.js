@@ -153,11 +153,19 @@ export async function POST(request) {
         return NextResponse.json({ ok: true, tested: true, passed: true });
       }
 
-      // Test failed — re-apply minimum lockout if configured, otherwise keep existing lock
+      // Test failed — re-apply minimum lockout if configured, otherwise keep existing lock.
+      // Apply the same backoff multiplier as markAccountUnavailable: 1x, 2x, 3x per backoffLevel.
       if (minimumLockoutMinutes > 0) {
-        const lockUntil = new Date(Date.now() + minimumLockoutMinutes * 60 * 1000).toISOString();
+        const minimumLockoutMs = minimumLockoutMinutes * 60 * 1000;
         await Promise.all(
-          connections.filter((c) => c[lockKey]).map((c) => updateProviderConnection(c.id, { [lockKey]: lockUntil })),
+          connections
+            .filter((c) => c[lockKey])
+            .map((c) => {
+              const backoffMultiplier = Math.max(1, c.backoffLevel || 1);
+              const effectiveMs = minimumLockoutMs * backoffMultiplier;
+              const lockUntil = new Date(Date.now() + effectiveMs).toISOString();
+              return updateProviderConnection(c.id, { [lockKey]: lockUntil });
+            }),
         );
       }
       return NextResponse.json({ ok: false, tested: true, passed: false });
