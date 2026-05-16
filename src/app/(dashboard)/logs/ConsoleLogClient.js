@@ -38,7 +38,7 @@ function LogLine({ line, idx, onCopy, copied }) {
 
   return (
     <div className="group flex items-start gap-2 px-3 py-1 rounded-[4px] hover:bg-porcelain/4 transition-colors duration-75">
-      <span className="shrink-0 text-[10px] text-fog-grey font-mono mt-0.5 w-[72px]">{ts || "—"}</span>
+      <span className="shrink-0 text-[10px] text-fog-grey font-mono mt-0.5 w-[66px]">{ts || "—"}</span>
       <span
         className={cn(
           "shrink-0 inline-flex items-center px-1 py-0.5 rounded-[3px] border text-[9px] font-[590] uppercase tracking-[0.05em] mt-0.5 w-[42px] justify-center",
