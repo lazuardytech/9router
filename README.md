@@ -1,23 +1,10 @@
-<p align="center">
-  <a href="">
-    <img alt="pi logo" src="https://raw.githubusercontent.com/lazuardytech/pod/refs/heads/main/public/logo-white.svg" width="128">
-  </a>
-</p>
-<!-- <p align="center">
-  <a href="https://discord.com/invite/"><img alt="Discord" src="https://img.shields.io/badge/discord-community-5865F2?style=flat-square&logo=discord&logoColor=white" /></a>
-</p> -->
-<p align="center">
-  ✦ Unified Proxy for LLM Inference<br/>
-</p>
-<p align="center">
-  <code>🚧 under heady development on v0.0.x</code>
-</p>
+<img width="1792" height="768" alt="LT Cover" src="https://github.com/user-attachments/assets/5bb53ae6-73a1-4a35-b163-81dc5a5b5c24" />
 
----
+# ✦ Pod
 
-## Contributing
+Unified proxy for LLM Inference.
 
-See [CONTRIBUTING.md](CONTRIBUTING.md) for contribution guidelines and [AGENTS.md](AGENTS.md) for project-specific rules (for both humans and agents).
+<code>🚧 under heady development on v0.0.x</code>
 
 ## Development
 
@@ -30,8 +17,12 @@ bun run test         # Run tests
 
 > **Note:** Development requires `bun run build` to be run first.
 
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for contribution guidelines and [AGENTS.md](AGENTS.md) for project-specific rules (for both humans and agents).
+
+> Pod is heavily inspired by [9router](https://9router.com) and [OmniRoute](https://omniroute.online). All credits should go to their maintainers too.
+
 ## License
 
 [MIT](https://github.com/lazuardytech/pod/blob/main/LICENSE)
-
-> Pod is heavily inspired by [9router](https://9router.com) and [OmniRoute](https://omniroute.online). All credits should go to their maintainers too.
