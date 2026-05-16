@@ -141,18 +141,16 @@ export default function CombosPage() {
     setTestingComboId(combo.id);
     setComboTestResults((prev) => ({ ...prev, [combo.id]: null }));
     try {
-      // Use the first model in the combo to test
       const model = combo.models[0];
-      const res = await fetch("/api/providers/test-batch", {
+      const res = await fetch("/api/models/test", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ models: [model] }),
+        body: JSON.stringify({ model }),
       });
       const data = await res.json();
-      const result = data.results?.[0];
       setComboTestResults((prev) => ({
         ...prev,
-        [combo.id]: result?.ok ? "ok" : "error",
+        [combo.id]: data?.ok ? "ok" : "error",
       }));
     } catch {
       setComboTestResults((prev) => ({ ...prev, [combo.id]: "error" }));
@@ -405,9 +403,9 @@ function ComboCard({
               }`}
               title="Test combo"
             >
-              <span className={`material-symbols-outlined text-[18px] ${isTesting ? "animate-pulse" : ""}`}>
+              <span className={`material-symbols-outlined text-[18px] ${isTesting ? "animate-spin" : ""}`}>
                 {isTesting
-                  ? "hourglass_top"
+                  ? "progress_activity"
                   : testStatus === "ok"
                     ? "check_circle"
                     : testStatus === "error"
