@@ -4,10 +4,11 @@
  * - cache API routes (GET stats, DELETE all/model/signature/staleMs)
  * - isCacheableForRead/Write rules
  */
-import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
+
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
 let tempDir;
 let originalDataDir;
@@ -260,10 +261,18 @@ describe("isCacheableForRead / isCacheableForWrite", () => {
     expect(isCacheableForWrite({ stream: false, temperature: 0 }, {})).toBe(true);
   });
 
-  it("blocks non-zero temperature", async () => {
+  it("blocks non-zero temperature > 1", async () => {
     const { isCacheableForRead, isCacheableForWrite } = await import("@/lib/semanticCache.js");
-    expect(isCacheableForRead({ temperature: 0.5 }, {})).toBe(false);
-    expect(isCacheableForWrite({ temperature: 1 }, {})).toBe(false);
+    expect(isCacheableForRead({ temperature: 1.5 }, {})).toBe(false);
+    expect(isCacheableForWrite({ temperature: 2 }, {})).toBe(false);
+  });
+
+  it("allows temperature <= 1 (including default temperature=1)", async () => {
+    const { isCacheableForRead, isCacheableForWrite } = await import("@/lib/semanticCache.js");
+    expect(isCacheableForRead({ temperature: 1 }, {})).toBe(true);
+    expect(isCacheableForWrite({ temperature: 1 }, {})).toBe(true);
+    expect(isCacheableForRead({ temperature: 0.5 }, {})).toBe(true);
+    expect(isCacheableForWrite({ temperature: 0 }, {})).toBe(true);
   });
 
   it("blocks x-pod-no-cache: true header", async () => {

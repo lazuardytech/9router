@@ -1,7 +1,7 @@
-import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
+import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
 let tempDir;
 let originalDataDir;
@@ -81,7 +81,11 @@ describe("semantic cache", () => {
     expect(isCacheableForWrite(baseBody, {})).toBe(true);
     expect(isCacheableForRead({ ...baseBody, stream: true }, {})).toBe(true); // streaming now cacheable
     expect(isCacheableForWrite({ ...baseBody, stream: true }, {})).toBe(true); // streaming now cacheable
-    expect(isCacheableForWrite({ ...baseBody, temperature: 0.2 }, {})).toBe(false);
+    expect(isCacheableForRead({ ...baseBody, temperature: 1 }, {})).toBe(true); // default temperature cacheable
+    expect(isCacheableForWrite({ ...baseBody, temperature: 1 }, {})).toBe(true); // default temperature cacheable
+    expect(isCacheableForRead({ ...baseBody, temperature: 0.5 }, {})).toBe(true); // <= 1 cacheable
+    expect(isCacheableForWrite({ ...baseBody, temperature: 1.5 }, {})).toBe(false); // > 1 not cacheable
+    expect(isCacheableForWrite({ ...baseBody, temperature: 0.2 }, {})).toBe(true);
     expect(isCacheableForRead(baseBody, { "x-pod-no-cache": "true" })).toBe(false);
   });
 });

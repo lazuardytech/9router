@@ -254,14 +254,18 @@ export function getCacheStats() {
 export function isCacheableForRead(body, headers) {
   if ((getHeaderValue(headers, "x-pod-no-cache") || "").toLowerCase() === "true") return false;
   if ((getHeaderValue(headers, "x-omniroute-no-cache") || "").toLowerCase() === "true") return false;
-  if ((body?.temperature ?? 0) !== 0) return false;
+  // Cache requests with temperature <= 1 (includes default temperature=1 from most clients).
+  // Requests with temperature > 1 are intentionally non-deterministic and should not be cached.
+  const temp = body?.temperature ?? 0;
+  if (temp > 1) return false;
   return true;
 }
 
 export function isCacheableForWrite(body, headers) {
   if ((getHeaderValue(headers, "x-pod-no-cache") || "").toLowerCase() === "true") return false;
   if ((getHeaderValue(headers, "x-omniroute-no-cache") || "").toLowerCase() === "true") return false;
-  if ((body?.temperature ?? 0) !== 0) return false;
+  const temp = body?.temperature ?? 0;
+  if (temp > 1) return false;
   return true;
 }
 
