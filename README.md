@@ -1,4 +1,5 @@
-<img width="1792" height="768" alt="LT Cover" src="https://github.com/user-attachments/assets/5bb53ae6-73a1-4a35-b163-81dc5a5b5c24" />
+<img width="1700" height="600" alt="Pod" src="https://github.com/user-attachments/assets/f606d37c-769a-4f54-8f03-b7cbda7ac780" />
+
 
 # ✦ Pod
 
