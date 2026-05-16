@@ -5,7 +5,7 @@ export const APP_CONFIG = {
   name: "Pod",
   description: "AI Infrastructure Management",
   version: pkg.version,
-  displayVersion: "0.0.12",
+  displayVersion: "0.0.13",
 };
 
 // GitHub configuration
@@ -59,18 +59,17 @@ export const PROVIDER_ENDPOINTS = {
   "ollama-local": "http://localhost:11434/api/chat",
 };
 
-// Re-export from providers.js for backward compatibility
-export {
-  FREE_PROVIDERS,
-  OAUTH_PROVIDERS,
-  APIKEY_PROVIDERS,
-  WEB_COOKIE_PROVIDERS,
-  AI_PROVIDERS,
-  AUTH_METHODS,
-} from "./providers.js";
-
 // Re-export from models.js for backward compatibility
 export {
-  PROVIDER_MODELS,
   AI_MODELS,
+  PROVIDER_MODELS,
 } from "./models.js";
+// Re-export from providers.js for backward compatibility
+export {
+  AI_PROVIDERS,
+  APIKEY_PROVIDERS,
+  AUTH_METHODS,
+  FREE_PROVIDERS,
+  OAUTH_PROVIDERS,
+  WEB_COOKIE_PROVIDERS,
+} from "./providers.js";
