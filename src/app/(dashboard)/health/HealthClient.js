@@ -461,7 +461,9 @@ export default function HealthPage() {
                 className="flex items-center justify-center size-7 rounded-[4px] border border-charcoal-grey text-storm-cloud hover:bg-deep-slate hover:text-porcelain transition-colors duration-100 disabled:opacity-50 disabled:cursor-not-allowed"
                 title="Refresh lockout status"
               >
-                <span className={`material-symbols-outlined text-[15px] ${refreshing ? "animate-spin" : ""}`}>refresh</span>
+                <span className={`material-symbols-outlined text-[15px] ${refreshing ? "animate-spin" : ""}`}>
+                  refresh
+                </span>
               </button>
             </div>
           )}
@@ -493,7 +495,11 @@ export default function HealthPage() {
                               fetch("/api/models/availability", {
                                 method: "POST",
                                 headers: { "Content-Type": "application/json" },
-                                body: JSON.stringify({ action: "clearCooldown", provider: c.provider, model: bm.model }),
+                                body: JSON.stringify({
+                                  action: "clearCooldown",
+                                  provider: c.provider,
+                                  model: bm.model,
+                                }),
                               }),
                             ),
                           );
@@ -506,7 +512,11 @@ export default function HealthPage() {
                       className="flex items-center justify-center size-7 rounded-[4px] border border-charcoal-grey text-storm-cloud hover:bg-deep-slate hover:text-porcelain transition-colors duration-100 disabled:opacity-50 disabled:cursor-not-allowed"
                       title="Clear lockout and recheck"
                     >
-                      <span className={`material-symbols-outlined text-[15px] ${clearingLock !== null ? "animate-spin" : ""}`}>lock_open</span>
+                      <span
+                        className={`material-symbols-outlined text-[15px] ${clearingLock !== null ? "animate-spin" : ""}`}
+                      >
+                        lock_open
+                      </span>
                     </button>
                   </div>
                 </div>

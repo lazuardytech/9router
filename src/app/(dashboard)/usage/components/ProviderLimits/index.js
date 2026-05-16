@@ -666,7 +666,9 @@ export default function ProviderLimits() {
           className="flex items-center justify-center size-7 rounded-[4px] border border-charcoal-grey text-storm-cloud hover:bg-deep-slate hover:text-porcelain transition-colors duration-100 disabled:opacity-50 disabled:cursor-not-allowed"
           title="Refresh all"
         >
-          <span className={`material-symbols-outlined text-[15px] ${refreshingAll ? "animate-spin" : ""}`}>refresh</span>
+          <span className={`material-symbols-outlined text-[15px] ${refreshingAll ? "animate-spin" : ""}`}>
+            refresh
+          </span>
         </button>
 
         {/* Live toggle */}
