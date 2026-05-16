@@ -18,13 +18,14 @@ bun run check        # Lint, format, and type check
 bun run test         # Run tests
 ```
 
-> **Note:** Development requires `bun run build` to be run first.
+> Development requires `bun run build` to be run first.<br/>
+> All AI agents should read and understand all information inside `.agents`.
 
 <br/>
 
 ## Contributing
 
-See [CONTRIBUTING.md](CONTRIBUTING.md) for contribution guidelines and [AGENTS.md](AGENTS.md) for project-specific rules (for both humans and agents).
+See [CONTRIBUTING.md](CONTRIBUTING.md) for contribution guidelines and [AGENTS.md](AGENTS.md) for project-specific rules (for both humans and AI agents). Additional information for AI agents are stored in `.agents`.
 
 > Pod is heavily inspired by [9router](https://9router.com) and [OmniRoute](https://omniroute.online). All credits should go to their maintainers too.
 
