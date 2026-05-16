@@ -88,7 +88,7 @@ function injectClaudeSystem(body, prompt) {
 // Each shape: { parts: [{ text }] }
 function injectGeminiSystem(body, prompt) {
   const target = body.request && typeof body.request === "object" ? body.request : body;
-  const useSnake = Object.prototype.hasOwnProperty.call(target, "system_instruction");
+  const useSnake = Object.hasOwn(target, "system_instruction");
   const key = useSnake ? "system_instruction" : "systemInstruction";
   const sys = target[key];
   if (sys && Array.isArray(sys.parts)) {

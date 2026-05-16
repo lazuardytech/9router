@@ -1,7 +1,7 @@
 /**
  * OAuth Configuration Constants
  */
-import { platform, arch } from "os";
+import { arch, platform } from "os";
 
 /**
  * Get the platform enum value based on the current OS.

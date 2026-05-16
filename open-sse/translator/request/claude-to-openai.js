@@ -1,6 +1,6 @@
-import { register } from "../index.js";
 import { FORMATS } from "../formats.js";
 import { adjustMaxTokens } from "../helpers/maxTokensHelper.js";
+import { register } from "../index.js";
 
 // Convert Claude request to OpenAI format
 export function claudeToOpenAIRequest(model, body, stream) {
@@ -150,7 +150,7 @@ function convertClaudeMessage(msg) {
           });
           break;
 
-        case "tool_result":
+        case "tool_result": {
           let resultContent = "";
           if (typeof block.content === "string") {
             resultContent = block.content;
@@ -170,6 +170,7 @@ function convertClaudeMessage(msg) {
             content: resultContent,
           });
           break;
+        }
       }
     }
 

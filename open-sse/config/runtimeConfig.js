@@ -15,7 +15,7 @@ export const HTTP_STATUS = {
 };
 
 // Re-export error config (backward compat)
-export { ERROR_TYPES, DEFAULT_ERROR_MESSAGES, BACKOFF_CONFIG, COOLDOWN_MS } from "./errorConfig.js";
+export { BACKOFF_CONFIG, COOLDOWN_MS, DEFAULT_ERROR_MESSAGES, ERROR_TYPES } from "./errorConfig.js";
 
 // Cache TTLs (seconds)
 export const CACHE_TTL = {

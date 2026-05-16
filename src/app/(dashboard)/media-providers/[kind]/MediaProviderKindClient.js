@@ -1,11 +1,11 @@
 "use client";
 
-import { useParams, notFound, useRouter } from "next/navigation";
 import Link from "next/link";
+import { notFound, useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { Card, Badge, Button, AddCustomEmbeddingModal } from "@/shared/components";
+import { AddCustomEmbeddingModal, Badge, Button, Card } from "@/shared/components";
 import ProviderIcon from "@/shared/components/ProviderIcon";
-import { MEDIA_PROVIDER_KINDS, AI_PROVIDERS, getProvidersByKind } from "@/shared/constants/providers";
+import { AI_PROVIDERS, getProvidersByKind, MEDIA_PROVIDER_KINDS } from "@/shared/constants/providers";
 import { useHeaderActionStore } from "@/store/headerActionStore";
 
 // Kinds that support combos (currently disabled for image/tts — temporarily hidden).

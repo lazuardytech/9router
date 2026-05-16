@@ -1,4 +1,4 @@
-import { platform, arch } from "os";
+import { arch, platform } from "os";
 
 // === Gemini CLI ===
 export const GEMINI_CLI_VERSION = "0.31.0";

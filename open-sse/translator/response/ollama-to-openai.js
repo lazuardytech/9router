@@ -1,5 +1,5 @@
-import { register } from "../index.js";
 import { FORMATS } from "../formats.js";
+import { register } from "../index.js";
 
 /**
  * Convert Ollama NDJSON response to OpenAI SSE format

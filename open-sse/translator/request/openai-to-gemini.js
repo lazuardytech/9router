@@ -1,27 +1,27 @@
-import { register } from "../index.js";
-import { FORMATS } from "../formats.js";
+import { ANTIGRAVITY_DEFAULT_SYSTEM } from "../../config/appConstants.js";
 import {
   DEFAULT_THINKING_AG_SIGNATURE,
   DEFAULT_THINKING_GEMINI_CLI_SIGNATURE,
 } from "../../config/defaultThinkingSignature.js";
-import { ANTIGRAVITY_DEFAULT_SYSTEM } from "../../config/appConstants.js";
+import { FORMATS } from "../formats.js";
+import { register } from "../index.js";
 import { openaiToClaudeRequestForAntigravity } from "./openai-to-claude.js";
 
 function generateUUID() {
   return crypto.randomUUID();
 }
 
+import { deriveSessionId } from "../../utils/sessionManager.js";
 import {
-  DEFAULT_SAFETY_SETTINGS,
+  cleanJSONSchemaForAntigravity,
   convertOpenAIContentToParts,
+  DEFAULT_SAFETY_SETTINGS,
   extractTextContent,
-  tryParseJSON,
+  generateProjectId,
   generateRequestId,
   generateSessionId,
-  generateProjectId,
-  cleanJSONSchemaForAntigravity,
+  tryParseJSON,
 } from "../helpers/geminiHelper.js";
-import { deriveSessionId } from "../../utils/sessionManager.js";
 
 // Sanitize function names for Gemini API.
 // Gemini requires: starts with [a-zA-Z_], followed by [a-zA-Z0-9_.:\-], max 64 chars.
@@ -29,7 +29,7 @@ import { deriveSessionId } from "../../utils/sessionManager.js";
 function sanitizeGeminiFunctionName(name) {
   if (!name) return "_unknown";
   // Replace any char not in [a-zA-Z0-9_.:\-] with '_'
-  let sanitized = name.replace(/[^a-zA-Z0-9_.:\-]/g, "_");
+  let sanitized = name.replace(/[^a-zA-Z0-9_.:-]/g, "_");
   // First char must be letter or underscore
   if (!/^[a-zA-Z_]/.test(sanitized)) {
     sanitized = "_" + sanitized;
@@ -163,7 +163,7 @@ function openaiToGeminiBase(model, body, stream, signature = DEFAULT_THINKING_AG
                 }
               }
 
-              let resp = toolResponses[fid];
+              const resp = toolResponses[fid];
               let parsedResp = tryParseJSON(resp);
               if (parsedResp === null) {
                 parsedResp = { result: resp };

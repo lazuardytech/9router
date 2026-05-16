@@ -1,10 +1,10 @@
 "use server";
 
-import os from "os";
 import { execSync } from "child_process";
-import { installTailscale } from "@/lib/tunnel/tailscale";
+import os from "os";
 import { getSettings, updateSettings } from "@/lib/localDb";
-import { loadState, generateShortId } from "@/lib/tunnel/state.js";
+import { generateShortId, loadState } from "@/lib/tunnel/state.js";
+import { installTailscale } from "@/lib/tunnel/tailscale";
 
 // Removed initDbHooks call
 

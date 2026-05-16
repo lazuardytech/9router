@@ -8,7 +8,7 @@
  *  - handleEmbeddingsCore()    — full handler: success, errors, validation
  */
 
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 // ─── Mock the executors/index.js to avoid transitive uuid dependency ─────────
 // kiro.js (imported by executors/index.js) requires 'uuid' which isn't

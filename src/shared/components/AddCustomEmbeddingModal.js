@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useEffect } from "react";
 import PropTypes from "prop-types";
-import { Modal, Input, Button, Badge } from "@/shared/components";
+import { useEffect, useState } from "react";
+import { Badge, Button, Input, Modal } from "@/shared/components";
 
 const DEFAULT_BASE_URL = "https://api.openai.com/v1";
 

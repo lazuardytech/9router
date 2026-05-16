@@ -1,10 +1,10 @@
 import open from "open";
-import { OAuthService } from "./oauth.js";
-import { CODEX_CONFIG } from "../constants/oauth.js";
 import { getServerCredentials } from "../config/index.js";
-import { startLocalServer } from "../utils/server.js";
+import { CODEX_CONFIG } from "../constants/oauth.js";
 import { generatePKCE } from "../utils/pkce.js";
+import { startLocalServer } from "../utils/server.js";
 import { spinner as createSpinner } from "../utils/ui.js";
+import { OAuthService } from "./oauth.js";
 
 /**
  * Codex (OpenAI) OAuth Service

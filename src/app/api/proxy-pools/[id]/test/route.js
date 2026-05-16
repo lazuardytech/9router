@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
-import { getProxyPoolById, updateProxyPool } from "@/models";
-import { testProxyUrl } from "@/lib/network/proxyTest";
 import { fetch as undiciFetch } from "undici";
+import { testProxyUrl } from "@/lib/network/proxyTest";
+import { getProxyPoolById, updateProxyPool } from "@/models";
 
 async function testVercelRelay(relayUrl, timeoutMs = 10000) {
   const controller = new AbortController();

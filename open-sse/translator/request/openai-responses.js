@@ -4,9 +4,10 @@
  * Responses API uses: { input: [...], instructions: "..." }
  * Chat API uses: { messages: [...] }
  */
-import { register } from "../index.js";
+
 import { FORMATS } from "../formats.js";
 import { normalizeResponsesInput } from "../helpers/responsesApiHelper.js";
+import { register } from "../index.js";
 
 // Responses API enforces max 64 chars on call_id (#393)
 const MAX_CALL_ID_LEN = 64;
@@ -105,8 +106,6 @@ export function openaiResponsesToOpenAIRequest(model, body, stream, credentials)
         content: typeof item.output === "string" ? item.output : JSON.stringify(item.output),
       });
     } else if (itemType === "reasoning") {
-      // Skip reasoning items - they are for display only
-      continue;
     }
   }
 

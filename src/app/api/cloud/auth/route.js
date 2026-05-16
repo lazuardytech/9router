@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { validateApiKey, getProviderConnections, getModelAliases } from "@/models";
+import { getModelAliases, getProviderConnections, validateApiKey } from "@/models";
 
 // Verify API key and return provider credentials
 export async function POST(request) {

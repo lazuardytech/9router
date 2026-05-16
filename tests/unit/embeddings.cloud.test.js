@@ -16,7 +16,7 @@
  * so tests run without Cloudflare Workers runtime.
  */
 
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 // ─── Module mocks (hoisted before imports) ───────────────────────────────────
 
@@ -59,10 +59,10 @@ vi.mock("../../cloud/src/services/storage.js", () => ({
 // ─── Imports (after mocks) ────────────────────────────────────────────────────
 
 import { handleEmbeddings } from "../../cloud/src/handlers/embeddings.js";
-import { getModelInfoCore } from "../../open-sse/services/model.js";
-import { handleEmbeddingsCore } from "../../open-sse/handlers/embeddingsCore.js";
-import { parseApiKey, extractBearerToken } from "../../cloud/src/utils/apiKey.js";
 import { getMachineData, saveMachineData } from "../../cloud/src/services/storage.js";
+import { extractBearerToken, parseApiKey } from "../../cloud/src/utils/apiKey.js";
+import { handleEmbeddingsCore } from "../../open-sse/handlers/embeddingsCore.js";
+import { getModelInfoCore } from "../../open-sse/services/model.js";
 
 // ─── Fixtures ─────────────────────────────────────────────────────────────────
 

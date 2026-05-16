@@ -2,8 +2,8 @@
 
 import { useEffect } from "react";
 import { cn } from "@/shared/utils/cn";
-import { LogDrawer, LogDrawerHeader, LogDrawerBody, DetailSection, DetailRow, JsonBlock } from "./LogDrawer";
 import Badge from "./Badge";
+import { DetailRow, DetailSection, JsonBlock, LogDrawer, LogDrawerBody, LogDrawerHeader } from "./LogDrawer";
 
 function PayloadSection({ title, icon, data }) {
   if (!data || (typeof data === "object" && Object.keys(data).length === 0)) return null;

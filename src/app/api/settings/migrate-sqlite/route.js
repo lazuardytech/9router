@@ -3,10 +3,10 @@
 // re-running would duplicate history rows (AUTOINCREMENT PK, no dedupe key).
 // Config uses INSERT OR REPLACE so re-runs are idempotent.
 
-import { NextResponse } from "next/server";
 import fs from "node:fs";
 import path from "node:path";
-import { getDatabase, DATA_DIR } from "@/lib/sqlite/connection.js";
+import { NextResponse } from "next/server";
+import { DATA_DIR, getDatabase } from "@/lib/sqlite/connection.js";
 import { migrateFromJson } from "@/lib/sqlite/migrate-from-json.js";
 
 const CONFIG_FILE = "db.json";

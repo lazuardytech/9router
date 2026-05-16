@@ -1,6 +1,6 @@
-import { handleChat } from "@/sse/handlers/chat.js";
 import { initTranslators } from "open-sse/translator/index.js";
 import { getSettings, validateApiKey } from "@/lib/localDb";
+import { handleChat } from "@/sse/handlers/chat.js";
 import { extractApiKey } from "@/sse/services/auth.js";
 
 let initialized = false;

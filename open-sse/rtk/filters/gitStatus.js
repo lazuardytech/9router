@@ -81,7 +81,6 @@ export function gitStatus(input) {
         staged++;
         stagedFiles.push(path);
       }
-      continue;
     }
 
     // "Untracked files:" section — gather bare paths after this marker

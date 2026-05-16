@@ -1,9 +1,9 @@
 "use client";
 
 import { useState } from "react";
+import Badge from "@/shared/components/Badge";
 import Card from "@/shared/components/Card";
 import ProviderIcon from "@/shared/components/ProviderIcon";
-import Badge from "@/shared/components/Badge";
 import QuotaProgressBar from "./QuotaProgressBar";
 import { calculatePercentage } from "./utils";
 

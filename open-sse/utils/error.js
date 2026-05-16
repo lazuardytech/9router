@@ -1,4 +1,4 @@
-import { ERROR_TYPES, DEFAULT_ERROR_MESSAGES } from "../config/errorConfig.js";
+import { DEFAULT_ERROR_MESSAGES, ERROR_TYPES } from "../config/errorConfig.js";
 
 /**
  * Build OpenAI-compatible error response body

@@ -1,6 +1,6 @@
-import net from "net";
 import dns from "dns";
-import { INTERNET_CHECK, HEALTH_CHECK } from "./tunnelConfig.js";
+import net from "net";
+import { HEALTH_CHECK, INTERNET_CHECK } from "./tunnelConfig.js";
 
 // Force public DNS to bypass OS negative cache (mDNSResponder holds NXDOMAIN)
 const resolver = new dns.promises.Resolver();

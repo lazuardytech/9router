@@ -6,8 +6,9 @@
  * with partial schema mismatches. For stability, tool outputs are represented as
  * structured text blocks in user messages.
  */
-import { register } from "../index.js";
+
 import { FORMATS } from "../formats.js";
+import { register } from "../index.js";
 
 function extractContent(content) {
   if (typeof content === "string") return content;

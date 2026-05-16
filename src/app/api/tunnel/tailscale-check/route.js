@@ -1,6 +1,6 @@
-import os from "os";
 import { execSync } from "child_process";
 import { NextResponse } from "next/server";
+import os from "os";
 import { isTailscaleInstalled, isTailscaleLoggedIn, TAILSCALE_SOCKET } from "@/lib/tunnel/tailscale";
 
 const EXTENDED_PATH = `/usr/local/bin:/opt/homebrew/bin:/usr/bin:/bin:${process.env.PATH || ""}`;

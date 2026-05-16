@@ -1,11 +1,11 @@
 "use client";
 
-import { useState } from "react";
 import { usePathname } from "next/navigation";
+import { useState } from "react";
 import { Toaster } from "sonner";
 import { cn } from "@/shared/utils/cn";
-import Sidebar from "../Sidebar";
 import Header from "../Header";
+import Sidebar from "../Sidebar";
 
 export default function DashboardLayout({ children }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);

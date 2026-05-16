@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useEffect } from "react";
 import PropTypes from "prop-types";
-import { Modal, Button, Input } from "@/shared/components";
+import { useEffect, useState } from "react";
+import { Button, Input, Modal } from "@/shared/components";
 
 /**
  * Cursor Auth Modal

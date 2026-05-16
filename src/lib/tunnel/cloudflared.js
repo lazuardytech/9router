@@ -1,10 +1,10 @@
+import { execSync, spawn } from "child_process";
 import fs from "fs";
-import path from "path";
 import https from "https";
 import os from "os";
-import { execSync, spawn } from "child_process";
-import { savePid, loadPid, clearPid } from "./state.js";
+import path from "path";
 import { DATA_DIR } from "@/lib/dataDir.js";
+import { clearPid, loadPid, savePid } from "./state.js";
 
 const BIN_DIR = path.join(DATA_DIR, "bin");
 const BINARY_NAME = "cloudflared";

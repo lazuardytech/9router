@@ -2,10 +2,10 @@
 // Cloudflare Workers. Public API surface unchanged from the previous
 // lowdb+JSON implementation so the 35+ consumer files keep working.
 
+import { timingSafeEqual } from "crypto";
 import { Low } from "lowdb";
 import { v4 as uuidv4 } from "uuid";
 import { getDatabase } from "./sqlite/connection.js";
-import { timingSafeEqual } from "crypto";
 
 const isCloud = typeof caches !== "undefined" || typeof caches === "object";
 
@@ -764,7 +764,7 @@ export async function renameProviderNode(oldId, newId) {
   const settingsPatches = {};
   for (const key of ["providerStrategies", "providerThinking"]) {
     const map = settings[key];
-    if (map && Object.prototype.hasOwnProperty.call(map, oldId)) {
+    if (map && Object.hasOwn(map, oldId)) {
       const copy = { ...map };
       copy[newId] = copy[oldId];
       delete copy[oldId];

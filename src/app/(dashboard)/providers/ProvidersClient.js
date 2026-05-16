@@ -1,23 +1,22 @@
 "use client";
 
-import { toast } from "sonner";
-
-import { useState, useEffect } from "react";
+import Link from "next/link";
 import PropTypes from "prop-types";
-import { Card, CardSkeleton, Badge, Button, Input, Modal, Select, Toggle } from "@/shared/components";
+import { useEffect, useState } from "react";
+import { toast } from "sonner";
+import { Badge, Button, Card, CardSkeleton, Input, Modal, Select, Toggle } from "@/shared/components";
 import ProviderIcon from "@/shared/components/ProviderIcon";
-import { OAUTH_PROVIDERS, APIKEY_PROVIDERS } from "@/shared/constants/config";
+import { APIKEY_PROVIDERS, OAUTH_PROVIDERS } from "@/shared/constants/config";
 import {
+  ANTHROPIC_COMPATIBLE_PREFIX,
   FREE_PROVIDERS,
   FREE_TIER_PROVIDERS,
-  WEB_COOKIE_PROVIDERS,
   OPENAI_COMPATIBLE_PREFIX,
-  ANTHROPIC_COMPATIBLE_PREFIX,
+  WEB_COOKIE_PROVIDERS,
 } from "@/shared/constants/providers";
-import Link from "next/link";
 import { getErrorCode, getRelativeTime } from "@/shared/utils";
-import { useHeaderSearchStore } from "@/store/headerSearchStore";
 import { useHeaderActionStore } from "@/store/headerActionStore";
+import { useHeaderSearchStore } from "@/store/headerSearchStore";
 import ModelAvailabilityBadge from "./components/ModelAvailabilityBadge";
 
 function getStatusDisplay(connected, error, errorCode) {

@@ -1,6 +1,6 @@
+import chalkAnimation from "chalk-animation";
 import figlet from "figlet";
 import gradient from "gradient-string";
-import chalkAnimation from "chalk-animation";
 
 /**
  * Display banner

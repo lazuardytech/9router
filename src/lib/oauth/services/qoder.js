@@ -1,7 +1,7 @@
 import crypto from "crypto";
 import open from "open";
-import { QODER_CONFIG } from "../constants/oauth.js";
 import { getServerCredentials } from "../config/index.js";
+import { QODER_CONFIG } from "../constants/oauth.js";
 import { startLocalServer } from "../utils/server.js";
 import { spinner as createSpinner } from "../utils/ui.js";
 

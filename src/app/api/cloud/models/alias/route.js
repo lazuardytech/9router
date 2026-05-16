@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { validateApiKey, getModelAliases, setModelAlias } from "@/models";
+import { getModelAliases, setModelAlias, validateApiKey } from "@/models";
 
 // PUT /api/cloud/models/alias - Set model alias (for cloud/CLI)
 export async function PUT(request) {

@@ -1,9 +1,9 @@
-import { createErrorResult, parseUpstreamError, formatProviderError } from "../utils/error.js";
 import { HTTP_STATUS } from "../config/runtimeConfig.js";
-import { refreshWithRetry } from "../services/tokenRefresh.js";
 import { getExecutor } from "../executors/index.js";
-import { getImageAdapter } from "./imageProviders/index.js";
+import { refreshWithRetry } from "../services/tokenRefresh.js";
+import { createErrorResult, formatProviderError, parseUpstreamError } from "../utils/error.js";
 import { urlToBase64 } from "./imageProviders/_base.js";
+import { getImageAdapter } from "./imageProviders/index.js";
 
 function serializeRequestBody(requestBody) {
   if (typeof FormData !== "undefined" && requestBody instanceof FormData) return requestBody;

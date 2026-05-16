@@ -1,5 +1,5 @@
-import { DefaultExecutor } from "./default.js";
 import { resolveOllamaLocalHost } from "../config/providers.js";
+import { DefaultExecutor } from "./default.js";
 
 export class OllamaLocalExecutor extends DefaultExecutor {
   constructor() {

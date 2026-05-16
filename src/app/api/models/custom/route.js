@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getCustomModels, addCustomModel, deleteCustomModel } from "@/models";
+import { addCustomModel, deleteCustomModel, getCustomModels } from "@/models";
 
 export const dynamic = "force-dynamic";
 

@@ -1,12 +1,12 @@
 "use client";
 
-import { useState, useRef, useEffect, useCallback } from "react";
-import PropTypes from "prop-types";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { cn } from "@/shared/utils/cn";
+import PropTypes from "prop-types";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { APP_CONFIG } from "@/shared/constants/config";
 import { MEDIA_PROVIDER_KINDS } from "@/shared/constants/providers";
+import { cn } from "@/shared/utils/cn";
 import { ConfirmModal } from "./Modal";
 
 function MediaFlyout({ isMediaActive, pathname, onClose }) {

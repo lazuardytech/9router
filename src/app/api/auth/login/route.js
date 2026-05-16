@@ -1,8 +1,8 @@
-import { NextResponse } from "next/server";
-import { getSettings } from "@/lib/localDb";
 import bcrypt from "bcryptjs";
 import { SignJWT } from "jose";
 import { cookies } from "next/headers";
+import { NextResponse } from "next/server";
+import { getSettings } from "@/lib/localDb";
 
 const SECRET = new TextEncoder().encode(process.env.JWT_SECRET || "pod-default-secret-change-me");
 

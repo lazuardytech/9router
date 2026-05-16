@@ -1,10 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import PropTypes from "prop-types";
+import { useEffect, useState } from "react";
+import Badge from "./Badge";
 import Card from "./Card";
 import Select from "./Select";
-import Badge from "./Badge";
 
 const NONE_PROXY_POOL_VALUE = "__none__";
 

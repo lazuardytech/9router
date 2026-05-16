@@ -25,8 +25,8 @@ export function createResponsesLogger(model, logsDir = null) {
     return null;
   }
 
-  let inputEvents = [];
-  let outputEvents = [];
+  const inputEvents = [];
+  const outputEvents = [];
 
   return {
     logInput: (event) => {

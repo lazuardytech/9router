@@ -1,9 +1,9 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from "react";
-import TelemetryCard from "./TelemetryCard";
-import ProviderIcon from "@/shared/components/ProviderIcon";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Badge, Button } from "@/shared/components";
+import ProviderIcon from "@/shared/components/ProviderIcon";
+import TelemetryCard from "./TelemetryCard";
 
 function formatBytes(bytes = 0) {
   if (bytes < 1024) return `${bytes} B`;

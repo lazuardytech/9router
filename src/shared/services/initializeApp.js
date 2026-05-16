@@ -1,27 +1,27 @@
-import os from "os";
-import { fileURLToPath } from "url";
-import { dirname, join } from "path";
 import { existsSync } from "fs";
-import { cleanupProviderConnections, getSettings, updateSettings, getApiKeys } from "@/lib/localDb";
+import os from "os";
+import { dirname, join } from "path";
+import { fileURLToPath } from "url";
+import { cleanupProviderConnections, getApiKeys, getSettings, updateSettings } from "@/lib/localDb";
+import { ensureCloudflared, isCloudflaredRunning, killCloudflared } from "@/lib/tunnel/cloudflared";
+import { checkInternet, probeUrlAlive } from "@/lib/tunnel/networkProbe";
+import { loadState } from "@/lib/tunnel/state";
+import { isTailscaleRunning } from "@/lib/tunnel/tailscale";
 import {
-  enableTunnel,
+  NETWORK_CHECK_INTERVAL_MS,
+  NETWORK_SETTLE_MS,
+  RESTART_COOLDOWN_MS,
+  WATCHDOG_INTERVAL_MS,
+} from "@/lib/tunnel/tunnelConfig";
+import {
   enableTailscale,
+  enableTunnel,
+  getTailscaleService,
+  getTunnelService,
+  isTailscaleReconnecting,
   isTunnelManuallyDisabled,
   isTunnelReconnecting,
-  isTailscaleReconnecting,
-  getTunnelService,
-  getTailscaleService,
 } from "@/lib/tunnel/tunnelManager";
-import { killCloudflared, isCloudflaredRunning, ensureCloudflared } from "@/lib/tunnel/cloudflared";
-import { isTailscaleRunning } from "@/lib/tunnel/tailscale";
-import { loadState } from "@/lib/tunnel/state";
-import { checkInternet, probeUrlAlive } from "@/lib/tunnel/networkProbe";
-import {
-  RESTART_COOLDOWN_MS,
-  NETWORK_SETTLE_MS,
-  WATCHDOG_INTERVAL_MS,
-  NETWORK_CHECK_INTERVAL_MS,
-} from "@/lib/tunnel/tunnelConfig";
 
 process.setMaxListeners(20);
 

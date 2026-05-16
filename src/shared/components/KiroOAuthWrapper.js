@@ -1,10 +1,10 @@
 "use client";
 
-import { useState, useCallback } from "react";
 import PropTypes from "prop-types";
-import OAuthModal from "./OAuthModal";
+import { useCallback, useState } from "react";
 import KiroAuthModal from "./KiroAuthModal";
 import KiroSocialOAuthModal from "./KiroSocialOAuthModal";
+import OAuthModal from "./OAuthModal";
 
 /**
  * Kiro OAuth Wrapper

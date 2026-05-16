@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { cn } from "@/shared/utils/cn";
 
 function TypeBadge({ type }) {
@@ -34,7 +34,7 @@ function StatusBadge({ active }) {
   );
 }
 
-import { LogDrawer, LogDrawerHeader, LogDrawerBody, DetailSection, DetailRow } from "@/shared/components/LogDrawer";
+import { DetailRow, DetailSection, LogDrawer, LogDrawerBody, LogDrawerHeader } from "@/shared/components/LogDrawer";
 
 export default function ProxyLogsTab({ sortBy, setSortBy, live, setLive, onRefresh, onCountChange }) {
   const [loading, setLoading] = useState(true);

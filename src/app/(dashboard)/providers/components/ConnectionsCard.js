@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from "react";
 import PropTypes from "prop-types";
-import { Card, Badge, Button, Modal, Select, Toggle, EditConnectionModal } from "@/shared/components";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { Badge, Button, Card, EditConnectionModal, Modal, Select, Toggle } from "@/shared/components";
 import { ConfirmModal } from "@/shared/components/Modal";
 
 // ── CooldownTimer ──────────────────────────────────────────────

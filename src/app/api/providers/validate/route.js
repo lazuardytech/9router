@@ -1,15 +1,15 @@
 import { NextResponse } from "next/server";
-import { getProviderNodeById } from "@/models";
-import {
-  isOpenAICompatibleProvider,
-  isAnthropicCompatibleProvider,
-  isCustomEmbeddingProvider,
-  AI_PROVIDERS,
-} from "@/shared/constants/providers";
 import { getDefaultModel } from "open-sse/config/providerModels.js";
 import { resolveOllamaLocalHost } from "open-sse/config/providers.js";
-import { PROVIDER_ENDPOINTS } from "@/shared/constants/config";
 import { normalizeProviderId } from "@/lib/providerNormalization";
+import { getProviderNodeById } from "@/models";
+import { PROVIDER_ENDPOINTS } from "@/shared/constants/config";
+import {
+  AI_PROVIDERS,
+  isAnthropicCompatibleProvider,
+  isCustomEmbeddingProvider,
+  isOpenAICompatibleProvider,
+} from "@/shared/constants/providers";
 
 // Probe a webSearch/webFetch provider using its searchConfig/fetchConfig.
 // Returns true if API key is accepted (status !== 401 && !== 403).
@@ -276,14 +276,15 @@ export async function POST(request) {
       }
 
       switch (provider) {
-        case "openai":
+        case "openai": {
           const openaiRes = await fetch("https://api.openai.com/v1/models", {
             headers: { Authorization: `Bearer ${apiKey}` },
           });
           isValid = openaiRes.ok;
           break;
+        }
 
-        case "anthropic":
+        case "anthropic": {
           const anthropicRes = await fetch("https://api.anthropic.com/v1/messages", {
             method: "POST",
             headers: {
@@ -299,18 +300,21 @@ export async function POST(request) {
           });
           isValid = anthropicRes.status !== 401;
           break;
+        }
 
-        case "gemini":
+        case "gemini": {
           const geminiRes = await fetch(`https://generativelanguage.googleapis.com/v1/models?key=${apiKey}`);
           isValid = geminiRes.ok;
           break;
+        }
 
-        case "openrouter":
+        case "openrouter": {
           const openrouterRes = await fetch("https://openrouter.ai/api/v1/models", {
             headers: { Authorization: `Bearer ${apiKey}` },
           });
           isValid = openrouterRes.ok;
           break;
+        }
 
         case "glm":
         case "glm-cn":

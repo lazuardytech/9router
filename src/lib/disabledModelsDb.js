@@ -1,7 +1,7 @@
+import fs from "node:fs";
+import path from "node:path";
 import { Low } from "lowdb";
 import { JSONFile } from "lowdb/node";
-import path from "node:path";
-import fs from "node:fs";
 import { DATA_DIR } from "@/lib/dataDir.js";
 
 const DB_FILE = path.join(DATA_DIR, "disabledModels.json");

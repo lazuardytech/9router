@@ -1,9 +1,9 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
 import PropTypes from "prop-types";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
-import { Badge, Card, Button, Input, Modal, CardSkeleton, Toggle, SegmentedControl } from "@/shared/components";
+import { Badge, Button, Card, CardSkeleton, Input, Modal, SegmentedControl, Toggle } from "@/shared/components";
 import { ConfirmModal } from "@/shared/components/Modal";
 import { useCopyToClipboard } from "@/shared/hooks/useCopyToClipboard";
 

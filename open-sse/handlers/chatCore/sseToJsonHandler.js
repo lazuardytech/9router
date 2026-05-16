@@ -1,9 +1,9 @@
-import { convertResponsesStreamToJson } from "../../transformer/streamToJsonConverter.js";
-import { createErrorResult } from "../../utils/error.js";
+import { appendRequestLog, generateDetailId, saveRequestDetail } from "@/lib/usageDb.js";
 import { HTTP_STATUS } from "../../config/runtimeConfig.js";
+import { convertResponsesStreamToJson } from "../../transformer/streamToJsonConverter.js";
 import { FORMATS } from "../../translator/formats.js";
+import { createErrorResult } from "../../utils/error.js";
 import { buildRequestDetail, extractRequestConfig, saveUsageStats } from "./requestDetail.js";
-import { saveRequestDetail, appendRequestLog, generateDetailId } from "@/lib/usageDb.js";
 
 function textFromResponsesMessageItem(item) {
   if (!item?.content || !Array.isArray(item.content)) return "";

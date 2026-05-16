@@ -1,5 +1,5 @@
-import { handleImageGeneration } from "@/sse/handlers/imageGeneration.js";
 import { withApiKeyRateLimit } from "@/app/api/v1/_utils/apiKeyRateLimit.js";
+import { handleImageGeneration } from "@/sse/handlers/imageGeneration.js";
 
 export async function OPTIONS() {
   return new Response(null, {

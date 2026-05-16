@@ -1,12 +1,12 @@
 "use client";
 
-import { useState, useEffect } from "react";
 import PropTypes from "prop-types";
-import Modal from "@/shared/components/Modal";
-import Input from "@/shared/components/Input";
-import Button from "@/shared/components/Button";
+import { useEffect, useState } from "react";
 import Badge from "@/shared/components/Badge";
-import { isOpenAICompatibleProvider, isAnthropicCompatibleProvider } from "@/shared/constants/providers";
+import Button from "@/shared/components/Button";
+import Input from "@/shared/components/Input";
+import Modal from "@/shared/components/Modal";
+import { isAnthropicCompatibleProvider, isOpenAICompatibleProvider } from "@/shared/constants/providers";
 
 export default function EditConnectionModal({ isOpen, connection, proxyPools, onSave, onClose }) {
   const [formData, setFormData] = useState({

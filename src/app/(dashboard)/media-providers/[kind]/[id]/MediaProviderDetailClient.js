@@ -1,24 +1,24 @@
 "use client";
 
-import { useParams, notFound, useRouter } from "next/navigation";
 import Link from "next/link";
-import { useState, useEffect } from "react";
-import { Card, Badge, Button, AddCustomEmbeddingModal, NoAuthProxyCard, ProviderInfoCard } from "@/shared/components";
+import { notFound, useParams, useRouter } from "next/navigation";
+import { GOOGLE_TTS_LANGUAGES } from "open-sse/config/googleTtsLanguages.js";
+import { getTtsVoicesForModel } from "open-sse/config/ttsModels.js";
+import { useEffect, useState } from "react";
+import ConnectionsCard from "@/app/(dashboard)/providers/components/ConnectionsCard";
+import ModelsCard from "@/app/(dashboard)/providers/components/ModelsCard";
+import { AddCustomEmbeddingModal, Badge, Button, Card, NoAuthProxyCard, ProviderInfoCard } from "@/shared/components";
 import { ConfirmModal } from "@/shared/components/Modal";
 import ProviderIcon from "@/shared/components/ProviderIcon";
+import { getModelsByProviderId } from "@/shared/constants/models";
 import {
-  MEDIA_PROVIDER_KINDS,
   AI_PROVIDERS,
   getProviderAlias,
   isCustomEmbeddingProvider,
+  MEDIA_PROVIDER_KINDS,
 } from "@/shared/constants/providers";
-import { getModelsByProviderId } from "@/shared/constants/models";
-import { useCopyToClipboard } from "@/shared/hooks/useCopyToClipboard";
-import ConnectionsCard from "@/app/(dashboard)/providers/components/ConnectionsCard";
-import ModelsCard from "@/app/(dashboard)/providers/components/ModelsCard";
 import { TTS_PROVIDER_CONFIG } from "@/shared/constants/ttsProviders";
-import { getTtsVoicesForModel } from "open-sse/config/ttsModels.js";
-import { GOOGLE_TTS_LANGUAGES } from "open-sse/config/googleTtsLanguages.js";
+import { useCopyToClipboard } from "@/shared/hooks/useCopyToClipboard";
 
 // Shared row layout — defined outside components to avoid re-mount on re-render
 function Row({ label, children }) {
@@ -1130,7 +1130,7 @@ function GenericExampleCard({ providerId, kind }) {
   const apiPathWithQuery = `${apiPath}${wantBinary ? "?response_format=binary" : ""}`;
   const headersPreview = `-H "Content-Type: application/json" \\\n  -H "Authorization: Bearer ${apiKey || "YOUR_KEY"}"${pinnedConnectionId ? ` \\\n  -H "x-connection-id: ${pinnedConnectionId}"` : ""}${useStreaming ? ` \\\n  -H "Accept: text/event-stream"` : ""}`;
   const curlSnippet = `curl -X ${kindConfig.endpoint.method} ${endpoint}${apiPathWithQuery} \\
-  ${headersPreview.replace(/\\\n  /g, "\\\n  ")} \\
+  ${headersPreview.replace(/\\\n {2}/g, "\\\n  ")} \\
   -d '${JSON.stringify(requestBody)}'${wantBinary ? " \\\n  --output image.png" : ""}`;
 
   const handleRun = async () => {

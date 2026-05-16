@@ -15,7 +15,7 @@ export function gitDiff(diff, maxLines = 500) {
 
   const lines = diff.split("\n");
 
-  outer: for (const line of lines) {
+  for (const line of lines) {
     if (line.startsWith("diff --git")) {
       if (hunkSkipped > 0) {
         result.push(`  ... (${hunkSkipped} lines truncated)`);
@@ -69,7 +69,7 @@ export function gitDiff(diff, maxLines = 500) {
     if (result.length >= maxLines) {
       result.push("\n... (more changes truncated)");
       wasTruncated = true;
-      break outer;
+      break;
     }
   }
 

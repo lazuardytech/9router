@@ -4,10 +4,10 @@ import {
   AI_PROVIDERS,
   ANTHROPIC_COMPATIBLE_PREFIX,
   CUSTOM_EMBEDDING_PREFIX,
-  OPENAI_COMPATIBLE_PREFIX,
   isAnthropicCompatibleProvider,
   isCustomEmbeddingProvider,
   isOpenAICompatibleProvider,
+  OPENAI_COMPATIBLE_PREFIX,
 } from "@/shared/constants/providers";
 import { invalidateConnectionsCache } from "@/sse/services/auth";
 
@@ -19,7 +19,7 @@ const PREFIX_BY_TYPE = {
   "custom-embedding": CUSTOM_EMBEDDING_PREFIX,
 };
 
-const ID_REGEX = /^[a-zA-Z0-9_.\-]+$/;
+const ID_REGEX = /^[a-zA-Z0-9_.-]+$/;
 
 function isCustomNode(node) {
   if (!node) return false;

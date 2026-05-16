@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 import Card from "@/shared/components/Card";
 import PricingModal from "@/shared/components/PricingModal";
 

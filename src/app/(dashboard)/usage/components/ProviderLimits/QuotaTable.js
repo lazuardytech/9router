@@ -1,6 +1,6 @@
 "use client";
 
-import { formatResetTime, calculatePercentage } from "./utils";
+import { calculatePercentage, formatResetTime } from "./utils";
 
 /**
  * Format reset time display (Today, 12:00 PM)

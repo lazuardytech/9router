@@ -1,7 +1,7 @@
 import { Buffer } from "node:buffer";
-import { createErrorResult } from "../utils/error.js";
-import { HTTP_STATUS } from "../config/runtimeConfig.js";
 import { AI_PROVIDERS } from "../../src/shared/constants/providers.js";
+import { HTTP_STATUS } from "../config/runtimeConfig.js";
+import { createErrorResult } from "../utils/error.js";
 
 // Build auth headers from sttConfig + token
 function buildAuthHeaders(cfg, token) {

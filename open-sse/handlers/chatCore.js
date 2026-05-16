@@ -1,16 +1,16 @@
+import { appendRequestLog, saveRequestDetail, trackPendingRequest } from "@/lib/usageDb.js";
+import { getModelStrip, getModelTargetFormat, PROVIDER_ID_TO_ALIAS } from "../config/providerModels.js";
+import { HTTP_STATUS, LOCAL_UPSTREAM_TIMEOUT_MS } from "../config/runtimeConfig.js";
+import { getExecutor } from "../executors/index.js";
 import { detectFormat, getTargetFormat } from "../services/provider.js";
-import { translateRequest } from "../translator/index.js";
+import { refreshWithRetry } from "../services/tokenRefresh.js";
 import { FORMATS } from "../translator/formats.js";
+import { translateRequest } from "../translator/index.js";
+import { handleBypassRequest } from "../utils/bypassHandler.js";
+import { createErrorResult, formatProviderError, parseUpstreamError } from "../utils/error.js";
+import { createRequestLogger } from "../utils/requestLogger.js";
 import { COLORS } from "../utils/stream.js";
 import { createStreamController } from "../utils/streamHandler.js";
-import { refreshWithRetry } from "../services/tokenRefresh.js";
-import { createRequestLogger } from "../utils/requestLogger.js";
-import { getModelTargetFormat, getModelStrip, PROVIDER_ID_TO_ALIAS } from "../config/providerModels.js";
-import { createErrorResult, parseUpstreamError, formatProviderError } from "../utils/error.js";
-import { HTTP_STATUS, LOCAL_UPSTREAM_TIMEOUT_MS } from "../config/runtimeConfig.js";
-import { handleBypassRequest } from "../utils/bypassHandler.js";
-import { trackPendingRequest, appendRequestLog, saveRequestDetail } from "@/lib/usageDb.js";
-import { getExecutor } from "../executors/index.js";
 import { buildRequestDetail, extractRequestConfig } from "./chatCore/requestDetail.js";
 import { handleForcedSSEToJson } from "./chatCore/sseToJsonHandler.js";
 
@@ -62,26 +62,27 @@ function buildCacheHitSSEResponse(cached, model) {
     },
   });
 }
-import { handleNonStreamingResponse } from "./chatCore/nonStreamingHandler.js";
-import { handleStreamingResponse, buildOnStreamComplete } from "./chatCore/streamingHandler.js";
-import { detectClientTool, isNativePassthrough } from "../utils/clientDetector.js";
-import { injectCaveman } from "../rtk/caveman.js";
-import { compressMessages, formatRtkLog } from "../rtk/index.js";
-import { reserveReasoningTokenBudget } from "../utils/tokenBudget.js";
-import {
-  generateSignature,
-  getCachedResponse,
-  isCacheableForRead,
-  isCacheableForWrite,
-  setCachedResponse,
-  getInFlight,
-  setInFlight,
-  clearInFlight,
-} from "@/lib/semanticCache.js";
+
 import { extractFacts } from "@/lib/memory/extraction.js";
 import { injectMemory, shouldInjectMemory } from "@/lib/memory/injection.js";
 import { retrieveMemories } from "@/lib/memory/retrieval.js";
 import { normalizeMemorySettings, toMemoryRetrievalConfig } from "@/lib/memory/settings.js";
+import {
+  clearInFlight,
+  generateSignature,
+  getCachedResponse,
+  getInFlight,
+  isCacheableForRead,
+  isCacheableForWrite,
+  setCachedResponse,
+  setInFlight,
+} from "@/lib/semanticCache.js";
+import { injectCaveman } from "../rtk/caveman.js";
+import { compressMessages, formatRtkLog } from "../rtk/index.js";
+import { detectClientTool, isNativePassthrough } from "../utils/clientDetector.js";
+import { reserveReasoningTokenBudget } from "../utils/tokenBudget.js";
+import { handleNonStreamingResponse } from "./chatCore/nonStreamingHandler.js";
+import { buildOnStreamComplete, handleStreamingResponse } from "./chatCore/streamingHandler.js";
 
 const MAX_SEMANTIC_CACHE_BYTES = 256 * 1024;
 const MEMORY_EXTRACTION_TEXT_LIMIT = 64 * 1024;

@@ -1,4 +1,4 @@
-import { getConsoleLogs, getConsoleEmitter, initConsoleLogCapture } from "@/lib/consoleLogBuffer";
+import { getConsoleEmitter, getConsoleLogs, initConsoleLogCapture } from "@/lib/consoleLogBuffer";
 
 export const dynamic = "force-dynamic";
 

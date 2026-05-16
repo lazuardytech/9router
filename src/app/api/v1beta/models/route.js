@@ -1,5 +1,5 @@
-import { PROVIDER_MODELS } from "@/shared/constants/models";
 import { getSettings, validateApiKey } from "@/lib/localDb";
+import { PROVIDER_MODELS } from "@/shared/constants/models";
 import { extractApiKey } from "@/sse/services/auth.js";
 
 /**

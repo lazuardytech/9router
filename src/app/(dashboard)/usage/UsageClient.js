@@ -1,8 +1,8 @@
 "use client";
 
+import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useState } from "react";
-import { useSearchParams, useRouter } from "next/navigation";
-import { UsageStats, RequestLogger, CardSkeleton, SegmentedControl } from "@/shared/components";
+import { CardSkeleton, RequestLogger, SegmentedControl, UsageStats } from "@/shared/components";
 import MetricsLineChart from "./components/MetricsLineChart";
 import RequestDetailsTab from "./components/RequestDetailsTab";
 

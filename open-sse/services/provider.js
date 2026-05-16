@@ -1,5 +1,5 @@
-import { PROVIDERS } from "../config/providers.js";
 import { buildClineHeaders } from "../../src/shared/utils/clineAuth.js";
+import { PROVIDERS } from "../config/providers.js";
 
 const OPENAI_COMPATIBLE_PREFIX = "openai-compatible-";
 const OPENAI_COMPATIBLE_DEFAULTS = {
@@ -265,7 +265,7 @@ export function buildProviderHeaders(provider, credentials, stream = true, body 
         // Generate a UUID for x-request-id (Cloudflare Workers compatible)
         headers["x-request-id"] = crypto.randomUUID
           ? crypto.randomUUID()
-          : "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, function (c) {
+          : "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, (c) => {
               const r = (Math.random() * 16) | 0;
               const v = c == "x" ? r : (r & 0x3) | 0x8;
               return v.toString(16);

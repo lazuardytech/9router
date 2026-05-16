@@ -1,5 +1,5 @@
 // Fal.ai — async submit + queue polling
-import { sleep, nowSec, sizeToAspectRatio, POLL_INTERVAL_MS, POLL_TIMEOUT_MS } from "./_base.js";
+import { nowSec, POLL_INTERVAL_MS, POLL_TIMEOUT_MS, sizeToAspectRatio, sleep } from "./_base.js";
 
 const BASE_URL = "https://queue.fal.run";
 

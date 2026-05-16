@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
-import { getRequestDetails } from "@/lib/requestDetailsDb";
 import { getProviderNodes } from "@/lib/localDb";
+import { getRequestDetails } from "@/lib/requestDetailsDb";
 import { AI_PROVIDERS, getProviderByAlias } from "@/shared/constants/providers";
 
 /**

@@ -1,5 +1,5 @@
-import { handleSearch } from "@/sse/handlers/search.js";
 import { withApiKeyRateLimit } from "@/app/api/v1/_utils/apiKeyRateLimit.js";
+import { handleSearch } from "@/sse/handlers/search.js";
 
 /**
  * Handle CORS preflight

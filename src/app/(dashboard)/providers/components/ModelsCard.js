@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useCallback, useEffect } from "react";
 import PropTypes from "prop-types";
-import { Badge, Card, Button, Modal } from "@/shared/components";
+import { useCallback, useEffect, useState } from "react";
+import { Badge, Button, Card, Modal } from "@/shared/components";
 import { getModelsByProviderId } from "@/shared/constants/models";
 import { getProviderAlias } from "@/shared/constants/providers";
 import { useCopyToClipboard } from "@/shared/hooks/useCopyToClipboard";

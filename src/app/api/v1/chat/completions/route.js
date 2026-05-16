@@ -1,7 +1,7 @@
+import { initTranslators } from "open-sse/translator/index.js";
+import { withApiKeyRateLimit } from "@/app/api/v1/_utils/apiKeyRateLimit.js";
 import { callCloudWithMachineId } from "@/shared/utils/cloud.js";
 import { handleChat } from "@/sse/handlers/chat.js";
-import { withApiKeyRateLimit } from "@/app/api/v1/_utils/apiKeyRateLimit.js";
-import { initTranslators } from "open-sse/translator/index.js";
 
 let initialized = false;
 

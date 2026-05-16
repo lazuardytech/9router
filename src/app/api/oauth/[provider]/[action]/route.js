@@ -1,13 +1,13 @@
 import { NextResponse } from "next/server";
-import { getProvider, generateAuthData, exchangeTokens, requestDeviceCode, pollForToken } from "@/lib/oauth/providers";
-import { createProviderConnection } from "@/models";
+import { exchangeTokens, generateAuthData, getProvider, pollForToken, requestDeviceCode } from "@/lib/oauth/providers";
 import {
+  clearCodexSession,
+  getCodexSessionStatus,
+  registerCodexSession,
   startCodexProxy,
   stopCodexProxy,
-  registerCodexSession,
-  getCodexSessionStatus,
-  clearCodexSession,
 } from "@/lib/oauth/utils/server";
+import { createProviderConnection } from "@/models";
 
 /**
  * Dynamic OAuth API Route

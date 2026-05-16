@@ -1,5 +1,5 @@
-import { BaseExecutor } from "./base.js";
 import { PROVIDERS } from "../config/providers.js";
+import { BaseExecutor } from "./base.js";
 
 // Models that use /zen/v1/messages (claude format)
 const MESSAGES_MODELS = new Set(["big-pickle"]);

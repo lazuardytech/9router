@@ -144,7 +144,7 @@ export default function EditCompatibleNodeModal({ isOpen, node, onSave, onRename
             </span>
           )}
           {!renameError && !idChanged && idPrefix && (
-            <span className="text-[11px] text-text-subtle">Must start with "{idPrefix}"</span>
+            <span className="text-[11px] text-text-subtle">Must start with &quot;{idPrefix}&quot;</span>
           )}
         </div>
         <Input

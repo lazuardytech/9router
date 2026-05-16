@@ -1,13 +1,13 @@
-import { BaseExecutor } from "./base.js";
+import crypto from "crypto";
+import { GITHUB_COPILOT, OAUTH_ENDPOINTS } from "../config/appConstants.js";
 import { PROVIDERS } from "../config/providers.js";
-import { OAUTH_ENDPOINTS, GITHUB_COPILOT } from "../config/appConstants.js";
 import { HTTP_STATUS } from "../config/runtimeConfig.js";
+import { initState } from "../translator/index.js";
 import { openaiToOpenAIResponsesRequest } from "../translator/request/openai-responses.js";
 import { openaiResponsesToOpenAIResponse } from "../translator/response/openai-responses.js";
-import { initState } from "../translator/index.js";
-import { parseSSELine, formatSSE } from "../utils/streamHelpers.js";
 import { proxyAwareFetch } from "../utils/proxyFetch.js";
-import crypto from "crypto";
+import { formatSSE, parseSSELine } from "../utils/streamHelpers.js";
+import { BaseExecutor } from "./base.js";
 
 export class GithubExecutor extends BaseExecutor {
   constructor() {

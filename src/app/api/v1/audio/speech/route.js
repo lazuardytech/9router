@@ -1,5 +1,5 @@
-import { handleTts } from "@/sse/handlers/tts.js";
 import { withApiKeyRateLimit } from "@/app/api/v1/_utils/apiKeyRateLimit.js";
+import { handleTts } from "@/sse/handlers/tts.js";
 
 export async function OPTIONS() {
   return new Response(null, {

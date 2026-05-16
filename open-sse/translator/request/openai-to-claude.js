@@ -1,7 +1,7 @@
-import { register } from "../index.js";
-import { FORMATS } from "../formats.js";
 import { CLAUDE_SYSTEM_PROMPT } from "../../config/appConstants.js";
+import { FORMATS } from "../formats.js";
 import { adjustMaxTokens } from "../helpers/maxTokensHelper.js";
+import { register } from "../index.js";
 
 // Empty prefix matches real Claude Code behavior (no tool name prefix).
 // Previously "proxy_" was used but this is a detectable fingerprint difference.
@@ -39,7 +39,7 @@ export function openaiToClaudeRequest(model, body, stream) {
 
     // Process messages with merging logic
     // CRITICAL: tool_result must be in separate message immediately after tool_use
-    let currentRole = undefined;
+    let currentRole;
     let currentParts = [];
 
     const flushCurrentMessage = () => {

@@ -1,5 +1,5 @@
-import { handleFetch } from "@/sse/handlers/fetch.js";
 import { withApiKeyRateLimit } from "@/app/api/v1/_utils/apiKeyRateLimit.js";
+import { handleFetch } from "@/sse/handlers/fetch.js";
 
 /**
  * Handle CORS preflight

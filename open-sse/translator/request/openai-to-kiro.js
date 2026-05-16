@@ -2,16 +2,17 @@
  * OpenAI to Kiro Request Translator
  * Converts OpenAI Chat Completions format to Kiro/AWS CodeWhisperer format
  */
-import { register } from "../index.js";
-import { FORMATS } from "../formats.js";
+
 import { v4 as uuidv4 } from "uuid";
+import { FORMATS } from "../formats.js";
+import { register } from "../index.js";
 
 /**
  * Convert OpenAI messages to Kiro format
  * Rules: system/tool/user -> user role, merge consecutive same roles
  */
 function convertMessages(messages, tools, model) {
-  let history = [];
+  const history = [];
   let currentMessage = null;
 
   let pendingUserContent = [];

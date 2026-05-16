@@ -11,13 +11,13 @@
  *  - Error handling (401, 429)
  */
 
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
-  parseOpenAIMessages,
-  buildQuery,
   buildPplxRequestBody,
+  buildQuery,
   formatToolsHint,
   PerplexityWebExecutor,
+  parseOpenAIMessages,
 } from "../../open-sse/executors/perplexity-web.js";
 
 const originalFetch = global.fetch;

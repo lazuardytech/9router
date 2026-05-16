@@ -1,8 +1,11 @@
 import { describe, expect, it } from "vitest";
-
 import {
-  MODEL_LOCK_PREFIX,
-  MODEL_LOCK_ALL,
+  BACKOFF_CONFIG,
+  msUntilMidnightVN,
+  msUntilNextMinute,
+  TRANSIENT_COOLDOWN_MS,
+} from "../../open-sse/config/errorConfig.js";
+import {
   buildClearModelLocksUpdate,
   buildModelLockUpdate,
   checkFallbackError,
@@ -15,13 +18,9 @@ import {
   getUnavailableUntil,
   isAccountUnavailable,
   isModelLockActive,
+  MODEL_LOCK_ALL,
+  MODEL_LOCK_PREFIX,
 } from "../../open-sse/services/accountFallback.js";
-import {
-  BACKOFF_CONFIG,
-  TRANSIENT_COOLDOWN_MS,
-  msUntilMidnightVN,
-  msUntilNextMinute,
-} from "../../open-sse/config/errorConfig.js";
 
 const SECOND = 1000;
 const MINUTE = 60 * SECOND;

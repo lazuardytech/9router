@@ -1,5 +1,5 @@
+import { readdir, readFile } from "fs/promises";
 import { NextResponse } from "next/server";
-import { readFile, readdir } from "fs/promises";
 import { homedir } from "os";
 import { join } from "path";
 
@@ -56,10 +56,7 @@ export async function GET() {
             foundFile = file;
             break;
           }
-        } catch (error) {
-          // Skip invalid JSON files
-          continue;
-        }
+        } catch (error) {}
       }
     }
 

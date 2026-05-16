@@ -2,8 +2,9 @@
  * Cursor to OpenAI Response Translator
  * CursorExecutor already emits OpenAI format - this is a passthrough
  */
-import { register } from "../index.js";
+
 import { FORMATS } from "../formats.js";
+import { register } from "../index.js";
 
 /**
  * Convert Cursor response to OpenAI format

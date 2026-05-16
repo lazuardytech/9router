@@ -1,5 +1,5 @@
-import { register } from "../index.js";
 import { FORMATS } from "../formats.js";
+import { register } from "../index.js";
 
 // Convert Gemini response chunk to OpenAI format
 export function geminiToOpenAIResponse(chunk, state) {

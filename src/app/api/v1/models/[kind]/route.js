@@ -1,6 +1,6 @@
-import { buildModelsList } from "../route.js";
 import { getSettings, validateApiKey } from "@/lib/localDb";
 import { extractApiKey } from "@/sse/services/auth.js";
+import { buildModelsList } from "../route.js";
 
 // URL slug → service kind(s). `web` covers both webSearch and webFetch.
 const KIND_SLUG_MAP = {

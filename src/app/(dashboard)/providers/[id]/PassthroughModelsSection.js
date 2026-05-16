@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
 import PropTypes from "prop-types";
+import { useState } from "react";
 import { Button } from "@/shared/components";
 
 function PassthroughModelRow({ modelId, fullModel, copied, onCopy, onDeleteAlias, onTest, testStatus, isTesting }) {

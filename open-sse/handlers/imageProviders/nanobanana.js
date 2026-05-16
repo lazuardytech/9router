@@ -1,5 +1,5 @@
 // NanoBanana API — async submit + poll record-info
-import { sleep, nowSec, sizeToAspectRatio, POLL_INTERVAL_MS, POLL_TIMEOUT_MS } from "./_base.js";
+import { nowSec, POLL_INTERVAL_MS, POLL_TIMEOUT_MS, sizeToAspectRatio, sleep } from "./_base.js";
 
 const SUBMIT_URL = "https://api.nanobananaapi.ai/api/v1/nanobanana/generate";
 const POLL_BASE = "https://api.nanobananaapi.ai/api/v1/nanobanana/record-info";

@@ -8,10 +8,11 @@
  * - extractFacts async store
  * - memory API routes (GET, POST, PATCH, DELETE, search)
  */
-import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
+
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
 let tempDir;
 let originalDataDir;

@@ -1,22 +1,22 @@
 import crypto from "crypto";
-import { BaseExecutor } from "./base.js";
-import { PROVIDERS } from "../config/providers.js";
 import {
-  OAUTH_ENDPOINTS,
-  ANTIGRAVITY_HEADERS,
-  INTERNAL_REQUEST_HEADER,
   AG_DEFAULT_TOOLS,
   AG_TOOL_SUFFIX,
+  ANTIGRAVITY_HEADERS,
+  INTERNAL_REQUEST_HEADER,
+  OAUTH_ENDPOINTS,
 } from "../config/appConstants.js";
+import { PROVIDERS } from "../config/providers.js";
 import { HTTP_STATUS } from "../config/runtimeConfig.js";
-import { deriveSessionId } from "../utils/sessionManager.js";
-import { proxyAwareFetch } from "../utils/proxyFetch.js";
 import { cleanJSONSchemaForAntigravity } from "../translator/helpers/geminiHelper.js";
+import { proxyAwareFetch } from "../utils/proxyFetch.js";
+import { deriveSessionId } from "../utils/sessionManager.js";
+import { BaseExecutor } from "./base.js";
 
 // Sanitize function name: Gemini requires [a-zA-Z_][a-zA-Z0-9_.:\-]{0,63}
 function sanitizeFunctionName(name) {
   if (!name) return "_unknown";
-  let s = name.replace(/[^a-zA-Z0-9_.:\-]/g, "_");
+  let s = name.replace(/[^a-zA-Z0-9_.:-]/g, "_");
   if (!/^[a-zA-Z_]/.test(s)) s = "_" + s;
   return s.substring(0, 64);
 }

@@ -1,5 +1,5 @@
-import { getConsistentMachineId } from "@/shared/utils/machineId";
 import { isCloudEnabled } from "@/lib/localDb";
+import { getConsistentMachineId } from "@/shared/utils/machineId";
 
 const INTERNAL_BASE_URL = process.env.BASE_URL || process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:20128";
 
@@ -69,7 +69,7 @@ export class CloudSyncScheduler {
           return null;
         }
 
-        const delay = Math.min(1000 * Math.pow(2, attempt), 10000); // Max 10s
+        const delay = Math.min(1000 * 2 ** attempt, 10000); // Max 10s
         await new Promise((resolve) => setTimeout(resolve, delay));
       }
     }

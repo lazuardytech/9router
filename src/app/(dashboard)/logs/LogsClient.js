@@ -1,10 +1,10 @@
 "use client";
 
-import { useSearchParams, useRouter, usePathname } from "next/navigation";
-import { useState, useRef, Suspense } from "react";
-import { cn } from "@/shared/utils/cn";
-import SegmentedControl from "@/shared/components/SegmentedControl";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { Suspense, useRef, useState } from "react";
 import RequestLogger from "@/shared/components/RequestLogger";
+import SegmentedControl from "@/shared/components/SegmentedControl";
+import { cn } from "@/shared/utils/cn";
 import ConsoleLogClient from "./ConsoleLogClient";
 import ProxyLogsTab from "./ProxyLogsTab";
 

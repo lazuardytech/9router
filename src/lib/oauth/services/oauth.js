@@ -1,8 +1,8 @@
 import open from "open";
-import { startLocalServer } from "../utils/server.js";
-import { generatePKCE } from "../utils/pkce.js";
-import { spinner as createSpinner } from "../utils/ui.js";
 import { OAUTH_TIMEOUT } from "../constants/oauth.js";
+import { generatePKCE } from "../utils/pkce.js";
+import { startLocalServer } from "../utils/server.js";
+import { spinner as createSpinner } from "../utils/ui.js";
 
 /**
  * Generic OAuth Authorization Code Flow with PKCE

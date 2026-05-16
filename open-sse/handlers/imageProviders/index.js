@@ -1,16 +1,17 @@
 // Image provider adapter registry
-import createOpenAIAdapter from "./openai.js";
-import gemini from "./gemini.js";
+
+import blackForestLabs from "./blackForestLabs.js";
+import cloudflareAi from "./cloudflareAi.js";
 import codex from "./codex.js";
-import sdwebui from "./sdwebui.js";
 import comfyui from "./comfyui.js";
+import falAi from "./falAi.js";
+import gemini from "./gemini.js";
 import huggingface from "./huggingface.js";
 import nanobanana from "./nanobanana.js";
-import falAi from "./falAi.js";
-import stabilityAi from "./stabilityAi.js";
-import blackForestLabs from "./blackForestLabs.js";
+import createOpenAIAdapter from "./openai.js";
 import runwayml from "./runwayml.js";
-import cloudflareAi from "./cloudflareAi.js";
+import sdwebui from "./sdwebui.js";
+import stabilityAi from "./stabilityAi.js";
 
 const ADAPTERS = {
   openai: createOpenAIAdapter("openai"),

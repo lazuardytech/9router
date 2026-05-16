@@ -1,9 +1,9 @@
-import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
-import { MAX_RATE_LIMIT_COOLDOWN_MS, BACKOFF_CONFIG } from "../../open-sse/config/errorConfig.js";
+import { BACKOFF_CONFIG, MAX_RATE_LIMIT_COOLDOWN_MS } from "../../open-sse/config/errorConfig.js";
 
 let tempDir;
 let originalDataDir;

@@ -2,22 +2,22 @@
 // Order: git-diff → git-status → grep → find → tree → ls → search-list
 //        → read-numbered → dedup-log → smart-truncate → null
 import { DETECT_WINDOW, READ_NUMBERED_MIN_HIT_RATIO, SMART_TRUNCATE_MIN_LINES } from "./constants.js";
+import { dedupLog } from "./filters/dedupLog.js";
+import { find } from "./filters/find.js";
 import { gitDiff } from "./filters/gitDiff.js";
 import { gitStatus } from "./filters/gitStatus.js";
 import { grep } from "./filters/grep.js";
-import { find } from "./filters/find.js";
-import { dedupLog } from "./filters/dedupLog.js";
 import { ls } from "./filters/ls.js";
-import { tree } from "./filters/tree.js";
+import { READ_NUMBERED_LINE_RE, readNumbered } from "./filters/readNumbered.js";
+import { SEARCH_LIST_HEADER_RE, searchList } from "./filters/searchList.js";
 import { smartTruncate } from "./filters/smartTruncate.js";
-import { readNumbered, READ_NUMBERED_LINE_RE } from "./filters/readNumbered.js";
-import { searchList, SEARCH_LIST_HEADER_RE } from "./filters/searchList.js";
+import { tree } from "./filters/tree.js";
 
 const RE_GIT_DIFF = /^diff --git /m;
 const RE_GIT_DIFF_HUNK = /^@@ /m;
 const RE_GIT_STATUS = /^On branch |^nothing to commit|^Changes (not |to be )|^Untracked files:/m;
 const RE_PORCELAIN = /^[ MADRCU?!][ MADRCU?!] \S/m;
-const RE_TREE_GLYPH = /[├└]──|│  /;
+const RE_TREE_GLYPH = /[├└]──|│ {2}/;
 const RE_LS_ROW = /^[-dlbcps][rwx-]{9}/m;
 const RE_LS_TOTAL = /^total \d+$/m;
 

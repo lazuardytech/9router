@@ -1,6 +1,6 @@
-import { DefaultExecutor } from "./default.js";
-import { PROVIDERS } from "../config/providers.js";
 import { OAUTH_ENDPOINTS } from "../config/appConstants.js";
+import { PROVIDERS } from "../config/providers.js";
+import { DefaultExecutor } from "./default.js";
 
 /** portal.qwen.ai — static fingerprint matching stable Qwen Code release */
 const QWEN_USER_AGENT = "QwenCode/0.12.3 (linux; x64)";

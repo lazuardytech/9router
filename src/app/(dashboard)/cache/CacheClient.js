@@ -1,8 +1,7 @@
 "use client";
 
-import { toast } from "sonner";
-
 import { useCallback, useEffect, useState } from "react";
+import { toast } from "sonner";
 import { Button, Card, CardSkeleton, Input, Toggle } from "@/shared/components";
 
 function staleMinutesToMs(value) {

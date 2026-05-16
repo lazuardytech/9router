@@ -1,8 +1,9 @@
 // RTK port: compress tool_result content in LLM request bodies
 // Injected at the top of translateRequest (before any format translation)
-import { RAW_CAP, MIN_COMPRESS_SIZE } from "./constants.js";
-import { autoDetectFilter } from "./autodetect.js";
+
 import { safeApply } from "./applyFilter.js";
+import { autoDetectFilter } from "./autodetect.js";
+import { MIN_COMPRESS_SIZE, RAW_CAP } from "./constants.js";
 
 // Compress tool_result content in-place. Returns stats or null if disabled/failed.
 export function compressMessages(body, enabled) {

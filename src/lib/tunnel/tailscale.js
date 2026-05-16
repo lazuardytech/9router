@@ -1,9 +1,9 @@
-import fs from "fs";
-import path from "path";
-import os from "os";
 import { execSync, spawn } from "child_process";
-import { saveTailscalePid, loadTailscalePid, clearTailscalePid } from "./state.js";
+import fs from "fs";
+import os from "os";
+import path from "path";
 import { DATA_DIR } from "@/lib/dataDir.js";
+import { clearTailscalePid, loadTailscalePid, saveTailscalePid } from "./state.js";
 
 const BIN_DIR = path.join(DATA_DIR, "bin");
 const IS_MAC = os.platform() === "darwin";

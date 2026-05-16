@@ -2,7 +2,7 @@
  * Usage Fetcher - Get usage data from provider APIs
  */
 
-import { GITHUB_CONFIG, GEMINI_CONFIG, ANTIGRAVITY_CONFIG } from "@/lib/oauth/constants/oauth";
+import { ANTIGRAVITY_CONFIG, GEMINI_CONFIG, GITHUB_CONFIG } from "@/lib/oauth/constants/oauth";
 
 /**
  * Get usage data for a provider connection

@@ -1,33 +1,33 @@
 "use client";
 
-import { useState, useEffect, useCallback, useMemo } from "react";
-import PropTypes from "prop-types";
-import { useParams, useRouter } from "next/navigation";
-import Link from "next/link";
 import Image from "next/image";
+import Link from "next/link";
+import { useParams, useRouter } from "next/navigation";
+import PropTypes from "prop-types";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
-  Card,
-  Button,
   Badge,
-  Input,
-  Modal,
+  Button,
+  Card,
   CardSkeleton,
-  OAuthModal,
-  KiroOAuthWrapper,
   CursorAuthModal,
-  Toggle,
+  Input,
+  KiroOAuthWrapper,
+  Modal,
+  OAuthModal,
   Select,
+  Toggle,
 } from "@/shared/components";
 import { ConfirmModal } from "@/shared/components/Modal";
+import { getModelsByProviderId } from "@/shared/constants/models";
 import {
-  OAUTH_PROVIDERS,
   APIKEY_PROVIDERS,
   FREE_PROVIDERS,
   getProviderAlias,
-  isOpenAICompatibleProvider,
   isAnthropicCompatibleProvider,
+  isOpenAICompatibleProvider,
+  OAUTH_PROVIDERS,
 } from "@/shared/constants/providers";
-import { getModelsByProviderId } from "@/shared/constants/models";
 import { useCopyToClipboard } from "@/shared/hooks/useCopyToClipboard";
 
 export default function ProviderDetailPage() {
@@ -361,7 +361,7 @@ export default function ProviderDetailPage() {
       // gets a lower value than the one moving down.
       // We use a small offset which the backend re-indexing will fix.
       let p1 = conn2.priority;
-      let p2 = conn1.priority;
+      const p2 = conn1.priority;
 
       if (p1 === p2) {
         // If moving conn1 "up" (index decreases)

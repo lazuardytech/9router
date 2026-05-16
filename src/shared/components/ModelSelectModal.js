@@ -1,20 +1,20 @@
 "use client";
 
-import { useState, useMemo, useEffect } from "react";
 import PropTypes from "prop-types";
-import Modal from "./Modal";
-import Button from "./Button";
+import { useEffect, useMemo, useState } from "react";
 import { getModelsByProviderId } from "@/shared/constants/models";
 import {
-  OAUTH_PROVIDERS,
+  AI_PROVIDERS,
   APIKEY_PROVIDERS,
   FREE_PROVIDERS,
   FREE_TIER_PROVIDERS,
-  AI_PROVIDERS,
-  isOpenAICompatibleProvider,
-  isAnthropicCompatibleProvider,
   getProviderAlias,
+  isAnthropicCompatibleProvider,
+  isOpenAICompatibleProvider,
+  OAUTH_PROVIDERS,
 } from "@/shared/constants/providers";
+import Button from "./Button";
+import Modal from "./Modal";
 
 // Provider order: OAuth first, then Free Tier, then API Key (matches dashboard/providers)
 const PROVIDER_ORDER = [

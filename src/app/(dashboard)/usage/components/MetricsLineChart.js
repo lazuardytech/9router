@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
 import PropTypes from "prop-types";
+import { useCallback, useEffect, useState } from "react";
 
 const fmtNum = (n) => {
   if (!n && n !== 0) return "—";

@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
 import PropTypes from "prop-types";
-import { Button, Badge, Input, Modal, Select } from "@/shared/components";
+import { useState } from "react";
+import { Badge, Button, Input, Modal, Select } from "@/shared/components";
 
 export default function AddApiKeyModal({
   isOpen,

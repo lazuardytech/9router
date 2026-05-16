@@ -9,7 +9,7 @@ import { toast } from "sonner";
  * issues, with a hover popover for details and cooldown clearing.
  */
 
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Button } from "@/shared/components";
 
 const STATUS_CONFIG = {

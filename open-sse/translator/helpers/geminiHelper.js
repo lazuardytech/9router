@@ -351,7 +351,7 @@ export function cleanJSONSchemaForAntigravity(schema) {
   if (!schema || typeof schema !== "object") return schema;
 
   // Mutate directly (schema is only used once per request)
-  let cleaned = schema;
+  const cleaned = schema;
 
   // Phase 0: Ensure schemas with properties have type:"object"
   ensureObjectType(cleaned);
@@ -373,7 +373,7 @@ export function cleanJSONSchemaForAntigravity(schema) {
     if (!obj || typeof obj !== "object") return;
 
     if (obj.required && Array.isArray(obj.required) && obj.properties) {
-      const validRequired = obj.required.filter((field) => Object.prototype.hasOwnProperty.call(obj.properties, field));
+      const validRequired = obj.required.filter((field) => Object.hasOwn(obj.properties, field));
       if (validRequired.length === 0) {
         delete obj.required;
       } else {

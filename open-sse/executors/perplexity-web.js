@@ -1,5 +1,5 @@
-import { BaseExecutor } from "./base.js";
 import { PROVIDERS } from "../config/providers.js";
+import { BaseExecutor } from "./base.js";
 
 const PPLX_SSE_ENDPOINT = PROVIDERS["perplexity-web"].baseUrl;
 const PPLX_API_VERSION = "2.18";
@@ -637,6 +637,6 @@ export class PerplexityWebExecutor extends BaseExecutor {
   }
 }
 
-export { parseOpenAIMessages, buildQuery, buildPplxRequestBody, formatToolsHint, sessionKey };
+export { buildPplxRequestBody, buildQuery, formatToolsHint, parseOpenAIMessages, sessionKey };
 
 export default PerplexityWebExecutor;

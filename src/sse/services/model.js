@@ -1,6 +1,7 @@
 // Re-export from open-sse with localDb integration
-import { getModelAliases, getComboByName, getProviderNodes } from "@/lib/localDb";
-import { parseModel, resolveModelAliasFromMap, getModelInfoCore } from "open-sse/services/model.js";
+
+import { getModelInfoCore, parseModel, resolveModelAliasFromMap } from "open-sse/services/model.js";
+import { getComboByName, getModelAliases, getProviderNodes } from "@/lib/localDb";
 
 export { parseModel };
 

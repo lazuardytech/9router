@@ -1,16 +1,16 @@
 import { NextResponse } from "next/server";
 import {
+  deleteProviderConnection,
   getProviderConnectionById,
   getProxyPoolById,
   updateProviderConnection,
-  deleteProviderConnection,
 } from "@/models";
 
 function normalizeProxyConfig(body = {}) {
   const hasAnyProxyField =
-    Object.prototype.hasOwnProperty.call(body, "connectionProxyEnabled") ||
-    Object.prototype.hasOwnProperty.call(body, "connectionProxyUrl") ||
-    Object.prototype.hasOwnProperty.call(body, "connectionNoProxy");
+    Object.hasOwn(body, "connectionProxyEnabled") ||
+    Object.hasOwn(body, "connectionProxyUrl") ||
+    Object.hasOwn(body, "connectionNoProxy");
 
   if (!hasAnyProxyField) return { hasAnyProxyField: false };
 

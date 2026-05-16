@@ -8,7 +8,7 @@
  *  - Required browser-fingerprint headers sent to Grok
  */
 
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const originalFetch = global.fetch;
 

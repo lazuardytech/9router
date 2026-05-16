@@ -1,6 +1,6 @@
 import fs from "node:fs";
-import path from "path";
 import os from "os";
+import path from "path";
 
 const APP_NAME = "pod";
 

@@ -7,7 +7,7 @@
  * - Falls back to old refresh_token when server doesn't return new one
  */
 
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const originalFetch = global.fetch;
 

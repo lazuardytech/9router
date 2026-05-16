@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { getSettings } from "@/lib/localDb";
 import {
   clearCache,
   getCacheStats,
@@ -6,7 +7,6 @@ import {
   invalidateBySignature,
   invalidateStale,
 } from "@/lib/semanticCache.js";
-import { getSettings } from "@/lib/localDb";
 
 function errorMessage(error) {
   return error instanceof Error ? error.message : String(error);

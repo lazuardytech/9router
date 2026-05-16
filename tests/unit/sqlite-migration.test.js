@@ -3,10 +3,10 @@
 // assert that the public APIs (localDb / usageDb) return the same shape
 // the lowdb version did.
 
-import { describe, it, expect, beforeAll, afterAll } from "vitest";
 import fs from "node:fs";
-import path from "node:path";
 import os from "node:os";
+import path from "node:path";
+import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
 let tempDir;
 let originalDataDir;

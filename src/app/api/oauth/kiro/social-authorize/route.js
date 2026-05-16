@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
-import { generatePKCE } from "@/lib/oauth/utils/pkce";
 import { KiroService } from "@/lib/oauth/services/kiro";
+import { generatePKCE } from "@/lib/oauth/utils/pkce";
 
 /**
  * GET /api/oauth/kiro/social-authorize

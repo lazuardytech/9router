@@ -1,17 +1,17 @@
-import {
-  getProviderCredentials,
-  markAccountUnavailable,
-  clearAccountError,
-  extractApiKey,
-  isValidApiKey,
-} from "../services/auth.js";
-import { getSettings } from "@/lib/localDb";
-import { getModelInfo } from "../services/model.js";
+import { HTTP_STATUS } from "open-sse/config/runtimeConfig.js";
 import { handleEmbeddingsCore } from "open-sse/handlers/embeddingsCore.js";
 import { errorResponse, unavailableResponse } from "open-sse/utils/error.js";
-import { HTTP_STATUS } from "open-sse/config/runtimeConfig.js";
+import { getSettings } from "@/lib/localDb";
+import {
+  clearAccountError,
+  extractApiKey,
+  getProviderCredentials,
+  isValidApiKey,
+  markAccountUnavailable,
+} from "../services/auth.js";
+import { getModelInfo } from "../services/model.js";
+import { checkAndRefreshToken, updateProviderCredentials } from "../services/tokenRefresh.js";
 import * as log from "../utils/logger.js";
-import { updateProviderCredentials, checkAndRefreshToken } from "../services/tokenRefresh.js";
 
 /**
  * Handle embeddings request for the SSE/Next.js server.

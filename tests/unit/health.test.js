@@ -5,7 +5,7 @@
  * Integration tests: actual API route handler with mocked dependencies
  */
 
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 // ─── Helpers (duplicated from page/route for isolated testing) ────────────────
 

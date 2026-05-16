@@ -36,8 +36,6 @@ export function filterToOpenAIFormat(body) {
           const { signature, cache_control, ...cleanBlock } = block;
           filteredContent.push(cleanBlock);
         } else if (block.type === "tool_use") {
-          // Convert tool_use to tool_calls format (handled separately)
-          continue;
         } else if (block.type === "tool_result") {
           // Keep tool_result but clean it
           const { signature, cache_control, ...cleanBlock } = block;
@@ -78,38 +76,36 @@ export function filterToOpenAIFormat(body) {
 
   // Normalize tools to OpenAI format (from Claude, Gemini, etc.)
   if (body.tools && Array.isArray(body.tools) && body.tools.length > 0) {
-    body.tools = body.tools
-      .map((tool) => {
-        // Already OpenAI format
-        if (tool.type === "function" && tool.function) return tool;
+    body.tools = body.tools.flatMap((tool) => {
+      // Already OpenAI format
+      if (tool.type === "function" && tool.function) return tool;
 
-        // Claude format: {name, description, input_schema}
-        if (tool.name && (tool.input_schema || tool.description)) {
-          return {
-            type: "function",
-            function: {
-              name: tool.name,
-              description: String(tool.description || ""),
-              parameters: tool.input_schema || { type: "object", properties: {} },
-            },
-          };
-        }
+      // Claude format: {name, description, input_schema}
+      if (tool.name && (tool.input_schema || tool.description)) {
+        return {
+          type: "function",
+          function: {
+            name: tool.name,
+            description: String(tool.description || ""),
+            parameters: tool.input_schema || { type: "object", properties: {} },
+          },
+        };
+      }
 
-        // Gemini format: {functionDeclarations: [{name, description, parameters}]}
-        if (tool.functionDeclarations && Array.isArray(tool.functionDeclarations)) {
-          return tool.functionDeclarations.map((fn) => ({
-            type: "function",
-            function: {
-              name: fn.name,
-              description: String(fn.description || ""),
-              parameters: fn.parameters || { type: "object", properties: {} },
-            },
-          }));
-        }
+      // Gemini format: {functionDeclarations: [{name, description, parameters}]}
+      if (tool.functionDeclarations && Array.isArray(tool.functionDeclarations)) {
+        return tool.functionDeclarations.map((fn) => ({
+          type: "function",
+          function: {
+            name: fn.name,
+            description: String(fn.description || ""),
+            parameters: fn.parameters || { type: "object", properties: {} },
+          },
+        }));
+      }
 
-        return tool;
-      })
-      .flat();
+      return tool;
+    });
   }
 
   // Normalize tool_choice to OpenAI format

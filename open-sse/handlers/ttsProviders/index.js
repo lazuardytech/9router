@@ -1,13 +1,14 @@
 // TTS provider registry
-import googleTts from "./googleTts.js";
+
+import { parseModelVoice } from "./_base.js";
 import edgeTts, { fetchEdgeTtsVoices } from "./edgeTts.js";
-import localDevice, { fetchLocalDeviceVoices } from "./localDevice.js";
 import elevenlabs, { fetchElevenLabsVoices } from "./elevenlabs.js";
-import openai from "./openai.js";
-import openrouter from "./openrouter.js";
 import gemini, { fetchGeminiVoices } from "./gemini.js";
 import { FORMAT_HANDLERS } from "./genericFormats.js";
-import { parseModelVoice } from "./_base.js";
+import googleTts from "./googleTts.js";
+import localDevice, { fetchLocalDeviceVoices } from "./localDevice.js";
+import openai from "./openai.js";
+import openrouter from "./openrouter.js";
 
 // Special providers with custom synthesize() logic
 const SPECIAL_ADAPTERS = {
@@ -47,4 +48,4 @@ export const VOICE_FETCHERS = {
 };
 
 // Re-export for backward compat
-export { fetchEdgeTtsVoices, fetchLocalDeviceVoices, fetchElevenLabsVoices, fetchGeminiVoices };
+export { fetchEdgeTtsVoices, fetchElevenLabsVoices, fetchGeminiVoices, fetchLocalDeviceVoices };

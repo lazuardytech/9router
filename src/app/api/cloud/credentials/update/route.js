@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { validateApiKey, getProviderConnections, updateProviderConnection } from "@/models";
+import { getProviderConnections, updateProviderConnection, validateApiKey } from "@/models";
 
 // Update provider credentials (for cloud token refresh)
 export async function PUT(request) {

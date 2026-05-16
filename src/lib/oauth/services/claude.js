@@ -1,7 +1,7 @@
-import { OAuthService } from "./oauth.js";
-import { CLAUDE_CONFIG } from "../constants/oauth.js";
 import { getServerCredentials } from "../config/index.js";
+import { CLAUDE_CONFIG } from "../constants/oauth.js";
 import { spinner as createSpinner } from "../utils/ui.js";
+import { OAuthService } from "./oauth.js";
 
 /**
  * Claude OAuth Service

@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
 import PropTypes from "prop-types";
+import { useState } from "react";
 import { Button } from "@/shared/components";
+
 function CompatibleModelRow({ modelId, fullModel, copied, onCopy, onDeleteAlias, onTest, testStatus, isTesting }) {
   const borderColor =
     testStatus === "ok" ? "border-green-500/40" : testStatus === "error" ? "border-red-500/40" : "border-border";

@@ -1,11 +1,11 @@
 import { createHash } from "crypto";
-import { BaseExecutor } from "./base.js";
-import { CODEX_DEFAULT_INSTRUCTIONS } from "../config/codexInstructions.js";
-import { PROVIDERS } from "../config/providers.js";
-import { normalizeResponsesInput } from "../translator/helpers/responsesApiHelper.js";
-import { fetchImageAsBase64 } from "../translator/helpers/imageHelper.js";
-import { getModelUpstreamId } from "../config/providerModels.js";
 import { getConsistentMachineId } from "../../src/shared/utils/machineId.js";
+import { CODEX_DEFAULT_INSTRUCTIONS } from "../config/codexInstructions.js";
+import { getModelUpstreamId } from "../config/providerModels.js";
+import { PROVIDERS } from "../config/providers.js";
+import { fetchImageAsBase64 } from "../translator/helpers/imageHelper.js";
+import { normalizeResponsesInput } from "../translator/helpers/responsesApiHelper.js";
+import { BaseExecutor } from "./base.js";
 
 // In-memory map: hash(machineId + first assistant content) → { sessionId, lastUsed }
 const SESSION_TTL_MS = 60 * 60 * 1000; // 1 hour

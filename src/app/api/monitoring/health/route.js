@@ -1,7 +1,7 @@
-import { NextResponse } from "next/server";
 import os from "node:os";
+import { NextResponse } from "next/server";
+import { getApiKeys, getCombos, getProviderConnections, getSettings } from "@/lib/localDb.js";
 import { getDatabase } from "@/lib/sqlite/connection.js";
-import { getProviderConnections, getCombos, getApiKeys, getSettings } from "@/lib/localDb.js";
 import { getQueueDepths } from "@/lib/usageDb.js";
 import { AI_PROVIDERS } from "@/shared/constants/providers.js";
 

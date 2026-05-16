@@ -10,7 +10,7 @@
  *  - proxyFetch.js: api.anthropic.com routes through anthropicFetch path
  */
 
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 // ─── claudeHeaderCache ────────────────────────────────────────────────────────
 

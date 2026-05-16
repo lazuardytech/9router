@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { getDefaultPricing, formatCost } from "@/shared/constants/pricing.js";
+import { useEffect, useState } from "react";
 import { ConfirmModal } from "@/shared/components/Modal";
+import { formatCost, getDefaultPricing } from "@/shared/constants/pricing.js";
 
 export default function PricingModal({ isOpen, onClose, onSave }) {
   const [pricingData, setPricingData] = useState({});

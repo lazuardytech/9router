@@ -1,16 +1,16 @@
 import crypto from "crypto";
-import { loadState, saveState, generateShortId } from "./state.js";
-import { spawnQuickTunnel, killCloudflared, isCloudflaredRunning, setUnexpectedExitHandler } from "./cloudflared.js";
-import {
-  startFunnel,
-  stopFunnel,
-  isTailscaleRunning,
-  isTailscaleLoggedIn,
-  startLogin,
-  startDaemonWithPassword,
-} from "./tailscale.js";
 import { getSettings, updateSettings } from "@/lib/localDb";
-import { waitForHealth, probeUrlAlive } from "./networkProbe.js";
+import { isCloudflaredRunning, killCloudflared, setUnexpectedExitHandler, spawnQuickTunnel } from "./cloudflared.js";
+import { probeUrlAlive, waitForHealth } from "./networkProbe.js";
+import { generateShortId, loadState, saveState } from "./state.js";
+import {
+  isTailscaleLoggedIn,
+  isTailscaleRunning,
+  startDaemonWithPassword,
+  startFunnel,
+  startLogin,
+  stopFunnel,
+} from "./tailscale.js";
 
 // Removed initDbHooks call
 

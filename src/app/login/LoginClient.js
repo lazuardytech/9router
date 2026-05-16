@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Card, Button, Input } from "@/shared/components";
+import { useEffect, useState } from "react";
+import { Button, Card, Input } from "@/shared/components";
 
 export default function LoginClient() {
   const [password, setPassword] = useState("");

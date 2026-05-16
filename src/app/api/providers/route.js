@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
+import { normalizeProviderId, normalizeProviderSpecificData } from "@/lib/providerNormalization";
 import {
-  getProviderConnections,
   createProviderConnection,
+  getProviderConnections,
   getProviderNodeById,
   getProviderNodes,
   getProxyPoolById,
@@ -10,12 +11,11 @@ import { APIKEY_PROVIDERS } from "@/shared/constants/config";
 import {
   AI_PROVIDERS,
   FREE_TIER_PROVIDERS,
-  WEB_COOKIE_PROVIDERS,
-  isOpenAICompatibleProvider,
   isAnthropicCompatibleProvider,
   isCustomEmbeddingProvider,
+  isOpenAICompatibleProvider,
+  WEB_COOKIE_PROVIDERS,
 } from "@/shared/constants/providers";
-import { normalizeProviderId, normalizeProviderSpecificData } from "@/lib/providerNormalization";
 
 export const dynamic = "force-dynamic";
 
@@ -59,7 +59,7 @@ export async function GET() {
     const connections = await getProviderConnections();
 
     // Build nodeNameMap for compatible providers (id → name)
-    let nodeNameMap = {};
+    const nodeNameMap = {};
     try {
       const nodes = await getProviderNodes();
       for (const node of nodes) {

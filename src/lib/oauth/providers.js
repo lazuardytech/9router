@@ -6,24 +6,24 @@
 // Ensure outbound fetch respects HTTP(S)_PROXY/ALL_PROXY in Node runtime
 import "open-sse/index.js";
 
-import { generatePKCE, generateState } from "./utils/pkce";
 import {
-  CLAUDE_CONFIG,
-  CODEX_CONFIG,
-  GEMINI_CONFIG,
-  QWEN_CONFIG,
-  QODER_CONFIG,
-  IFLOW_CONFIG,
   ANTIGRAVITY_CONFIG,
-  GITHUB_CONFIG,
-  KIRO_CONFIG,
-  CURSOR_CONFIG,
-  KIMI_CODING_CONFIG,
-  KILOCODE_CONFIG,
+  CLAUDE_CONFIG,
   CLINE_CONFIG,
-  GITLAB_CONFIG,
   CODEBUDDY_CONFIG,
+  CODEX_CONFIG,
+  CURSOR_CONFIG,
+  GEMINI_CONFIG,
+  GITHUB_CONFIG,
+  GITLAB_CONFIG,
+  IFLOW_CONFIG,
+  KILOCODE_CONFIG,
+  KIMI_CODING_CONFIG,
+  KIRO_CONFIG,
+  QODER_CONFIG,
+  QWEN_CONFIG,
 } from "./constants/oauth";
+import { generatePKCE, generateState } from "./utils/pkce";
 
 const BASE64_BLOCK_SIZE = 4;
 

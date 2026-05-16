@@ -1,11 +1,11 @@
 import { NextResponse } from "next/server";
 import { getProviderConnections } from "@/models";
 import {
+  ANTHROPIC_COMPATIBLE_PREFIX,
+  APIKEY_PROVIDERS,
   FREE_PROVIDERS,
   OAUTH_PROVIDERS,
-  APIKEY_PROVIDERS,
   OPENAI_COMPATIBLE_PREFIX,
-  ANTHROPIC_COMPATIBLE_PREFIX,
 } from "@/shared/constants/providers";
 import { testSingleConnection } from "../[id]/test/testUtils.js";
 

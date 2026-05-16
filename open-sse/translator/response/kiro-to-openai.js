@@ -2,8 +2,9 @@
  * Kiro to OpenAI Response Translator
  * Converts Kiro/AWS CodeWhisperer streaming events to OpenAI SSE format
  */
-import { register } from "../index.js";
+
 import { FORMATS } from "../formats.js";
+import { register } from "../index.js";
 
 /**
  * Parse Kiro SSE event and convert to OpenAI format

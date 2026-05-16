@@ -1,24 +1,24 @@
 import "open-sse/index.js";
 
+import { HTTP_STATUS } from "open-sse/config/runtimeConfig.js";
+import { handleChatCore } from "open-sse/handlers/chatCore.js";
+import { handleComboChat, injectComboSystemPrompt, overrideResponseModelId } from "open-sse/services/combo.js";
+import { getProjectIdForConnection } from "open-sse/services/projectId.js";
+import { detectFormatByEndpoint } from "open-sse/translator/formats.js";
+import { handleBypassRequest } from "open-sse/utils/bypassHandler.js";
+import { cacheClaudeHeaders } from "open-sse/utils/claudeHeaderCache.js";
+import { errorResponse, unavailableResponse } from "open-sse/utils/error.js";
+import { getApiKeyByKey, getSettings } from "@/lib/localDb";
 import {
-  getProviderCredentials,
-  markAccountUnavailable,
   clearAccountError,
   extractApiKey,
+  getProviderCredentials,
   isValidApiKey,
+  markAccountUnavailable,
 } from "../services/auth.js";
-import { cacheClaudeHeaders } from "open-sse/utils/claudeHeaderCache.js";
-import { getSettings, getApiKeyByKey } from "@/lib/localDb";
-import { getModelInfo, getComboInfo } from "../services/model.js";
-import { handleChatCore } from "open-sse/handlers/chatCore.js";
-import { errorResponse, unavailableResponse } from "open-sse/utils/error.js";
-import { handleComboChat, injectComboSystemPrompt, overrideResponseModelId } from "open-sse/services/combo.js";
-import { handleBypassRequest } from "open-sse/utils/bypassHandler.js";
-import { HTTP_STATUS } from "open-sse/config/runtimeConfig.js";
-import { detectFormatByEndpoint } from "open-sse/translator/formats.js";
+import { getComboInfo, getModelInfo } from "../services/model.js";
+import { checkAndRefreshToken, updateProviderCredentials } from "../services/tokenRefresh.js";
 import * as log from "../utils/logger.js";
-import { updateProviderCredentials, checkAndRefreshToken } from "../services/tokenRefresh.js";
-import { getProjectIdForConnection } from "open-sse/services/projectId.js";
 
 /**
  * Handle chat completion request

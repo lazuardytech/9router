@@ -1,6 +1,6 @@
 import open from "open";
-import { QWEN_CONFIG } from "../constants/oauth.js";
 import { getServerCredentials } from "../config/index.js";
+import { QWEN_CONFIG } from "../constants/oauth.js";
 import { generatePKCE } from "../utils/pkce.js";
 import { spinner as createSpinner } from "../utils/ui.js";
 
@@ -70,10 +70,8 @@ export class QwenService {
       const error = await response.json();
 
       if (error.error === "authorization_pending") {
-        continue;
       } else if (error.error === "slow_down") {
         await new Promise((r) => setTimeout(r, 5000));
-        continue;
       } else if (error.error === "expired_token") {
         throw new Error("Device code expired");
       } else if (error.error === "access_denied") {

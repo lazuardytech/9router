@@ -2,8 +2,8 @@
  * Shared combo (model combo) handling with fallback support
  */
 
-import { checkFallbackError, formatRetryAfter } from "./accountFallback.js";
 import { unavailableResponse } from "../utils/error.js";
+import { checkFallbackError, formatRetryAfter } from "./accountFallback.js";
 
 /**
  * Track rotation state per combo (for round-robin strategy)

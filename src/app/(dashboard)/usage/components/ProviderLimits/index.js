@@ -1,12 +1,12 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from "react";
-import ProviderIcon from "@/shared/components/ProviderIcon";
-import Toggle from "@/shared/components/Toggle";
-import { parseQuotaData, calculatePercentage, getStatusColor, formatResetTime } from "./utils";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { EditConnectionModal } from "@/shared/components";
 import { ConfirmModal } from "@/shared/components/Modal";
-import { USAGE_SUPPORTED_PROVIDERS, USAGE_APIKEY_PROVIDERS } from "@/shared/constants/providers";
+import ProviderIcon from "@/shared/components/ProviderIcon";
+import Toggle from "@/shared/components/Toggle";
+import { USAGE_APIKEY_PROVIDERS, USAGE_SUPPORTED_PROVIDERS } from "@/shared/constants/providers";
+import { calculatePercentage, formatResetTime, getStatusColor, parseQuotaData } from "./utils";
 
 // Connection is eligible for the quota page when it uses OAuth or is an apikey provider whitelisted for quota
 const isUsageEligible = (conn) =>

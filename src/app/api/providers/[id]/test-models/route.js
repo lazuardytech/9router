@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
-import { getProviderConnectionById, getApiKeys } from "@/lib/localDb";
 import { getProviderModels, PROVIDER_ID_TO_ALIAS } from "open-sse/config/providerModels.js";
-import { isOpenAICompatibleProvider, isAnthropicCompatibleProvider } from "@/shared/constants/providers";
+import { getApiKeys, getProviderConnectionById } from "@/lib/localDb";
+import { isAnthropicCompatibleProvider, isOpenAICompatibleProvider } from "@/shared/constants/providers";
 
 /**
  * Get an active API key to pass through auth when requireApiKey is enabled.

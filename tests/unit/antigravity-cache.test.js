@@ -10,13 +10,13 @@
  * Enable with: AG_CACHE_TEST=1 pnpm test
  */
 
-import { describe, it, expect } from "vitest";
+import crypto from "node:crypto";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
-import crypto from "node:crypto";
-import { PROVIDERS } from "../../open-sse/config/providers.js";
+import { describe, expect, it } from "vitest";
 import { ANTIGRAVITY_HEADERS, INTERNAL_REQUEST_HEADER } from "../../open-sse/config/appConstants.js";
+import { PROVIDERS } from "../../open-sse/config/providers.js";
 
 const ENABLE = process.env.AG_CACHE_TEST === "1";
 const DB_PATH = path.join(os.homedir(), ".pod", "db.json");

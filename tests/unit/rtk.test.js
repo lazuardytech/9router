@@ -1,17 +1,17 @@
-import { describe, it, expect, beforeEach } from "vitest";
-import { compressMessages, formatRtkLog } from "../../open-sse/rtk/index.js";
+import { beforeEach, describe, expect, it } from "vitest";
+import { safeApply } from "../../open-sse/rtk/applyFilter.js";
+import { autoDetectFilter } from "../../open-sse/rtk/autodetect.js";
+import { dedupLog } from "../../open-sse/rtk/filters/dedupLog.js";
+import { find } from "../../open-sse/rtk/filters/find.js";
 import { gitDiff } from "../../open-sse/rtk/filters/gitDiff.js";
 import { gitStatus } from "../../open-sse/rtk/filters/gitStatus.js";
 import { grep } from "../../open-sse/rtk/filters/grep.js";
-import { find } from "../../open-sse/rtk/filters/find.js";
-import { dedupLog } from "../../open-sse/rtk/filters/dedupLog.js";
 import { ls } from "../../open-sse/rtk/filters/ls.js";
-import { tree } from "../../open-sse/rtk/filters/tree.js";
-import { smartTruncate } from "../../open-sse/rtk/filters/smartTruncate.js";
 import { readNumbered } from "../../open-sse/rtk/filters/readNumbered.js";
 import { searchList } from "../../open-sse/rtk/filters/searchList.js";
-import { autoDetectFilter } from "../../open-sse/rtk/autodetect.js";
-import { safeApply } from "../../open-sse/rtk/applyFilter.js";
+import { smartTruncate } from "../../open-sse/rtk/filters/smartTruncate.js";
+import { tree } from "../../open-sse/rtk/filters/tree.js";
+import { compressMessages, formatRtkLog } from "../../open-sse/rtk/index.js";
 
 function makeLongDiff() {
   const lines = [

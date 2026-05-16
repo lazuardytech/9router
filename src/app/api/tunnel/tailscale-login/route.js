@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
+import { generateShortId, loadState } from "@/lib/tunnel/state.js";
 import { startLogin } from "@/lib/tunnel/tailscale";
-import { loadState, generateShortId } from "@/lib/tunnel/state.js";
 
 export async function POST() {
   try {

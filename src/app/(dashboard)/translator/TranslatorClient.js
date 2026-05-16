@@ -1,9 +1,9 @@
 "use client";
 
-import { useState } from "react";
-import { Card, Button } from "@/shared/components";
-import { useCopyToClipboard } from "@/shared/hooks/useCopyToClipboard";
 import dynamic from "next/dynamic";
+import { useState } from "react";
+import { Button, Card } from "@/shared/components";
+import { useCopyToClipboard } from "@/shared/hooks/useCopyToClipboard";
 
 const Editor = dynamic(() => import("@monaco-editor/react"), { ssr: false });
 

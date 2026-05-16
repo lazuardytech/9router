@@ -1,18 +1,18 @@
-import { PROVIDER_MODELS, PROVIDER_ID_TO_ALIAS } from "@/shared/constants/models";
+import {
+  getCombos,
+  getCustomModels,
+  getModelAliases,
+  getProviderConnections,
+  getSettings,
+  validateApiKey,
+} from "@/lib/localDb";
+import { PROVIDER_ID_TO_ALIAS, PROVIDER_MODELS } from "@/shared/constants/models";
 import {
   AI_PROVIDERS,
   getProviderAlias,
   isAnthropicCompatibleProvider,
   isOpenAICompatibleProvider,
 } from "@/shared/constants/providers";
-import {
-  getProviderConnections,
-  getCombos,
-  getCustomModels,
-  getModelAliases,
-  getSettings,
-  validateApiKey,
-} from "@/lib/localDb";
 import { extractApiKey } from "@/sse/services/auth.js";
 
 const parseOpenAIStyleModels = (data) => {

@@ -25,7 +25,7 @@ export async function getConsistentMachineId(salt = null) {
     // Fallback to random ID if node-machine-id fails
     return crypto.randomUUID
       ? crypto.randomUUID()
-      : "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, function (c) {
+      : "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, (c) => {
           const r = (Math.random() * 16) | 0;
           const v = c == "x" ? r : (r & 0x3) | 0x8;
           return v.toString(16);
@@ -46,7 +46,7 @@ export async function getRawMachineId() {
     // Fallback to random ID if node-machine-id fails
     return crypto.randomUUID
       ? crypto.randomUUID()
-      : "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, function (c) {
+      : "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, (c) => {
           const r = (Math.random() * 16) | 0;
           const v = c == "x" ? r : (r & 0x3) | 0x8;
           return v.toString(16);

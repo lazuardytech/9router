@@ -1,4 +1,4 @@
-import { platform, arch } from "os";
+import { arch, platform } from "os";
 
 // === OS/Arch helpers ===
 function mapStainlessOs() {

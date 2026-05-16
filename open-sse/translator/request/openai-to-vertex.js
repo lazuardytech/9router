@@ -1,7 +1,7 @@
-import { register } from "../index.js";
-import { FORMATS } from "../formats.js";
-import { openaiToGeminiRequest } from "./openai-to-gemini.js";
 import { DEFAULT_THINKING_VERTEX_SIGNATURE } from "../../config/defaultThinkingSignature.js";
+import { FORMATS } from "../formats.js";
+import { register } from "../index.js";
+import { openaiToGeminiRequest } from "./openai-to-gemini.js";
 
 /**
  * Post-process a Gemini-format body for Vertex AI compatibility:

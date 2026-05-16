@@ -1,6 +1,6 @@
-import { OAuthService } from "./oauth.js";
 import { GITHUB_CONFIG } from "../constants/oauth.js";
 import { spinner as createSpinner } from "../utils/ui.js";
+import { OAuthService } from "./oauth.js";
 
 /**
  * GitHub Copilot OAuth Service
@@ -80,12 +80,9 @@ export class GitHubService extends OAuthService {
           scope: data.scope,
         };
       } else if (data.error === "authorization_pending") {
-        // Continue polling
-        continue;
       } else if (data.error === "slow_down") {
         // Increase polling interval
         interval += 5000;
-        continue;
       } else if (data.error === "expired_token") {
         spinner.fail("Device code expired. Please try again.");
         throw new Error("Device code expired");

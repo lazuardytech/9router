@@ -6,7 +6,7 @@
  *  - Response format handling (json_schema, json_object)
  */
 
-import { describe, it, expect } from "vitest";
+import { describe, expect, it } from "vitest";
 import { openaiToClaudeRequest } from "../../open-sse/translator/request/openai-to-claude.js";
 
 describe("openaiToClaudeRequest", () => {

@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
-import { getModelAliases, setModelAlias } from "@/models";
 import { getDisabledModels } from "@/lib/disabledModelsDb";
+import { getModelAliases, setModelAlias } from "@/models";
 import { AI_MODELS } from "@/shared/constants/config";
 import { getProviderAlias } from "@/shared/constants/providers";
 

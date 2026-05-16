@@ -1,5 +1,5 @@
 // Black Forest Labs (FLUX) — async submit + polling_url
-import { sleep, nowSec, POLL_INTERVAL_MS, POLL_TIMEOUT_MS } from "./_base.js";
+import { nowSec, POLL_INTERVAL_MS, POLL_TIMEOUT_MS, sleep } from "./_base.js";
 
 const BASE_URL = "https://api.bfl.ai/v1";
 

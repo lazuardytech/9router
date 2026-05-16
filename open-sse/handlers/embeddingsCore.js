@@ -1,7 +1,7 @@
-import { createErrorResult, parseUpstreamError, formatProviderError } from "../utils/error.js";
 import { HTTP_STATUS } from "../config/runtimeConfig.js";
 import { getExecutor } from "../executors/index.js";
 import { refreshWithRetry } from "../services/tokenRefresh.js";
+import { createErrorResult, formatProviderError, parseUpstreamError } from "../utils/error.js";
 import { getEmbeddingAdapter } from "./embeddingProviders/index.js";
 
 /**
