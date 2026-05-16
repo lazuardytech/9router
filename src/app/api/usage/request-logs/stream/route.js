@@ -4,14 +4,30 @@ export const dynamic = "force-dynamic";
 
 /**
  * GET /api/usage/request-logs/stream
- * SSE stream that pushes new request log entries as they arrive.
- * Sends full snapshot on connect, then diffs every 2s.
+ * SSE stream that pushes request log updates as they arrive.
+ * Detects: new entries (maxId change) AND status changes (PENDING → SUCCESS/FAILED).
  */
 export async function GET() {
   let closed = false;
-  let lastMaxId = 0;
+  let lastSig = "";
 
   const encoder = new TextEncoder();
+
+  // Signature includes maxId + all PENDING row IDs + status hash
+  // so any status change (PENDING→SUCCESS/FAILED) triggers an update
+  function buildSig(logs) {
+    const maxId = logs.length > 0 ? logs[0].id : 0;
+    const pendingIds = logs
+      .filter((l) => l.status?.includes("PENDING"))
+      .map((l) => l.id)
+      .join(",");
+    // Hash recent statuses to catch any status change
+    const statusHash = logs
+      .slice(0, 50)
+      .map((l) => `${l.id}:${l.status}`)
+      .join("|");
+    return `${maxId}|${pendingIds}|${statusHash}`;
+  }
 
   const stream = new ReadableStream({
     async start(controller) {
@@ -25,29 +41,33 @@ export async function GET() {
       // Initial snapshot
       try {
         const logs = await getRecentLogsStructured(300);
-        if (logs.length > 0) lastMaxId = logs[0].id;
+        lastSig = buildSig(logs);
         send({ type: "init", logs });
       } catch {
         send({ type: "init", logs: [] });
       }
 
-      // Poll for new entries every 2s
-      const interval = setInterval(async () => {
-        if (closed) {
-          clearInterval(interval);
-          return;
-        }
+      // Poll every 1s when there are pending entries, 2s otherwise
+      let pollInterval = 2000;
+      const poll = async () => {
+        if (closed) return;
         try {
           const logs = await getRecentLogsStructured(300);
-          const newMaxId = logs.length > 0 ? logs[0].id : 0;
-          if (newMaxId !== lastMaxId) {
-            lastMaxId = newMaxId;
+          const sig = buildSig(logs);
+          if (sig !== lastSig) {
+            lastSig = sig;
             send({ type: "update", logs });
           }
+          // Poll faster if there are pending entries
+          const hasPending = logs.some((l) => l.status?.includes("PENDING"));
+          pollInterval = hasPending ? 1000 : 2000;
         } catch {}
-      }, 2000);
+        if (!closed) setTimeout(poll, pollInterval);
+      };
 
-      // Heartbeat every 30s to keep connection alive
+      setTimeout(poll, pollInterval);
+
+      // Heartbeat every 30s
       const heartbeat = setInterval(() => {
         if (closed) {
           clearInterval(heartbeat);
@@ -58,10 +78,8 @@ export async function GET() {
         } catch {}
       }, 30000);
 
-      // Cleanup on close
       return () => {
         closed = true;
-        clearInterval(interval);
         clearInterval(heartbeat);
       };
     },
