@@ -332,7 +332,7 @@ export default function ProfilePage() {
       const res = await fetch("/api/pricing/sync", { method: "POST" });
       const data = await res.json();
       if (data.success) {
-        toast.success(`Synced ${data.modelCount} model prices from models.dev`);
+        toast.success(`Synced ${data.modelCount} model prices`);
       } else {
         toast.error(data.error || "Sync failed");
       }

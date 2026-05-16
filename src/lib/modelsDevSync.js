@@ -156,11 +156,12 @@ export function transformModelsDevToPricing(raw) {
     for (const [modelId, modelData] of modelEntries) {
       if (!modelId || !modelData || typeof modelData !== "object") continue;
 
-      // pricing can be at top level or under .pricing
-      const pricing = modelData.pricing ?? modelData;
+      // pricing is under .cost in models.dev api.json
+      const cost = modelData.cost;
+      if (!cost || typeof cost !== "object") continue;
 
-      const input = toMillionTokenRate(pricing.input ?? pricing.inputPrice ?? pricing.prompt);
-      const output = toMillionTokenRate(pricing.output ?? pricing.outputPrice ?? pricing.completion);
+      const input = toMillionTokenRate(cost.input);
+      const output = toMillionTokenRate(cost.output);
 
       // Skip models with no usable pricing
       if (input == null && output == null) continue;
@@ -169,15 +170,13 @@ export function transformModelsDevToPricing(raw) {
       if (input != null) entry.input = input;
       if (output != null) entry.output = output;
 
-      const cached = toMillionTokenRate(pricing.cached ?? pricing.cacheRead ?? pricing.cache_read);
+      const cached = toMillionTokenRate(cost.cache_read);
       if (cached != null) entry.cached = cached;
 
-      const cacheCreation = toMillionTokenRate(
-        pricing.cache_creation ?? pricing.cacheWrite ?? pricing.cache_write ?? pricing.cacheCreation,
-      );
+      const cacheCreation = toMillionTokenRate(cost.cache_write);
       if (cacheCreation != null) entry.cache_creation = cacheCreation;
 
-      const reasoning = toMillionTokenRate(pricing.reasoning ?? pricing.reasoningOutput);
+      const reasoning = toMillionTokenRate(cost.reasoning);
       if (reasoning != null) entry.reasoning = reasoning;
 
       if (!result[podProvider]) result[podProvider] = {};
