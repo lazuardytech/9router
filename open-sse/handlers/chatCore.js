@@ -297,7 +297,19 @@ export async function handleChatCore({
   const approxRequestBytes = Array.isArray(messages)
     ? messages.reduce((sum, m) => {
         const c = m?.content;
-        return sum + (typeof c === "string" ? c.length : typeof c === "object" ? 512 : 0);
+        if (typeof c === "string") return sum + c.length;
+        if (Array.isArray(c)) {
+          // content blocks array — sum text parts, count non-text as 256 bytes each
+          return (
+            sum +
+            c.reduce((s, part) => {
+              if (typeof part?.text === "string") return s + part.text.length;
+              if (typeof part?.content === "string") return s + part.content.length;
+              return s + 256;
+            }, 0)
+          );
+        }
+        return sum + 256;
       }, 0)
     : 0;
   const requestTooLargeForCache = approxRequestBytes > MAX_REQUEST_BYTES_FOR_CACHE_CHECK;

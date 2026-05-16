@@ -113,12 +113,17 @@ function normalizeConversation(conversation) {
   }));
 }
 
-export function generateSignature(model, conversation, temperature = 0, topP = 1) {
+export function generateSignature(model, conversation, temperature, topP) {
+  // Normalize temperature and top_p: treat undefined/null as their semantic
+  // defaults so requests with explicit defaults hash identically to those
+  // that omit the field entirely (very common across different clients).
+  const normalizedTemp = temperature == null ? 1 : temperature;
+  const normalizedTopP = topP == null ? 1 : topP;
   const payload = JSON.stringify({
     model,
     messages: normalizeConversation(conversation),
-    temperature,
-    top_p: topP,
+    temperature: normalizedTemp,
+    top_p: normalizedTopP,
   });
   // For large payloads, hash only the tail slice so we avoid blocking the
   // event loop with a multi-MB SHA-256 update on every request.
