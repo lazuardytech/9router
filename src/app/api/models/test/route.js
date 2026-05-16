@@ -21,7 +21,7 @@ export async function POST(request) {
       apiKey = keys.find((k) => k.isActive !== false)?.key || null;
     } catch {}
 
-    const headers = { "Content-Type": "application/json" };
+    const headers = { "Content-Type": "application/json", "x-pod-no-cache": "true" };
     if (apiKey) headers["Authorization"] = `Bearer ${apiKey}`;
 
     const start = Date.now();
