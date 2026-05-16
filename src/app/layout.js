@@ -1,8 +1,22 @@
+import { Inter, IBM_Plex_Mono } from "next/font/google";
 import "./globals.css";
 import ServiceWorkerRegistrar from "@/shared/components/ServiceWorkerRegistrar";
 import { ThemeProvider } from "@/shared/components/ThemeProvider";
 import "@/lib/initCloudSync";
 import "@/lib/network/initOutboundProxy";
+
+const inter = Inter({
+  subsets: ["latin"],
+  variable: "--font-inter",
+  display: "swap",
+});
+
+const ibmPlexMono = IBM_Plex_Mono({
+  subsets: ["latin"],
+  weight: ["400"],
+  variable: "--font-ibm-plex-mono",
+  display: "swap",
+});
 
 export const metadata = {
   appleWebApp: {
@@ -12,27 +26,18 @@ export const metadata = {
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="en">
+    <html lang="en" className={`${inter.variable} ${ibmPlexMono.variable}`}>
       <head>
         {/* Favicon */}
         <link rel="icon" href="/favicon.ico" sizes="48x48" />
         <link rel="icon" href="/icon0.svg" type="image/svg+xml" />
         <link rel="apple-touch-icon" href="/apple-icon.png" />
         <meta name="apple-mobile-web-app-title" content="Pod" />
-        {/* Google Fonts preconnect */}
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        {/* Inter Variable */}
+        {/* Material Symbols Outlined — not available via next/font, loaded via CDN */}
+        {/* eslint-disable-next-line @next/next/no-page-custom-font */}
         <link
           rel="stylesheet"
-          href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap"
-        />
-        {/* IBM Plex Mono */}
-        <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400&display=swap" />
-        {/* Material Symbols Outlined */}
-        <link
-          rel="stylesheet"
-          href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=block"
+          href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap"
         />
       </head>
       <body className="h-full bg-pitch-black text-porcelain custom-scrollbar">
