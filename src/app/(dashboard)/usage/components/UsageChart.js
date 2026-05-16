@@ -96,7 +96,7 @@ export default function UsageChart({ period = "7d" }) {
             />
             {viewMode === "tokens" ? (
               <Area
-                type="monotone"
+                type="linear"
                 dataKey="tokens"
                 stroke="#E5E5E6"
                 strokeWidth={1.5}
@@ -106,7 +106,7 @@ export default function UsageChart({ period = "7d" }) {
               />
             ) : (
               <Area
-                type="monotone"
+                type="linear"
                 dataKey="cost"
                 stroke="#E5E5E6"
                 strokeWidth={1.5}
