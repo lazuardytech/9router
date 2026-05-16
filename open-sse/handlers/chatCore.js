@@ -661,11 +661,11 @@ export async function handleChatCore({
       onFinalJsonResponse: (finalResponse, usage) => {
         if (
           semanticCacheEnabled &&
+          cacheSignature &&
           isCacheableForWrite(body, clientRawRequest?.headers) &&
           isSmallEnoughForSemanticCache(finalResponse)
         ) {
-          const signature = generateSignature(model, body.messages ?? body.input, body.temperature, body.top_p);
-          setCachedResponse(signature, model, finalResponse, extractTokensSaved(usage));
+          setCachedResponse(cacheSignature, model, finalResponse, extractTokensSaved(usage));
           if (resolveInFlight) {
             resolveInFlight(finalResponse);
             resolveInFlight = null;
@@ -700,11 +700,11 @@ export async function handleChatCore({
       onFinalJsonResponse: (translatedResponse, usage) => {
         if (
           semanticCacheEnabled &&
+          cacheSignature &&
           isCacheableForWrite(body, clientRawRequest?.headers) &&
           isSmallEnoughForSemanticCache(translatedResponse)
         ) {
-          const signature = generateSignature(model, body.messages ?? body.input, body.temperature, body.top_p);
-          setCachedResponse(signature, model, translatedResponse, extractTokensSaved(usage));
+          setCachedResponse(cacheSignature, model, translatedResponse, extractTokensSaved(usage));
           if (resolveInFlight) {
             resolveInFlight(translatedResponse);
             resolveInFlight = null;
