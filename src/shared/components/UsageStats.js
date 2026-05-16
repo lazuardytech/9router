@@ -16,6 +16,7 @@ import OverviewCards from "@/app/(dashboard)/usage/components/OverviewCards";
 import UsageTable, { fmt, fmtTime } from "@/app/(dashboard)/usage/components/UsageTable";
 import ProviderTopology from "@/app/(dashboard)/usage/components/ProviderTopology";
 import UsageChart from "@/app/(dashboard)/usage/components/UsageChart";
+import SegmentedControl from "./SegmentedControl";
 
 function timeAgo(timestamp) {
   const diff = Math.floor((Date.now() - new Date(timestamp)) / 1000);
@@ -518,20 +519,15 @@ export default function UsageStats({ period: periodProp, setPeriod: setPeriodPro
               </option>
             ))}
           </select>
-          <div className="grid grid-cols-2 items-center gap-1 rounded-lg border border-border bg-bg-subtle p-1 sm:flex">
-            <button
-              onClick={() => setViewMode("costs")}
-              className={`px-3 py-1 rounded-md text-sm font-medium transition-colors ${viewMode === "costs" ? "bg-primary text-white shadow-sm" : "text-text-muted hover:text-text hover:bg-bg-hover"}`}
-            >
-              Costs
-            </button>
-            <button
-              onClick={() => setViewMode("tokens")}
-              className={`px-3 py-1 rounded-md text-sm font-medium transition-colors ${viewMode === "tokens" ? "bg-primary text-white shadow-sm" : "text-text-muted hover:text-text hover:bg-bg-hover"}`}
-            >
-              Tokens
-            </button>
-          </div>
+          <SegmentedControl
+            options={[
+              { value: "costs", label: "Cost" },
+              { value: "tokens", label: "Tokens" },
+            ]}
+            value={viewMode}
+            onChange={setViewMode}
+            size="sm"
+          />
         </div>
         {loading
           ? spinner
