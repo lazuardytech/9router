@@ -60,6 +60,7 @@ export default function ProviderLimits() {
   const [bulkToggling, setBulkToggling] = useState(false);
   const [expandedRows, setExpandedRows] = useState({});
   const [expandedProviders, setExpandedProviders] = useState({});
+  const [disabledModels, setDisabledModels] = useState({});
 
   const [confirmDialog, setConfirmDialog] = useState({
     open: false,
@@ -81,6 +82,18 @@ export default function ProviderLimits() {
       window.localStorage.setItem(QUOTA_CACHE_KEY, JSON.stringify({ data: quotaData, timestamp: Date.now() }));
     }
   }, [quotaData]);
+
+  // Fetch disabled models
+  useEffect(() => {
+    fetch("/api/models/disabled")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data && typeof data === "object" && !data.error) {
+          setDisabledModels(data.disabled || data);
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   // Fetch all provider connections
   const fetchConnections = useCallback(async () => {
@@ -460,11 +473,17 @@ export default function ProviderLimits() {
     return count + (hasLowQuota ? 1 : 0);
   }, 0);
 
-  // Accumulated progress for a connection: sum used / sum total
+  // Accumulated progress for a connection: sum used / sum total (enabled models only)
   const getAccumulatedProgress = (conn) => {
     const quotas = quotaData[conn.id]?.quotas || [];
-    const totalUsed = quotas.reduce((s, q) => s + (q.used || 0), 0);
-    const totalLimit = quotas.reduce((s, q) => s + (q.total || 0), 0);
+    const providerAlias = conn.provider;
+    const disabledSet = new Set(disabledModels[providerAlias] || []);
+    const enabledQuotas = quotas.filter((q) => {
+      const key = q.modelKey || q.name;
+      return !disabledSet.has(key);
+    });
+    const totalUsed = enabledQuotas.reduce((s, q) => s + (q.used || 0), 0);
+    const totalLimit = enabledQuotas.reduce((s, q) => s + (q.total || 0), 0);
     const pct = calculatePercentage(totalUsed, totalLimit);
     return { totalUsed, totalLimit, pct };
   };
@@ -942,7 +961,7 @@ export default function ProviderLimits() {
 
                                       {/* Progress bar */}
                                       <div className="pr-3">
-                                        <div className={`h-1 rounded-full overflow-hidden ${qcc.track}`}>
+                                        <div className={`h-1.5 rounded-full overflow-hidden ${qcc.track}`}>
                                           <div
                                             className={`h-full rounded-full transition-all duration-300 ${qcc.bar}`}
                                             style={{ width: `${Math.min(remaining, 100)}%` }}

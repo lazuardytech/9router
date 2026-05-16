@@ -112,7 +112,7 @@ export default function QuotaTable({ quotas = [], compact = false }) {
                   <div className={compact ? "space-y-1" : "space-y-1.5"}>
                     {/* Progress bar - always show with border for visibility */}
                     <div
-                      className={`${compact ? "h-1" : "h-1.5"} rounded-full overflow-hidden border ${colors.bgLight} ${
+                      className={`h-1.5 rounded-full overflow-hidden border ${colors.bgLight} ${
                         remaining === 0 ? "border-black/10 dark:border-white/10" : "border-transparent"
                       }`}
                     >
