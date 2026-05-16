@@ -1,14 +1,14 @@
-import { getProviderConnections, validateApiKey, updateProviderConnection, getSettings } from "@/lib/localDb";
-import { resolveConnectionProxyConfig } from "@/lib/network/connectionProxy";
-import {
-  formatRetryAfter,
-  checkFallbackError,
-  isModelLockActive,
-  buildModelLockUpdate,
-  getEarliestModelLockUntil,
-} from "open-sse/services/accountFallback.js";
 import { MAX_RATE_LIMIT_COOLDOWN_MS } from "open-sse/config/errorConfig.js";
-import { resolveProviderId, FREE_PROVIDERS } from "@/shared/constants/providers.js";
+import {
+  buildModelLockUpdate,
+  checkFallbackError,
+  formatRetryAfter,
+  getEarliestModelLockUntil,
+  isModelLockActive,
+} from "open-sse/services/accountFallback.js";
+import { getProviderConnections, getSettings, updateProviderConnection, validateApiKey } from "@/lib/localDb";
+import { resolveConnectionProxyConfig } from "@/lib/network/connectionProxy";
+import { FREE_PROVIDERS, resolveProviderId } from "@/shared/constants/providers.js";
 import * as log from "../utils/logger.js";
 
 // In-memory rotation state per provider for round-robin (Node single-thread → safe)
@@ -36,6 +36,10 @@ async function getCachedActiveConnections(providerId) {
   const now = Date.now();
   if (entry && now - entry.fetchedAt < CONNECTIONS_CACHE_TTL_MS) {
     return entry.connections;
+  }
+  // Sweep stale entries on every miss to prevent unbounded Map growth
+  for (const [k, v] of connectionsCache) {
+    if (now - v.fetchedAt >= CONNECTIONS_CACHE_TTL_MS) connectionsCache.delete(k);
   }
   const connections = await getProviderConnections({ provider: providerId, isActive: true });
   connectionsCache.set(providerId, { connections, fetchedAt: now });

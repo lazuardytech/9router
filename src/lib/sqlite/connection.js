@@ -3,10 +3,10 @@
 // legacy JSON on first boot. Only runs in the Node.js path (`!isCloud`);
 // cloud/Workers callers must not import this file.
 
-import path from "node:path";
-import os from "node:os";
 import fs from "node:fs";
 import { createRequire } from "node:module";
+import os from "node:os";
+import path from "node:path";
 import { migrateFromJson } from "./migrate-from-json.js";
 import { SCHEMA_SQL } from "./schema.js";
 
@@ -59,10 +59,13 @@ function applyPragmas(db) {
   setPragma("synchronous = NORMAL");
   setPragma("foreign_keys = ON");
   setPragma("busy_timeout = 5000");
-  // Concurrency tuning: bigger page cache, mmap reads, in-memory temp tables,
-  // and a sane WAL checkpoint cadence to avoid long pauses under load.
-  setPragma("cache_size = -64000"); // ~64 MB
-  setPragma("mmap_size = 268435456"); // 256 MB
+  // Memory tuning: keep footprint small for embedded use.
+  // cache_size: 16 MB page cache (was 64 MB — unnecessary for this schema).
+  // mmap_size: 64 MB (was 256 MB — mmap'd pages count toward RSS on Linux,
+  //   especially under Bun/JSC which holds freed memory longer than Node/V8).
+  // temp_store: MEMORY for temp tables (small, bounded by query complexity).
+  setPragma("cache_size = -16000"); // 16 MB
+  setPragma("mmap_size = 67108864"); // 64 MB
   setPragma("temp_store = MEMORY");
   setPragma("wal_autocheckpoint = 1000");
 }

@@ -1,10 +1,24 @@
 import crypto from "crypto";
+import { LRUCache } from "../cacheLayer.js";
 import { getDatabase } from "../sqlite/connection.js";
-import { MemoryType, MEMORY_TYPES } from "./types.js";
+import { MEMORY_TYPES, MemoryType } from "./types.js";
 
 const MEMORY_CACHE_TTL = 300_000;
-const MEMORY_MAX_CACHE_SIZE = 10_000;
-const memoryCache = new Map();
+// Use LRUCache instead of plain Map: bounded by size + bytes + TTL,
+// no manual eviction needed, no unbounded growth under write-heavy load.
+const memoryCache = new LRUCache({
+  maxSize: 500,
+  maxBytes: 4 * 1024 * 1024, // 4 MB
+  defaultTTL: MEMORY_CACHE_TTL,
+});
+
+function setCache(cacheKey, value) {
+  memoryCache.set(cacheKey, value);
+}
+
+function getCache(cacheKey) {
+  return memoryCache.get(cacheKey); // undefined on miss or expired
+}
 
 function parseJSON(value) {
   if (!value || typeof value !== "string" || !value.trim()) return {};
@@ -29,25 +43,6 @@ function rowToMemory(row) {
     updatedAt: new Date(String(row.updated_at)),
     expiresAt: row.expires_at ? new Date(String(row.expires_at)) : null,
   };
-}
-
-function setCache(cacheKey, value) {
-  if (memoryCache.size > MEMORY_MAX_CACHE_SIZE) {
-    const keysArray = Array.from(memoryCache.keys());
-    const removeCount = Math.floor(memoryCache.size * 0.2);
-    for (let i = 0; i < removeCount; i += 1) memoryCache.delete(keysArray[i]);
-  }
-  memoryCache.set(cacheKey, { value, timestamp: Date.now() });
-}
-
-function getCache(cacheKey) {
-  const cached = memoryCache.get(cacheKey);
-  if (!cached) return undefined;
-  if (Date.now() - cached.timestamp > MEMORY_CACHE_TTL) {
-    memoryCache.delete(cacheKey);
-    return undefined;
-  }
-  return cached.value;
 }
 
 function findExistingMemory(db, apiKeyId, key) {

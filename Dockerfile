@@ -58,4 +58,4 @@ WORKDIR /app
 EXPOSE 20128
 
 ENTRYPOINT ["/entrypoint.sh"]
-CMD ["bun", "/app/server.js"]
+CMD ["bun", "--smol", "/app/server.js"]

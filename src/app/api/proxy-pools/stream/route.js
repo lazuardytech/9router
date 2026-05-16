@@ -6,7 +6,7 @@ export const dynamic = "force-dynamic";
  * GET /api/proxy-pools/stream
  * SSE stream that pushes proxy pool updates every 3s.
  */
-export async function GET() {
+export async function GET(request) {
   let closed = false;
   let lastSig = "";
 
@@ -57,11 +57,16 @@ export async function GET() {
         } catch {}
       }, 30000);
 
-      return () => {
+      const cleanup = () => {
         closed = true;
         clearInterval(interval);
         clearInterval(heartbeat);
       };
+
+      // Fires reliably on client disconnect in Next.js standalone + Bun
+      request.signal.addEventListener("abort", cleanup, { once: true });
+
+      return cleanup;
     },
     cancel() {
       closed = true;
