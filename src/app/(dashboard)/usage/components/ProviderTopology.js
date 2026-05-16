@@ -91,7 +91,7 @@ function RouterNode({ data }) {
       <img src="/logo.svg" alt="Pod" className="w-6 h-6 mr-2 dark:invert" />
       <span className="text-sm font-bold text-primary">Pod</span>
       {data.activeCount > 0 && (
-        <span className="ml-2 px-1.5 py-0.5 rounded-full bg-primary text-white text-xs font-bold">
+        <span className="ml-2 px-1.5 py-0.5 rounded-full bg-primary text-primary-fg text-xs font-bold">
           {data.activeCount}
         </span>
       )}

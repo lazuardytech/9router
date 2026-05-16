@@ -446,7 +446,7 @@ export default function ModelSelectModal({
                       px-2 py-1 rounded-xl text-xs font-medium transition-all border hover:cursor-pointer flex items-center gap-1
                       ${
                         isSelected
-                          ? "bg-primary text-white border-primary"
+                          ? "bg-primary text-primary-fg border-primary"
                           : addedModelValues.includes(combo.name)
                             ? "bg-green-500/10 border-green-500/30 text-green-700 dark:text-green-400 hover:border-green-500/50"
                             : "bg-surface border-border text-text-main hover:border-primary/50 hover:bg-primary/5"
@@ -489,7 +489,7 @@ export default function ModelSelectModal({
                         isPlaceholder
                           ? "border-dashed border-border text-text-muted hover:border-primary/50 hover:text-primary bg-surface italic"
                           : isSelected
-                            ? "bg-primary text-white border-primary"
+                            ? "bg-primary text-primary-fg border-primary"
                             : addedModelValues.includes(model.value)
                               ? "bg-green-500/10 border-green-500/30 text-green-700 dark:text-green-400 hover:border-green-500/50"
                               : "bg-surface border-border text-text-main hover:border-primary/50 hover:bg-primary/5"

@@ -53,6 +53,7 @@ Important groups under `src/app/api/`:
 
 - Auth/session: `auth/*`
 - Providers and nodes: `providers/*`, `provider-nodes/*`
+  - `PATCH /api/provider-nodes/[id]/rename` — rename a custom provider node identifier (atomic cascade, custom nodes only)
 - API keys: `keys/*`
 - Combos: `combos/*`
 - Usage analytics: `usage/*`

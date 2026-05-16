@@ -271,7 +271,6 @@ export default function RequestLogger({
               { key: "ok", label: "Success" },
               { key: "failed", label: "Failed" },
               { key: "pending", label: "Pending" },
-              { key: "combo", label: "Combo" },
             ].map((f) => (
               <button
                 key={f.key}
@@ -302,7 +301,6 @@ export default function RequestLogger({
           <span className="text-emerald">{counts.ok}</span> ok
           {counts.failed > 0 && <span className="text-warning-red">{counts.failed} failed</span>}
           {counts.pending > 0 && <span className="text-aether-blue animate-pulse">{counts.pending} pending</span>}
-          {counts.combo > 0 && <span className="text-amethyst">{counts.combo} combo</span>}
         </div>
       </div>
 

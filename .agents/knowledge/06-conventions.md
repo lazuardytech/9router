@@ -40,6 +40,7 @@ Do not convert `open-sse` imports into package dependencies.
 - CSS variables for all color tokens (see `globals.css`)
 - `html.dark` class-based dark mode; `@custom-variant dark (&:where(.dark, .dark *))` in globals.css
 - Light theme overrides in `html:not(.dark)` block
+- **Never use `text-white` or `text-black` with `bg-primary`**. The `--color-primary` token is near-black in light theme and near-white in dark theme. Always use `text-primary-fg` as the paired foreground — it is `#ffffff` in light and `#08090a` in dark, guaranteed readable in both.
 
 ### Components
 - **Button**: use `<Button>` from `@/shared/components` — variants: `primary`, `secondary`, `outline`, `ghost`, `danger`, `success`; sizes: `sm`, `md`, `lg`
@@ -48,6 +49,8 @@ Do not convert `open-sse` imports into package dependencies.
 - **Confirm dialogs**: always use `<ConfirmModal>` from `@/shared/components/Modal` — never `window.confirm()`
 - **Toasts**: use `toast` from `sonner` directly — never custom notification store
 - **Input + Button side by side**: use `items-end` wrapper, `size="lg"` on Button to match Input height
+- **Provider modal field order**: Add/Edit Compatible modals use Name → Identifier → Prefix → (other fields). Do not reorder.
+- **Refresh buttons in `/logs`**: use `size-7` (28×28px square, icon-only). Show `animate-spin` + `disabled` while refreshing; re-enable on completion.
 
 ### Layout
 - Sidebar taxonomy must stay aligned:

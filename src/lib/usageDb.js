@@ -328,7 +328,7 @@ async function getConnectionName(connectionId) {
 // In-memory log queue, flushed on threshold or interval. Hot path is non-blocking.
 const LOG_BATCH_SIZE = 50;
 const LOG_FLUSH_INTERVAL_MS = 500;
-const LOG_MAX_ROWS = 1000; // trim threshold
+const LOG_MAX_ROWS = 10000; // trim threshold
 
 if (!global._logQueue) global._logQueue = [];
 const logQueue = global._logQueue;

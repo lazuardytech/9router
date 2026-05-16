@@ -249,6 +249,18 @@ export default function ProviderDetailPage() {
           }
         }
 
+        // URL bookmark fallback: a node whose identifier was renamed keeps the
+        // old id in its `previousIds` list — redirect to its current id.
+        if (!node) {
+          const renamed = (nodesData.nodes || []).find(
+            (entry) => Array.isArray(entry.previousIds) && entry.previousIds.includes(providerId),
+          );
+          if (renamed) {
+            router.replace(`/providers/${renamed.id}`);
+            return;
+          }
+        }
+
         setProviderNode(node);
       }
     } catch (error) {
@@ -274,6 +286,22 @@ export default function ProviderDetailPage() {
     } catch (error) {
       console.log("Error updating provider node:", error);
     }
+  };
+
+  const handleRenameNode = async (newId) => {
+    const res = await fetch(`/api/provider-nodes/${providerId}/rename`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ newId }),
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      throw new Error(data?.error || "Failed to rename provider node");
+    }
+    setShowEditNodeModal(false);
+    // Navigate to the new identifier URL — fetchConnections will pick up the
+    // renamed node from the fresh providerId.
+    router.replace(`/providers/${data.node.id}`);
   };
 
   const saveProviderStrategy = async (strategy, stickyLimit) => {
@@ -1272,6 +1300,7 @@ export default function ProviderDetailPage() {
           isOpen={showEditNodeModal}
           node={providerNode}
           onSave={handleUpdateNode}
+          onRename={handleRenameNode}
           onClose={() => setShowEditNodeModal(false)}
           isAnthropic={isAnthropicCompatible}
         />

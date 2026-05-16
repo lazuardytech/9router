@@ -18,6 +18,7 @@ function RequestLogsToolbar({
   sortBy,
   setSortBy,
   onRefresh,
+  refreshing,
   recording,
   setRecording,
   filterProvider,
@@ -52,10 +53,11 @@ function RequestLogsToolbar({
       </select>
       <button
         onClick={onRefresh}
-        className="flex items-center justify-center size-7 rounded-[4px] border border-charcoal-grey text-storm-cloud hover:bg-deep-slate hover:text-porcelain transition-colors duration-100"
+        disabled={refreshing}
+        className="flex items-center justify-center size-7 rounded-[4px] border border-charcoal-grey text-storm-cloud hover:bg-deep-slate hover:text-porcelain transition-colors duration-100 disabled:opacity-50 disabled:cursor-not-allowed"
         title="Refresh"
       >
-        <span className="material-symbols-outlined text-[15px]">refresh</span>
+        <span className={cn("material-symbols-outlined text-[15px]", refreshing && "animate-spin")}>refresh</span>
       </button>
       <button
         onClick={() => setRecording((v) => !v)}
@@ -74,7 +76,7 @@ function RequestLogsToolbar({
   );
 }
 
-function ProxyLogsToolbar({ sortBy, setSortBy, onRefresh, live, setLive, count }) {
+function ProxyLogsToolbar({ sortBy, setSortBy, onRefresh, refreshing, live, setLive, count }) {
   return (
     <div className="flex items-center gap-2">
       <span className="text-[11px] text-fog-grey">{count} configured</span>
@@ -89,10 +91,11 @@ function ProxyLogsToolbar({ sortBy, setSortBy, onRefresh, live, setLive, count }
       </select>
       <button
         onClick={onRefresh}
-        className="flex items-center justify-center size-7 rounded-[4px] border border-charcoal-grey text-storm-cloud hover:bg-deep-slate hover:text-porcelain transition-colors duration-100"
+        disabled={refreshing}
+        className="flex items-center justify-center size-7 rounded-[4px] border border-charcoal-grey text-storm-cloud hover:bg-deep-slate hover:text-porcelain transition-colors duration-100 disabled:opacity-50 disabled:cursor-not-allowed"
         title="Refresh"
       >
-        <span className="material-symbols-outlined text-[15px]">refresh</span>
+        <span className={cn("material-symbols-outlined text-[15px]", refreshing && "animate-spin")}>refresh</span>
       </button>
       <button
         onClick={() => setLive((v) => !v)}
@@ -111,15 +114,16 @@ function ProxyLogsToolbar({ sortBy, setSortBy, onRefresh, live, setLive, count }
   );
 }
 
-function ConsoleToolbar({ autoScroll, setAutoScroll, onClear, onRefresh, live, setLive }) {
+function ConsoleToolbar({ autoScroll, setAutoScroll, onClear, onRefresh, refreshing, live, setLive }) {
   return (
     <div className="flex items-center gap-2">
       <button
         onClick={onRefresh}
-        className="flex items-center gap-1.5 h-7 px-2.5 rounded-[4px] border border-charcoal-grey text-[11px] text-storm-cloud hover:bg-deep-slate hover:text-porcelain transition-colors duration-100"
+        disabled={refreshing}
+        className="flex items-center justify-center size-7 rounded-[4px] border border-charcoal-grey text-storm-cloud hover:bg-deep-slate hover:text-porcelain transition-colors duration-100 disabled:opacity-50 disabled:cursor-not-allowed"
         title="Refresh"
       >
-        <span className="material-symbols-outlined text-[15px]">refresh</span>
+        <span className={cn("material-symbols-outlined text-[15px]", refreshing && "animate-spin")}>refresh</span>
       </button>
       <button
         onClick={() => setLive((v) => !v)}
@@ -170,19 +174,47 @@ function LogsInner() {
   const [recording, setRecording] = useState(true);
   const [filterProvider, setFilterProvider] = useState("all");
   const [providerOptions, setProviderOptions] = useState([]);
+  const [requestRefreshing, setRequestRefreshing] = useState(false);
   const refreshRef = useRef(null);
 
   // ProxyLogsTab lifted state
   const [proxySortBy, setProxySortBy] = useState("newest");
   const [proxyLive, setProxyLive] = useState(true);
   const [proxyCount, setProxyCount] = useState(0);
+  const [proxyRefreshing, setProxyRefreshing] = useState(false);
   const proxyRefreshRef = useRef(null);
 
   // ConsoleLogClient lifted state
   const [autoScroll, setAutoScroll] = useState(true);
   const [consoleLive, setConsoleLive] = useState(true);
+  const [consoleRefreshing, setConsoleRefreshing] = useState(false);
   const clearRef = useRef(null);
   const consoleRefreshRef = useRef(null);
+
+  const handleRequestRefresh = async () => {
+    setRequestRefreshing(true);
+    try {
+      await refreshRef.current?.();
+    } finally {
+      setRequestRefreshing(false);
+    }
+  };
+  const handleProxyRefresh = async () => {
+    setProxyRefreshing(true);
+    try {
+      await proxyRefreshRef.current?.();
+    } finally {
+      setProxyRefreshing(false);
+    }
+  };
+  const handleConsoleRefresh = async () => {
+    setConsoleRefreshing(true);
+    try {
+      await consoleRefreshRef.current?.();
+    } finally {
+      setConsoleRefreshing(false);
+    }
+  };
 
   const setTab = (key) => {
     const params = new URLSearchParams(searchParams.toString());
@@ -208,7 +240,8 @@ function LogsInner() {
           <RequestLogsToolbar
             sortBy={sortBy}
             setSortBy={setSortBy}
-            onRefresh={() => refreshRef.current?.()}
+            onRefresh={handleRequestRefresh}
+            refreshing={requestRefreshing}
             recording={recording}
             setRecording={setRecording}
             filterProvider={filterProvider}
@@ -220,7 +253,8 @@ function LogsInner() {
           <ProxyLogsToolbar
             sortBy={proxySortBy}
             setSortBy={setProxySortBy}
-            onRefresh={() => proxyRefreshRef.current?.()}
+            onRefresh={handleProxyRefresh}
+            refreshing={proxyRefreshing}
             live={proxyLive}
             setLive={setProxyLive}
             count={proxyCount}
@@ -231,7 +265,8 @@ function LogsInner() {
             autoScroll={autoScroll}
             setAutoScroll={setAutoScroll}
             onClear={() => clearRef.current?.()}
-            onRefresh={() => consoleRefreshRef.current?.()}
+            onRefresh={handleConsoleRefresh}
+            refreshing={consoleRefreshing}
             live={consoleLive}
             setLive={setConsoleLive}
           />

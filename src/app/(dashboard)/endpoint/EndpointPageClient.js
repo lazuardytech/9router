@@ -1019,7 +1019,7 @@ export default function APIPageClient({ machineId }) {
                     onClick={() => handleCavemanLevel(lvl.id)}
                     className={`px-3 py-1.5 rounded text-xs font-medium border transition-colors ${
                       cavemanLevel === lvl.id
-                        ? "bg-primary text-white border-primary"
+                        ? "bg-primary text-primary-fg border-primary"
                         : "bg-transparent border-border text-text-muted hover:bg-surface-2"
                     }`}
                     title={lvl.desc}

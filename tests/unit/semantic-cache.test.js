@@ -79,7 +79,8 @@ describe("semantic cache", () => {
 
     expect(isCacheableForRead(baseBody, {})).toBe(true);
     expect(isCacheableForWrite(baseBody, {})).toBe(true);
-    expect(isCacheableForRead({ ...baseBody, stream: true }, {})).toBe(false);
+    expect(isCacheableForRead({ ...baseBody, stream: true }, {})).toBe(true); // streaming now cacheable
+    expect(isCacheableForWrite({ ...baseBody, stream: true }, {})).toBe(true); // streaming now cacheable
     expect(isCacheableForWrite({ ...baseBody, temperature: 0.2 }, {})).toBe(false);
     expect(isCacheableForRead(baseBody, { "x-pod-no-cache": "true" })).toBe(false);
   });

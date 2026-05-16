@@ -4,7 +4,7 @@ import { getRecentLogsStructured } from "@/lib/usageDb";
 export async function GET(request) {
   try {
     const { searchParams } = new URL(request.url);
-    const limit = Math.min(parseInt(searchParams.get("limit") || "300"), 500);
+    const limit = Math.min(parseInt(searchParams.get("limit") || "300"), 10000);
     const logs = await getRecentLogsStructured(limit);
     return NextResponse.json(logs);
   } catch (error) {

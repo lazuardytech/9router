@@ -216,7 +216,7 @@ export default function ProvidersPage() {
       textIcon: "OC",
       apiType: node.apiType,
     }))
-    .filter((p) => matchSearch(p.name));
+    .filter((p) => matchSearch(p.name) && matchConnected(p.id, "apikey"));
 
   const anthropicCompatibleProviders = providerNodes
     .filter((node) => node.type === "anthropic-compatible")
@@ -226,7 +226,7 @@ export default function ProvidersPage() {
       color: "#D97757",
       textIcon: "AC",
     }))
-    .filter((p) => matchSearch(p.name));
+    .filter((p) => matchSearch(p.name) && matchConnected(p.id, "apikey"));
 
   const oauthEntries = Object.entries(OAUTH_PROVIDERS).filter(
     ([id, info]) => matchSearch(info.name) && matchConnected(id, "oauth"),
@@ -844,6 +844,13 @@ function AddOpenAICompatibleModal({ isOpen, onClose, onCreated }) {
           hint="Required. A friendly label for this node."
         />
         <Input
+          label="Identifier"
+          value={formData.identifier}
+          onChange={(e) => setFormData({ ...formData, identifier: e.target.value })}
+          placeholder="my-openai-prod"
+          hint="Optional. Custom ID for this provider. Auto-generated if left empty."
+        />
+        <Input
           label="Prefix"
           value={formData.prefix}
           onChange={(e) => setFormData({ ...formData, prefix: e.target.value })}
@@ -862,13 +869,6 @@ function AddOpenAICompatibleModal({ isOpen, onClose, onCreated }) {
           onChange={(e) => setFormData({ ...formData, baseUrl: e.target.value })}
           placeholder="https://api.openai.com/v1"
           hint="Use the base URL (ending in /v1) for your OpenAI-compatible API."
-        />
-        <Input
-          label="Identifier"
-          value={formData.identifier}
-          onChange={(e) => setFormData({ ...formData, identifier: e.target.value })}
-          placeholder="my-openai-prod"
-          hint="Optional. Custom ID for this provider. Auto-generated if left empty."
         />
         <Input
           label="API Key (for Check)"
@@ -1026,6 +1026,13 @@ function AddAnthropicCompatibleModal({ isOpen, onClose, onCreated }) {
           hint="Required. A friendly label for this node."
         />
         <Input
+          label="Identifier"
+          value={formData.identifier}
+          onChange={(e) => setFormData({ ...formData, identifier: e.target.value })}
+          placeholder="my-anthropic-prod"
+          hint="Optional. Custom ID for this provider. Auto-generated if left empty."
+        />
+        <Input
           label="Prefix"
           value={formData.prefix}
           onChange={(e) => setFormData({ ...formData, prefix: e.target.value })}
@@ -1038,13 +1045,6 @@ function AddAnthropicCompatibleModal({ isOpen, onClose, onCreated }) {
           onChange={(e) => setFormData({ ...formData, baseUrl: e.target.value })}
           placeholder="https://api.anthropic.com/v1"
           hint="Use the base URL (ending in /v1) for your Anthropic-compatible API. The system will append /messages."
-        />
-        <Input
-          label="Identifier"
-          value={formData.identifier}
-          onChange={(e) => setFormData({ ...formData, identifier: e.target.value })}
-          placeholder="my-anthropic-prod"
-          hint="Optional. Custom ID for this provider. Auto-generated if left empty."
         />
         <Input
           label="API Key (for Check)"

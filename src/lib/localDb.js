@@ -651,6 +651,178 @@ export async function deleteProviderNode(id) {
   return current;
 }
 
+// Rewrite a combo's `models` array, replacing any "<oldId>/<model>" entry
+// with "<newId>/<model>". Returns the new array if anything changed, else null.
+function rewriteComboModels(models, oldId, newId) {
+  if (!Array.isArray(models)) return null;
+  let changed = false;
+  const prefix = `${oldId}/`;
+  const next = models.map((m) => {
+    if (typeof m === "string" && m.startsWith(prefix)) {
+      changed = true;
+      return `${newId}/${m.slice(prefix.length)}`;
+    }
+    return m;
+  });
+  return changed ? next : null;
+}
+
+// Rewrite alias targets like "<oldId>/<model>" → "<newId>/<model>".
+function rewriteAliasTarget(target, oldId, newId) {
+  if (typeof target !== "string") return null;
+  const prefix = `${oldId}/`;
+  if (!target.startsWith(prefix)) return null;
+  return `${newId}/${target.slice(prefix.length)}`;
+}
+
+/**
+ * Rename a custom provider node's identifier. Cascades the change across all
+ * tables and JSON blobs that reference the old id. Atomic via SQLite
+ * transaction.
+ *
+ * Tracks rename history in `node.previousIds` so URL redirects from old ids
+ * keep working.
+ *
+ * Throws on:
+ *  - source node missing
+ *  - newId conflicts with another existing node
+ *  - newId is empty / equals oldId
+ *
+ * Returns the updated node.
+ */
+export async function renameProviderNode(oldId, newId) {
+  if (!oldId || !newId) throw new Error("Both oldId and newId are required");
+  if (oldId === newId) throw new Error("newId must differ from oldId");
+
+  if (isCloud) {
+    const d = await getCloudDb();
+    const node = (d.data.providerNodes || []).find((n) => n.id === oldId);
+    if (!node) throw new Error("Provider node not found");
+    if ((d.data.providerNodes || []).some((n) => n.id === newId)) {
+      throw new Error("Identifier already in use");
+    }
+    const now = nowIso();
+    node.previousIds = Array.from(new Set([...(node.previousIds || []), oldId]));
+    node.id = newId;
+    node.updatedAt = now;
+    for (const c of d.data.providerConnections || []) {
+      if (c.provider === oldId) c.provider = newId;
+    }
+    for (const m of d.data.customModels || []) {
+      if (m.providerAlias === oldId) m.providerAlias = newId;
+    }
+    if (d.data.pricing && d.data.pricing[oldId]) {
+      d.data.pricing[newId] = d.data.pricing[oldId];
+      delete d.data.pricing[oldId];
+    }
+    for (const combo of d.data.combos || []) {
+      const next = rewriteComboModels(combo.models, oldId, newId);
+      if (next) combo.models = next;
+    }
+    for (const [alias, target] of Object.entries(d.data.modelAliases || {})) {
+      const rewritten = rewriteAliasTarget(target, oldId, newId);
+      if (rewritten) d.data.modelAliases[alias] = rewritten;
+    }
+    const settings = d.data.settings || {};
+    for (const key of ["providerStrategies", "providerThinking"]) {
+      if (settings[key] && settings[key][oldId] !== undefined) {
+        settings[key][newId] = settings[key][oldId];
+        delete settings[key][oldId];
+      }
+    }
+    return node;
+  }
+
+  const current = await getProviderNodeById(oldId);
+  if (!current) throw new Error("Provider node not found");
+  const conflict = db().prepare("SELECT id FROM provider_nodes WHERE id = ?").get(newId);
+  if (conflict) throw new Error("Identifier already in use");
+
+  // Pre-compute JSON rewrites outside the transaction (read-only work).
+  const comboRows = db().prepare("SELECT id, data FROM combos").all();
+  const comboUpdates = [];
+  for (const row of comboRows) {
+    let parsed;
+    try {
+      parsed = JSON.parse(row.data);
+    } catch {
+      continue;
+    }
+    const next = rewriteComboModels(parsed.models, oldId, newId);
+    if (next) {
+      parsed.models = next;
+      comboUpdates.push({ id: row.id, data: JSON.stringify(parsed) });
+    }
+  }
+
+  const aliasRows = db().prepare("SELECT alias, target FROM model_aliases WHERE target LIKE ?").all(`${oldId}/%`);
+  const aliasUpdates = aliasRows
+    .map((r) => ({ alias: r.alias, target: rewriteAliasTarget(r.target, oldId, newId) }))
+    .filter((u) => u.target);
+
+  const settings = await getSettings();
+  const settingsPatches = {};
+  for (const key of ["providerStrategies", "providerThinking"]) {
+    const map = settings[key];
+    if (map && Object.prototype.hasOwnProperty.call(map, oldId)) {
+      const copy = { ...map };
+      copy[newId] = copy[oldId];
+      delete copy[oldId];
+      settingsPatches[key] = copy;
+    }
+  }
+
+  // Build updated node row payload
+  const previousIds = Array.from(new Set([...(current.previousIds || []), oldId]));
+  const updatedNode = { ...current, id: newId, previousIds, updatedAt: nowIso() };
+  const nodeExtras = splitExtras(updatedNode, NODE_COLS);
+
+  const settingsStmt = db().prepare("INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)");
+
+  db().transaction(() => {
+    // Note: provider_nodes.id is the PRIMARY KEY but there are no foreign
+    // keys declared on dependent tables, so updating the row in place is
+    // safe — we don't have to delete-then-insert.
+    db()
+      .prepare(
+        `UPDATE provider_nodes
+           SET id = ?, type = ?, name = ?, prefix = ?, api_type = ?, base_url = ?, data = ?, updated_at = ?
+         WHERE id = ?`,
+      )
+      .run(
+        newId,
+        updatedNode.type || null,
+        updatedNode.name ?? null,
+        updatedNode.prefix ?? null,
+        updatedNode.apiType ?? null,
+        updatedNode.baseUrl ?? null,
+        JSON.stringify(nodeExtras),
+        updatedNode.updatedAt,
+        oldId,
+      );
+
+    db().prepare("UPDATE provider_connections SET provider = ? WHERE provider = ?").run(newId, oldId);
+    db().prepare("UPDATE custom_models SET provider_alias = ? WHERE provider_alias = ?").run(newId, oldId);
+    db().prepare("UPDATE pricing SET provider = ? WHERE provider = ?").run(newId, oldId);
+    db().prepare("UPDATE usage_history SET provider = ? WHERE provider = ?").run(newId, oldId);
+    db().prepare("UPDATE request_details SET provider = ? WHERE provider = ?").run(newId, oldId);
+    db().prepare("UPDATE request_log SET provider = ? WHERE provider = ?").run(newId, oldId);
+    db().prepare("UPDATE daily_summary SET key = ? WHERE bucket = 'byProvider' AND key = ?").run(newId, oldId);
+
+    const comboStmt = db().prepare("UPDATE combos SET data = ?, updated_at = ? WHERE id = ?");
+    for (const u of comboUpdates) comboStmt.run(u.data, nowIso(), u.id);
+
+    const aliasStmt = db().prepare("UPDATE model_aliases SET target = ? WHERE alias = ?");
+    for (const u of aliasUpdates) aliasStmt.run(u.target, u.alias);
+
+    for (const [k, v] of Object.entries(settingsPatches)) {
+      settingsStmt.run(k, JSON.stringify(v));
+    }
+  })();
+
+  return updatedNode;
+}
+
 // ===== Proxy Pools =======================================================
 
 export async function getProxyPools(filter = {}) {

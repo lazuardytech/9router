@@ -4,9 +4,9 @@ Operational notes for AI agents working on **Pod** (`~/projects/lt/pod`).
 
 ## Current Baseline
 
-- Release baseline: **v0.0.6**
+- Release baseline: **v0.0.11**
 - Package: `pod`
-- Docker: `lazuardytech/pod` (tags v0.0.1–v0.0.6, latest)
+- Docker: `lazuardytech/pod` (tags v0.0.1–v0.0.11, latest)
 - GitHub: `lazuardytech/pod`, branch `main`
 - Data dir: `~/.pod/pod.sqlite`
 
@@ -22,6 +22,9 @@ Operational notes for AI agents working on **Pod** (`~/projects/lt/pod`).
 8. **Page-level header actions go through `headerActionStore`** — register buttons via `src/store/headerActionStore.js`, not inline in page components.
 9. **API key auth on model listing endpoints** — `GET /v1/models`, `GET /v1/models/[kind]`, `GET /v1beta/models` enforce auth when `requireApiKey=true`. Do not bypass.
 10. **SSE endpoints use `open-sse` stream helpers** — `/api/usage/request-logs/stream` and `/api/proxy-pools/stream` follow the same SSE pattern as console logs.
+11. **`text-primary-fg` for text on `bg-primary`** — never use `text-white` or `text-black` with `bg-primary`. The `--color-primary` token flips between near-black (light) and near-white (dark); `text-primary-fg` is the paired foreground token that stays readable in both themes.
+12. **Provider node rename is custom-only** — `renameProviderNode` and `PATCH /api/provider-nodes/[id]/rename` only work on custom nodes (`openai-compatible-*`, `anthropic-compatible-*`, `custom-embedding-*`). Built-in provider IDs are hardcoded in routing and must never be renamed.
+13. **Streaming requests are now cached** — `isCacheableForRead/Write` no longer blocks `stream: true`. Cache hits for streaming clients are served as SSE chunks via `buildCacheHitSSEResponse`. Do not re-add the `stream: true` exclusion.
 
 ## Verification Before Push
 

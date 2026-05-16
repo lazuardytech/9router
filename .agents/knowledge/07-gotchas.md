@@ -129,3 +129,44 @@ Do not create new kebab-case sub-routes under `/media-providers`.
 
 Blackbox (LLM) and MiniMax (TTS) are supported as of v0.0.6.
 Do not treat them as unknown providers when encountered in provider config or routing code.
+
+## 26) `text-primary-fg` required when text sits on `bg-primary`
+
+`--color-primary` flips: near-black (`#111111`) in light theme, near-white (`#e5e5e6`) in dark theme.
+Using `text-white` with `bg-primary` produces unreadable white-on-white in dark mode.
+Always pair `bg-primary` with `text-primary-fg` (the dedicated foreground token).
+This applies to buttons, badges, chips, and any element using `bg-primary` as background.
+
+## 27) Semantic cache now covers streaming requests
+
+`isCacheableForRead` and `isCacheableForWrite` no longer exclude `stream: true` requests.
+Streaming responses are written to cache inside `onStreamComplete` in `open-sse/handlers/chatCore.js`.
+Cache hits for streaming clients are served as SSE chunks via `buildCacheHitSSEResponse`.
+Do not re-add a `stream: true` guard to the cache eligibility functions — it was the root cause of 0% hit rate.
+
+## 28) Provider node rename: custom nodes only, prefix must be preserved
+
+`renameProviderNode(oldId, newId)` and `PATCH /api/provider-nodes/[id]/rename` only accept custom nodes.
+Built-in provider IDs (`openai`, `anthropic`, `gemini`, `codex`, etc.) are hardcoded in routing handlers and must never be renamed.
+The new id must start with the same type prefix (`openai-compatible-`, `anthropic-compatible-`, `custom-embedding-`).
+The function is a single SQLite transaction — partial renames cannot occur.
+
+## 29) `previousIds[]` enables permanent URL bookmark redirect for renamed providers
+
+Every rename appends the old id to `node.data.previousIds[]`.
+`ProviderDetailClient` checks this array when a node lookup by URL id returns nothing, then calls `router.replace` to the current id.
+Do not clear `previousIds` — it is the redirect map for all historical bookmarks.
+
+## 30) Request log cap is 10 000 rows
+
+`LOG_MAX_ROWS = 10000` in `src/lib/usageDb.js`. The `/api/usage/request-logs` endpoint cap is also 10 000.
+Do not lower these values without updating both locations together.
+
+## 31) Console Logs lines are stored as `{ line, receivedAt }` objects
+
+`ConsoleLogClient` wraps every incoming log string as `{ line: string, receivedAt: string }` via `wrapLine()`.
+`LogLine` uses `parseTimestamp(line) || receivedAt` for display — lines without a `[HH:MM:SS]` prefix show the receive time instead of `—`.
+Do not pass raw strings into the logs state array; always use `wrapLine()`.
+
+Blackbox (LLM) and MiniMax (TTS) are supported as of v0.0.6.
+Do not treat them as unknown providers when encountered in provider config or routing code.

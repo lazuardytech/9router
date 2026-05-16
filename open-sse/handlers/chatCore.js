@@ -13,6 +13,55 @@ import { trackPendingRequest, appendRequestLog, saveRequestDetail } from "@/lib/
 import { getExecutor } from "../executors/index.js";
 import { buildRequestDetail, extractRequestConfig } from "./chatCore/requestDetail.js";
 import { handleForcedSSEToJson } from "./chatCore/sseToJsonHandler.js";
+
+/**
+ * Build a streaming SSE Response from a cached (non-streaming) response object.
+ * Emits role chunk → content chunk → finish chunk → [DONE].
+ */
+function buildCacheHitSSEResponse(cached, model) {
+  const cachedId = cached.id || `chatcmpl-cached-${Date.now().toString(36)}`;
+  const created = cached.created || Math.floor(Date.now() / 1000);
+  const content = cached.choices?.[0]?.message?.content ?? "";
+  const encoder = new TextEncoder();
+  const sseStream = new ReadableStream({
+    start(controller) {
+      const emit = (obj) => controller.enqueue(encoder.encode(`data: ${JSON.stringify(obj)}\n\n`));
+      emit({
+        id: cachedId,
+        object: "chat.completion.chunk",
+        created,
+        model,
+        choices: [{ index: 0, delta: { role: "assistant", content: "" }, finish_reason: null }],
+      });
+      emit({
+        id: cachedId,
+        object: "chat.completion.chunk",
+        created,
+        model,
+        choices: [{ index: 0, delta: { content }, finish_reason: null }],
+      });
+      emit({
+        id: cachedId,
+        object: "chat.completion.chunk",
+        created,
+        model,
+        choices: [{ index: 0, delta: {}, finish_reason: "stop" }],
+        usage: cached.usage,
+      });
+      controller.enqueue(encoder.encode("data: [DONE]\n\n"));
+      controller.close();
+    },
+  });
+  return new Response(sseStream, {
+    headers: {
+      "Content-Type": "text/event-stream",
+      "Cache-Control": "no-cache",
+      Connection: "keep-alive",
+      "Access-Control-Allow-Origin": "*",
+      "X-9Router-Cache": "HIT",
+    },
+  });
+}
 import { handleNonStreamingResponse } from "./chatCore/nonStreamingHandler.js";
 import { handleStreamingResponse, buildOnStreamComplete } from "./chatCore/streamingHandler.js";
 import { detectClientTool, isNativePassthrough } from "../utils/clientDetector.js";
@@ -226,14 +275,13 @@ export async function handleChatCore({
     const cached = getCachedResponse(cacheSignature);
     if (cached) {
       reqLogger.logConvertedResponse(cached);
+      if (clientRequestedStreaming) {
+        return { success: true, response: buildCacheHitSSEResponse(cached, model) };
+      }
       return {
         success: true,
         response: new Response(JSON.stringify(cached), {
-          headers: {
-            "Content-Type": "application/json",
-            "Access-Control-Allow-Origin": "*",
-            "X-9Router-Cache": "HIT",
-          },
+          headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*", "X-9Router-Cache": "HIT" },
         }),
       };
     }
@@ -244,6 +292,9 @@ export async function handleChatCore({
         const result = await inFlight;
         if (result) {
           reqLogger.logConvertedResponse(result);
+          if (clientRequestedStreaming) {
+            return { success: true, response: buildCacheHitSSEResponse(result, model) };
+          }
           return {
             success: true,
             response: new Response(JSON.stringify(result), {
@@ -759,6 +810,46 @@ export async function handleChatCore({
       if (requestMemoryText) extractFacts(requestMemoryText, memoryOwnerId, pipelineSessionId);
       const streamedText = toLimitedText(contentObj?.content || "");
       if (streamedText) extractFacts(streamedText, memoryOwnerId, pipelineSessionId);
+    }
+    // Cache the assembled streaming response so future identical requests
+    // (even streaming ones) can be served from cache without hitting upstream.
+    // We reconstruct a minimal OpenAI-format object — same shape the
+    // non-streaming path caches — so getCachedResponse works for both paths.
+    if (
+      semanticCacheEnabled &&
+      cacheSignature &&
+      isCacheableForWrite(body, clientRawRequest?.headers) &&
+      contentObj?.content
+    ) {
+      const cachedId = `chatcmpl-cached-${Date.now().toString(36)}`;
+      const assembledResponse = {
+        id: cachedId,
+        object: "chat.completion",
+        created: Math.floor(Date.now() / 1000),
+        model,
+        choices: [
+          {
+            index: 0,
+            message: { role: "assistant", content: contentObj.content },
+            finish_reason: "stop",
+          },
+        ],
+        usage: usage
+          ? {
+              prompt_tokens: usage.prompt_tokens ?? 0,
+              completion_tokens: usage.completion_tokens ?? 0,
+              total_tokens: usage.total_tokens ?? (usage.prompt_tokens ?? 0) + (usage.completion_tokens ?? 0),
+            }
+          : { prompt_tokens: 0, completion_tokens: 0, total_tokens: 0 },
+      };
+      if (isSmallEnoughForSemanticCache(assembledResponse)) {
+        setCachedResponse(cacheSignature, model, assembledResponse, extractTokensSaved(usage));
+        if (resolveInFlight) {
+          resolveInFlight(assembledResponse);
+          resolveInFlight = null;
+        }
+        clearInFlight(cacheSignature);
+      }
     }
   };
   return handleStreamingResponse({

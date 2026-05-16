@@ -470,7 +470,7 @@ export default function UsageStats({ period: periodProp, setPeriod: setPeriodPro
                 key={p.value}
                 onClick={() => setPeriod(p.value)}
                 disabled={fetching}
-                className={`rounded-md px-3 py-1 text-sm font-medium transition-colors ${period === p.value ? "bg-primary text-white shadow-sm" : "text-text-muted hover:bg-bg-hover hover:text-text"}`}
+                className={`rounded-md px-3 py-1 text-sm font-medium transition-colors ${period === p.value ? "bg-primary text-primary-fg shadow-sm" : "text-text-muted hover:bg-bg-hover hover:text-text"}`}
               >
                 {p.label}
               </button>

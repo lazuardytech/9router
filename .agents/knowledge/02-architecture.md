@@ -1,6 +1,6 @@
 # Architecture
 
-This file summarizes the current architecture for `github.com/lazuardytech/pod` (v0.0.6).
+This file summarizes the current architecture for `github.com/lazuardytech/pod` (v0.0.11).
 
 ## Package Layout
 
@@ -63,6 +63,7 @@ All use the `open-sse` stream helpers. The `/logs` page surfaces Refresh/Live to
 - Semantic cache:
   - Tables: `semantic_cache`, `cache_metrics`
   - API: `/api/cache`, `/api/settings/cache-config`
+  - Streaming requests (`stream: true`) are now cached. After `onStreamComplete`, the assembled response is written to cache. Cache hits for streaming clients are served as SSE chunks via `buildCacheHitSSEResponse` in `open-sse/handlers/chatCore.js`.
 - Conversational memory:
   - Tables: `memories`, `memory_fts`
   - API: `/api/memory`, `/api/memory/[id]`, `/api/settings/memory`
@@ -91,6 +92,8 @@ Primary store is SQLite:
 Schema migrations applied at boot (in `connection.js`):
 - `combo` column on `request_log`
 - `details_id` column on `request_log`
+
+`LOG_MAX_ROWS` in `src/lib/usageDb.js` is set to **10 000**. The `/api/usage/request-logs` endpoint serves up to 10 000 rows. Both values were raised from 1 000 / 500 in v0.0.11.
 
 `DATA_DIR` env var: if the resolved data directory is inaccessible (EACCES/EPERM), the app falls back gracefully rather than crashing on boot.
 
@@ -133,6 +136,18 @@ All routes are top-level (no `/dashboard` prefix):
 - Vercel relay forwarding via `x-relay-target` / `x-relay-path` headers
 
 No MITM bypass code exists (removed in v0.0.4).
+
+## Provider Node Rename
+
+Custom provider nodes (`openai-compatible-*`, `anthropic-compatible-*`, `custom-embedding-*`) can be renamed after creation.
+
+- **Function**: `renameProviderNode(oldId, newId)` in `src/lib/localDb.js`
+- **Endpoint**: `PATCH /api/provider-nodes/[id]/rename`
+- **Cascade**: single SQLite transaction updates `provider_nodes.id` + all FK columns (`provider_connections.provider`, `custom_models.provider_alias`, `pricing.provider`, `usage_history.provider`, `request_details.provider`, `request_log.provider`, `daily_summary.key`) + JSON blobs (`combos.data` models array, `model_aliases.target`, `settings.value` for `providerStrategies`/`providerThinking`)
+- **Redirect tracking**: `previousIds[]` appended to node `data` JSON on each rename. `ProviderDetailClient` checks `previousIds` when a node is not found by current URL id and calls `router.replace` to the current id — bookmark URLs self-heal permanently.
+- **Cache invalidation**: `invalidateConnectionsCache` called after commit to flush in-memory connection/rotation state.
+- **Validation**: built-in provider IDs rejected; new id must preserve the type prefix; collision with existing nodes blocked.
+- **UI**: Identifier field in Edit Compatible modal is now editable with a dedicated Rename button (prefix hint shown). Built-in providers remain read-only.
 
 ## Upstream Engine Fixes (v0.0.6)
 

@@ -10,6 +10,7 @@ export {
   createProviderNode,
   updateProviderNode,
   deleteProviderNode,
+  renameProviderNode,
   getProxyPools,
   getProxyPoolById,
   createProxyPool,

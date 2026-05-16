@@ -4,14 +4,27 @@ import { useState, useEffect } from "react";
 import PropTypes from "prop-types";
 import { Button, Badge, Input, Modal, Select } from "@/shared/components";
 
-export default function EditCompatibleNodeModal({ isOpen, node, onSave, onClose, isAnthropic }) {
+// Type prefix that must be preserved on rename so isOpenAICompatibleProvider()
+// / isAnthropicCompatibleProvider() keep classifying the node correctly.
+function requiredIdPrefix(node, isAnthropic) {
+  if (!node) return isAnthropic ? "anthropic-compatible-" : "openai-compatible-";
+  if (node.type === "anthropic-compatible") return "anthropic-compatible-";
+  if (node.type === "openai-compatible") return "openai-compatible-";
+  if (node.type === "custom-embedding") return "custom-embedding-";
+  return "";
+}
+
+export default function EditCompatibleNodeModal({ isOpen, node, onSave, onRename, onClose, isAnthropic }) {
   const [formData, setFormData] = useState({
+    identifier: "",
     name: "",
     prefix: "",
     apiType: "chat",
     baseUrl: "https://api.openai.com/v1",
   });
   const [saving, setSaving] = useState(false);
+  const [renaming, setRenaming] = useState(false);
+  const [renameError, setRenameError] = useState("");
   const [checkKey, setCheckKey] = useState("");
   const [checkModelId, setCheckModelId] = useState("");
   const [validating, setValidating] = useState(false);
@@ -20,11 +33,13 @@ export default function EditCompatibleNodeModal({ isOpen, node, onSave, onClose,
   useEffect(() => {
     if (node) {
       setFormData({
+        identifier: node.id || "",
         name: node.name || "",
         prefix: node.prefix || "",
         apiType: node.apiType || "chat",
         baseUrl: node.baseUrl || (isAnthropic ? "https://api.anthropic.com/v1" : "https://api.openai.com/v1"),
       });
+      setRenameError("");
     }
   }, [node, isAnthropic]);
 
@@ -75,16 +90,28 @@ export default function EditCompatibleNodeModal({ isOpen, node, onSave, onClose,
 
   if (!node) return null;
 
+  const idPrefix = requiredIdPrefix(node, isAnthropic);
+  const trimmedId = formData.identifier.trim();
+  const idChanged = trimmedId && trimmedId !== node.id;
+  const idLooksValid =
+    trimmedId && /^[a-zA-Z0-9_.\-]+$/.test(trimmedId) && (!idPrefix || trimmedId.startsWith(idPrefix));
+
+  const handleRename = async () => {
+    if (!onRename || !idChanged || !idLooksValid) return;
+    setRenameError("");
+    setRenaming(true);
+    try {
+      await onRename(trimmedId);
+    } catch (err) {
+      setRenameError(err?.message || "Failed to rename");
+    } finally {
+      setRenaming(false);
+    }
+  };
+
   return (
     <Modal isOpen={isOpen} title={`Edit ${isAnthropic ? "Anthropic" : "OpenAI"} Compatible`} onClose={onClose}>
       <div className="flex flex-col gap-4">
-        <Input
-          label="Identifier"
-          value={node.id || ""}
-          readOnly
-          hint="Provider identifier (read-only after creation)."
-          inputClassName="font-mono text-[12px] opacity-70"
-        />
         <Input
           label="Name"
           value={formData.name}
@@ -92,6 +119,33 @@ export default function EditCompatibleNodeModal({ isOpen, node, onSave, onClose,
           placeholder={`${isAnthropic ? "Anthropic" : "OpenAI"} Compatible (Prod)`}
           hint="Required. A friendly label for this node."
         />
+        <div className="flex flex-col gap-1">
+          <div className="flex gap-2 items-end">
+            <Input
+              label="Identifier"
+              value={formData.identifier}
+              onChange={(e) => setFormData({ ...formData, identifier: e.target.value })}
+              hint={
+                idPrefix
+                  ? `Editable. Must start with "${idPrefix}". Renames cascade across connections, history, combos, and aliases.`
+                  : "Editable. Renames cascade across connections, history, combos, and aliases."
+              }
+              inputClassName="font-mono text-[12px]"
+              className="flex-1"
+            />
+            <div>
+              <Button onClick={handleRename} disabled={!idChanged || !idLooksValid || renaming} variant="secondary">
+                {renaming ? "Renaming..." : "Rename"}
+              </Button>
+            </div>
+          </div>
+          {renameError && <span className="text-[11px] text-error">{renameError}</span>}
+          {idChanged && !renameError && idLooksValid && (
+            <span className="text-[11px] text-text-muted">
+              Press Rename to apply. The page will redirect to the new identifier.
+            </span>
+          )}
+        </div>
         <Input
           label="Prefix"
           value={formData.prefix}
@@ -169,8 +223,10 @@ EditCompatibleNodeModal.propTypes = {
     prefix: PropTypes.string,
     apiType: PropTypes.string,
     baseUrl: PropTypes.string,
+    type: PropTypes.string,
   }),
   onSave: PropTypes.func.isRequired,
+  onRename: PropTypes.func,
   onClose: PropTypes.func.isRequired,
   isAnthropic: PropTypes.bool,
 };

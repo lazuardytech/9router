@@ -26,19 +26,34 @@ function parseTimestamp(line) {
   return m ? m[1] : null;
 }
 
+function nowTs() {
+  return new Date().toLocaleTimeString("en-US", {
+    hour12: false,
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+  });
+}
+
+function wrapLine(line) {
+  return typeof line === "string" ? { line, receivedAt: nowTs() } : line;
+}
+
 function stripLevel(line) {
   return line.replace(LEVEL_RE, "").trim();
 }
 
-function LogLine({ line, idx, onCopy, copied }) {
+function LogLine({ entry, idx, onCopy, copied }) {
+  const line = typeof entry === "string" ? entry : entry.line;
+  const receivedAt = typeof entry === "object" ? entry.receivedAt : null;
   const level = parseLevel(line);
-  const ts = parseTimestamp(line);
+  const ts = parseTimestamp(line) || receivedAt || "—";
   const style = LEVEL_STYLES[level] || LEVEL_STYLES.LOG;
   const text = stripLevel(line);
 
   return (
     <div className="group flex items-start gap-2 px-3 py-1 rounded-[4px] hover:bg-porcelain/4 transition-colors duration-75">
-      <span className="shrink-0 text-[10px] text-fog-grey font-mono mt-0.5 w-[66px]">{ts || "—"}</span>
+      <span className="shrink-0 text-[10px] text-fog-grey font-mono mt-0.5 w-[66px]">{ts}</span>
       <span
         className={cn(
           "shrink-0 inline-flex items-center px-1 py-0.5 rounded-[3px] border text-[9px] font-[590] uppercase tracking-[0.05em] mt-0.5 w-[42px] justify-center",
@@ -95,7 +110,7 @@ export default function ConsoleLogClient({ autoScroll, setAutoScroll, clearRef, 
       const res = await fetch("/api/translator/console-logs");
       if (res.ok) {
         const data = await res.json();
-        setLogs((data.logs || []).slice(-CONSOLE_LOG_CONFIG.maxLines));
+        setLogs((data.logs || []).slice(-CONSOLE_LOG_CONFIG.maxLines).map(wrapLine));
         setLastUpdated(new Date());
       }
     } catch {}
@@ -128,12 +143,12 @@ export default function ConsoleLogClient({ autoScroll, setAutoScroll, clearRef, 
     es.onmessage = (e) => {
       const msg = JSON.parse(e.data);
       if (msg.type === "init") {
-        setLogs(msg.logs.slice(-CONSOLE_LOG_CONFIG.maxLines));
+        setLogs(msg.logs.slice(-CONSOLE_LOG_CONFIG.maxLines).map(wrapLine));
         setLastUpdated(new Date());
       } else if (msg.type === "line") {
         if (!liveRef.current) return;
         setLogs((prev) => {
-          const next = [...prev, msg.line];
+          const next = [...prev, wrapLine(msg.line)];
           return next.length > CONSOLE_LOG_CONFIG.maxLines ? next.slice(-CONSOLE_LOG_CONFIG.maxLines) : next;
         });
         setLastUpdated(new Date());
@@ -153,7 +168,8 @@ export default function ConsoleLogClient({ autoScroll, setAutoScroll, clearRef, 
     }
   }, [logs, autoScroll]);
 
-  const filtered = logs.filter((line) => {
+  const filtered = logs.filter((entry) => {
+    const line = typeof entry === "string" ? entry : entry.line;
     const level = parseLevel(line);
     if (levelFilter !== "all") {
       const minOrder = LEVEL_ORDER[levelFilter.toUpperCase()] ?? 0;
@@ -165,8 +181,8 @@ export default function ConsoleLogClient({ autoScroll, setAutoScroll, clearRef, 
 
   const counts = {
     total: logs.length,
-    error: logs.filter((l) => parseLevel(l) === "ERROR").length,
-    warn: logs.filter((l) => parseLevel(l) === "WARN").length,
+    error: logs.filter((e) => parseLevel(typeof e === "string" ? e : e.line) === "ERROR").length,
+    warn: logs.filter((e) => parseLevel(typeof e === "string" ? e : e.line) === "WARN").length,
   };
 
   return (
@@ -248,7 +264,7 @@ export default function ConsoleLogClient({ autoScroll, setAutoScroll, clearRef, 
               </p>
             </div>
           ) : (
-            filtered.map((line, i) => <LogLine key={i} line={line} idx={i} onCopy={handleCopy} copied={copied} />)
+            filtered.map((entry, i) => <LogLine key={i} entry={entry} idx={i} onCopy={handleCopy} copied={copied} />)
           )}
         </div>
       </div>

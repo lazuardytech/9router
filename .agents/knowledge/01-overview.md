@@ -2,7 +2,7 @@
 
 Pod is Lazuardy Tech's internal AI routing proxy.
 
-Current baseline: **v0.0.6**.
+Current baseline: **v0.0.11**.
 
 ## Core Capabilities
 
@@ -118,6 +118,16 @@ Current baseline: **v0.0.6**.
 - Blackbox provider support
 - MiniMax TTS support
 - "Today" period added to usage chart
+
+### v0.0.7–v0.0.11
+- **Semantic cache fixed for streaming**: `isCacheableForRead/Write` no longer blocks `stream: true`. Streaming responses are written to cache after `onStreamComplete`; cache hits served as SSE chunks via `buildCacheHitSSEResponse`. `/cache` page now shows real hit rates.
+- **Provider node rename**: custom nodes (`openai-compatible-*`, `anthropic-compatible-*`, `custom-embedding-*`) can now be renamed via `PATCH /api/provider-nodes/[id]/rename`. Atomic SQLite transaction cascades across all FK columns and JSON blobs. `previousIds[]` stored in node data enables permanent URL bookmark redirect.
+- **Model lock tests**: 36 unit tests for `open-sse/services/accountFallback.js` and 16 integration tests for `markAccountUnavailable` / `clearAccountError` / `getProviderCredentials` added.
+- **Comprehensive cache + memory tests**: 39 tests each for `/cache` and `/memory` feature surfaces.
+- **Request log cap raised**: `LOG_MAX_ROWS` 1 000 → 10 000; API fetch cap 500 → 10 000.
+- **`/logs` UX**: all Refresh buttons standardized to `size-7` square with spinning animation + disabled state during refresh. "Combo" filter pill removed from Request Logs. Console Logs lines without `[HH:MM:SS]` prefix now show receive-time timestamp instead of `—`.
+- **`/providers` UX**: Identifier field reordered above Prefix in Add/Edit modals. "Connected Only" filter now correctly hides disabled custom provider nodes.
+- **Button color fix**: `bg-primary text-white` replaced with `bg-primary text-primary-fg` across 11 sites — fixes unreadable white-on-white text in dark theme.
 
 ## Ground Rules
 
