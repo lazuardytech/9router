@@ -173,7 +173,7 @@ Rationale: `--smol` throttles the entire heap and hurts throughput. Bun's high R
 
 ## Upstream Engine Fixes (v0.0.6)
 
-The following fixes were adopted from upstream 9router into `open-sse`:
+The following fixes were adopted from upstream pod into `open-sse`:
 
 - **Role normalization**: `developer` role normalized to `system` before upstream dispatch
 - **Stream stall timeout**: 3-minute timeout kills stalled streams

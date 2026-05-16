@@ -101,7 +101,7 @@ Current baseline: **v0.0.14**.
 - Settings: removed Migrate to SQLite button
 
 ### v0.0.6
-- Upstream 9router fixes: developer role normalization (developer→system), stream stall timeout 3min, Ollama usage tracking, Gemini schema `ensureObjectType`, `DATA_DIR` graceful fallback on EACCES/EPERM
+- Upstream fixes: developer role normalization (developer→system), stream stall timeout 3min, Ollama usage tracking, Gemini schema `ensureObjectType`, `DATA_DIR` graceful fallback on EACCES/EPERM
 - Request Logs SSE live stream: `GET /api/usage/request-logs/stream` endpoint
 - Proxy Logs SSE live stream: `GET /api/proxy-pools/stream` endpoint
 - Console Logs: Refresh/Live toggle (already had SSE, now surfaced in UI)
