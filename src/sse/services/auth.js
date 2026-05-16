@@ -302,11 +302,14 @@ export async function markAccountUnavailable(
   const reason = typeof errorText === "string" ? errorText.slice(0, 100) : "Provider error";
   const lockUpdate = buildModelLockUpdate(model, cooldownMs);
 
-  // Read-before-write guard: skip redundant DB write if the lock is already
-  // active (avoids a pile of identical SQLite writes under concurrent 429s).
+  // Read-before-write guard: skip redundant DB write only if existing lock
+  // expires LATER than the new cooldown would. This ensures that if the
+  // minimum lockout was increased in settings, the lock gets updated.
+  // Use a 5s tolerance to avoid spurious re-writes from clock drift.
   const lockKey = Object.keys(lockUpdate)[0];
   const existingExpiry = conn?.[lockKey];
-  if (existingExpiry && new Date(existingExpiry).getTime() > Date.now()) {
+  const newExpiry = Date.now() + cooldownMs;
+  if (existingExpiry && new Date(existingExpiry).getTime() >= newExpiry - 5000) {
     return { shouldFallback: true, cooldownMs };
   }
 
