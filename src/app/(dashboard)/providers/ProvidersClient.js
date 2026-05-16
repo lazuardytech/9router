@@ -239,10 +239,10 @@ export default function ProvidersPage() {
     ([id, info]) => matchSearch(info.name) && matchConnected(id, "oauth"),
   );
   const freeEntries = Object.entries(FREE_PROVIDERS).filter(
-    ([id, info]) => matchSearch(info.name) && matchConnected(id, "free"),
+    ([id, info]) => !showConnectedOnly && matchSearch(info.name),
   );
   const freeTierEntries = Object.entries(FREE_TIER_PROVIDERS).filter(
-    ([id, info]) => matchSearch(info.name) && matchConnected(id, "free"),
+    ([id, info]) => !showConnectedOnly && matchSearch(info.name),
   );
   const apikeyEntries = Object.entries(APIKEY_PROVIDERS).filter(
     ([id, info]) =>
@@ -261,8 +261,12 @@ export default function ProvidersPage() {
     <div className="flex min-w-0 flex-col gap-6 px-1 sm:px-0">
       {!loading && !hasAnyResult && (
         <div className="text-center py-8 border border-dashed border-border rounded-xl">
-          <span className="material-symbols-outlined text-[32px] text-text-muted mb-2">search_off</span>
-          <p className="text-text-muted text-sm">No providers match your search</p>
+          <span className="material-symbols-outlined text-[32px] text-text-muted mb-2">
+            {showConnectedOnly ? "wifi_off" : "search_off"}
+          </span>
+          <p className="text-text-muted text-sm">
+            {showConnectedOnly ? "No connected providers available" : "No providers match your search"}
+          </p>
         </div>
       )}
 

@@ -236,6 +236,9 @@ export default function MediaProviderKindPage() {
 
   const allProviders = [...providers, ...customProviders].filter((p) => {
     if (!showConnectedOnly) return true;
+    // noAuth providers (e.g. Kiro) have no connections — hide when Connected Only
+    const providerInfo = AI_PROVIDERS[p.id];
+    if (providerInfo?.noAuth) return false;
     const providerConns = connections.filter((c) => c.provider === p.id);
     const hasConnected = providerConns.some((c) => {
       const s = getEffectiveStatus(c);
@@ -287,7 +290,16 @@ export default function MediaProviderKindPage() {
 
       {allProviders.length === 0 ? (
         <div className="text-center py-12 border border-dashed border-border rounded-xl text-text-muted text-sm">
-          No providers support <strong>{kindConfig.label}</strong> yet.
+          {showConnectedOnly ? (
+            <>
+              <span className="material-symbols-outlined text-[32px] mb-2 block">wifi_off</span>
+              No connected providers available
+            </>
+          ) : (
+            <>
+              No providers support <strong>{kindConfig.label}</strong> yet.
+            </>
+          )}
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
