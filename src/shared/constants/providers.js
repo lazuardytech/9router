@@ -1468,16 +1468,6 @@ export const APIKEY_PROVIDERS = {
       ],
     },
   },
-  melma: {
-    id: "melma",
-    alias: "melma",
-    name: "Melma",
-    icon: "auto_awesome",
-    color: "#6366F1",
-    textIcon: "ML",
-    website: "https://melma.lazuardy.tech",
-    notice: { apiKeyUrl: "https://melma.lazuardy.tech" },
-  },
   "jina-reader": {
     id: "jina-reader",
     alias: "jina",
