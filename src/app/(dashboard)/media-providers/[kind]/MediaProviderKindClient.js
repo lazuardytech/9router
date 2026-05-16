@@ -166,7 +166,16 @@ export default function MediaProviderKindPage() {
   const [customNodes, setCustomNodes] = useState([]);
   const [combos, setCombos] = useState([]);
   const [showAddCustomEmbedding, setShowAddCustomEmbedding] = useState(false);
-  const [showConnectedOnly, setShowConnectedOnly] = useState(false);
+  const [showConnectedOnly, setShowConnectedOnly] = useState(() => {
+    if (typeof window === "undefined") return false;
+    return window.localStorage.getItem("media-providers:connectedOnly") === "true";
+  });
+
+  const toggleConnectedOnly = (v) => {
+    const next = typeof v === "boolean" ? v : !showConnectedOnly;
+    setShowConnectedOnly(next);
+    window.localStorage.setItem("media-providers:connectedOnly", String(next));
+  };
   const registerAction = useHeaderActionStore((s) => s.register);
   const unregisterAction = useHeaderActionStore((s) => s.unregister);
 
@@ -176,7 +185,7 @@ export default function MediaProviderKindPage() {
       icon: "wifi",
       active: showConnectedOnly,
       title: "Show connected providers only",
-      onClick: () => setShowConnectedOnly((v) => !v),
+      onClick: () => toggleConnectedOnly(),
     });
     return () => unregisterAction();
   }, [showConnectedOnly, registerAction, unregisterAction]);

@@ -90,7 +90,16 @@ export default function ProvidersPage() {
   const unregisterSearch = useHeaderSearchStore((s) => s.unregister);
   const registerAction = useHeaderActionStore((s) => s.register);
   const unregisterAction = useHeaderActionStore((s) => s.unregister);
-  const [showConnectedOnly, setShowConnectedOnly] = useState(false);
+  const [showConnectedOnly, setShowConnectedOnly] = useState(() => {
+    if (typeof window === "undefined") return false;
+    return window.localStorage.getItem("providers:connectedOnly") === "true";
+  });
+
+  const toggleConnectedOnly = (v) => {
+    const next = typeof v === "boolean" ? v : !showConnectedOnly;
+    setShowConnectedOnly(next);
+    window.localStorage.setItem("providers:connectedOnly", String(next));
+  };
 
   useEffect(() => {
     registerSearch("Search providers...");
@@ -103,7 +112,7 @@ export default function ProvidersPage() {
       icon: "wifi",
       active: showConnectedOnly,
       title: "Show connected providers only",
-      onClick: () => setShowConnectedOnly((v) => !v),
+      onClick: () => toggleConnectedOnly(),
     });
     return () => unregisterAction();
   }, [showConnectedOnly, registerAction, unregisterAction]);
