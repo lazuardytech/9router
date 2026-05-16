@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { toast } from "sonner";
 import { Badge, Button } from "@/shared/components";
 import ProviderIcon from "@/shared/components/ProviderIcon";
 import TelemetryCard from "./TelemetryCard";
@@ -511,19 +512,26 @@ export default function HealthPage() {
                         const key = `${bm.model}`;
                         setClearingLock(key);
                         try {
-                          await Promise.all(
+                          const results = await Promise.all(
                             bm.connections.map((c) =>
                               fetch("/api/models/availability", {
                                 method: "POST",
                                 headers: { "Content-Type": "application/json" },
                                 body: JSON.stringify({
-                                  action: "clearCooldown",
+                                  action: "recheckAndClear",
                                   provider: c.provider,
                                   model: bm.model,
                                 }),
-                              }),
+                              }).then((r) => r.json()),
                             ),
                           );
+                          const anyPassed = results.some((r) => r.passed);
+                          const allFailed = results.every((r) => r.tested && !r.passed);
+                          if (anyPassed) {
+                            toast.success("Model recheck passed — lockout cleared");
+                          } else if (allFailed) {
+                            toast.error("Model still failing — lockout kept");
+                          }
                           await fetchHealth();
                         } finally {
                           setClearingLock(null);
@@ -534,9 +542,9 @@ export default function HealthPage() {
                       title="Clear lockout and recheck"
                     >
                       <span
-                        className={`material-symbols-outlined text-[15px] ${clearingLock !== null ? "animate-spin" : ""}`}
+                        className={`material-symbols-outlined text-[15px] ${clearingLock === bm.model ? "animate-spin" : ""}`}
                       >
-                        lock_open
+                        {clearingLock === bm.model ? "progress_activity" : "lock_open"}
                       </span>
                     </button>
                   </div>
@@ -549,7 +557,13 @@ export default function HealthPage() {
                         <span className="text-fog-grey/70 text-[10px]">{c.providerName}</span>
                       </div>
                       <span className="text-fog-grey shrink-0">
-                        unblocks in {Math.max(0, Math.round(c.retryAfterMs / 1000))}s
+                        {(() => {
+                          const secs = Math.max(0, Math.round(c.retryAfterMs / 1000));
+                          if (secs >= 3600)
+                            return `unblocks in ${Math.round(secs / 3600)}h ${Math.round((secs % 3600) / 60)}m`;
+                          if (secs >= 60) return `unblocks in ${Math.round(secs / 60)}m`;
+                          return `unblocks in ${secs}s`;
+                        })()}
                       </span>
                     </div>
                   ))}
