@@ -4,6 +4,7 @@ import { resolveOllamaLocalHost } from "open-sse/config/providers.js";
 import { normalizeProviderId } from "@/lib/providerNormalization";
 import { getProviderNodeById } from "@/models";
 import { PROVIDER_ENDPOINTS } from "@/shared/constants/config";
+import { validateFetchUrl } from "@/lib/validateUrl";
 import {
   AI_PROVIDERS,
   isAnthropicCompatibleProvider,
@@ -135,7 +136,12 @@ export async function POST(request) {
         if (!node) {
           return NextResponse.json({ error: "OpenAI Compatible node not found" }, { status: 404 });
         }
-        const modelsUrl = `${node.baseUrl?.replace(/\/$/, "")}/models`;
+        const nodeBaseUrl = node.baseUrl?.replace(/\/$/, "") || "";
+        const nodeUrlCheck = validateFetchUrl(nodeBaseUrl);
+        if (!nodeUrlCheck.ok) {
+          return NextResponse.json({ valid: false, error: `Invalid provider base URL: ${nodeUrlCheck.error}` });
+        }
+        const modelsUrl = `${nodeBaseUrl}/models`;
         const res = await fetch(modelsUrl, {
           headers: { Authorization: `Bearer ${apiKey}` },
         });
@@ -152,7 +158,11 @@ export async function POST(request) {
         if (!node) {
           return NextResponse.json({ error: "Custom Embedding node not found" }, { status: 404 });
         }
-        const baseUrl = node.baseUrl?.replace(/\/$/, "");
+        const baseUrl = node.baseUrl?.replace(/\/$/, "") || "";
+        const embedUrlCheck = validateFetchUrl(baseUrl);
+        if (!embedUrlCheck.ok) {
+          return NextResponse.json({ valid: false, error: `Invalid provider base URL: ${embedUrlCheck.error}` });
+        }
         const modelsRes = await fetch(`${baseUrl}/models`, {
           headers: { Authorization: `Bearer ${apiKey}` },
         });
@@ -186,6 +196,10 @@ export async function POST(request) {
         let normalizedBase = node.baseUrl?.trim().replace(/\/$/, "") || "";
         if (normalizedBase.endsWith("/messages")) {
           normalizedBase = normalizedBase.slice(0, -9); // remove /messages
+        }
+        const anthropicUrlCheck = validateFetchUrl(normalizedBase);
+        if (!anthropicUrlCheck.ok) {
+          return NextResponse.json({ valid: false, error: `Invalid provider base URL: ${anthropicUrlCheck.error}` });
         }
 
         const modelsUrl = `${normalizedBase}/models`;

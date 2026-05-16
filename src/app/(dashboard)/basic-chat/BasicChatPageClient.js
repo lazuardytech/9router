@@ -13,8 +13,8 @@ const STORAGE_KEYS = {
 };
 
 function createId() {
-  if (globalThis.crypto?.randomUUID) return globalThis.crypto.randomUUID();
-  return `chat_${Date.now()}_${Math.random().toString(16).slice(2)}`;
+  // crypto.randomUUID() is available in all modern browsers and Node 14.17+
+  return globalThis.crypto.randomUUID();
 }
 
 function safeParse(value, fallback) {

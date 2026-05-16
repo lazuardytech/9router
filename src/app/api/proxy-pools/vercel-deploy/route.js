@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createProxyPool } from "@/models";
+import { validateFetchUrl } from "@/lib/validateUrl";
 
 const VERCEL_API = "https://api.vercel.com";
 
@@ -123,6 +124,12 @@ export async function POST(request) {
     // Poll until deployment is ready
     const ready = await pollDeployment(deploymentId, vercelToken);
     const deployUrl = `https://${ready.url}`;
+
+    // Validate the deploy URL returned by Vercel before storing
+    const urlCheck = validateFetchUrl(deployUrl);
+    if (!urlCheck.ok) {
+      throw new Error(`Invalid deployment URL from Vercel: ${urlCheck.error}`);
+    }
 
     // Create proxy pool entry with type vercel
     const proxyPool = await createProxyPool({

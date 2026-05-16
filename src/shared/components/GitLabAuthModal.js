@@ -6,6 +6,22 @@ import { Button, Input, Modal, OAuthModal } from "@/shared/components";
 
 const GITLAB_COM = "https://gitlab.com";
 
+/**
+ * Sanitize a user-supplied GitLab base URL for use in anchor hrefs.
+ * Only allows http/https schemes to prevent javascript: XSS.
+ * Falls back to GITLAB_COM if the URL is invalid or uses a disallowed scheme.
+ */
+function sanitizeGitLabUrl(url) {
+  const trimmed = (url || "").trim() || GITLAB_COM;
+  try {
+    const parsed = new URL(trimmed);
+    if (parsed.protocol !== "http:" && parsed.protocol !== "https:") return GITLAB_COM;
+    return trimmed.replace(/\/$/, "");
+  } catch {
+    return GITLAB_COM;
+  }
+}
+
 function getRedirectUri() {
   if (typeof window === "undefined") return "http://localhost/callback";
   const port = window.location.port || (window.location.protocol === "https:" ? "443" : "80");
@@ -144,7 +160,7 @@ export default function GitLabAuthModal({ isOpen, providerInfo, onSuccess, onClo
             <p className="text-xs text-text-muted">
               Create an OAuth app at{" "}
               <a
-                href={`${baseUrl.trim() || GITLAB_COM}/-/profile/applications`}
+                href={`${sanitizeGitLabUrl(baseUrl)}/-/profile/applications`}
                 target="_blank"
                 rel="noreferrer"
                 className="text-primary underline"
@@ -196,7 +212,7 @@ export default function GitLabAuthModal({ isOpen, providerInfo, onSuccess, onClo
             <p className="text-xs text-text-muted">
               Create a PAT at{" "}
               <a
-                href={`${baseUrl.trim() || GITLAB_COM}/-/user_settings/personal_access_tokens`}
+                href={`${sanitizeGitLabUrl(baseUrl)}/-/user_settings/personal_access_tokens`}
                 target="_blank"
                 rel="noreferrer"
                 className="text-primary underline"

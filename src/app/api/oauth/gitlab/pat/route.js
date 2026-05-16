@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createProviderConnection } from "@/models";
+import { validateFetchUrl } from "@/lib/validateUrl";
 
 const GITLAB_DEFAULT_BASE = "https://gitlab.com";
 
@@ -22,6 +23,12 @@ export async function POST(request) {
     }
 
     const base = (baseUrl?.trim() || GITLAB_DEFAULT_BASE).replace(/\/$/, "");
+
+    // Validate the GitLab base URL — must be http/https and not a private address
+    const urlCheck = validateFetchUrl(base);
+    if (!urlCheck.ok) {
+      return NextResponse.json({ error: `Invalid GitLab base URL: ${urlCheck.error}` }, { status: 400 });
+    }
 
     // Verify token by fetching current user
     const userRes = await fetch(`${base}/api/v4/user`, {

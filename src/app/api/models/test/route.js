@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getApiKeys } from "@/lib/localDb";
+import { validateFetchUrl } from "@/lib/validateUrl";
 
 // POST /api/models/test - Ping a single model via internal completions or embeddings
 export async function POST(request) {
@@ -7,12 +8,20 @@ export async function POST(request) {
     const { model, kind } = await request.json();
     if (!model) return NextResponse.json({ error: "Model required" }, { status: 400 });
 
-    const baseUrl =
-      process.env.BASE_URL ||
-      (() => {
-        const u = new URL(request.url);
-        return `${u.protocol}//${u.host}`;
-      })();
+    // Derive base URL from request host (internal loopback call — allowPrivate is intentional)
+    const requestBase = (() => {
+      const u = new URL(request.url);
+      return `${u.protocol}//${u.host}`;
+    })();
+    const envBase = process.env.BASE_URL;
+    // Validate BASE_URL env var if set; fall back to request host
+    const baseUrl = (() => {
+      if (envBase) {
+        const check = validateFetchUrl(envBase, { allowPrivate: true });
+        if (check.ok) return envBase.replace(/\/$/, "");
+      }
+      return requestBase;
+    })();
 
     // Get an active internal API key for auth (if requireApiKey is enabled)
     let apiKey = null;

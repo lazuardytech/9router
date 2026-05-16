@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { validateFetchUrl } from "@/lib/validateUrl";
 
 // Fetch with timeout wrapper
 const fetchWithTimeout = (url, options, timeout = 10000) => {
@@ -57,9 +58,15 @@ export async function POST(request) {
       return NextResponse.json({ error: "Base URL and API key required" }, { status: 400 });
     }
 
-    // Validate URL format
+    // Validate URL format and protocol
     if (!isValidUrl(baseUrl)) {
       return NextResponse.json({ error: "Invalid URL format" }, { status: 400 });
+    }
+
+    // Block non-http(s) protocols and private/internal addresses
+    const urlCheck = validateFetchUrl(baseUrl);
+    if (!urlCheck.ok) {
+      return NextResponse.json({ error: urlCheck.error }, { status: 400 });
     }
 
     // Custom Embedding Validation - test POST /embeddings directly

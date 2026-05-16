@@ -65,7 +65,10 @@ function getImageEditDefaults(providerId, modelId) {
 function toImagePreviewSrc(value) {
   const trimmed = typeof value === "string" ? value.trim() : "";
   if (!trimmed) return "";
-  if (/^(data:image\/|https?:\/\/)/i.test(trimmed)) return trimmed;
+  // Only allow https URLs or data:image/ URIs to prevent XSS via javascript: or other schemes
+  if (/^https:\/\//i.test(trimmed)) return trimmed;
+  if (/^data:image\//i.test(trimmed)) return trimmed;
+  // Treat anything else as raw base64
   return `data:image/png;base64,${trimmed}`;
 }
 
@@ -1128,7 +1131,9 @@ function GenericExampleCard({ providerId, kind }) {
   const wantBinary = kind === "image" && imageOutputFormat === "binary";
   const useStreaming = kind === "image" && providerId === "codex" && !wantBinary;
   const apiPathWithQuery = `${apiPath}${wantBinary ? "?response_format=binary" : ""}`;
-  const headersPreview = `-H "Content-Type: application/json" \\\n  -H "Authorization: Bearer ${apiKey || "YOUR_KEY"}"${pinnedConnectionId ? ` \\\n  -H "x-connection-id: ${pinnedConnectionId}"` : ""}${useStreaming ? ` \\\n  -H "Accept: text/event-stream"` : ""}`;
+  // Sanitize pinnedConnectionId to prevent header injection in the curl snippet display
+  const safeConnectionId = pinnedConnectionId ? pinnedConnectionId.replace(/[^\w\-]/g, "") : "";
+  const headersPreview = `-H "Content-Type: application/json" \\\n  -H "Authorization: Bearer ${apiKey || "YOUR_KEY"}"${safeConnectionId ? ` \\\n  -H "x-connection-id: ${safeConnectionId}"` : ""}${useStreaming ? ` \\\n  -H "Accept: text/event-stream"` : ""}`;
   const curlSnippet = `curl -X ${kindConfig.endpoint.method} ${endpoint}${apiPathWithQuery} \\
   ${headersPreview.replace(/\\\n {2}/g, "\\\n  ")} \\
   -d '${JSON.stringify(requestBody)}'${wantBinary ? " \\\n  --output image.png" : ""}`;

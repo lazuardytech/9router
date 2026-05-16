@@ -206,7 +206,8 @@ export async function handleChatCore({
 }) {
   const { provider, model } = modelInfo;
   const requestStartTime = Date.now();
-  const pipelineSessionId = connectionId || `req-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 9)}`;
+  const pipelineSessionId =
+    connectionId || `req-${Date.now().toString(36)}-${crypto.randomUUID().replace(/-/g, "").slice(0, 9)}`;
   const settings = chatSettings || {};
   const semanticCacheEnabled = settings.semanticCacheEnabled !== false;
   const memorySettings = normalizeMemorySettings(settings);

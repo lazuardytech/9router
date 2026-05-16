@@ -273,9 +273,10 @@ export async function handleComboChat({
       log.warn("COMBO", `Model ${modelStr} failed, trying next`, { status: result.status });
     } catch (error) {
       // Catch unexpected exceptions to ensure fallback continues
-      lastError = error.message || String(error);
+      // Log full error internally but don't expose raw stack/message to clients
+      log.warn("COMBO", `Model ${modelStr} threw error, trying next`, { error: error.message });
+      lastError = "Model request failed";
       if (!lastStatus) lastStatus = 500;
-      log.warn("COMBO", `Model ${modelStr} threw error, trying next`, { error: lastError });
     }
   }
 

@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { validateFetchUrl } from "@/lib/validateUrl";
 
 export const dynamic = "force-dynamic";
 
@@ -24,6 +25,12 @@ export async function GET(request) {
   const filter = FILTERS[type];
   if (!filter) {
     return NextResponse.json({ error: "Unknown filter type" }, { status: 400 });
+  }
+
+  // Validate the URL — must be http/https and not a private address
+  const urlCheck = validateFetchUrl(url);
+  if (!urlCheck.ok) {
+    return NextResponse.json({ error: urlCheck.error }, { status: 400 });
   }
 
   try {

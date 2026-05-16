@@ -22,7 +22,12 @@ function hashContent(text) {
 }
 
 function generateSessionId() {
-  return `sess_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 9)}`;
+  const bytes = new Uint8Array(5);
+  crypto.getRandomValues(bytes);
+  const rand = Array.from(bytes, (b) => b.toString(36))
+    .join("")
+    .slice(0, 7);
+  return `sess_${Date.now().toString(36)}_${rand}`;
 }
 
 // Extract text content from an input item
