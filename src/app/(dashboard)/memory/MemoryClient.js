@@ -301,7 +301,9 @@ export default function MemoryClient() {
 
         {loading ? (
           <div className="flex flex-col gap-3">
-            {[1, 2, 3].map((i) => <CardSkeleton key={i} />)}
+            {[1, 2, 3].map((i) => (
+              <CardSkeleton key={i} />
+            ))}
           </div>
         ) : memoryData.data.length === 0 ? (
           <div className="rounded-xl border border-dashed border-border px-4 py-10 text-center text-sm text-text-muted">

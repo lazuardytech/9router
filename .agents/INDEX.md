@@ -2,7 +2,7 @@
 
 Knowledge base entrypoint for Pod contributors.
 
-Last synced: **2026-05-17** (baseline **v0.0.20**).
+Last synced: **2026-05-17** (baseline **v0.0.22**).
 
 - [Overview](knowledge/01-overview.md)
 - [Architecture](knowledge/02-architecture.md)
@@ -13,3 +13,4 @@ Last synced: **2026-05-17** (baseline **v0.0.20**).
 - [Gotchas](knowledge/07-gotchas.md)
 - [Skills System](knowledge/08-skills-system.md)
 - [Fork Status](knowledge/09-fork-status.md)
+- [Open Issues](knowledge/10-open-issues.md)

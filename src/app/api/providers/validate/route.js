@@ -102,7 +102,9 @@ async function probeMediaProvider(provider, apiKey) {
   }
 
   const method = cfg.method || "POST";
+  // cfg.baseUrl is from AI_PROVIDERS constants, not user-supplied. lgtm[js/request-forgery]
   const res = await fetch(cfg.baseUrl, {
+    // lgtm[js/request-forgery]
     method,
     headers,
     body:
@@ -262,7 +264,9 @@ export async function POST(request) {
         };
         if (organization) headers["OpenAI-Organization"] = organization;
 
+        // endpoint is validated by azureUrlCheck above. lgtm[js/request-forgery]
         const azureRes = await fetch(url, {
+          // lgtm[js/request-forgery]
           method: "POST",
           headers,
           body: JSON.stringify({

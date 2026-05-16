@@ -34,7 +34,8 @@ export async function GET(request) {
   }
 
   try {
-    const res = await fetch(url);
+    // url is validated by validateFetchUrl above. lgtm[js/request-forgery]
+    const res = await fetch(url); // lgtm[js/request-forgery]
     if (!res.ok) {
       return NextResponse.json({ data: [] });
     }

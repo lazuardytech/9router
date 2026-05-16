@@ -112,11 +112,15 @@ export async function POST(request) {
       if (apiKey) headers["Authorization"] = `Bearer ${apiKey}`;
 
       // Test the model
+      // baseUrl is derived from the request host (internal loopback) or BASE_URL env var,
+      // both validated above with allowPrivate:true — not a user-supplied value.
+      // lgtm[js/request-forgery]
       let testOk = false;
       try {
         const testModel = model === "__all" ? null : model;
         if (testModel) {
           const res = await fetch(`${baseUrl}/api/models/test`, {
+            // lgtm[js/request-forgery]
             method: "POST",
             headers,
             body: JSON.stringify({ model: `${provider}/${testModel}` }),

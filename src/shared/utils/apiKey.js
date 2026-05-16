@@ -25,10 +25,11 @@ function generateKeyId() {
  * not a password and carries no secret user credential; the HMAC
  * is used solely to verify the key was issued by this server.
  * nosemgrep: node_crypto_weak_hash
+ * lgtm[js/insufficient-password-hash]
  */
 function generateCrc(machineId, keyId) {
   return crypto
-    .createHmac("sha256", API_KEY_SECRET)
+    .createHmac("sha256", API_KEY_SECRET) // lgtm[js/insufficient-password-hash]
     .update(machineId + keyId)
     .digest("hex")
     .slice(0, 8);

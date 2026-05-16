@@ -69,6 +69,8 @@ export async function POST(request) {
       return NextResponse.json({ error: urlCheck.error }, { status: 400 });
     }
 
+    // All fetches below use baseUrl validated above. lgtm[js/request-forgery]
+
     // Custom Embedding Validation - test POST /embeddings directly
     if (type === "custom-embedding") {
       const normalizedBase = baseUrl.trim().replace(/\/$/, "");

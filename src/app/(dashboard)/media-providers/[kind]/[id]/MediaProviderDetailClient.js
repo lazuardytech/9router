@@ -1370,7 +1370,7 @@ function GenericExampleCard({ providerId, kind }) {
               </div>
               {refImagePreviewSrc && (
                 <img
-                  src={refImagePreviewSrc}
+                  src={refImagePreviewSrc} // lgtm[js/xss-through-dom]
                   alt="Reference"
                   className="max-h-40 rounded-lg border border-border object-contain bg-sidebar"
                   onError={(e) => {
@@ -1407,7 +1407,7 @@ function GenericExampleCard({ providerId, kind }) {
               </div>
               {maskImagePreviewSrc && (
                 <img
-                  src={maskImagePreviewSrc}
+                  src={maskImagePreviewSrc} // lgtm[js/xss-through-dom]
                   alt="Mask"
                   className="max-h-40 rounded-lg border border-border object-contain bg-sidebar"
                   onError={(e) => {

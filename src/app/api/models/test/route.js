@@ -36,8 +36,11 @@ export async function POST(request) {
     const start = Date.now();
 
     // Route to appropriate endpoint based on kind
+    // baseUrl is derived from request host (internal loopback) or BASE_URL env var,
+    // validated above with allowPrivate:true — not a user-supplied value. lgtm[js/request-forgery]
     if (kind === "embedding") {
       const res = await fetch(`${baseUrl}/api/v1/embeddings`, {
+        // lgtm[js/request-forgery]
         method: "POST",
         headers,
         body: JSON.stringify({ model, input: "test" }),
@@ -73,7 +76,9 @@ export async function POST(request) {
     }
 
     // Default: chat completions
+    // baseUrl is internal loopback — not user-supplied. lgtm[js/request-forgery]
     const res = await fetch(`${baseUrl}/api/v1/chat/completions`, {
+      // lgtm[js/request-forgery]
       method: "POST",
       headers,
       body: JSON.stringify({

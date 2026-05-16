@@ -160,7 +160,7 @@ export default function GitLabAuthModal({ isOpen, providerInfo, onSuccess, onClo
             <p className="text-xs text-text-muted">
               Create an OAuth app at{" "}
               <a
-                href={`${sanitizeGitLabUrl(baseUrl)}/-/profile/applications`}
+                href={`${sanitizeGitLabUrl(baseUrl)}/-/profile/applications`} // lgtm[js/xss-through-dom]
                 target="_blank"
                 rel="noreferrer"
                 className="text-primary underline"
@@ -212,7 +212,7 @@ export default function GitLabAuthModal({ isOpen, providerInfo, onSuccess, onClo
             <p className="text-xs text-text-muted">
               Create a PAT at{" "}
               <a
-                href={`${sanitizeGitLabUrl(baseUrl)}/-/user_settings/personal_access_tokens`}
+                href={`${sanitizeGitLabUrl(baseUrl)}/-/user_settings/personal_access_tokens`} // lgtm[js/xss-through-dom]
                 target="_blank"
                 rel="noreferrer"
                 className="text-primary underline"

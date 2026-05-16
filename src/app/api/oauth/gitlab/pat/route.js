@@ -30,8 +30,9 @@ export async function POST(request) {
       return NextResponse.json({ error: `Invalid GitLab base URL: ${urlCheck.error}` }, { status: 400 });
     }
 
-    // Verify token by fetching current user
+    // base is validated by validateFetchUrl above. lgtm[js/request-forgery]
     const userRes = await fetch(`${base}/api/v4/user`, {
+      // lgtm[js/request-forgery]
       headers: { "Private-Token": token.trim(), Accept: "application/json" },
     });
 

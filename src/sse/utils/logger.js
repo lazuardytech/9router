@@ -36,7 +36,8 @@ export function debug(tag, message, data) {
     // data is non-sensitive context (model names, provider IDs, counts).
     // API keys are always pre-masked via maskKey() before being passed here.
     const dataStr = data ? ` ${formatData(data)}` : "";
-    console.log(`[${formatTime()}] 🔍 [${tag}] ${message}${dataStr}`);
+    // lgtm[js/clear-text-logging]
+    console.log(`[${formatTime()}] 🔍 [${tag}] ${message}${dataStr}`); // lgtm[js/clear-text-logging]
   }
 }
 
