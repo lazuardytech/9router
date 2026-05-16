@@ -1,49 +1,50 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
-import { useParams, useRouter } from "next/navigation";
-import Link from "next/link";
 import Image from "next/image";
+import Link from "next/link";
+import { useParams, useRouter } from "next/navigation";
+import { useCallback, useEffect, useState } from "react";
 import {
-  Card,
-  Button,
   Badge,
-  Input,
-  Modal,
+  Button,
+  Card,
   CardSkeleton,
-  OAuthModal,
-  KiroOAuthWrapper,
   CursorAuthModal,
-  IFlowCookieModal,
-  GitLabAuthModal,
-  Toggle,
-  Select,
   EditConnectionModal,
+  GitLabAuthModal,
+  IFlowCookieModal,
+  Input,
+  KiroOAuthWrapper,
+  Modal,
   NoAuthProxyCard,
+  OAuthModal,
+  Select,
+  Toggle,
 } from "@/shared/components";
 import { ConfirmModal } from "@/shared/components/Modal";
+import { getModelsByProviderId } from "@/shared/constants/models";
 import {
-  OAUTH_PROVIDERS,
+  AI_PROVIDERS,
   APIKEY_PROVIDERS,
   FREE_PROVIDERS,
   FREE_TIER_PROVIDERS,
-  WEB_COOKIE_PROVIDERS,
   getProviderAlias,
-  isOpenAICompatibleProvider,
   isAnthropicCompatibleProvider,
-  AI_PROVIDERS,
+  isCustomEmbeddingProvider,
+  isOpenAICompatibleProvider,
+  OAUTH_PROVIDERS,
   THINKING_CONFIG,
+  WEB_COOKIE_PROVIDERS,
 } from "@/shared/constants/providers";
-import { getModelsByProviderId } from "@/shared/constants/models";
 import { useCopyToClipboard } from "@/shared/hooks/useCopyToClipboard";
 import { fetchSuggestedModels } from "@/shared/utils/providerModelsFetcher";
-import ModelRow from "./ModelRow";
-import PassthroughModelsSection from "./PassthroughModelsSection";
+import AddApiKeyModal from "./AddApiKeyModal";
+import AddCustomModelModal from "./AddCustomModelModal";
 import CompatibleModelsSection from "./CompatibleModelsSection";
 import ConnectionRow from "./ConnectionRow";
-import AddApiKeyModal from "./AddApiKeyModal";
 import EditCompatibleNodeModal from "./EditCompatibleNodeModal";
-import AddCustomModelModal from "./AddCustomModelModal";
+import ModelRow from "./ModelRow";
+import PassthroughModelsSection from "./PassthroughModelsSection";
 
 export default function ProviderDetailPage() {
   const params = useParams();
@@ -114,7 +115,8 @@ export default function ProviderDetailPage() {
 
   const isOpenAICompatible = isOpenAICompatibleProvider(providerId);
   const isAnthropicCompatible = isAnthropicCompatibleProvider(providerId);
-  const isCompatible = isOpenAICompatible || isAnthropicCompatible;
+  const isCustomEmbedding = isCustomEmbeddingProvider(providerId);
+  const isCompatible = isOpenAICompatible || isAnthropicCompatible || isCustomEmbedding;
   const thinkingConfig = AI_PROVIDERS[providerId]?.thinkingConfig || THINKING_CONFIG.extended;
 
   const providerStorageAlias = isCompatible ? providerId : providerAlias;
@@ -1000,7 +1002,7 @@ export default function ProviderDetailPage() {
         </div>
       )}
 
-      {isCompatible && providerNode && (
+      {(isCompatible || providerNode) && providerNode && (
         <Card>
           <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
             <div className="min-w-0">

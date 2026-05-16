@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useEffect } from "react";
 import PropTypes from "prop-types";
-import { Button, Badge, Input, Modal, Select } from "@/shared/components";
+import { useEffect, useState } from "react";
+import { Badge, Button, Input, Modal, Select } from "@/shared/components";
 
 // Type prefix that must be preserved on rename so isOpenAICompatibleProvider()
 // / isAnthropicCompatibleProvider() keep classifying the node correctly.
@@ -94,7 +94,7 @@ export default function EditCompatibleNodeModal({ isOpen, node, onSave, onRename
   const trimmedId = formData.identifier.trim();
   const idChanged = trimmedId && trimmedId !== node.id;
   const idLooksValid =
-    trimmedId && /^[a-zA-Z0-9_.\-]+$/.test(trimmedId) && (!idPrefix || trimmedId.startsWith(idPrefix));
+    trimmedId && /^[a-zA-Z0-9_.-]+$/.test(trimmedId) && (!idPrefix || trimmedId.startsWith(idPrefix));
 
   const handleRename = async () => {
     if (!onRename || !idChanged || !idLooksValid) return;
@@ -120,30 +120,31 @@ export default function EditCompatibleNodeModal({ isOpen, node, onSave, onRename
           hint="Required. A friendly label for this node."
         />
         <div className="flex flex-col gap-1">
-          <div className="flex gap-2 items-end">
+          <label className="text-[12px] font-medium text-text-muted">Identifier</label>
+          <div className="flex gap-2">
             <Input
-              label="Identifier"
               value={formData.identifier}
               onChange={(e) => setFormData({ ...formData, identifier: e.target.value })}
-              hint={
-                idPrefix
-                  ? `Editable. Must start with "${idPrefix}". Renames cascade across connections, history, combos, and aliases.`
-                  : "Editable. Renames cascade across connections, history, combos, and aliases."
-              }
               inputClassName="font-mono text-[12px]"
               className="flex-1"
             />
-            <div>
-              <Button onClick={handleRename} disabled={!idChanged || !idLooksValid || renaming} variant="secondary">
-                {renaming ? "Renaming..." : "Rename"}
-              </Button>
-            </div>
+            <Button
+              onClick={handleRename}
+              disabled={!idChanged || !idLooksValid || renaming}
+              variant="secondary"
+              size="md"
+            >
+              {renaming ? "Renaming..." : "Rename"}
+            </Button>
           </div>
           {renameError && <span className="text-[11px] text-error">{renameError}</span>}
-          {idChanged && !renameError && idLooksValid && (
+          {!renameError && idChanged && idLooksValid && (
             <span className="text-[11px] text-text-muted">
               Press Rename to apply. The page will redirect to the new identifier.
             </span>
+          )}
+          {!renameError && !idChanged && idPrefix && (
+            <span className="text-[11px] text-text-subtle">Must start with "{idPrefix}"</span>
           )}
         </div>
         <Input
