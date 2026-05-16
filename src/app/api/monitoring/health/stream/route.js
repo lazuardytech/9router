@@ -10,7 +10,7 @@ export const dynamic = "force-dynamic";
 export async function GET(request) {
   let closed = false;
   const encoder = new TextEncoder();
-  const INTERVAL_MS = 5000;
+  const INTERVAL_MS = 2000;
   const HEARTBEAT_MS = 25000;
 
   const stream = new ReadableStream({

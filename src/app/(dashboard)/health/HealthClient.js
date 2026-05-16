@@ -101,14 +101,7 @@ export default function HealthPage() {
   }, []);
 
   if (!data && !error) {
-    return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <div className="text-center">
-          <span className="material-symbols-outlined text-[32px] text-fog-grey animate-spin">progress_activity</span>
-          <p className="text-[13px] text-storm-cloud mt-3">Loading health data...</p>
-        </div>
-      </div>
-    );
+    return null;
   }
 
   if (error && !data) {
