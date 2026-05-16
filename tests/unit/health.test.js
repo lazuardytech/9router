@@ -154,6 +154,7 @@ describe("GET /api/monitoring/health (integration)", () => {
         semanticCacheMaxSize: 100,
         semanticCacheTTL: 1800000,
       }),
+      getProviderNodes: async () => [],
     }));
 
     const mod = await import("@/app/api/monitoring/health/route.js");
@@ -281,6 +282,7 @@ describe("GET /api/monitoring/health — degraded DB", () => {
       getCombos: async () => [],
       getApiKeys: async () => [],
       getSettings: async () => ({}),
+      getProviderNodes: async () => [],
     }));
 
     const mod = await import("@/app/api/monitoring/health/route.js");
@@ -316,6 +318,7 @@ describe("GET /api/monitoring/health — SQLite unavailable", () => {
       getCombos: async () => [],
       getApiKeys: async () => [],
       getSettings: async () => ({}),
+      getProviderNodes: async () => [],
     }));
 
     const mod = await import("@/app/api/monitoring/health/route.js");
@@ -371,6 +374,7 @@ describe("GET /api/monitoring/health — localDb partial failure", () => {
       getCombos: async () => [],
       getApiKeys: async () => [],
       getSettings: async () => ({}),
+      getProviderNodes: async () => [],
     }));
 
     const mod = await import("@/app/api/monitoring/health/route.js");

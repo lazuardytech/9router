@@ -51,6 +51,8 @@ export default function HealthPage() {
   const telemetryRef = useRef(null);
   const [error, setError] = useState(null);
   const [lastRefresh, setLastRefresh] = useState(null);
+  const [refreshing, setRefreshing] = useState(false);
+  const [clearingLock, setClearingLock] = useState(null);
 
   const fetchHealth = useCallback(async () => {
     try {
@@ -113,15 +115,18 @@ export default function HealthPage() {
               Updated {lastRefresh.toLocaleTimeString()}
             </span>
           )}
-          <Button
-            size="sm"
-            variant="outline"
-            icon="refresh"
-            onClick={() => {
-              fetchHealth();
-              telemetryRef.current?.refresh();
+          <button
+            onClick={async () => {
+              setRefreshing(true);
+              await Promise.all([fetchHealth(), telemetryRef.current?.refresh()]);
+              setRefreshing(false);
             }}
-          />
+            disabled={refreshing}
+            className="flex items-center justify-center size-7 rounded-[4px] border border-charcoal-grey text-storm-cloud hover:bg-deep-slate hover:text-porcelain transition-colors duration-100 disabled:opacity-50 disabled:cursor-not-allowed"
+            title="Refresh"
+          >
+            <span className={`material-symbols-outlined text-[15px] ${refreshing ? "animate-spin" : ""}`}>refresh</span>
+          </button>
         </div>
       </div>
 
@@ -341,7 +346,7 @@ export default function HealthPage() {
                           <div className="flex items-center gap-2 flex-wrap">
                             <div className="w-4 h-4 shrink-0 rounded-[3px] bg-white flex items-center justify-center overflow-hidden">
                               <ProviderIcon
-                                src={`/providers/${p.provider}.png`}
+                                src={`/providers/${p.providerPrefix || p.provider}.png`}
                                 alt={p.providerName}
                                 size={16}
                                 fallbackText={p.providerName?.slice(0, 2).toUpperCase()}
@@ -381,7 +386,7 @@ export default function HealthPage() {
                           <span className="size-2 rounded-full bg-emerald shrink-0" />
                           <div className="w-4 h-4 shrink-0 rounded-[3px] bg-white flex items-center justify-center overflow-hidden">
                             <ProviderIcon
-                              src={`/providers/${p.provider}.png`}
+                              src={`/providers/${p.providerPrefix || p.provider}.png`}
                               alt={p.providerName}
                               size={16}
                               fallbackText={p.providerName?.slice(0, 2).toUpperCase()}
@@ -442,9 +447,23 @@ export default function HealthPage() {
       <div className="rounded-[6px] border border-charcoal-grey bg-graphite p-5">
         <SectionHeader icon="lock" title="Model Lockout Status">
           {data.blockedModelStatus?.length > 0 && (
-            <span className="text-[11px] text-fog-grey">
-              {data.blockedModelStatus.length} model{data.blockedModelStatus.length !== 1 ? "s" : ""} locked
-            </span>
+            <div className="flex items-center gap-2">
+              <span className="text-[11px] text-fog-grey">
+                {data.blockedModelStatus.length} model{data.blockedModelStatus.length !== 1 ? "s" : ""} locked
+              </span>
+              <button
+                onClick={async () => {
+                  setRefreshing(true);
+                  await fetchHealth();
+                  setRefreshing(false);
+                }}
+                disabled={refreshing}
+                className="flex items-center justify-center size-7 rounded-[4px] border border-charcoal-grey text-storm-cloud hover:bg-deep-slate hover:text-porcelain transition-colors duration-100 disabled:opacity-50 disabled:cursor-not-allowed"
+                title="Refresh lockout status"
+              >
+                <span className={`material-symbols-outlined text-[15px] ${refreshing ? "animate-spin" : ""}`}>refresh</span>
+              </button>
+            </div>
           )}
         </SectionHeader>
         {!data.blockedModelStatus?.length ? (
@@ -460,9 +479,36 @@ export default function HealthPage() {
                   >
                     {bm.model === "__all" ? "(all models)" : bm.model}
                   </span>
-                  <Badge variant="error" size="sm">
-                    {bm.blockedCount} locked
-                  </Badge>
+                  <div className="flex items-center gap-1.5 shrink-0">
+                    <Badge variant="error" size="sm">
+                      {bm.blockedCount} locked
+                    </Badge>
+                    <button
+                      onClick={async () => {
+                        const key = `${bm.model}`;
+                        setClearingLock(key);
+                        try {
+                          await Promise.all(
+                            bm.connections.map((c) =>
+                              fetch("/api/models/availability", {
+                                method: "POST",
+                                headers: { "Content-Type": "application/json" },
+                                body: JSON.stringify({ action: "clearCooldown", provider: c.provider, model: bm.model }),
+                              }),
+                            ),
+                          );
+                          await fetchHealth();
+                        } finally {
+                          setClearingLock(null);
+                        }
+                      }}
+                      disabled={clearingLock !== null}
+                      className="flex items-center justify-center size-7 rounded-[4px] border border-charcoal-grey text-storm-cloud hover:bg-deep-slate hover:text-porcelain transition-colors duration-100 disabled:opacity-50 disabled:cursor-not-allowed"
+                      title="Clear lockout and recheck"
+                    >
+                      <span className={`material-symbols-outlined text-[15px] ${clearingLock !== null ? "animate-spin" : ""}`}>lock_open</span>
+                    </button>
+                  </div>
                 </div>
                 <div className="space-y-1">
                   {bm.connections.map((c) => (

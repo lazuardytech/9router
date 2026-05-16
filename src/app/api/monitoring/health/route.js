@@ -1,9 +1,9 @@
 import os from "node:os";
 import { NextResponse } from "next/server";
-import { getApiKeys, getCombos, getProviderConnections, getSettings } from "@/lib/localDb.js";
+import { getApiKeys, getCombos, getProviderConnections, getProviderNodes, getSettings } from "@/lib/localDb.js";
 import { getDatabase } from "@/lib/sqlite/connection.js";
 import { getQueueDepths } from "@/lib/usageDb.js";
-import { AI_PROVIDERS } from "@/shared/constants/providers.js";
+import { AI_PROVIDERS, isAnthropicCompatibleProvider, isCustomEmbeddingProvider, isOpenAICompatibleProvider } from "@/shared/constants/providers.js";
 
 const START_TIME = globalThis.__pod_start_time ?? (globalThis.__pod_start_time = Date.now());
 
@@ -46,17 +46,19 @@ export async function GET() {
   const system = getSystemInfo();
   const database = getDbInfo();
 
-  const [connections, combos, apiKeys, settings] = await Promise.allSettled([
+  const [connections, combos, apiKeys, settings, providerNodesResult] = await Promise.allSettled([
     getProviderConnections(),
     getCombos(),
     getApiKeys(),
     getSettings(),
+    getProviderNodes(),
   ]);
 
   const conns = connections.status === "fulfilled" ? connections.value : [];
   const comboList = combos.status === "fulfilled" ? combos.value : [];
   const keys = apiKeys.status === "fulfilled" ? apiKeys.value : [];
   const cfg = settings.status === "fulfilled" ? settings.value : {};
+  const nodeMap = new Map((providerNodesResult.status === "fulfilled" ? providerNodesResult.value : []).map((n) => [n.id, n]));
 
   const providers = {
     total: conns.length,
@@ -88,11 +90,15 @@ export async function GET() {
     if (isRateLimited) state = "OPEN";
     else if (c.testStatus === "error") state = "HALF_OPEN";
     const providerInfo = AI_PROVIDERS[c.provider];
+    const isCompatible = isOpenAICompatibleProvider(c.provider) || isAnthropicCompatibleProvider(c.provider) || isCustomEmbeddingProvider(c.provider);
+    const node = isCompatible ? nodeMap.get(c.provider) : null;
     const key = c.provider;
     if (!providerHealthMap[key]) {
       providerHealthMap[key] = {
         provider: c.provider,
-        providerName: providerInfo?.name || c.provider,
+        providerName: node?.name || providerInfo?.name || c.provider,
+        providerPrefix: node?.prefix || null,
+        isCompatible,
         state: "CLOSED",
         retryAfterMs: 0,
         rateLimitedUntil: null,
