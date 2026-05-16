@@ -239,7 +239,7 @@ export default function ConsoleLogClient({ autoScroll, setAutoScroll, clearRef, 
       </div>
 
       {/* Terminal */}
-      <div className="h-[368px] rounded-[6px] border border-charcoal-grey bg-pitch-black overflow-hidden flex flex-col">
+      <div className="h-[70vh] rounded-[6px] border border-charcoal-grey bg-pitch-black overflow-hidden flex flex-col">
         <div className="flex items-center gap-2 px-3 py-2 border-b border-charcoal-grey bg-graphite shrink-0">
           <span className="text-[11px] text-fog-grey font-mono">console — pod</span>
           <span className="ml-auto text-[10px] text-fog-grey">
