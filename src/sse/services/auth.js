@@ -288,6 +288,17 @@ export async function markAccountUnavailable(
   }
   if (!shouldFallback) return { shouldFallback: false, cooldownMs: 0 };
 
+  // Apply minimum lockout time from settings (default 0 = no minimum enforced)
+  const settingsData = await getSettings().catch(() => ({}));
+  const minimumLockoutMinutes = Number(settingsData.minimumLockoutMinutes) || 0;
+  if (minimumLockoutMinutes > 0) {
+    const minimumLockoutMs = minimumLockoutMinutes * 60 * 1000;
+    // Multiply minimum by backoff level (1x, 2x, 3x, ...) — level 0/1 = 1x
+    const backoffMultiplier = Math.max(1, (newBackoffLevel ?? backoffLevel) || 1);
+    const effectiveMinimumMs = minimumLockoutMs * backoffMultiplier;
+    cooldownMs = Math.max(effectiveMinimumMs, cooldownMs);
+  }
+
   const reason = typeof errorText === "string" ? errorText.slice(0, 100) : "Provider error";
   const lockUpdate = buildModelLockUpdate(model, cooldownMs);
 

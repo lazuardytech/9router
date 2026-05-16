@@ -283,6 +283,20 @@ export default function ProfilePage() {
     }
   };
 
+  const updateMinimumLockout = async (minutes) => {
+    const val = Math.max(1, parseInt(minutes, 10) || 60);
+    try {
+      const res = await fetch("/api/settings", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ minimumLockoutMinutes: val }),
+      });
+      if (res.ok) setSettings((prev) => ({ ...prev, minimumLockoutMinutes: val }));
+    } catch (err) {
+      console.error("Failed to update minimum lockout:", err);
+    }
+  };
+
   const updateRequireLogin = async (requireLogin) => {
     try {
       const res = await fetch("/api/settings", {
@@ -576,6 +590,21 @@ export default function ProfilePage() {
                 />
               </SettingRow>
             )}
+
+            <SettingRow
+              label="Minimum Lockout Time"
+              description="Minimum lockout duration per error (minutes). Doubles on each consecutive failure: 1x, 2x, 3x..."
+              border
+            >
+              <Input
+                type="number"
+                min="1"
+                value={settings.minimumLockoutMinutes ?? 60}
+                onChange={(e) => updateMinimumLockout(e.target.value)}
+                disabled={loading}
+                className="w-20 text-center shrink-0"
+              />
+            </SettingRow>
 
             <p className="text-[12px] text-storm-cloud pt-3 border-t border-charcoal-grey">
               {settings.fallbackStrategy === "round-robin"
