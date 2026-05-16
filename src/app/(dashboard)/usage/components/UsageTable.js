@@ -2,7 +2,6 @@
 
 import PropTypes from "prop-types";
 import { Fragment, useCallback, useEffect, useMemo, useState } from "react";
-import Badge from "@/shared/components/Badge";
 import Card from "@/shared/components/Card";
 
 const fmt = (n) => new Intl.NumberFormat().format(n || 0);

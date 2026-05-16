@@ -43,7 +43,7 @@ export default function ProxyLogsTab({ sortBy, setSortBy, live, setLive, onRefre
   const [testResults, setTestResults] = useState({});
   const [selectedPool, setSelectedPool] = useState(null);
   const [internalPools, setInternalPools] = useState([]);
-  const [connected, setConnected] = useState(false);
+  const [_connected, setConnected] = useState(false);
 
   const esRef = useRef(null);
   const liveRef = useRef(live);

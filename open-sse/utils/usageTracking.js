@@ -269,7 +269,7 @@ export function estimateInputTokens(body) {
 
     // Estimate: ~4 chars per token (rough average across all tokenizers)
     return Math.ceil(totalChars / 4);
-  } catch (err) {
+  } catch (_err) {
     // Fallback if stringify fails
     return 0;
   }

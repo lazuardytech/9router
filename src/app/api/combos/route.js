@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { createCombo, getComboByName, getCombos, reorderCombos, updateCombo } from "@/lib/localDb";
+import { createCombo, getComboByName, getCombos, reorderCombos } from "@/lib/localDb";
 
 export const dynamic = "force-dynamic";
 

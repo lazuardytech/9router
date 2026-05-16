@@ -1,13 +1,12 @@
-import { execSync, spawn } from "child_process";
+import { execSync, spawn } from "node:child_process";
 import fs from "fs";
-import os from "os";
-import path from "path";
+import os from "node:os";
+import path from "node:path";
 import { DATA_DIR } from "@/lib/dataDir.js";
-import { clearTailscalePid, loadTailscalePid, saveTailscalePid } from "./state.js";
 
 const BIN_DIR = path.join(DATA_DIR, "bin");
 const IS_MAC = os.platform() === "darwin";
-const IS_LINUX = os.platform() === "linux";
+const _IS_LINUX = os.platform() === "linux";
 const IS_WINDOWS = os.platform() === "win32";
 const TAILSCALE_BIN = path.join(BIN_DIR, IS_WINDOWS ? "tailscale.exe" : "tailscale");
 
@@ -27,7 +26,7 @@ function getTailscaleBin() {
       windowsHide: true,
     }).trim();
     if (systemPath) return systemPath;
-  } catch (e) {
+  } catch (_e) {
     /* not in PATH */
   }
   if (fs.existsSync(TAILSCALE_BIN)) return TAILSCALE_BIN;
@@ -57,7 +56,7 @@ export function isTailscaleLoggedIn() {
     const json = JSON.parse(out);
     // BackendState "Running" means fully logged in and connected
     return json.BackendState === "Running";
-  } catch (e) {
+  } catch (_e) {
     return false;
   }
 }
@@ -72,7 +71,7 @@ export function isTailscaleRunning() {
     });
     const json = JSON.parse(out);
     return Object.keys(json.AllowFunnel || {}).length > 0;
-  } catch (e) {
+  } catch (_e) {
     return false;
   }
 }
@@ -86,7 +85,7 @@ export function getTailscaleFunnelUrl(port) {
     const json = JSON.parse(out);
     const dnsName = json.Self?.DNSName?.replace(/\.$/, "");
     if (dnsName) return `https://${dnsName}`;
-  } catch (e) {
+  } catch (_e) {
     /* ignore */
   }
   return null;
@@ -458,7 +457,7 @@ export async function startFunnel(port) {
   // Reset any existing funnel
   try {
     execSync(`"${bin}" ${SOCKET_FLAG.join(" ")} funnel --bg reset`, { stdio: "ignore", windowsHide: true });
-  } catch (e) {
+  } catch (_e) {
     /* ignore */
   }
 
@@ -537,7 +536,7 @@ export function stopFunnel() {
   if (!bin) return;
   try {
     execSync(`"${bin}" ${SOCKET_FLAG.join(" ")} funnel --bg reset`, { stdio: "ignore", windowsHide: true });
-  } catch (e) {
+  } catch (_e) {
     /* ignore */
   }
 }

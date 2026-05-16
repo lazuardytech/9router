@@ -11,7 +11,6 @@ function isLLMProvider(id) {
   return p.serviceKinds.includes("llm");
 }
 
-import OverviewCards from "@/app/(dashboard)/usage/components/OverviewCards";
 import ProviderTopology from "@/app/(dashboard)/usage/components/ProviderTopology";
 import UsageChart from "@/app/(dashboard)/usage/components/UsageChart";
 import UsageTable, { fmt, fmtTime } from "@/app/(dashboard)/usage/components/UsageTable";
@@ -417,7 +416,6 @@ export default function UsageStats({ period: periodProp, setPeriod: setPeriodPro
           ),
         };
       }
-      case "endpoint":
       default: {
         return {
           columns: ENDPOINT_COLUMNS,

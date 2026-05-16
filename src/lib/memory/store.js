@@ -1,4 +1,4 @@
-import crypto from "crypto";
+import crypto from "node:crypto";
 import { LRUCache } from "../cacheLayer.js";
 import { getDatabase } from "../sqlite/connection.js";
 import { MEMORY_TYPES, MemoryType } from "./types.js";

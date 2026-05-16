@@ -49,7 +49,7 @@ export class GitHubService extends OAuthService {
     try {
       const open = (await import("open")).default;
       await open(verificationUri);
-    } catch (error) {
+    } catch (_error) {
       console.log("Could not open browser automatically. Please visit the URL above manually.");
     }
 

@@ -1,5 +1,5 @@
-import dns from "dns";
-import net from "net";
+import dns from "node:dns";
+import net from "node:net";
 import { HEALTH_CHECK, INTERNET_CHECK } from "./tunnelConfig.js";
 
 // Force public DNS to bypass OS negative cache (mDNSResponder holds NXDOMAIN)

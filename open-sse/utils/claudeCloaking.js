@@ -1,5 +1,5 @@
-import { createHash, randomBytes, randomUUID } from "crypto";
-import { CC_DEFAULT_TOOLS, CLAUDE_TOOL_SUFFIX } from "../config/appConstants.js";
+import { createHash, randomBytes, randomUUID } from "node:crypto";
+import { CLAUDE_TOOL_SUFFIX } from "../config/appConstants.js";
 
 const CLAUDE_VERSION = "2.1.92";
 const CC_ENTRYPOINT = "sdk-cli";

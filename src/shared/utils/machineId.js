@@ -13,7 +13,7 @@ export async function getConsistentMachineId(salt = null) {
   try {
     const rawMachineId = machineIdSync();
     // Create consistent ID using salt
-    const crypto = await import("crypto");
+    const crypto = await import("node:crypto");
     const hashedMachineId = crypto
       .createHash("sha256")
       .update(rawMachineId + saltValue)
@@ -27,7 +27,7 @@ export async function getConsistentMachineId(salt = null) {
       ? crypto.randomUUID()
       : "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, (c) => {
           const r = (Math.random() * 16) | 0;
-          const v = c == "x" ? r : (r & 0x3) | 0x8;
+          const v = c === "x" ? r : (r & 0x3) | 0x8;
           return v.toString(16);
         });
   }
@@ -48,7 +48,7 @@ export async function getRawMachineId() {
       ? crypto.randomUUID()
       : "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, (c) => {
           const r = (Math.random() * 16) | 0;
-          const v = c == "x" ? r : (r & 0x3) | 0x8;
+          const v = c === "x" ? r : (r & 0x3) | 0x8;
           return v.toString(16);
         });
   }

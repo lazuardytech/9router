@@ -1,5 +1,5 @@
 import fs from "fs";
-import path from "path";
+import path from "node:path";
 import { DATA_DIR } from "@/lib/dataDir.js";
 
 const TUNNEL_DIR = path.join(DATA_DIR, "tunnel");
@@ -18,7 +18,7 @@ export function loadState() {
     if (fs.existsSync(STATE_FILE)) {
       return JSON.parse(fs.readFileSync(STATE_FILE, "utf8"));
     }
-  } catch (e) {
+  } catch (_e) {
     /* ignore corrupt state */
   }
   return null;
@@ -32,7 +32,7 @@ export function saveState(state) {
 export function clearState() {
   try {
     if (fs.existsSync(STATE_FILE)) fs.unlinkSync(STATE_FILE);
-  } catch (e) {
+  } catch (_e) {
     /* ignore */
   }
 }
@@ -48,7 +48,7 @@ export function loadPid() {
     if (fs.existsSync(CLOUDFLARED_PID_FILE)) {
       return parseInt(fs.readFileSync(CLOUDFLARED_PID_FILE, "utf8"));
     }
-  } catch (e) {
+  } catch (_e) {
     /* ignore */
   }
   return null;
@@ -57,7 +57,7 @@ export function loadPid() {
 export function clearPid() {
   try {
     if (fs.existsSync(CLOUDFLARED_PID_FILE)) fs.unlinkSync(CLOUDFLARED_PID_FILE);
-  } catch (e) {
+  } catch (_e) {
     /* ignore */
   }
 }
@@ -73,7 +73,7 @@ export function loadTailscalePid() {
     if (fs.existsSync(TAILSCALE_PID_FILE)) {
       return parseInt(fs.readFileSync(TAILSCALE_PID_FILE, "utf8"));
     }
-  } catch (e) {
+  } catch (_e) {
     /* ignore */
   }
   return null;
@@ -82,7 +82,7 @@ export function loadTailscalePid() {
 export function clearTailscalePid() {
   try {
     if (fs.existsSync(TAILSCALE_PID_FILE)) fs.unlinkSync(TAILSCALE_PID_FILE);
-  } catch (e) {
+  } catch (_e) {
     /* ignore */
   }
 }

@@ -305,7 +305,7 @@ export function getDefaultPricing() {
  * @returns {string}
  */
 export function formatCost(cost) {
-  if (cost === null || cost === undefined || isNaN(cost)) return "$0.00";
+  if (cost === null || cost === undefined || Number.isNaN(cost)) return "$0.00";
   return `$${cost.toFixed(2)}`;
 }
 

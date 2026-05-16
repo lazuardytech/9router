@@ -1,4 +1,4 @@
-import { EventEmitter } from "events";
+import { EventEmitter } from "node:events";
 import { CONSOLE_LOG_CONFIG } from "@/shared/constants/config.js";
 
 const consoleLevels = ["log", "info", "warn", "error", "debug"];

@@ -61,8 +61,8 @@ async function getObservabilityConfig() {
 let writeBuffer = [];
 let flushTimer = null;
 let isFlushing = false;
-const estimatedDbSize = 0;
-const flushCount = 0;
+const _estimatedDbSize = 0;
+const _flushCount = 0;
 
 function sanitizeHeaders(headers) {
   if (!headers || typeof headers !== "object") return {};

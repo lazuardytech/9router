@@ -13,7 +13,7 @@ async function ensureNodeModules() {
   if (!isNode || !LOGGING_ENABLED || fs) return;
   try {
     fs = await import("fs");
-    path = await import("path");
+    path = await import("node:path");
     LOGS_DIR = path.join(typeof process !== "undefined" && process.cwd ? process.cwd() : ".", "logs");
   } catch {
     // Running in non-Node environment (Worker, Browser, etc.)
@@ -187,7 +187,7 @@ export async function createRequestLogger(sourceFormat, targetFormat, model) {
       try {
         const filePath = path.join(sessionPath, "5_res_provider.txt");
         fs.appendFileSync(filePath, chunk);
-      } catch (err) {
+      } catch (_err) {
         // Ignore append errors
       }
     },
@@ -198,7 +198,7 @@ export async function createRequestLogger(sourceFormat, targetFormat, model) {
       try {
         const filePath = path.join(sessionPath, "6_res_openai.txt");
         fs.appendFileSync(filePath, chunk);
-      } catch (err) {
+      } catch (_err) {
         // Ignore append errors
       }
     },
@@ -217,7 +217,7 @@ export async function createRequestLogger(sourceFormat, targetFormat, model) {
       try {
         const filePath = path.join(sessionPath, "7_res_client.txt");
         fs.appendFileSync(filePath, chunk);
-      } catch (err) {
+      } catch (_err) {
         // Ignore append errors
       }
     },

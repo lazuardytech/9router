@@ -1,4 +1,4 @@
-import crypto from "crypto";
+import crypto from "node:crypto";
 
 const DEFAULT_MAX_ENTRIES = 50;
 const DEFAULT_MAX_BYTES = 2 * 1024 * 1024;

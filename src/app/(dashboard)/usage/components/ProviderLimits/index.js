@@ -37,7 +37,7 @@ export default function ProviderLimits() {
     const stored = window.localStorage.getItem(AUTO_REFRESH_STORAGE_KEY);
     return stored === null ? true : stored === "true";
   });
-  const [lastUpdated, setLastUpdated] = useState(() => {
+  const [_lastUpdated, setLastUpdated] = useState(() => {
     if (typeof window === "undefined") return null;
     const cached = window.localStorage.getItem(QUOTA_CACHE_KEY);
     if (cached) {
@@ -458,11 +458,11 @@ export default function ProviderLimits() {
   const selectedProviderLabel = providerFilter === "all" ? "All providers" : providerFilter;
 
   // Calculate summary stats
-  const totalProviders = sortedConnections.length;
-  const activeWithLimits = Object.values(quotaData).filter((data) => data?.quotas?.length > 0).length;
+  const _totalProviders = sortedConnections.length;
+  const _activeWithLimits = Object.values(quotaData).filter((data) => data?.quotas?.length > 0).length;
 
   // Count low quotas (remaining < 30%)
-  const lowQuotasCount = Object.values(quotaData).reduce((count, data) => {
+  const _lowQuotasCount = Object.values(quotaData).reduce((count, data) => {
     if (!data?.quotas) return count;
 
     const hasLowQuota = data.quotas.some((quota) => {

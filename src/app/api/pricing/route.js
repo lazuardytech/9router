@@ -50,7 +50,7 @@ export async function PATCH(request) {
               { status: 400 },
             );
           }
-          if (typeof value !== "number" || isNaN(value) || value < 0) {
+          if (typeof value !== "number" || Number.isNaN(value) || value < 0) {
             return NextResponse.json(
               { error: `Invalid pricing value for ${key} in ${provider}/${model}: must be non-negative number` },
               { status: 400 },

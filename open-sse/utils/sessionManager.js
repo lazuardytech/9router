@@ -8,7 +8,7 @@
  * Reference: antigravity-claude-proxy/src/cloudcode/session-manager.js
  */
 
-import crypto from "crypto";
+import crypto from "node:crypto";
 import { MEMORY_CONFIG } from "../config/runtimeConfig.js";
 
 // Runtime storage: Key = connectionId, Value = { sessionId, lastUsed }

@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it } from "vitest";
+import { describe, expect, it } from "vitest";
 import { safeApply } from "../../open-sse/rtk/applyFilter.js";
 import { autoDetectFilter } from "../../open-sse/rtk/autodetect.js";
 import { dedupLog } from "../../open-sse/rtk/filters/dedupLog.js";

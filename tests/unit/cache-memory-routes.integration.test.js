@@ -118,7 +118,6 @@ describe("cache/memory routes integration", () => {
       { params: { id: memoryId } },
     );
     if (patchRes.status !== 200) {
-      // eslint-disable-next-line no-console
       console.log("PATCH memory error:", await patchRes.clone().text());
     }
     expect(patchRes.status).toBe(200);

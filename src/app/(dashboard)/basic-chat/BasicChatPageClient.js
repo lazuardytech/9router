@@ -443,7 +443,7 @@ export default function BasicChatPageClient() {
     };
   };
 
-  const handleNewChat = () => {
+  const _handleNewChat = () => {
     if (!activeModel) return;
     const session = ensureSessionForModel(activeModel);
     if (!session) return;
@@ -482,7 +482,7 @@ export default function BasicChatPageClient() {
     }
   };
 
-  const handleSelectProvider = (providerId) => {
+  const _handleSelectProvider = (providerId) => {
     const group = providerGroups.find((item) => item.providerId === providerId);
     if (!group || group.models.length === 0) return;
     const nextModel = group.models[0];

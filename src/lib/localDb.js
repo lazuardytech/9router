@@ -2,7 +2,7 @@
 // Cloudflare Workers. Public API surface unchanged from the previous
 // lowdb+JSON implementation so the 35+ consumer files keep working.
 
-import { timingSafeEqual } from "crypto";
+import { timingSafeEqual } from "node:crypto";
 import { Low } from "lowdb";
 import { v4 as uuidv4 } from "uuid";
 import { getDatabase } from "./sqlite/connection.js";

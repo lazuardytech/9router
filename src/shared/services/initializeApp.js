@@ -1,8 +1,5 @@
-import { existsSync } from "fs";
-import os from "os";
-import { dirname, join } from "path";
-import { fileURLToPath } from "url";
-import { cleanupProviderConnections, getApiKeys, getSettings, updateSettings } from "@/lib/localDb";
+import os from "node:os";
+import { cleanupProviderConnections, getSettings } from "@/lib/localDb";
 import { ensureCloudflared, isCloudflaredRunning, killCloudflared } from "@/lib/tunnel/cloudflared";
 import { checkInternet, probeUrlAlive } from "@/lib/tunnel/networkProbe";
 import { loadState } from "@/lib/tunnel/state";
@@ -13,15 +10,7 @@ import {
   RESTART_COOLDOWN_MS,
   WATCHDOG_INTERVAL_MS,
 } from "@/lib/tunnel/tunnelConfig";
-import {
-  enableTailscale,
-  enableTunnel,
-  getTailscaleService,
-  getTunnelService,
-  isTailscaleReconnecting,
-  isTunnelManuallyDisabled,
-  isTunnelReconnecting,
-} from "@/lib/tunnel/tunnelManager";
+import { enableTailscale, enableTunnel, getTailscaleService, getTunnelService } from "@/lib/tunnel/tunnelManager";
 
 process.setMaxListeners(20);
 

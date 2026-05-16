@@ -63,7 +63,7 @@ export default function NewProviderPage() {
         const data = await response.json();
         setErrors({ submit: data.error || "Failed to create provider" });
       }
-    } catch (error) {
+    } catch (_error) {
       setErrors({ submit: "An error occurred. Please try again." });
     } finally {
       setLoading(false);

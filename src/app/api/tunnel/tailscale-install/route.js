@@ -1,8 +1,7 @@
 "use server";
 
-import { execSync } from "child_process";
-import os from "os";
-import { getSettings, updateSettings } from "@/lib/localDb";
+import { execSync } from "node:child_process";
+import os from "node:os";
 import { generateShortId, loadState } from "@/lib/tunnel/state.js";
 import { installTailscale } from "@/lib/tunnel/tailscale";
 

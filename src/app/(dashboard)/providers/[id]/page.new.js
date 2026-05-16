@@ -102,7 +102,7 @@ export default function ProviderDetailPage() {
     const enabled = activeConnection?.providerSpecificData?.enabledModels;
     return Array.isArray(enabled) ? enabled.filter((modelId) => allProviderModelIds.includes(modelId)) : [];
   }, [activeConnection?.providerSpecificData?.enabledModels, allProviderModelIds]);
-  const savedEnabledModelsKey = useMemo(() => savedEnabledModels.join("|"), [savedEnabledModels]);
+  const _savedEnabledModelsKey = useMemo(() => savedEnabledModels.join("|"), [savedEnabledModels]);
 
   // Define callbacks BEFORE the useEffect that uses them
   const fetchAliases = useCallback(async () => {

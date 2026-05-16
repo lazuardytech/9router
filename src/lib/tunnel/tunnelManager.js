@@ -1,4 +1,4 @@
-import crypto from "crypto";
+import crypto from "node:crypto";
 import { getSettings, updateSettings } from "@/lib/localDb";
 import { isCloudflaredRunning, killCloudflared, setUnexpectedExitHandler, spawnQuickTunnel } from "./cloudflared.js";
 import { probeUrlAlive, waitForHealth } from "./networkProbe.js";
@@ -58,7 +58,7 @@ function getMachineId() {
       .update(raw + MACHINE_ID_SALT)
       .digest("hex")
       .substring(0, 16);
-  } catch (e) {
+  } catch (_e) {
     return crypto.randomUUID().replace(/-/g, "").substring(0, 16);
   }
 }

@@ -9,7 +9,7 @@ export async function GET() {
     const tunnelUrl = settings.tunnelUrl || "";
     const tailscaleUrl = settings.tailscaleUrl || "";
     return NextResponse.json({ requireLogin, tunnelDashboardAccess, tunnelUrl, tailscaleUrl });
-  } catch (error) {
+  } catch (_error) {
     return NextResponse.json({ requireLogin: true }, { status: 200 });
   }
 }

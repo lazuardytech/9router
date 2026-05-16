@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { ConfirmModal } from "@/shared/components/Modal";
-import { formatCost, getDefaultPricing } from "@/shared/constants/pricing.js";
+import { getDefaultPricing } from "@/shared/constants/pricing.js";
 
 export default function PricingModal({ isOpen, onClose, onSave }) {
   const [pricingData, setPricingData] = useState({});
@@ -49,7 +49,7 @@ export default function PricingModal({ isOpen, onClose, onSave }) {
 
   const handlePricingChange = (provider, model, field, value) => {
     const numValue = parseFloat(value);
-    if (isNaN(numValue) || numValue < 0) return;
+    if (Number.isNaN(numValue) || numValue < 0) return;
 
     setPricingData((prev) => {
       const newData = { ...prev };

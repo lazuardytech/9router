@@ -5,7 +5,7 @@
  */
 
 import fs from "fs";
-import path from "path";
+import path from "node:path";
 
 // Create log directory for responses (Node.js only)
 export function createResponsesLogger(model, logsDir = null) {

@@ -134,28 +134,28 @@ export async function buildModelsList(kindFilter) {
   try {
     connections = await getProviderConnections();
     connections = connections.filter((c) => c.isActive !== false);
-  } catch (e) {
+  } catch (_e) {
     console.log("Could not fetch providers, returning all models");
   }
 
   let combos = [];
   try {
     combos = await getCombos();
-  } catch (e) {
+  } catch (_e) {
     console.log("Could not fetch combos");
   }
 
   let customModels = [];
   try {
     customModels = await getCustomModels();
-  } catch (e) {
+  } catch (_e) {
     console.log("Could not fetch custom models");
   }
 
   let modelAliases = {};
   try {
     modelAliases = await getModelAliases();
-  } catch (e) {
+  } catch (_e) {
     console.log("Could not fetch model aliases");
   }
 

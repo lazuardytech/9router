@@ -47,7 +47,7 @@ export function info(tag, message, data) {
 
 export function warn(tag, message, data) {
   if (LEVEL <= LOG_LEVELS.WARN) {
-    const dataStr = data ? ` ${formatData(data)}` : "";
+    const _dataStr = data ? ` ${formatData(data)}` : "";
     // console.warn(`[${formatTime()}] ⚠️  [${tag}] ${message}${dataStr}`);
   }
 }

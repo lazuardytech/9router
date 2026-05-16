@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useRef } from "react";
 import { Drawer } from "vaul";
 import { cn } from "@/shared/utils/cn";
 

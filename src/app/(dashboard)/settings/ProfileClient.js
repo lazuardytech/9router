@@ -69,7 +69,7 @@ export default function ProfilePage() {
     onConfirm: null,
     variant: "default",
   });
-  const openConfirm = (title, message, onConfirm, variant = "default") =>
+  const _openConfirm = (title, message, onConfirm, variant = "default") =>
     setConfirmDialog({ open: true, title, message, onConfirm, variant });
   const closeConfirm = () => setConfirmDialog((prev) => ({ ...prev, open: false, onConfirm: null }));
   const [legacyInfo, setLegacyInfo] = useState({ hasLegacyData: false, legacyFilesFound: [] });
@@ -255,7 +255,7 @@ export default function ProfilePage() {
 
   const updateStickyLimit = async (limit) => {
     const numLimit = parseInt(limit);
-    if (isNaN(numLimit) || numLimit < 1) return;
+    if (Number.isNaN(numLimit) || numLimit < 1) return;
     try {
       const res = await fetch("/api/settings", {
         method: "PATCH",
@@ -270,7 +270,7 @@ export default function ProfilePage() {
 
   const updateComboStickyLimit = async (limit) => {
     const numLimit = parseInt(limit);
-    if (isNaN(numLimit) || numLimit < 1) return;
+    if (Number.isNaN(numLimit) || numLimit < 1) return;
     try {
       const res = await fetch("/api/settings", {
         method: "PATCH",

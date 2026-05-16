@@ -1,7 +1,6 @@
 "use client";
 
 import { cn } from "@/shared/utils/cn";
-import Button from "./Button";
 
 export default function Pagination({ currentPage, pageSize, totalItems, onPageChange, onPageSizeChange, className }) {
   const totalPages = Math.ceil(totalItems / pageSize);

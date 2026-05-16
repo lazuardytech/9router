@@ -2,7 +2,7 @@
  * Usage Fetcher - Get usage data from provider APIs
  */
 
-import { ANTIGRAVITY_CONFIG, GEMINI_CONFIG, GITHUB_CONFIG } from "@/lib/oauth/constants/oauth";
+import { GITHUB_CONFIG } from "@/lib/oauth/constants/oauth";
 
 /**
  * Get usage data for a provider connection
@@ -135,7 +135,7 @@ async function getGeminiUsage(accessToken) {
     }
 
     return { message: "Gemini CLI connected. Usage tracked via Google Cloud Console." };
-  } catch (error) {
+  } catch (_error) {
     return { message: "Unable to fetch Gemini usage. Check Google Cloud Console." };
   }
 }
@@ -147,7 +147,7 @@ async function getAntigravityUsage(accessToken) {
   try {
     // Similar to Gemini, uses Google Cloud
     return { message: "Antigravity connected. Usage tracked via Google Cloud Console." };
-  } catch (error) {
+  } catch (_error) {
     return { message: "Unable to fetch Antigravity usage." };
   }
 }
@@ -160,7 +160,7 @@ async function getClaudeUsage(accessToken) {
     // Claude OAuth doesn't expose usage API directly
     // Could potentially check via inference endpoint
     return { message: "Claude connected. Usage tracked per request." };
-  } catch (error) {
+  } catch (_error) {
     return { message: "Unable to fetch Claude usage." };
   }
 }
@@ -172,7 +172,7 @@ async function getCodexUsage(accessToken) {
   try {
     // OpenAI usage requires organization API access
     return { message: "Codex connected. Check OpenAI dashboard for usage." };
-  } catch (error) {
+  } catch (_error) {
     return { message: "Unable to fetch Codex usage." };
   }
 }
@@ -189,7 +189,7 @@ async function getQwenUsage(accessToken, providerSpecificData) {
 
     // Qwen may have usage endpoint at resource URL
     return { message: "Qwen connected. Usage tracked per request." };
-  } catch (error) {
+  } catch (_error) {
     return { message: "Unable to fetch Qwen usage." };
   }
 }
@@ -201,7 +201,7 @@ async function getIflowUsage(accessToken) {
   try {
     // iFlow may have usage endpoint
     return { message: "iFlow connected. Usage tracked per request." };
-  } catch (error) {
+  } catch (_error) {
     return { message: "Unable to fetch iFlow usage." };
   }
 }

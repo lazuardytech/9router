@@ -2,7 +2,7 @@
 // Prevents N concurrent identical requests from all hitting upstream simultaneously.
 const inFlightRequests = new Map();
 
-import crypto from "crypto";
+import crypto from "node:crypto";
 import { LRUCache } from "./cacheLayer.js";
 import { getDatabase } from "./sqlite/connection.js";
 

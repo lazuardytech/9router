@@ -1,4 +1,4 @@
-import { createHash } from "crypto";
+import { createHash } from "node:crypto";
 import { getConsistentMachineId } from "../../src/shared/utils/machineId.js";
 import { CODEX_DEFAULT_INSTRUCTIONS } from "../config/codexInstructions.js";
 import { getModelUpstreamId } from "../config/providerModels.js";

@@ -33,8 +33,8 @@ export async function handleFetch(request) {
   // Accept either `provider` or `model` (UI sends `model` since provider IS the model for webFetch)
   const providerInput = body.provider || body.model;
   const targetUrl = body.url;
-  const format = body.format;
-  const maxCharacters = body.max_characters;
+  const _format = body.format;
+  const _maxCharacters = body.max_characters;
 
   log.request("POST", `${reqUrl.pathname} | ${providerInput}`);
 

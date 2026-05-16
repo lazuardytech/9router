@@ -1,7 +1,7 @@
-import { readdir, readFile } from "fs/promises";
+import { readdir, readFile } from "node:fs/promises";
 import { NextResponse } from "next/server";
-import { homedir } from "os";
-import { join } from "path";
+import { homedir } from "node:os";
+import { join } from "node:path";
 
 /**
  * GET /api/oauth/kiro/auto-import
@@ -15,7 +15,7 @@ export async function GET() {
     let files;
     try {
       files = await readdir(cachePath);
-    } catch (error) {
+    } catch (_error) {
       return NextResponse.json({
         found: false,
         error: "AWS SSO cache not found. Please login to Kiro IDE first.",
@@ -36,7 +36,7 @@ export async function GET() {
           refreshToken = data.refreshToken;
           foundFile = kiroTokenFile;
         }
-      } catch (error) {
+      } catch (_error) {
         // Continue to search other files
       }
     }
@@ -56,7 +56,7 @@ export async function GET() {
             foundFile = file;
             break;
           }
-        } catch (error) {}
+        } catch (_error) {}
       }
     }
 

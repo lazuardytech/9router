@@ -1,8 +1,8 @@
-import { execSync, spawn } from "child_process";
+import { execSync, spawn } from "node:child_process";
 import fs from "fs";
-import https from "https";
-import os from "os";
-import path from "path";
+import https from "node:https";
+import os from "node:os";
+import path from "node:path";
 import { DATA_DIR } from "@/lib/dataDir.js";
 import { clearPid, loadPid, savePid } from "./state.js";
 
@@ -295,7 +295,7 @@ export async function spawnQuickTunnel(localPort, onUrlUpdate) {
     isCleaned = true;
     try {
       fs.rmSync(configDir, { recursive: true, force: true });
-    } catch (e) {
+    } catch (_e) {
       /* ignore */
     }
   };
@@ -415,7 +415,7 @@ function killCloudflaredByPort(port) {
         windowsHide: true,
       });
     }
-  } catch (e) {
+  } catch (_e) {
     /* ignore */
   }
 }
@@ -424,7 +424,7 @@ export function killCloudflared(localPort) {
   if (cloudflaredProcess) {
     try {
       cloudflaredProcess.kill();
-    } catch (e) {
+    } catch (_e) {
       /* ignore */
     }
     cloudflaredProcess = null;
@@ -434,7 +434,7 @@ export function killCloudflared(localPort) {
   if (pid) {
     try {
       process.kill(pid);
-    } catch (e) {
+    } catch (_e) {
       /* ignore */
     }
     clearPid();
@@ -449,7 +449,7 @@ export function isCloudflaredRunning() {
   try {
     process.kill(pid, 0);
     return true;
-  } catch (e) {
+  } catch (_e) {
     return false;
   }
 }

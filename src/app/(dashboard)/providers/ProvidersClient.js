@@ -12,7 +12,6 @@ import {
   FREE_PROVIDERS,
   FREE_TIER_PROVIDERS,
   OPENAI_COMPATIBLE_PREFIX,
-  WEB_COOKIE_PROVIDERS,
 } from "@/shared/constants/providers";
 import { getErrorCode, getRelativeTime } from "@/shared/utils";
 import { useHeaderActionStore } from "@/store/headerActionStore";
@@ -198,7 +197,7 @@ export default function ProvidersPage() {
         if (failed === 0) toast.success(`All ${total} tests passed`);
         else toast.warning(`${passed}/${total} passed, ${failed} failed`);
       }
-    } catch (error) {
+    } catch (_error) {
       setTestResults({ error: "Test request failed" });
       toast.error("Provider test failed");
     } finally {
@@ -517,13 +516,13 @@ function ProviderCard({ providerId, provider, stats, authType, onToggle }) {
   const { connected, error, errorCode, errorTime, allDisabled } = stats;
   const isNoAuth = !!provider.noAuth;
 
-  const dotColors = {
+  const _dotColors = {
     free: "bg-green-500",
     oauth: "bg-blue-500",
     apikey: "bg-amber-500",
     compatible: "bg-orange-500",
   };
-  const dotLabels = {
+  const _dotLabels = {
     free: "Free",
     oauth: "OAuth",
     apikey: "API Key",
@@ -578,7 +577,7 @@ function ProviderCard({ providerId, provider, stats, authType, onToggle }) {
                 onClick={(e) => {
                   e.preventDefault();
                   e.stopPropagation();
-                  onToggle(!allDisabled ? false : true);
+                  onToggle(!!allDisabled);
                 }}
               >
                 <Toggle
@@ -619,13 +618,13 @@ function ApiKeyProviderCard({ providerId, provider, stats, authType, onToggle })
   const isCompatible = providerId.startsWith(OPENAI_COMPATIBLE_PREFIX);
   const isAnthropicCompatible = providerId.startsWith(ANTHROPIC_COMPATIBLE_PREFIX);
 
-  const dotColors = {
+  const _dotColors = {
     free: "bg-green-500",
     oauth: "bg-blue-500",
     apikey: "bg-amber-500",
     compatible: "bg-orange-500",
   };
-  const dotLabels = {
+  const _dotLabels = {
     free: "Free",
     oauth: "OAuth",
     apikey: "API Key",
@@ -692,7 +691,7 @@ function ApiKeyProviderCard({ providerId, provider, stats, authType, onToggle })
                 onClick={(e) => {
                   e.preventDefault();
                   e.stopPropagation();
-                  onToggle(!allDisabled ? false : true);
+                  onToggle(!!allDisabled);
                 }}
               >
                 <Toggle

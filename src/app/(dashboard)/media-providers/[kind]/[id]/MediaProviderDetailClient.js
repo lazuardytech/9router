@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { notFound, useParams, useRouter } from "next/navigation";
 import { GOOGLE_TTS_LANGUAGES } from "open-sse/config/googleTtsLanguages.js";
 import { getTtsVoicesForModel } from "open-sse/config/ttsModels.js";
@@ -425,7 +424,7 @@ function TtsExampleCard({ providerId }) {
 
   // Voice state
   const [selectedVoice, setSelectedVoice] = useState("");
-  const [selectedVoiceName, setSelectedVoiceName] = useState("");
+  const [_selectedVoiceName, setSelectedVoiceName] = useState("");
   const [voiceId, setVoiceId] = useState(""); // editable voice id (elevenlabs)
   // Voices shown below Voice row after language selected
   const [countryVoices, setCountryVoices] = useState([]);

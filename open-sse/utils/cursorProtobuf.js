@@ -4,11 +4,11 @@
  */
 
 import { v4 as uuidv4 } from "uuid";
-import zlib from "zlib";
+import zlib from "node:zlib";
 
 const DEBUG = process.env.CURSOR_PROTOBUF_DEBUG === "1";
 const log = (tag, ...args) => DEBUG && console.log(`[PROTOBUF:${tag}]`, ...args);
-const textDecoder = new TextDecoder();
+const _textDecoder = new TextDecoder();
 
 const PROTOBUF_SCHEMA_VERSION = "1.1.3";
 
@@ -21,7 +21,7 @@ const ROLE = { USER: 1, ASSISTANT: 2 };
 const UNIFIED_MODE = { CHAT: 1, AGENT: 2 };
 
 const THINKING_LEVEL = { UNSPECIFIED: 0, MEDIUM: 1, HIGH: 2 };
-const CLIENT_SIDE_TOOL_V2 = { MCP: 19 };
+const _CLIENT_SIDE_TOOL_V2 = { MCP: 19 };
 const CLIENT_SIDE_TOOL_V2_MCP = 19;
 
 const FIELD = {

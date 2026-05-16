@@ -14,7 +14,6 @@ import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import {
-  Badge,
   Button,
   Card,
   CardSkeleton,
@@ -22,7 +21,6 @@ import {
   EditConnectionModal,
   GitLabAuthModal,
   IFlowCookieModal,
-  Input,
   KiroOAuthWrapper,
   Modal,
   NoAuthProxyCard,
@@ -53,7 +51,6 @@ import CompatibleModelsSection from "./CompatibleModelsSection";
 import ConnectionRow from "./ConnectionRow";
 import EditCompatibleNodeModal from "./EditCompatibleNodeModal";
 import ModelRow from "./ModelRow";
-import PassthroughModelsSection from "./PassthroughModelsSection";
 
 export default function ProviderDetailPage() {
   const params = useParams();
@@ -126,7 +123,7 @@ export default function ProviderDetailPage() {
   const isAnthropicCompatible = isAnthropicCompatibleProvider(providerId);
   const isCustomEmbedding = isCustomEmbeddingProvider(providerId);
   const isCompatible = isOpenAICompatible || isAnthropicCompatible || isCustomEmbedding;
-  const thinkingConfig = AI_PROVIDERS[providerId]?.thinkingConfig || THINKING_CONFIG.extended;
+  const _thinkingConfig = AI_PROVIDERS[providerId]?.thinkingConfig || THINKING_CONFIG.extended;
 
   const providerStorageAlias = isCompatible ? providerId : providerAlias;
   const providerDisplayAlias = isCompatible ? providerNode?.prefix || providerId : providerAlias;
@@ -382,7 +379,7 @@ export default function ProviderDetailPage() {
     }
   };
 
-  const handleThinkingModeChange = (mode) => {
+  const _handleThinkingModeChange = (mode) => {
     setThinkingMode(mode);
     saveThinkingConfig(mode, effortMode);
   };
@@ -551,13 +548,13 @@ export default function ProviderDetailPage() {
   const selectedConnections = connections.filter((conn) => selectedConnectionIds.includes(conn.id));
   const allSelected = connections.length > 0 && selectedConnectionIds.length === connections.length;
 
-  const toggleSelectConnection = (connectionId) => {
+  const _toggleSelectConnection = (connectionId) => {
     setSelectedConnectionIds((prev) =>
       prev.includes(connectionId) ? prev.filter((id) => id !== connectionId) : [...prev, connectionId],
     );
   };
 
-  const toggleSelectAllConnections = () => {
+  const _toggleSelectAllConnections = () => {
     if (allSelected) {
       setSelectedConnectionIds([]);
       return;
@@ -586,7 +583,7 @@ export default function ProviderDetailPage() {
     return "Selected connections have mixed proxy bindings";
   })();
 
-  const openBulkProxyModal = () => {
+  const _openBulkProxyModal = () => {
     if (selectedConnections.length === 0) return;
     const uniquePoolIds = [
       ...new Set(selectedConnections.map((conn) => conn.providerSpecificData?.proxyPoolId || "__none__")),

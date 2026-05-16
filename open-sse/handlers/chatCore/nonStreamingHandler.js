@@ -1,4 +1,4 @@
-import { appendRequestLog, generateDetailId, saveRequestDetail } from "@/lib/usageDb.js";
+import { generateDetailId, saveRequestDetail } from "@/lib/usageDb.js";
 import { HTTP_STATUS } from "../../config/runtimeConfig.js";
 import { FORMATS } from "../../translator/formats.js";
 import { needsTranslation } from "../../translator/index.js";

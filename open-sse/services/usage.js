@@ -444,7 +444,7 @@ async function getAntigravityUsage(accessToken, providerSpecificData, proxyOptio
 /**
  * Get Antigravity project ID from subscription info
  */
-async function getAntigravityProjectId(accessToken) {
+async function _getAntigravityProjectId(accessToken) {
   try {
     const info = await getAntigravitySubscriptionInfo(accessToken);
     return info?.cloudaicompanionProject || null;
@@ -903,7 +903,7 @@ async function getQwenUsage(accessToken, providerSpecificData) {
 
     // Qwen may have usage endpoint at resource URL
     return { message: "Qwen connected. Usage tracked per request." };
-  } catch (error) {
+  } catch (_error) {
     return { message: "Unable to fetch Qwen usage." };
   }
 }
@@ -915,7 +915,7 @@ async function getIflowUsage(accessToken) {
   try {
     // iFlow may have usage endpoint
     return { message: "iFlow connected. Usage tracked per request." };
-  } catch (error) {
+  } catch (_error) {
     return { message: "Unable to fetch iFlow usage." };
   }
 }
@@ -938,7 +938,7 @@ async function getOllamaUsage(accessToken, providerSpecificData) {
         "Ollama Cloud uses a free tier with light usage limits (resets every 5h & 7d). For detailed usage tracking, visit ollama.com/settings/keys.",
       quotas: [],
     };
-  } catch (error) {
+  } catch (_error) {
     return { message: "Unable to fetch Ollama Cloud usage." };
   }
 }

@@ -1,4 +1,4 @@
-import crypto from "crypto";
+import crypto from "node:crypto";
 import {
   AG_DEFAULT_TOOLS,
   AG_TOOL_SUFFIX,
@@ -169,10 +169,10 @@ export class AntigravityExecutor extends BaseExecutor {
     const retryAfter = headers.get("retry-after");
     if (retryAfter) {
       const seconds = parseInt(retryAfter, 10);
-      if (!isNaN(seconds) && seconds > 0) return seconds * 1000;
+      if (!Number.isNaN(seconds) && seconds > 0) return seconds * 1000;
 
       const date = new Date(retryAfter);
-      if (!isNaN(date.getTime())) {
+      if (!Number.isNaN(date.getTime())) {
         const diff = date.getTime() - Date.now();
         return diff > 0 ? diff : null;
       }
@@ -181,7 +181,7 @@ export class AntigravityExecutor extends BaseExecutor {
     const resetAfter = headers.get("x-ratelimit-reset-after");
     if (resetAfter) {
       const seconds = parseInt(resetAfter, 10);
-      if (!isNaN(seconds) && seconds > 0) return seconds * 1000;
+      if (!Number.isNaN(seconds) && seconds > 0) return seconds * 1000;
     }
 
     const resetTimestamp = headers.get("x-ratelimit-reset");
@@ -256,7 +256,7 @@ export class AntigravityExecutor extends BaseExecutor {
               const errorJson = JSON.parse(errorBody);
               const errorMessage = errorJson?.error?.message || errorJson?.message || "";
               retryMs = this.parseRetryFromErrorMessage(errorMessage);
-            } catch (e) {
+            } catch (_e) {
               // Ignore parse errors, will fall back to exponential backoff
             }
           }

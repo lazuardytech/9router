@@ -1,9 +1,9 @@
-import { execFile } from "child_process";
-import { access, constants } from "fs/promises";
+import { execFile } from "node:child_process";
+import { access, constants } from "node:fs/promises";
 import { NextResponse } from "next/server";
-import { homedir } from "os";
-import { join } from "path";
-import { promisify } from "util";
+import { homedir } from "node:os";
+import { join } from "node:path";
+import { promisify } from "node:util";
 
 const execFileAsync = promisify(execFile);
 
@@ -38,7 +38,7 @@ function getCandidatePaths(platform) {
   ];
 }
 
-const normalize = (value) => {
+const _normalize = (value) => {
   if (typeof value !== "string") return value;
   try {
     const parsed = JSON.parse(value);

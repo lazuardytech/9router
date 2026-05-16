@@ -9,7 +9,7 @@ import RequestLogDetail from "./RequestLogDetail";
 const fmtTokens = (n) => {
   if (n == null || n === "-") return "—";
   const num = typeof n === "string" ? parseInt(n, 10) : n;
-  if (isNaN(num)) return "—";
+  if (Number.isNaN(num)) return "—";
   if (num >= 1_000_000) return `${(num / 1_000_000).toFixed(1)}M`;
   if (num >= 1_000) return `${(num / 1_000).toFixed(1)}K`;
   return num.toLocaleString();

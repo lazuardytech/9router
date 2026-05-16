@@ -1,6 +1,6 @@
 "use client";
 
-import { forwardRef, useCallback, useEffect, useImperativeHandle, useMemo, useRef, useState } from "react";
+import { forwardRef, useCallback, useEffect, useImperativeHandle, useMemo, useState } from "react";
 
 const REFRESH_MS = 30_000;
 const MAX_SAMPLES = 24;
@@ -89,7 +89,7 @@ function Sparkline({ samples, field, fmt }) {
 const TelemetryCard = forwardRef(function TelemetryCard(_, ref) {
   const [health, setHealth] = useState(null);
   const [samples, setSamples] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [_loading, setLoading] = useState(true);
   const [lastUpdated, setLastUpdated] = useState(null);
 
   const load = useCallback(async () => {

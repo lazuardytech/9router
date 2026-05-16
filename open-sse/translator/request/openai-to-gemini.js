@@ -235,7 +235,7 @@ export function openaiToGeminiRequest(model, body, stream) {
 // OpenAI -> Gemini CLI (Cloud Code Assist)
 export function openaiToGeminiCLIRequest(model, body, stream) {
   const gemini = openaiToGeminiBase(model, body, stream, DEFAULT_THINKING_GEMINI_CLI_SIGNATURE);
-  const isClaude = model.toLowerCase().includes("claude");
+  const _isClaude = model.toLowerCase().includes("claude");
 
   // Add thinking config for CLI
   if (body.reasoning_effort) {

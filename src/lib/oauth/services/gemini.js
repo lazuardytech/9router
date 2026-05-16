@@ -1,4 +1,4 @@
-import crypto from "crypto";
+import crypto from "node:crypto";
 import open from "open";
 import { getServerCredentials } from "../config/index.js";
 import { GEMINI_CONFIG, getOAuthClientMetadata } from "../constants/oauth.js";

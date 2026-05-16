@@ -4,7 +4,7 @@
 // to `statsEmitter` events from SSE routes.
 
 import fs from "node:fs";
-import { EventEmitter } from "events";
+import { EventEmitter } from "node:events";
 import { DATA_DIR } from "@/lib/dataDir.js";
 import { LRUCache } from "./cacheLayer.js";
 import { getDatabase } from "./sqlite/connection.js";

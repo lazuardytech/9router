@@ -1,9 +1,9 @@
-import zlib from "zlib";
+import zlib from "node:zlib";
 import { PROVIDERS } from "../config/providers.js";
 import { HTTP_STATUS } from "../config/runtimeConfig.js";
 import { FORMATS } from "../translator/formats.js";
 import { buildCursorHeaders } from "../utils/cursorChecksum.js";
-import { extractTextFromResponse, generateCursorBody, parseConnectRPCFrame } from "../utils/cursorProtobuf.js";
+import { extractTextFromResponse, generateCursorBody } from "../utils/cursorProtobuf.js";
 import { proxyAwareFetch } from "../utils/proxyFetch.js";
 import { estimateUsage } from "../utils/usageTracking.js";
 import { BaseExecutor } from "./base.js";
@@ -19,7 +19,7 @@ const isCloudEnv = () => {
 let http2 = null;
 if (!isCloudEnv()) {
   try {
-    http2 = await import("http2");
+    http2 = await import("node:http2");
   } catch {
     // http2 not available
   }
@@ -553,7 +553,7 @@ export class CursorExecutor extends BaseExecutor {
         if (toolCallsMap.has(tc.id)) {
           // Accumulate arguments for existing tool call
           const existing = toolCallsMap.get(tc.id);
-          const oldArgsLen = existing.function.arguments.length;
+          const _oldArgsLen = existing.function.arguments.length;
           existing.function.arguments += tc.function.arguments;
           existing.isLast = tc.isLast;
 

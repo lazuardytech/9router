@@ -2,7 +2,6 @@
 import { DEFAULT_THINKING_CLAUDE_SIGNATURE } from "../../config/defaultThinkingSignature.js";
 import { applyCloaking } from "../../utils/claudeCloaking.js";
 import { deriveSessionId } from "../../utils/sessionManager.js";
-import { adjustMaxTokens } from "./maxTokensHelper.js";
 
 // Check if message has valid non-empty content
 export function hasValidContent(msg) {
