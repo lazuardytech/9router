@@ -116,6 +116,29 @@ function ensureSchemaPatches(db) {
     // Backfill existing rows with rowid-based order
     db.exec("UPDATE combos SET sort_order = rowid WHERE sort_order IS NULL");
   }
+
+  // Add last_access_at column to api_keys if missing
+  if (!hasColumn(db, "api_keys", "last_access_at")) {
+    db.exec("ALTER TABLE api_keys ADD COLUMN last_access_at TEXT");
+  }
+
+  // Add models_dev_pricing table if missing
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS models_dev_pricing (
+      provider TEXT NOT NULL,
+      model    TEXT NOT NULL,
+      data     TEXT NOT NULL,
+      PRIMARY KEY (provider, model)
+    )
+  `);
+
+  // Add models_dev_sync_meta table if missing
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS models_dev_sync_meta (
+      key   TEXT PRIMARY KEY,
+      value TEXT NOT NULL
+    )
+  `);
 }
 
 function readMeta(db, key) {

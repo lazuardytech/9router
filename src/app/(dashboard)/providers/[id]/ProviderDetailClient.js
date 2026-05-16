@@ -520,7 +520,7 @@ export default function ProviderDetailPage() {
     }
   };
 
-  const handleSwapPriority = async (index1, index2) => {
+  const _handleSwapPriority = async (index1, index2) => {
     // Optimistic update state
     const newConnections = [...connections];
     [newConnections[index1], newConnections[index2]] = [newConnections[index2], newConnections[index1]];
@@ -658,7 +658,7 @@ export default function ProviderDetailPage() {
     }
   };
 
-  const isSelected = (connectionId) => selectedConnectionIds.includes(connectionId);
+  const _isSelected = (connectionId) => selectedConnectionIds.includes(connectionId);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
@@ -673,13 +673,8 @@ export default function ProviderDetailPage() {
             <SortableConnectionRow
               key={conn.id}
               conn={conn}
-              index={index}
-              connectionsLength={connections.length}
               proxyPools={proxyPools}
               isOAuth={isOAuth}
-              isSelected={isSelected(conn.id)}
-              onMoveUp={() => handleSwapPriority(index, index - 1)}
-              onMoveDown={() => handleSwapPriority(index, index + 1)}
               onToggleActive={(isActive) => handleUpdateConnectionStatus(conn.id, isActive)}
               onUpdateProxy={async (proxyPoolId) => {
                 try {
@@ -1373,20 +1368,7 @@ export default function ProviderDetailPage() {
   );
 }
 
-function SortableConnectionRow({
-  conn,
-  index,
-  connectionsLength,
-  proxyPools,
-  isOAuth,
-  isSelected,
-  onMoveUp,
-  onMoveDown,
-  onToggleActive,
-  onUpdateProxy,
-  onEdit,
-  onDelete,
-}) {
+function SortableConnectionRow({ conn, proxyPools, isOAuth, onToggleActive, onUpdateProxy, onEdit, onDelete }) {
   const { attributes, listeners, setNodeRef, setActivatorNodeRef, transform, transition, isDragging } = useSortable({
     id: conn.id,
   });
@@ -1415,10 +1397,6 @@ function SortableConnectionRow({
           connection={conn}
           proxyPools={proxyPools}
           isOAuth={isOAuth}
-          isFirst={index === 0}
-          isLast={index === connectionsLength - 1}
-          onMoveUp={onMoveUp}
-          onMoveDown={onMoveDown}
           onToggleActive={onToggleActive}
           onUpdateProxy={onUpdateProxy}
           onEdit={onEdit}

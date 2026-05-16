@@ -33,6 +33,7 @@ const DEFAULT_SETTINGS = {
   outboundNoProxy: "",
   dnsToolEnabled: {},
   rtkEnabled: true,
+  modelCostSyncIntervalHours: 1,
   cavemanEnabled: false,
   cavemanLevel: "full",
   semanticCacheEnabled: true,
@@ -171,6 +172,7 @@ function rowToApiKey(r) {
     machineId: r.machine_id,
     isActive: r.is_active !== 0,
     createdAt: r.created_at,
+    lastAccessAt: r.last_access_at || null,
     limitType,
     requestsPerMinute,
     concurrentRequests,
@@ -1289,10 +1291,15 @@ export async function getApiKeyByKey(key) {
   if (!key) return null;
   if (isCloud) {
     const d = await getCloudDb();
-    return (d.data.apiKeys || []).find((k) => k.key === key && k.isActive !== false) || null;
+    const found = (d.data.apiKeys || []).find((k) => k.key === key && k.isActive !== false) || null;
+    if (found) found.lastAccessAt = nowIso();
+    return found;
   }
   const r = db().prepare("SELECT * FROM api_keys WHERE key = ? AND is_active != 0 LIMIT 1").get(key);
-  return r ? rowToApiKey(r) : null;
+  if (!r) return null;
+  const now = nowIso();
+  db().prepare("UPDATE api_keys SET last_access_at = ? WHERE id = ?").run(now, r.id);
+  return rowToApiKey({ ...r, last_access_at: now });
 }
 
 // ===== Settings ==========================================================
@@ -1626,6 +1633,11 @@ export async function getPricingForModel(provider, model) {
       if (r) return parseExtras(r.data);
     }
   }
+
+  // Check models.dev synced pricing
+  const { getModelsDevPricingForModel } = await import("@/lib/modelsDevSync.js");
+  const mdPricing = getModelsDevPricingForModel(provider, model);
+  if (mdPricing) return mdPricing;
 
   const { getPricingForModel: resolve } = await import("@/shared/constants/pricing.js");
   return resolve(provider, model);

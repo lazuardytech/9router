@@ -207,7 +207,7 @@ export default function ProxyLogsTab({ sortBy, setSortBy, live, setLive, onRefre
                   <th className="px-3 py-2 text-[10px] font-[590] uppercase tracking-[0.05em] text-fog-grey border-r border-charcoal-grey">
                     Status
                   </th>
-                  <th className="px-3 py-2 text-[10px] font-[590] uppercase tracking-[0.05em] text-fog-grey">
+                  <th className="px-3 py-2 text-[10px] font-[590] uppercase tracking-[0.05em] text-fog-grey w-[120px]">
                     Actions
                   </th>
                 </tr>
@@ -241,7 +241,7 @@ export default function ProxyLogsTab({ sortBy, setSortBy, live, setLive, onRefre
                       <td className="px-3 py-2.5 border-r border-charcoal-grey/50">
                         <StatusBadge active={pool.isActive} />
                       </td>
-                      <td className="px-3 py-2.5">
+                      <td className="px-3 py-2.5 w-[120px]">
                         <button
                           onClick={() => handleTest(pool)}
                           disabled={testing === pool.id}

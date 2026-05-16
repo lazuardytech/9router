@@ -1,7 +1,7 @@
 import crypto from "node:crypto";
 import { getSettings, updateSettings } from "@/lib/localDb";
 import { isCloudflaredRunning, killCloudflared, setUnexpectedExitHandler, spawnQuickTunnel } from "./cloudflared.js";
-import { probeUrlAlive, waitForHealth } from "./networkProbe.js";
+import { probeUrlAlive } from "./networkProbe.js";
 import { generateShortId, loadState, saveState } from "./state.js";
 import {
   isTailscaleLoggedIn,
@@ -120,8 +120,8 @@ export async function enableTunnel(localPort = 20128) {
     saveState({ shortId, machineId, tunnelUrl });
     await updateSettings({ tunnelEnabled: true, tunnelUrl });
 
-    // Block until /api/health responds via public URL — proves DNS propagated + tunnel works
-    await waitForHealth(publicUrl, token);
+    // Health probe is done client-side (pingTunnelHealth) — skip server-side
+    // waitForHealth to avoid false failures when DNS/worker is slow to propagate.
 
     return { success: true, tunnelUrl, shortId, publicUrl };
   } finally {
@@ -196,8 +196,7 @@ export async function enableTailscale(localPort = 20128) {
 
     await updateSettings({ tailscaleEnabled: true, tailscaleUrl: result.tunnelUrl });
 
-    // Verify funnel actually serves /api/health
-    await waitForHealth(result.tunnelUrl, token);
+    // Health probe is done client-side — skip server-side waitForHealth.
 
     return { success: true, tunnelUrl: result.tunnelUrl };
   } finally {

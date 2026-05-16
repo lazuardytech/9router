@@ -4,7 +4,12 @@ import PropTypes from "prop-types";
 import Card from "@/shared/components/Card";
 
 const fmt = (n) => new Intl.NumberFormat().format(n || 0);
-const fmtCost = (n) => `$${(n || 0).toFixed(2)}`;
+const fmtCost = (n) => {
+  const v = n || 0;
+  // Round up to 2 decimal places
+  const rounded = Math.ceil(v * 100) / 100;
+  return `$${rounded.toFixed(2)}`;
+};
 
 export default function OverviewCards({ stats }) {
   return (

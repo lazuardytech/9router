@@ -21,13 +21,18 @@ function getProviderImageUrl(providerId) {
 
 // Custom provider node - rectangle with image + name
 function ProviderNode({ data }) {
-  const { label, color, imageUrl, textIcon, active } = data;
+  const { label, color, imageUrl, textIcon, active, error } = data;
   const [imgError, setImgError] = useState(false);
+
+  const borderColor = error ? "#ef4444" : active ? "#22c55e" : "var(--color-border)";
+  const dotColor = error ? "#ef4444" : "#22c55e";
+  const textColor = error ? "#ef4444" : active ? "#22c55e" : "var(--color-text)";
+
   return (
     <div
       className="flex items-center gap-2.5 px-4 py-2.5 rounded-lg border-2 transition-all duration-300 bg-bg"
       style={{
-        borderColor: active ? "white" : "var(--color-border)",
+        borderColor,
         boxShadow: "none",
         minWidth: "150px",
       }}
@@ -57,18 +62,20 @@ function ProviderNode({ data }) {
       </div>
 
       {/* Provider name */}
-      <span className="text-base font-medium truncate" style={{ color: active ? color : "var(--color-text)" }}>
+      <span className="text-base font-medium truncate" style={{ color: textColor }}>
         {label}
       </span>
 
-      {/* Active indicator */}
-      {active && (
+      {/* Active / error indicator dot */}
+      {(active || error) && (
         <span className="relative flex h-2 w-2 shrink-0">
-          <span
-            className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75"
-            style={{ backgroundColor: color }}
-          />
-          <span className="relative inline-flex rounded-full h-2 w-2" style={{ backgroundColor: color }} />
+          {active && !error && (
+            <span
+              className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75"
+              style={{ backgroundColor: dotColor }}
+            />
+          )}
+          <span className="relative inline-flex rounded-full h-2 w-2" style={{ backgroundColor: dotColor }} />
         </span>
       )}
     </div>
@@ -156,6 +163,7 @@ function buildLayout(providers, activeSet, lastSet, errorSet) {
       imageUrl: getProviderImageUrl(p.provider),
       textIcon: config.textIcon || (p.provider || "?").slice(0, 2).toUpperCase(),
       active,
+      error,
     };
 
     // Distribute evenly starting from top (−π/2), clockwise

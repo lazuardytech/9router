@@ -4,6 +4,9 @@ import {
   checkFallbackError,
   formatRetryAfter,
   getEarliestModelLockUntil,
+  getModelLockCount,
+  getModelLockCountKey,
+  MODEL_LOCK_COUNT_PREFIX,
   isModelLockActive,
 } from "open-sse/services/accountFallback.js";
 import { getProviderConnections, getSettings, updateProviderConnection, validateApiKey } from "@/lib/localDb";
@@ -288,14 +291,18 @@ export async function markAccountUnavailable(
   }
   if (!shouldFallback) return { shouldFallback: false, cooldownMs: 0 };
 
-  // Apply minimum lockout time from settings (default 0 = no minimum enforced)
+  // Apply minimum lockout time from settings (default 60 minutes)
   const settingsData = await getSettings().catch(() => ({}));
-  const minimumLockoutMinutes = Number(settingsData.minimumLockoutMinutes) || 0;
-  if (minimumLockoutMinutes > 0) {
-    const minimumLockoutMs = minimumLockoutMinutes * 60 * 1000;
-    // Multiply minimum by backoff level (1x, 2x, 3x, ...) — level 0/1 = 1x
-    const backoffMultiplier = Math.max(1, (newBackoffLevel ?? backoffLevel) || 1);
-    const effectiveMinimumMs = minimumLockoutMs * backoffMultiplier;
+  const minimumLockoutMinutes = Number(settingsData.minimumLockoutMinutes) ?? 60;
+  const minimumLockoutMs = Math.max(minimumLockoutMinutes, 0) * 60 * 1000;
+
+  // Increment per-model lock count (1st lock = 1x, 2nd = 2x, 3rd = 3x, ...)
+  const prevLockCount = getModelLockCount(conn, model);
+  const newLockCount = prevLockCount + 1;
+
+  if (minimumLockoutMs > 0) {
+    // Multiply minimum by lock count: 1x, 2x, 3x, ...
+    const effectiveMinimumMs = minimumLockoutMs * newLockCount;
     cooldownMs = Math.max(effectiveMinimumMs, cooldownMs);
   }
 
@@ -315,6 +322,7 @@ export async function markAccountUnavailable(
 
   await updateProviderConnection(connectionId, {
     ...lockUpdate,
+    [getModelLockCountKey(model)]: newLockCount,
     testStatus: "unavailable",
     lastError: reason,
     errorCode: status,
@@ -347,6 +355,7 @@ export async function clearAccountError(connectionId, currentConnection, model =
   const conn = currentConnection._connection || currentConnection;
   const now = Date.now();
   const allLockKeys = Object.keys(conn).filter((k) => k.startsWith("modelLock_"));
+  const allLockCountKeys = Object.keys(conn).filter((k) => k.startsWith(MODEL_LOCK_COUNT_PREFIX));
 
   if (!conn.testStatus && !conn.lastError && allLockKeys.length === 0) return;
 
@@ -369,9 +378,15 @@ export async function clearAccountError(connectionId, currentConnection, model =
 
   const clearObj = Object.fromEntries(keysToClear.map((k) => [k, null]));
 
-  // Only reset error state if no active locks remain
+  // Only reset error state and lock counts if no active locks remain
   if (remainingActiveLocks.length === 0) {
     Object.assign(clearObj, { testStatus: "active", lastError: null, lastErrorAt: null, backoffLevel: 0 });
+    // Clear all lock count keys too
+    for (const k of allLockCountKeys) clearObj[k] = null;
+  } else {
+    // Clear only the count for the model that succeeded
+    const countKey = getModelLockCountKey(model);
+    if (conn[countKey]) clearObj[countKey] = null;
   }
 
   await updateProviderConnection(connectionId, clearObj);

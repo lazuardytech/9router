@@ -239,10 +239,10 @@ export default function ProvidersPage() {
     ([id, info]) => matchSearch(info.name) && matchConnected(id, "oauth"),
   );
   const freeEntries = Object.entries(FREE_PROVIDERS).filter(
-    ([id, info]) => !showConnectedOnly && matchSearch(info.name),
+    ([id, info]) => matchSearch(info.name) && matchConnected(id, "oauth"),
   );
   const freeTierEntries = Object.entries(FREE_TIER_PROVIDERS).filter(
-    ([id, info]) => !showConnectedOnly && matchSearch(info.name),
+    ([id, info]) => matchSearch(info.name) && matchConnected(id, "apikey"),
   );
   const apikeyEntries = Object.entries(APIKEY_PROVIDERS).filter(
     ([id, info]) =>

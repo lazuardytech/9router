@@ -29,6 +29,11 @@ export async function initializeApp() {
     await cleanupProviderConnections();
     const settings = await getSettings();
 
+    // Start models.dev pricing sync
+    const { startPeriodicSync } = await import("@/lib/modelsDevSync.js");
+    const intervalHours = settings.modelCostSyncIntervalHours ?? 1;
+    startPeriodicSync(intervalHours * 60 * 60 * 1000);
+
     // Auto-resume tunnel
     if (settings.tunnelEnabled) {
       console.log("[InitApp] Tunnel was enabled, auto-resuming...");

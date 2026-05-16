@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { toast } from "sonner";
 import { Button, Input, Toggle } from "@/shared/components";
 import { ConfirmModal } from "@/shared/components/Modal";
 import { APP_CONFIG } from "@/shared/constants/config";
@@ -82,6 +83,7 @@ export default function ProfilePage() {
   const [proxyStatus, setProxyStatus] = useState({ type: "", message: "" });
   const [proxyLoading, setProxyLoading] = useState(false);
   const [proxyTestLoading, setProxyTestLoading] = useState(false);
+  const [syncingCost, setSyncingCost] = useState(false);
 
   useEffect(() => {
     fetch("/api/settings/migrate-sqlite")
@@ -310,6 +312,37 @@ export default function ProfilePage() {
     }
   };
 
+  const updateModelCostSyncInterval = async (val) => {
+    const hours = Math.max(1, parseInt(val) || 1);
+    try {
+      const res = await fetch("/api/settings", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ modelCostSyncIntervalHours: hours }),
+      });
+      if (res.ok) setSettings((prev) => ({ ...prev, modelCostSyncIntervalHours: hours }));
+    } catch (err) {
+      console.error("Failed to update modelCostSyncIntervalHours:", err);
+    }
+  };
+
+  const handleSyncNow = async () => {
+    setSyncingCost(true);
+    try {
+      const res = await fetch("/api/pricing/sync", { method: "POST" });
+      const data = await res.json();
+      if (data.success) {
+        toast.success(`Synced ${data.modelCount} model prices from models.dev`);
+      } else {
+        toast.error(data.error || "Sync failed");
+      }
+    } catch (_err) {
+      toast.error("Sync failed");
+    } finally {
+      setSyncingCost(false);
+    }
+  };
+
   const updateObservabilityEnabled = async (enabled) => {
     try {
       const res = await fetch("/api/settings", {
@@ -388,7 +421,7 @@ export default function ProfilePage() {
     }
   };
 
-  const observabilityEnabled = settings.enableObservability === true;
+  const observabilityEnabled = settings.enableObservability === true || settings.observabilityEnabled === true;
 
   return (
     <div className="max-w-2xl mx-auto">
@@ -680,6 +713,40 @@ export default function ProfilePage() {
           <SettingRow label="Enable Observability" description="Record request details for inspection in the logs view">
             <Toggle checked={observabilityEnabled} onChange={updateObservabilityEnabled} disabled={loading} />
           </SettingRow>
+        </Section>
+
+        {/* ── Model Cost Sync ──────────────────────────────────────────── */}
+        <Section>
+          <SectionHeader icon="sync" title="Model Cost Sync" />
+          <div className="flex flex-col gap-4">
+            <SettingRow
+              label="Model Cost Sync Time"
+              description="How often to sync model pricing from models.dev (hours). Default: 1 hour."
+              border
+            >
+              <Input
+                type="number"
+                min="1"
+                max="168"
+                value={settings.modelCostSyncIntervalHours ?? 1}
+                onChange={(e) => updateModelCostSyncInterval(e.target.value)}
+                disabled={loading}
+                className="w-20 text-center shrink-0"
+              />
+            </SettingRow>
+            <SettingRow label="Sync Now" description="Immediately sync model pricing from models.dev.">
+              <Button
+                size="sm"
+                variant="secondary"
+                icon={syncingCost ? "progress_activity" : "sync"}
+                onClick={handleSyncNow}
+                disabled={loading || syncingCost}
+                className="shrink-0"
+              >
+                {syncingCost ? "Syncing..." : "Sync Now"}
+              </Button>
+            </SettingRow>
+          </div>
         </Section>
 
         {/* ── System Information ──────────────────────────────────────────── */}

@@ -36,7 +36,11 @@ function postProcessForVertex(body) {
 
 export function openaiToVertexRequest(model, body, stream, credentials) {
   const gemini = openaiToGeminiRequest(model, body, stream, credentials);
-  return postProcessForVertex(gemini);
+  const processed = postProcessForVertex(gemini);
+  // Vertex AI does not accept `stream` in the request body — streaming is
+  // controlled via the action suffix (:streamGenerateContent) and ?alt=sse.
+  delete processed.stream;
+  return processed;
 }
 
 register(FORMATS.OPENAI, FORMATS.VERTEX, openaiToVertexRequest, null);

@@ -23,6 +23,11 @@ const COLLAPSE_ALL_STORAGE_KEY = "quotaCollapseAll";
 const EXPIRING_FIRST_STORAGE_KEY = "quotaExpiringFirst";
 const HIDE_DISABLED_STORAGE_KEY = "quotaHideDisabled";
 
+const readLocalBool = (key) => {
+  if (typeof window === "undefined") return false;
+  return window.localStorage.getItem(key) === "true";
+};
+
 export default function ProviderLimits() {
   const [connections, setConnections] = useState([]);
   const [quotaData, setQuotaData] = useState(() => {
@@ -59,22 +64,19 @@ export default function ProviderLimits() {
   const [selectedConnection, setSelectedConnection] = useState(null);
   const [proxyPools, setProxyPools] = useState([]);
   const [providerFilter, setProviderFilter] = useState("all");
-  const [expiringFirst, setExpiringFirst] = useState(() => {
-    if (typeof window === "undefined") return false;
-    return window.sessionStorage.getItem(EXPIRING_FIRST_STORAGE_KEY) === "true";
-  });
+  const [expiringFirst, setExpiringFirst] = useState(() => readLocalBool(EXPIRING_FIRST_STORAGE_KEY));
   const [providerMenuOpen, setProviderMenuOpen] = useState(false);
   const [bulkToggling, setBulkToggling] = useState(false);
-  const [collapseAll, setCollapseAll] = useState(() => {
-    if (typeof window === "undefined") return false;
-    return window.sessionStorage.getItem(COLLAPSE_ALL_STORAGE_KEY) === "true";
+  const [collapseAll, setCollapseAll] = useState(() => readLocalBool(COLLAPSE_ALL_STORAGE_KEY));
+  const [expandedRows, setExpandedRows] = useState(() => {
+    if (!readLocalBool(COLLAPSE_ALL_STORAGE_KEY)) return {};
+    return { __collapsed: true };
   });
-  const [expandedRows, setExpandedRows] = useState({});
-  const [expandedProviders, setExpandedProviders] = useState({});
-  const [hideDisabled, setHideDisabled] = useState(() => {
-    if (typeof window === "undefined") return false;
-    return window.sessionStorage.getItem(HIDE_DISABLED_STORAGE_KEY) === "true";
+  const [expandedProviders, setExpandedProviders] = useState(() => {
+    if (!readLocalBool(COLLAPSE_ALL_STORAGE_KEY)) return {};
+    return { __collapsed: true };
   });
+  const [hideDisabled, setHideDisabled] = useState(() => readLocalBool(HIDE_DISABLED_STORAGE_KEY));
   const [disabledModels, setDisabledModels] = useState({});
 
   const [confirmDialog, setConfirmDialog] = useState({
@@ -338,20 +340,20 @@ export default function ProviderLimits() {
     window.localStorage.setItem(AUTO_REFRESH_STORAGE_KEY, String(autoRefresh));
   }, [autoRefresh]);
 
-  // Persist toggle states to sessionStorage
+  // Persist toggle states to localStorage
   useEffect(() => {
     if (typeof window === "undefined") return;
-    window.sessionStorage.setItem(EXPIRING_FIRST_STORAGE_KEY, String(expiringFirst));
+    window.localStorage.setItem(EXPIRING_FIRST_STORAGE_KEY, String(expiringFirst));
   }, [expiringFirst]);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
-    window.sessionStorage.setItem(COLLAPSE_ALL_STORAGE_KEY, String(collapseAll));
+    window.localStorage.setItem(COLLAPSE_ALL_STORAGE_KEY, String(collapseAll));
   }, [collapseAll]);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
-    window.sessionStorage.setItem(HIDE_DISABLED_STORAGE_KEY, String(hideDisabled));
+    window.localStorage.setItem(HIDE_DISABLED_STORAGE_KEY, String(hideDisabled));
   }, [hideDisabled]);
 
   // Auto-refresh interval
@@ -653,7 +655,7 @@ export default function ProviderLimits() {
           className={cn(
             "h-7 px-2.5 rounded-[4px] border text-[11px] transition-colors flex items-center gap-1",
             collapseAll
-              ? "border-aether-blue/30 bg-aether-blue/8 text-aether-blue hover:bg-aether-blue/15"
+              ? "border-white/20 bg-white/8 text-white hover:bg-white/15"
               : "border-charcoal-grey text-storm-cloud hover:text-porcelain hover:bg-deep-slate",
           )}
           title="Collapse all rows"
@@ -669,7 +671,7 @@ export default function ProviderLimits() {
           className={cn(
             "h-7 px-2.5 rounded-[4px] border text-[11px] transition-colors flex items-center gap-1",
             expiringFirst
-              ? "border-amber-500/40 bg-amber-500/10 text-amber-400 hover:bg-amber-500/15"
+              ? "border-white/20 bg-white/8 text-white hover:bg-white/15"
               : "border-charcoal-grey text-storm-cloud hover:text-porcelain hover:bg-deep-slate",
           )}
           title="Sort accounts by earliest quota reset time"
@@ -685,7 +687,7 @@ export default function ProviderLimits() {
           className={cn(
             "h-7 px-2.5 rounded-[4px] border text-[11px] transition-colors flex items-center gap-1",
             hideDisabled
-              ? "border-fog-grey/40 bg-fog-grey/10 text-fog-grey hover:bg-fog-grey/15"
+              ? "border-white/20 bg-white/8 text-white hover:bg-white/15"
               : "border-charcoal-grey text-storm-cloud hover:text-porcelain hover:bg-deep-slate",
           )}
           title="Hide disabled connections"
@@ -794,7 +796,9 @@ export default function ProviderLimits() {
             const isEmail = (v) => typeof v === "string" && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
 
             return providerGroups.map(([provider, conns]) => {
-              const providerExpanded = expandedProviders[provider] ?? true;
+              const providerExpanded = collapseAll
+                ? (expandedProviders[provider] ?? false)
+                : (expandedProviders[provider] ?? true);
 
               // Accumulated progress across all connections in this provider group
               const providerTotalUsed = conns.reduce((s, c) => s + getAccumulatedProgress(c).totalUsed, 0);
@@ -867,7 +871,9 @@ export default function ProviderLimits() {
                       const error = errors[conn.id];
                       const isInactive = conn.isActive === false;
                       const rowBusy = deletingId === conn.id || togglingId === conn.id;
-                      const accountExpanded = expandedRows[conn.id] ?? true;
+                      const accountExpanded = collapseAll
+                        ? (expandedRows[conn.id] ?? false)
+                        : (expandedRows[conn.id] ?? true);
                       const { totalLimit, pct } = getAccumulatedProgress(conn);
                       const color = getStatusColor(pct);
                       const cc = colorClasses(color);

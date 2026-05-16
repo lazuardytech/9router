@@ -121,6 +121,20 @@ export function getModelLockKey(model) {
   return model ? `${MODEL_LOCK_PREFIX}${model}` : MODEL_LOCK_ALL;
 }
 
+/** Prefix for model lock count flat fields — tracks how many times a model has been locked */
+export const MODEL_LOCK_COUNT_PREFIX = "modelLockCount_";
+
+/** Build the flat field key for a model lock count */
+export function getModelLockCountKey(model) {
+  return model ? `${MODEL_LOCK_COUNT_PREFIX}${model}` : `${MODEL_LOCK_COUNT_PREFIX}__all`;
+}
+
+/** Read current lock count for a model from a connection record */
+export function getModelLockCount(connection, model) {
+  const key = getModelLockCountKey(model);
+  return Number(connection?.[key]) || 0;
+}
+
 /**
  * Check if a model lock on a connection is still active.
  * Reads flat field `modelLock_${model}` (or `modelLock___all` when model=null).
@@ -164,6 +178,7 @@ export function buildClearModelLocksUpdate(connection) {
   const cleared = {};
   for (const key of Object.keys(connection)) {
     if (key.startsWith(MODEL_LOCK_PREFIX)) cleared[key] = null;
+    if (key.startsWith(MODEL_LOCK_COUNT_PREFIX)) cleared[key] = null;
   }
   return cleared;
 }

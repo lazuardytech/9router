@@ -4,7 +4,16 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { Badge, Button, CardSkeleton } from "@/shared/components";
 import ProviderIcon from "@/shared/components/ProviderIcon";
+import { ANTHROPIC_COMPATIBLE_PREFIX } from "@/shared/constants/providers";
 import TelemetryCard from "./TelemetryCard";
+
+function getProviderIconSrc(p) {
+  if (p.isCompatible) {
+    if (p.provider?.startsWith(ANTHROPIC_COMPATIBLE_PREFIX)) return "/providers/anthropic-m.png";
+    return "/providers/oai-cc.png";
+  }
+  return `/providers/${p.providerPrefix || p.provider}.png`;
+}
 
 function formatBytes(bytes = 0) {
   if (bytes < 1024) return `${bytes} B`;
@@ -386,7 +395,7 @@ export default function HealthPage() {
                           <div className="flex items-center gap-2 flex-wrap">
                             <div className="w-4 h-4 shrink-0 rounded-[3px] bg-white flex items-center justify-center overflow-hidden">
                               <ProviderIcon
-                                src={`/providers/${p.providerPrefix || p.provider}.png`}
+                                src={getProviderIconSrc(p)}
                                 alt={p.providerName}
                                 size={16}
                                 fallbackText={p.providerName?.slice(0, 2).toUpperCase()}
@@ -426,7 +435,7 @@ export default function HealthPage() {
                           <span className="size-2 rounded-full bg-emerald shrink-0" />
                           <div className="w-4 h-4 shrink-0 rounded-[3px] bg-white flex items-center justify-center overflow-hidden">
                             <ProviderIcon
-                              src={`/providers/${p.providerPrefix || p.provider}.png`}
+                              src={getProviderIconSrc(p)}
                               alt={p.providerName}
                               size={16}
                               fallbackText={p.providerName?.slice(0, 2).toUpperCase()}
@@ -446,9 +455,9 @@ export default function HealthPage() {
         )}
       </div>
 
-      {/* Rate Limit Status */}
+      {/* Model Lockout Status */}
       <div className="rounded-[6px] border border-charcoal-grey bg-graphite p-5">
-        <SectionHeader icon="speed" title="Rate Limit Status">
+        <SectionHeader icon="lock" title="Model Lockout Status">
           {data.rateLimitStatus?.length > 0 && (
             <span className="text-[11px] text-fog-grey">
               {data.rateLimitStatus.length} provider{data.rateLimitStatus.length !== 1 ? "s" : ""} affected
@@ -483,9 +492,9 @@ export default function HealthPage() {
         )}
       </div>
 
-      {/* Model Lockout Status */}
+      {/* Rate Limit Status */}
       <div className="rounded-[6px] border border-charcoal-grey bg-graphite p-5">
-        <SectionHeader icon="lock" title="Model Lockout Status">
+        <SectionHeader icon="speed" title="Rate Limit Status">
           {data.blockedModelStatus?.length > 0 && (
             <div className="flex items-center gap-2">
               <span className="text-[11px] text-fog-grey">
