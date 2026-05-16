@@ -186,7 +186,7 @@ export default function ConsoleLogClient({ autoScroll, setAutoScroll, clearRef, 
   };
 
   return (
-    <div className="flex flex-col gap-3 h-[calc(100vh-140px)]">
+    <div className="flex flex-col gap-3">
       {/* Row 2: Search + Level filter pills + Stats */}
       <div className="flex flex-wrap items-center justify-between gap-2 shrink-0">
         {/* Left: Search + filter pills */}
@@ -239,7 +239,7 @@ export default function ConsoleLogClient({ autoScroll, setAutoScroll, clearRef, 
       </div>
 
       {/* Terminal */}
-      <div className="flex-1 rounded-[6px] border border-charcoal-grey bg-pitch-black overflow-hidden flex flex-col">
+      <div className="h-[368px] rounded-[6px] border border-charcoal-grey bg-pitch-black overflow-hidden flex flex-col">
         <div className="flex items-center gap-2 px-3 py-2 border-b border-charcoal-grey bg-graphite shrink-0">
           <span className="text-[11px] text-fog-grey font-mono">console — pod</span>
           <span className="ml-auto text-[10px] text-fog-grey">

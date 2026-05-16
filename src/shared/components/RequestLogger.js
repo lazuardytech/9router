@@ -407,7 +407,7 @@ export default function RequestLogger({
       </div>
 
       <p className="text-[10px] text-fog-grey italic">
-        Showing {filtered.length} of {counts.total} logs · Live via SSE
+        Showing {filtered.length} of {counts.total} logs
       </p>
 
       {/* Detail Drawer */}
