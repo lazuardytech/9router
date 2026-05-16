@@ -12,6 +12,7 @@ const DEFAULT_BATCH_SIZE = 20;
 const DEFAULT_FLUSH_INTERVAL_MS = 5000;
 const DEFAULT_MAX_JSON_SIZE = 5 * 1024;
 const CONFIG_CACHE_TTL_MS = 5000;
+const WRITE_BUFFER_MAX = 500; // hard cap — prevent unbounded growth if flush stalls
 
 let cachedConfig = null;
 let cachedConfigTs = 0;
@@ -60,8 +61,8 @@ async function getObservabilityConfig() {
 let writeBuffer = [];
 let flushTimer = null;
 let isFlushing = false;
-let estimatedDbSize = 0;
-let flushCount = 0;
+const estimatedDbSize = 0;
+const flushCount = 0;
 
 function sanitizeHeaders(headers) {
   if (!headers || typeof headers !== "object") return {};
@@ -180,6 +181,11 @@ export async function saveRequestDetail(detail) {
   if (!config.enabled) return;
 
   writeBuffer.push(detail);
+
+  // Hard cap: drop oldest entries if buffer grows too large (flush stall guard)
+  if (writeBuffer.length > WRITE_BUFFER_MAX) {
+    writeBuffer = writeBuffer.slice(-WRITE_BUFFER_MAX);
+  }
 
   if (writeBuffer.length >= config.batchSize) {
     await flushToDatabase();

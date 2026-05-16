@@ -3,11 +3,11 @@
 // (same global state, same observable semantics) because consumers subscribe
 // to `statsEmitter` events from SSE routes.
 
-import { EventEmitter } from "events";
 import fs from "node:fs";
-import { getDatabase } from "./sqlite/connection.js";
+import { EventEmitter } from "events";
 import { DATA_DIR } from "@/lib/dataDir.js";
 import { LRUCache } from "./cacheLayer.js";
+import { getDatabase } from "./sqlite/connection.js";
 
 const isCloud = typeof caches !== "undefined" || typeof caches === "object";
 
@@ -246,6 +246,22 @@ function flushSummaryQueue() {
   }
 }
 
+// Keep usage_history bounded — trim every ~100 inserts.
+// Default: keep 90 days. Prevents unbounded table growth.
+const USAGE_HISTORY_MAX_DAYS = 90;
+let usageHistoryTrimCounter = 0;
+const USAGE_HISTORY_TRIM_EVERY = 100;
+
+function trimUsageHistoryIfNeeded(db) {
+  usageHistoryTrimCounter += 1;
+  if (usageHistoryTrimCounter < USAGE_HISTORY_TRIM_EVERY) return;
+  usageHistoryTrimCounter = 0;
+  try {
+    const cutoff = new Date(Date.now() - USAGE_HISTORY_MAX_DAYS * 86400000).toISOString();
+    db.prepare("DELETE FROM usage_history WHERE timestamp < ?").run(cutoff);
+  } catch {}
+}
+
 export async function saveRequestUsage(entry) {
   if (isCloud) return;
 
@@ -291,6 +307,9 @@ export async function saveRequestUsage(entry) {
     });
     if (summaryQueue.length >= SUMMARY_BATCH_SIZE) flushSummaryQueue();
     else scheduleSummaryFlush();
+
+    // Periodic trim to keep usage_history bounded
+    trimUsageHistoryIfNeeded(db);
   } catch (err) {
     console.error("Failed to save usage stats:", err);
   }
@@ -551,7 +570,8 @@ export async function getUsageHistory(filter = {}) {
     params.push(new Date(filter.endDate).toISOString());
   }
   const where = clauses.length ? `WHERE ${clauses.join(" AND ")}` : "";
-  const rows = db.prepare(`SELECT * FROM usage_history ${where} ORDER BY timestamp`).all(...params);
+  const limit = filter.limit || 10000;
+  const rows = db.prepare(`SELECT * FROM usage_history ${where} ORDER BY timestamp DESC LIMIT ?`).all(...params, limit);
   return rows.map(historyRow);
 }
 
@@ -563,7 +583,7 @@ export async function getActiveRequests() {
   const db = getDatabase();
 
   // Active requests from in-memory pending state
-  let connectionMap = {};
+  const connectionMap = {};
   try {
     const { getProviderConnections } = await import("@/lib/localDb.js");
     for (const c of await getProviderConnections()) {
@@ -895,7 +915,8 @@ export async function getUsageStats(period = "all") {
       : db
           .prepare(
             `SELECT timestamp, provider, model, connection_id AS connectionId,
-                  api_key AS apiKey, endpoint FROM usage_history`,
+                  api_key AS apiKey, endpoint FROM usage_history
+             ORDER BY timestamp DESC LIMIT 10000`,
           )
           .all();
     for (const entry of overlayRows) {
@@ -1156,4 +1177,4 @@ export function getQueueDepths() {
 
 // Re-export request details for back-compat (existing routes import these
 // names from @/lib/usageDb)
-export { saveRequestDetail, getRequestDetails, getRequestDetailById, generateDetailId } from "./requestDetailsDb.js";
+export { generateDetailId, getRequestDetailById, getRequestDetails, saveRequestDetail } from "./requestDetailsDb.js";
