@@ -238,9 +238,9 @@ function LogsInner() {
         )}
       </div>
 
-      {/* Tab content */}
+      {/* Tab content — all tabs always mounted to keep refs alive */}
       <div>
-        {activeTab === "request-logs" && (
+        <div className={activeTab === "request-logs" ? "" : "hidden"}>
           <RequestLogger
             sortBy={sortBy}
             setSortBy={setSortBy}
@@ -251,8 +251,8 @@ function LogsInner() {
             setFilterProvider={setFilterProvider}
             onProvidersChange={setProviderOptions}
           />
-        )}
-        {activeTab === "proxy-logs" && (
+        </div>
+        <div className={activeTab === "proxy-logs" ? "" : "hidden"}>
           <ProxyLogsTab
             sortBy={proxySortBy}
             setSortBy={setProxySortBy}
@@ -261,8 +261,8 @@ function LogsInner() {
             onRefresh={proxyRefreshRef}
             onCountChange={setProxyCount}
           />
-        )}
-        {activeTab === "console" && (
+        </div>
+        <div className={activeTab === "console" ? "" : "hidden"}>
           <ConsoleLogClient
             autoScroll={autoScroll}
             setAutoScroll={setAutoScroll}
@@ -270,7 +270,7 @@ function LogsInner() {
             live={consoleLive}
             refreshRef={consoleRefreshRef}
           />
-        )}
+        </div>
       </div>
     </div>
   );
