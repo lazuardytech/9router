@@ -254,7 +254,15 @@ function closeMessage(state, emit, idx) {
 }
 
 function emitToolCall(state, emit, tc) {
-  const tcIdx = tc.index ?? 0;
+  // Use tc.index if provided, otherwise fallback to state's tracked toolCallIndex
+  // This fixes Codex streaming freeze where tool calls may not have explicit index
+  let tcIdx = tc.index;
+  if (tcIdx === undefined || tcIdx === null) {
+    // Fallback: use state's tracked index (next available slot)
+    tcIdx = state.toolCallIndex ?? 0;
+    state.toolCallIndex = tcIdx + 1; // Increment for next tool call
+  }
+
   const newCallId = tc.id;
   const funcName = tc.function?.name;
 
@@ -408,6 +416,7 @@ export function openaiResponsesToOpenAIResponse(chunk, state) {
     state.created = Math.floor(Date.now() / 1000);
     state.toolCallIndex = 0;
     state.currentToolCallId = null;
+    state.maxOutputIndex = -1; // Track highest output_index seen
   }
 
   // Text content delta
@@ -442,6 +451,13 @@ export function openaiResponsesToOpenAIResponse(chunk, state) {
   ) {
     const item = data.item;
     state.currentToolCallId = item.call_id || `call_${Date.now()}`;
+
+    // Use output_index from the event if available, otherwise use tracked index
+    const outputIndex = data.output_index;
+    if (outputIndex !== undefined && outputIndex !== null) {
+      state.toolCallIndex = outputIndex;
+      state.maxOutputIndex = Math.max(state.maxOutputIndex, outputIndex);
+    }
 
     return {
       id: state.chatId,

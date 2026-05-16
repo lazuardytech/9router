@@ -29,7 +29,16 @@ function processSSEMessage(msg, state) {
     state.responseId = parsed.response?.id || state.responseId;
     state.created = parsed.response?.created_at || state.created;
   } else if (eventType === "response.output_item.done") {
-    state.items.set(parsed.output_index ?? 0, parsed.item);
+    // Use output_index from event, fallback to next available index
+    // This fixes Codex tool call freeze where output_index may be missing
+    let outputIndex = parsed.output_index;
+    if (outputIndex === undefined || outputIndex === null) {
+      outputIndex = state.nextIndex ?? 0;
+      state.nextIndex = outputIndex + 1;
+    } else {
+      state.nextIndex = Math.max(state.nextIndex ?? 0, outputIndex + 1);
+    }
+    state.items.set(outputIndex, parsed.item);
   } else if (eventType === "response.completed") {
     state.status = "completed";
     if (parsed.response?.usage) {
@@ -71,6 +80,7 @@ export async function convertResponsesStreamToJson(stream) {
     status: "in_progress",
     usage: { ...EMPTY_RESPONSE },
     items: new Map(),
+    nextIndex: 0, // Track next available index for items without output_index
   };
 
   try {
