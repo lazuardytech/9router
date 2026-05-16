@@ -55,4 +55,4 @@ Execution contract is still request/response based, with streaming handled in ch
 - OpenAI-like request/response shapes are the canonical transform center
 - Format adapters live in `open-sse/translator/*`
 - Streaming/non-streaming handlers are split in `open-sse/handlers/chatCore/*`
-- Reasoning/thinking metadata passthrough fixes landed in v0.2.9 baseline and remain active
+- Reasoning/thinking metadata passthrough fixes are active in current `open-sse` baseline.

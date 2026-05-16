@@ -9,6 +9,7 @@ Operational notes for AI agents working on **Pod** (`~/projects/lt/pod`).
 - Docker: `lazuardytech/pod` (tags v0.0.1–v0.0.14, latest)
 - GitHub: `lazuardytech/pod`, branch `main`
 - Data dir: `~/.pod/pod.sqlite`
+- Runtime: `bun /app/server.js` (no `--smol`; cache env vars limit heap instead)
 
 ## Non-Negotiable Rules
 
@@ -25,6 +26,7 @@ Operational notes for AI agents working on **Pod** (`~/projects/lt/pod`).
 11. **`text-primary-fg` for text on `bg-primary`** — never use `text-white` or `text-black` with `bg-primary`. The `--color-primary` token flips between near-black (light) and near-white (dark); `text-primary-fg` is the paired foreground token that stays readable in both themes.
 12. **Provider node rename is custom-only** — `renameProviderNode` and `PATCH /api/provider-nodes/[id]/rename` only work on custom nodes (`openai-compatible-*`, `anthropic-compatible-*`, `custom-embedding-*`). Built-in provider IDs are hardcoded in routing and must never be renamed.
 13. **Streaming requests are now cached** — `isCacheableForRead/Write` no longer blocks `stream: true`. Cache hits for streaming clients are served as SSE chunks via `buildCacheHitSSEResponse`. Do not re-add the `stream: true` exclusion.
+14. **No `--smol` flag** — removed from `Dockerfile` CMD. Memory is bounded via `SEMANTIC_CACHE_MAX_BYTES`, `SEMANTIC_CACHE_MAX_SIZE`, `PROMPT_CACHE_MAX_BYTES`, `PROMPT_CACHE_MAX_SIZE` env vars instead.
 
 ## Verification Before Push
 

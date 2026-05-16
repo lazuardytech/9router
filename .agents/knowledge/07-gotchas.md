@@ -187,10 +187,16 @@ Do not raise these without profiling — the previous values (256MB / 64MB) cont
 `USAGE_HISTORY_MAX_DAYS = 90` in `src/lib/usageDb.js`. Trim runs every 100 inserts.
 `getUsageHistory()` default LIMIT is 10 000. Do not remove the trim or raise the retention window without considering DB growth.
 
-## 35) `bun --smol` is required in Docker
+## 35) `bun --smol` has been removed from Docker
 
-`Dockerfile` runs `bun --smol run start` for more aggressive GC.
-Do not remove the `--smol` flag — without it, bun's default GC is too conservative for long-running server workloads.
+`Dockerfile` CMD is now `bun /app/server.js` (no `--smol`).
+Memory is bounded instead via env vars set in the Dockerfile:
+- `SEMANTIC_CACHE_MAX_BYTES=2097152` (2MB)
+- `SEMANTIC_CACHE_MAX_SIZE=50`
+- `PROMPT_CACHE_MAX_BYTES=1048576` (1MB)
+- `PROMPT_CACHE_MAX_SIZE=25`
+
+Do not re-add `--smol` — it throttles the heap globally and hurts throughput under load.
 
 ## 36) Semantic cache temperature threshold is `> 1`, not `!== 0`
 

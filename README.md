@@ -3,34 +3,129 @@
 
 # ✦ Pod
 
-Unified proxy for LLM Inference.
+Unified proxy for LLM inference. Pod sits in front of your AI providers and exposes a single OpenAI-compatible endpoint — with routing, fallback, caching, rate limiting, and a dashboard built in.
 
-<code>🚧 under heady development on v0.0.x</code>
+<code>🚧 under active development on v0.0.x</code>
+
+<br/>
+
+## Features
+
+- **Multi-provider routing** — OpenAI, Anthropic, Gemini, Codex, Ollama, Blackbox, MiniMax, and more
+- **Compatibility APIs** — OpenAI, Anthropic, Gemini, and Ollama-compatible endpoints under `/v1/*`
+- **Semantic cache** — deduplicates identical requests; streaming responses are cached too
+- **Conversational memory** — automatic injection and extraction across sessions
+- **API key auth** — per-key rate limiting (req/min + concurrent cap)
+- **Combos** — model groups with fallback and round-robin strategies
+- **Proxy pools** — per-provider proxy config with optional Vercel relay
+- **Tunnel support** — Tailscale and Cloudflare tunnel integration
+- **Dashboard** — full web UI for providers, usage analytics, quota tracking, logs, and health
+
+<br/>
+
+## Quick Start
+
+### Docker (recommended)
+
+```bash
+docker run -d \
+  --name pod \
+  -p 20128:20128 \
+  -v pod-data:/app/data \
+  lazuardytech/pod:latest
+```
+
+Then open `http://localhost:20128`.
+
+With an env file:
+
+```bash
+docker run -d \
+  --name pod \
+  -p 20128:20128 \
+  -v pod-data:/app/data \
+  --env-file .env \
+  lazuardytech/pod:latest
+```
+
+### Local Development
+
+Requires [bun](https://bun.sh) v1.3.14+.
+
+```bash
+bun install
+bun run dev        # starts on http://localhost:20128
+```
+
+<br/>
+
+## Environment Variables
+
+| Variable | Default | Description |
+|---|---|---|
+| `PORT` | `20128` | HTTP port |
+| `DATA_DIR` | `/app/data` | SQLite data directory |
+| `NEXT_TELEMETRY_DISABLED` | `1` | Disable Next.js telemetry |
+| `SEMANTIC_CACHE_MAX_BYTES` | `4194304` | Semantic cache max size in bytes |
+| `SEMANTIC_CACHE_MAX_SIZE` | `100` | Semantic cache max entries |
+| `SEMANTIC_CACHE_TTL_MS` | `1800000` | Semantic cache TTL (ms) |
+| `PROMPT_CACHE_MAX_BYTES` | `2097152` | Prompt cache max size in bytes |
+| `PROMPT_CACHE_MAX_SIZE` | `50` | Prompt cache max entries |
+| `PROMPT_CACHE_TTL_MS` | `300000` | Prompt cache TTL (ms) |
+
+<br/>
+
+## API
+
+Pod exposes standard-compatible endpoints:
+
+| Endpoint | Protocol |
+|---|---|
+| `POST /v1/chat/completions` | OpenAI |
+| `POST /v1/messages` | Anthropic |
+| `POST /v1/responses` | OpenAI Responses |
+| `POST /v1/embeddings` | OpenAI |
+| `POST /v1/audio/speech` | OpenAI TTS |
+| `POST /v1/audio/transcriptions` | OpenAI STT |
+| `POST /v1/images/generations` | OpenAI |
+| `GET /v1/models` | OpenAI |
+| `GET /v1beta/models` | Gemini |
+| `POST /v1/api/chat` | Ollama |
+
+All endpoints accept `Authorization: Bearer <key>` or `x-api-key: <key>` when API key auth is enabled.
 
 <br/>
 
 ## Development
 
 ```bash
-bun install          # Install all dependencies
-bun run build        # Build all packages
-bun run check        # Lint, format, and type check
-bun run test         # Run tests
+bun install          # install dependencies
+bun run dev          # start dev server on :20128
+bun run build        # production build
+bun run check        # biome format + lint + eslint
+bun run test:run     # run vitest
 ```
 
-> Development requires `bun run build` to be run first.<br/>
-> All AI agents should read and understand all information inside `.agents`.
+> Always run `bun run check` and `bun run test:run` before pushing.
+
+See [AGENTS.md](AGENTS.md) for project rules (applies to both humans and AI agents). Additional agent context lives in `.agents/`.
 
 <br/>
 
 ## Contributing
 
-See [CONTRIBUTING.md](CONTRIBUTING.md) for contribution guidelines and [AGENTS.md](AGENTS.md) for project-specific rules (for both humans and AI agents). Additional information for AI agents are stored in `.agents`.
+See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
 
-> Pod is heavily inspired by [9router](https://9router.com) and [OmniRoute](https://omniroute.online). All credits should go to their maintainers too.
+> Pod is heavily inspired by [9router](https://9router.com) and [OmniRoute](https://omniroute.online). Credits to their maintainers.
+
+<br/>
+
+## Security
+
+See [SECURITY.md](SECURITY.md) for the vulnerability disclosure policy.
 
 <br/>
 
 ## License
 
-[MIT](https://github.com/lazuardytech/pod/blob/main/LICENSE)
+[MIT](https://github.com/lazuardytech/pod/blob/main/LICENSE) — Copyright (c) 2024–2026 Lazuardy Technology and contributors.

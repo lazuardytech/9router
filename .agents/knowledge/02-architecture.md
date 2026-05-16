@@ -160,7 +160,14 @@ Custom provider nodes (`openai-compatible-*`, `anthropic-compatible-*`, `custom-
 
 ## Docker Runtime
 
-`Dockerfile` runs bun with `--smol` flag (`bun --smol run start`) for more aggressive GC. Do not remove this flag.
+`Dockerfile` CMD is `bun /app/server.js` (no `--smol`).
+Memory is bounded via cache env vars set in the Dockerfile:
+- `SEMANTIC_CACHE_MAX_BYTES=2097152` (2MB, default 4MB)
+- `SEMANTIC_CACHE_MAX_SIZE=50` (default 100)
+- `PROMPT_CACHE_MAX_BYTES=1048576` (1MB, default 2MB)
+- `PROMPT_CACHE_MAX_SIZE=25` (default 50)
+
+Rationale: `--smol` throttles the entire heap and hurts throughput. Bun's high RSS vs Node is a runtime characteristic, not a leak — the actual leaks (SSE abort, LRU, SQLite pragmas) were fixed in v0.0.13.
 
 ## Upstream Engine Fixes (v0.0.6)
 

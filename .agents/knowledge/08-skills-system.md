@@ -1,6 +1,6 @@
 # Skills System
 
-Status for this repo snapshot (v0.3.1):
+Status for this repo snapshot (v0.0.14):
 
 - There is **no `skills/` directory** at repository root.
 - There is **no dashboard `/dashboard/skills` page** in current route tree.

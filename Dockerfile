@@ -21,6 +21,12 @@ ENV HOSTNAME=0.0.0.0
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV DATA_DIR=/app/data
 
+# Cache memory limits (reduce Bun heap pressure)
+ENV SEMANTIC_CACHE_MAX_BYTES=2097152
+ENV SEMANTIC_CACHE_MAX_SIZE=50
+ENV PROMPT_CACHE_MAX_BYTES=1048576
+ENV PROMPT_CACHE_MAX_SIZE=25
+
 COPY --from=builder /app/public ./public
 COPY --from=builder /app/.next/static ./.next/static
 COPY --from=builder /app/.next/standalone ./
@@ -58,4 +64,4 @@ WORKDIR /app
 EXPOSE 20128
 
 ENTRYPOINT ["/entrypoint.sh"]
-CMD ["bun", "--smol", "/app/server.js"]
+CMD ["bun", "/app/server.js"]

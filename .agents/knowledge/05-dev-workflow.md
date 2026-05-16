@@ -18,19 +18,20 @@ Repo config:
 ```bash
 bun run dev        # next dev --webpack --port 20128
 bun run build      # production build
-bun run start      # bun /app/server.js (Next.js standalone)
+bun run start      # bun ./.next/standalone/server.js (Next.js standalone)
 ```
 
 ## Validation Commands
 
 ```bash
-bun run format     # biome format --write .
-bun x eslint .     # lint
+bun run check      # biome format + biome lint + eslint (all-in-one, canonical pre-push)
+bun run format     # biome format --write . (format only)
+bun x eslint .     # lint only
 bun run test:run   # vitest
 bun run build      # next build
 ```
 
-Always run in this order before release: format → lint → test → build.
+Always run in this order before release: `bun run check` → `bun run test:run` → `bun run build`.
 
 ## Docker (Local)
 
@@ -38,20 +39,24 @@ Always run in this order before release: format → lint → test → build.
 ./start.sh
 ```
 
+What `start.sh` does: stop + remove existing `pod` container, pull `lazuardytech/pod:latest`, run with `--env-file .env` and volume `pod-data:/app/data`.
+
 Dockerfile facts:
 - Multi-stage build:
   - Builder: `oven/bun:1.3.14-alpine` + `--ignore-scripts` (skips native compile)
   - Runner: `oven/bun:1.3.14-alpine`
-- CMD: `bun /app/server.js`
+- Entrypoint: `/entrypoint.sh` — fixes volume permissions, starts `tailscaled` in userspace mode, then `exec su-exec bun`
+- CMD: `bun /app/server.js` (no `--smol`; memory bounded via cache env vars)
+- Cache env vars set in Dockerfile: `SEMANTIC_CACHE_MAX_BYTES=2097152`, `SEMANTIC_CACHE_MAX_SIZE=50`, `PROMPT_CACHE_MAX_BYTES=1048576`, `PROMPT_CACHE_MAX_SIZE=25`
 - Runtime port: `20128`
-- Data dir defaults to `/app/data` in container
+- Data dir: `/app/data` (volume mount); `~/.pod` symlinked to `/app/data-home` inside container
 
 ## CI/CD Workflows
 
 ### Build & Test
 File: `.github/workflows/ci.yml`
 - Trigger: push/PR to `main`, manual dispatch
-- Steps: bun install → eslint → test → build
+- Steps: bun install → `bun run check` (lint) → `bun run test:run` → `bun run build`
 
 ### Format
 File: `.rwx/format.yml` — runs `bun run format` via rwx
@@ -71,7 +76,7 @@ File: `.github/workflows/docker-publish.yml`
 
 ## Release Flow
 
-1. Implement + validate (`bun run format`, `bun x eslint .`, `bun run test:run`, `bun run build`)
+1. Implement + validate: `bun run check` → `bun run test:run` → `bun run build`
 2. Run rwx build: `rwx run .rwx/build.yml` — wait for success
 3. Bump version in **both**:
    - `package.json` → `"version"`
