@@ -47,8 +47,8 @@ export async function GET(request) {
         send({ type: "init", logs: [] });
       }
 
-      // Poll every 1s when there are pending entries, 2s otherwise
-      let pollInterval = 2000;
+      // Fixed 2s poll — 1s fast-poll for PENDING entries caused unnecessary CPU load
+      const POLL_MS = 2000;
       const poll = async () => {
         if (closed) return;
         try {
@@ -58,14 +58,11 @@ export async function GET(request) {
             lastSig = sig;
             send({ type: "update", logs });
           }
-          // Poll faster if there are pending entries
-          const hasPending = logs.some((l) => l.status?.includes("PENDING"));
-          pollInterval = hasPending ? 1000 : 2000;
         } catch {}
-        if (!closed) setTimeout(poll, pollInterval);
+        if (!closed) setTimeout(poll, POLL_MS);
       };
 
-      setTimeout(poll, pollInterval);
+      setTimeout(poll, POLL_MS);
 
       // Heartbeat every 30s
       const heartbeat = setInterval(() => {

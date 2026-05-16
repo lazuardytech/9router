@@ -12,6 +12,23 @@ import {
 // biome-ignore lint/suspicious/noAssignInExpressions: globalThis singleton pattern for HMR survival
 const START_TIME = globalThis.__pod_start_time ?? (globalThis.__pod_start_time = Date.now());
 
+// Cache integrity_check result — it's an O(n-pages) full scan, too expensive
+// to run on every SSE poll. Re-run at most once every 5 minutes.
+const INTEGRITY_CACHE_TTL_MS = 5 * 60 * 1000;
+let _integrityCache = null;
+let _integrityCacheAt = 0;
+
+function getCachedIntegrity(db) {
+  const now = Date.now();
+  if (_integrityCache && now - _integrityCacheAt < INTEGRITY_CACHE_TTL_MS) {
+    return _integrityCache;
+  }
+  const result = db.prepare("PRAGMA integrity_check").get();
+  _integrityCache = result?.integrity_check ?? "ok";
+  _integrityCacheAt = now;
+  return _integrityCache;
+}
+
 function getSystemInfo() {
   const mem = process.memoryUsage();
   return {
@@ -31,14 +48,14 @@ function getDbInfo() {
   try {
     const db = getDatabase();
     const version = db.prepare("SELECT value FROM meta WHERE key = 'schema_version'").get();
-    const integrity = db.prepare("PRAGMA integrity_check").get();
+    const integrity = { integrity_check: getCachedIntegrity(db) };
     const pageCount = db.prepare("PRAGMA page_count").get();
     const pageSize = db.prepare("PRAGMA page_size").get();
     const walMode = db.prepare("PRAGMA journal_mode").get();
     return {
       ok: true,
       schemaVersion: version?.value ?? "unknown",
-      integrity: integrity?.integrity_check ?? "ok",
+      integrity: integrity.integrity_check,
       sizeBytes: (pageCount?.page_count ?? 0) * (pageSize?.page_size ?? 4096),
       journalMode: walMode?.journal_mode ?? "unknown",
     };
