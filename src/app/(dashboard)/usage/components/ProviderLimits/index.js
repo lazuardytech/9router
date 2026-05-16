@@ -601,21 +601,6 @@ export default function ProviderLimits() {
           )}
         </div>
 
-        {/* Expiring first */}
-        <button
-          type="button"
-          onClick={() => setExpiringFirst((prev) => !prev)}
-          className={`h-7 px-2.5 rounded-[4px] border text-[11px] transition-colors flex items-center gap-1 ${
-            expiringFirst
-              ? "border-amber-500/40 bg-amber-500/10 text-amber-400"
-              : "border-charcoal-grey text-storm-cloud hover:text-porcelain hover:bg-deep-slate"
-          }`}
-          title="Sort accounts by earliest quota reset time"
-        >
-          <span className="material-symbols-outlined text-[13px]">hourglass_top</span>
-          <span className="hidden sm:inline">Expiring first</span>
-        </button>
-
         {/* Collapse All */}
         <button
           type="button"
@@ -634,12 +619,27 @@ export default function ProviderLimits() {
           <span className="hidden sm:inline">Collapse all</span>
         </button>
 
+        {/* Expiring first */}
+        <button
+          type="button"
+          onClick={() => setExpiringFirst((prev) => !prev)}
+          className={`h-7 px-2.5 rounded-[4px] border text-[11px] transition-colors flex items-center gap-1 ${
+            expiringFirst
+              ? "border-amber-500/40 bg-amber-500/10 text-amber-400"
+              : "border-charcoal-grey text-storm-cloud hover:text-porcelain hover:bg-deep-slate"
+          }`}
+          title="Sort accounts by earliest quota reset time"
+        >
+          <span className="material-symbols-outlined text-[13px]">hourglass_top</span>
+          <span className="hidden sm:inline">Expiring first</span>
+        </button>
+
         {/* Bulk: disable depleted */}
         <button
           type="button"
           onClick={handleDisableDepleted}
           disabled={bulkToggling}
-          className="h-7 px-2.5 rounded-[4px] border border-red-500/30 text-[11px] text-red-400 hover:bg-red-500/10 transition-colors flex items-center gap-1 disabled:opacity-50"
+          className="h-7 px-2.5 rounded-[4px] border border-charcoal-grey text-[11px] text-storm-cloud hover:text-porcelain hover:bg-deep-slate transition-colors flex items-center gap-1 disabled:opacity-50"
           title="Disable connections with depleted quota"
         >
           <span className="material-symbols-outlined text-[13px]">block</span>
@@ -651,26 +651,11 @@ export default function ProviderLimits() {
           type="button"
           onClick={handleEnableAvailable}
           disabled={bulkToggling}
-          className="h-7 px-2.5 rounded-[4px] border border-emerald-500/30 text-[11px] text-emerald-400 hover:bg-emerald-500/10 transition-colors flex items-center gap-1 disabled:opacity-50"
+          className="h-7 px-2.5 rounded-[4px] border border-charcoal-grey text-[11px] text-storm-cloud hover:text-porcelain hover:bg-deep-slate transition-colors flex items-center gap-1 disabled:opacity-50"
           title="Enable connections that still have quota"
         >
           <span className="material-symbols-outlined text-[13px]">check_circle</span>
           <span className="hidden sm:inline">Turn on Available</span>
-        </button>
-
-        {/* Auto-refresh toggle */}
-        <button
-          onClick={() => setAutoRefresh((prev) => !prev)}
-          className="h-7 px-2.5 rounded-[4px] border border-charcoal-grey text-[11px] text-storm-cloud hover:text-porcelain hover:bg-deep-slate transition-colors flex items-center gap-1"
-          title={autoRefresh ? "Disable auto-refresh" : "Enable auto-refresh"}
-        >
-          <span
-            className={`material-symbols-outlined text-[13px] ${autoRefresh ? "text-aether-blue" : "text-storm-cloud"}`}
-          >
-            {autoRefresh ? "toggle_on" : "toggle_off"}
-          </span>
-          <span className="hidden text-storm-cloud sm:inline">Auto-refresh</span>
-          {autoRefresh && <span className="text-[10px] text-storm-cloud tabular-nums">({countdown}s)</span>}
         </button>
 
         {/* Refresh all button */}
@@ -678,12 +663,24 @@ export default function ProviderLimits() {
           type="button"
           onClick={refreshAll}
           disabled={refreshingAll}
-          className="h-7 px-2.5 rounded-[4px] border border-charcoal-grey text-[11px] text-storm-cloud hover:text-porcelain hover:bg-deep-slate transition-colors disabled:opacity-50 flex items-center gap-1"
+          className="flex items-center justify-center size-7 rounded-[4px] border border-charcoal-grey text-storm-cloud hover:bg-deep-slate hover:text-porcelain transition-colors duration-100 disabled:opacity-50 disabled:cursor-not-allowed"
           title="Refresh all"
         >
-          <span className={`material-symbols-outlined text-[13px] ${refreshingAll ? "animate-spin" : ""}`}>
-            refresh
-          </span>
+          <span className={`material-symbols-outlined text-[15px] ${refreshingAll ? "animate-spin" : ""}`}>refresh</span>
+        </button>
+
+        {/* Live toggle */}
+        <button
+          type="button"
+          onClick={() => setAutoRefresh((prev) => !prev)}
+          className={`flex items-center justify-center size-7 rounded-[4px] border transition-colors duration-100 ${
+            autoRefresh
+              ? "border-aether-blue/40 bg-aether-blue/10 text-aether-blue"
+              : "border-charcoal-grey text-storm-cloud hover:bg-deep-slate hover:text-porcelain"
+          }`}
+          title={autoRefresh ? `Live — refreshes every ${countdown}s` : "Enable live auto-refresh"}
+        >
+          <span className="material-symbols-outlined text-[15px]">sensors</span>
         </button>
       </div>
 
