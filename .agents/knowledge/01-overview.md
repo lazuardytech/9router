@@ -2,7 +2,7 @@
 
 Pod is Lazuardy Tech's internal AI routing proxy.
 
-Current baseline: **v0.0.11**.
+Current baseline: **v0.0.14**.
 
 ## Core Capabilities
 
@@ -119,7 +119,7 @@ Current baseline: **v0.0.11**.
 - MiniMax TTS support
 - "Today" period added to usage chart
 
-### v0.0.7–v0.0.11
+### v0.0.7–v0.0.11 (archived)
 - **Semantic cache fixed for streaming**: `isCacheableForRead/Write` no longer blocks `stream: true`. Streaming responses are written to cache after `onStreamComplete`; cache hits served as SSE chunks via `buildCacheHitSSEResponse`. `/cache` page now shows real hit rates.
 - **Provider node rename**: custom nodes (`openai-compatible-*`, `anthropic-compatible-*`, `custom-embedding-*`) can now be renamed via `PATCH /api/provider-nodes/[id]/rename`. Atomic SQLite transaction cascades across all FK columns and JSON blobs. `previousIds[]` stored in node data enables permanent URL bookmark redirect.
 - **Model lock tests**: 36 unit tests for `open-sse/services/accountFallback.js` and 16 integration tests for `markAccountUnavailable` / `clearAccountError` / `getProviderCredentials` added.
@@ -128,6 +128,37 @@ Current baseline: **v0.0.11**.
 - **`/logs` UX**: all Refresh buttons standardized to `size-7` square with spinning animation + disabled state during refresh. "Combo" filter pill removed from Request Logs. Console Logs lines without `[HH:MM:SS]` prefix now show receive-time timestamp instead of `—`.
 - **`/providers` UX**: Identifier field reordered above Prefix in Add/Edit modals. "Connected Only" filter now correctly hides disabled custom provider nodes.
 - **Button color fix**: `bg-primary text-white` replaced with `bg-primary text-primary-fg` across 11 sites — fixes unreadable white-on-white text in dark theme.
+
+### v0.0.12
+- **Provider node rename**: `renameProviderNode(oldId, newId)` in `src/lib/localDb.js` — atomic SQLite transaction cascading across all FK columns and JSON blobs. `previousIds[]` stored in node data for URL redirect tracking.
+- **`PATCH /api/provider-nodes/[id]/rename`**: custom nodes only; prefix must be preserved.
+- **`EditCompatibleNodeModal`**: Identifier field now editable with inline Rename button. URL bookmark redirect via `previousIds[]`.
+- **Button color fix**: `bg-primary text-white` → `bg-primary text-primary-fg` across 11 sites (dark theme fix).
+- **Connected Only filter**: now correctly applies to custom provider nodes.
+- **`/providers` modals**: field order Name → Identifier → Prefix in Add/Edit modals.
+- **`/logs` improvements**: Refresh buttons standardized to `size-7` square with spin+disabled animation. "Combo" filter pill removed from Request Logs. Console Logs lines without `[HH:MM:SS]` prefix show receive-time timestamp (stored as `{ line, receivedAt }`).
+- **Request log cap**: `LOG_MAX_ROWS` 1K → 10K, API fetch cap 500 → 10K.
+- **Semantic cache fixed for streaming**: `isCacheableForRead/Write` no longer blocks `stream: true`. Streaming responses written to cache after `onStreamComplete`. Cache hits served as SSE chunks via `buildCacheHitSSEResponse`.
+- **`bun run check`**: new script — `biome format + biome lint + eslint`. `biome.json` configured with targeted rules (`recommended: false`).
+- **Tests**: `account-fallback.test.js` (36), `model-lock.integration.test.js` (16), `rename-provider-node.integration.test.js` (12), `cache.comprehensive.test.js` (39), `memory.comprehensive.test.js` (39). Total: 433 tests.
+
+### v0.0.13
+- **Memory leak fixes** (1.2GB → ~200–400MB expected):
+  - SQLite `mmap_size` 256MB → 64MB, `cache_size` 64MB → 16MB
+  - SSE streams `proxy-pools/stream` and `request-logs/stream`: `request.signal.addEventListener("abort", cleanup)` added — previously orphaned `setInterval`/`setTimeout` on client disconnect
+  - `memory/store.js`: plain Map (10K entries, no TTL) → `LRUCache` (500 entries, 4MB, 300s TTL)
+  - `auth.js connectionsCache`: stale entry sweep on miss
+  - `Dockerfile`: `bun --smol` flag for more aggressive GC
+- **`usage_history` trim**: `USAGE_HISTORY_MAX_DAYS = 90`, trim every 100 inserts. `getUsageHistory()` default LIMIT 10K.
+- **`requestDetailsDb` writeBuffer cap**: `WRITE_BUFFER_MAX = 500`.
+- **`usage/stream` SSE debounce**: full `getUsageStats()` recalc debounced to max once per 2s per connection.
+- **Semantic cache temperature threshold**: `temperature !== 0` → `temperature > 1` (most clients send `temperature: 1` by default, which was incorrectly bypassing cache).
+- **Provider with custom identifier**: `ProviderDetailClient` shows Edit/Delete card when `providerNode` exists even if id lacks standard prefix.
+- **Browser tab title fix**: `/health` page title no longer double-applies the app name template.
+
+### v0.0.14
+- **ESLint fix**: `react/no-unescaped-entities` in `EditCompatibleNodeModal`.
+- **Cleanup**: `paseo.json` added to `.gitignore`, `melma-router` binary removed from repo.
 
 ## Ground Rules
 

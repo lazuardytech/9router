@@ -168,5 +168,38 @@ Do not lower these values without updating both locations together.
 `LogLine` uses `parseTimestamp(line) || receivedAt` for display — lines without a `[HH:MM:SS]` prefix show the receive time instead of `—`.
 Do not pass raw strings into the logs state array; always use `wrapLine()`.
 
-Blackbox (LLM) and MiniMax (TTS) are supported as of v0.0.6.
-Do not treat them as unknown providers when encountered in provider config or routing code.
+## 32) SSE endpoints must attach an abort listener
+
+Every SSE endpoint that uses `setInterval` or `setTimeout` must attach:
+```js
+request.signal.addEventListener("abort", cleanup)
+```
+Omitting this orphans timers on client disconnect and causes unbounded memory growth.
+`proxy-pools/stream` and `request-logs/stream` were the source of a 1.2GB leak fixed in v0.0.13.
+
+## 33) SQLite pragma sizing
+
+`connection.js` sets `mmap_size = 64MB` and `cache_size = 16MB`.
+Do not raise these without profiling — the previous values (256MB / 64MB) contributed to the v0.0.13 memory leak.
+
+## 34) `usage_history` is trimmed automatically
+
+`USAGE_HISTORY_MAX_DAYS = 90` in `src/lib/usageDb.js`. Trim runs every 100 inserts.
+`getUsageHistory()` default LIMIT is 10 000. Do not remove the trim or raise the retention window without considering DB growth.
+
+## 35) `bun --smol` is required in Docker
+
+`Dockerfile` runs `bun --smol run start` for more aggressive GC.
+Do not remove the `--smol` flag — without it, bun's default GC is too conservative for long-running server workloads.
+
+## 36) Semantic cache temperature threshold is `> 1`, not `!== 0`
+
+`isCacheableForRead` and `isCacheableForWrite` skip caching when `temperature > 1`.
+The previous guard (`temperature !== 0`) caused near-zero cache hit rates because most clients send `temperature: 1` by default.
+Do not revert to `!== 0`.
+
+## 37) `previousIds[]` must not be cleared
+
+`renameProviderNode` appends the old id to `node.data.previousIds[]` on every rename.
+`ProviderDetailClient` uses this array to redirect stale bookmark URLs to the current id via `router.replace`.
+Clearing `previousIds` breaks all historical bookmarks permanently.

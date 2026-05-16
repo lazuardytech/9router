@@ -75,8 +75,9 @@ Do not convert `open-sse` imports into package dependencies.
 
 Minimum verification for feature-level changes:
 ```bash
-bun run format
-bun x eslint .
-bun run test:run
-bun run build
+bun run check      # biome format + biome lint + eslint (all-in-one)
+bun run test:run   # vitest
+bun run build      # next build
 ```
+
+`bun run check` is the canonical pre-push lint step as of v0.0.12. `biome.json` uses `recommended: false` with targeted rules. Running `bun run format` separately is still valid for format-only passes.

@@ -1,6 +1,6 @@
 # Architecture
 
-This file summarizes the current architecture for `github.com/lazuardytech/pod` (v0.0.11).
+This file summarizes the current architecture for `github.com/lazuardytech/pod` (v0.0.14).
 
 ## Package Layout
 
@@ -58,15 +58,21 @@ Three endpoints push Server-Sent Events to the dashboard:
 
 All use the `open-sse` stream helpers. The `/logs` page surfaces Refresh/Live toggles for each tab.
 
+**SSE abort handling (v0.0.13)**: `proxy-pools/stream` and `request-logs/stream` attach `request.signal.addEventListener("abort", cleanup)` to cancel `setInterval`/`setTimeout` on client disconnect. Missing this was the primary cause of the 1.2GB memory leak. All new SSE endpoints must follow this pattern.
+
+**`usage/stream` debounce**: full `getUsageStats()` recalc is debounced to at most once per 2s per connection.
+
 ## Cache and Memory Integration
 
 - Semantic cache:
   - Tables: `semantic_cache`, `cache_metrics`
   - API: `/api/cache`, `/api/settings/cache-config`
-  - Streaming requests (`stream: true`) are now cached. After `onStreamComplete`, the assembled response is written to cache. Cache hits for streaming clients are served as SSE chunks via `buildCacheHitSSEResponse` in `open-sse/handlers/chatCore.js`.
+  - Streaming requests (`stream: true`) are cached. After `onStreamComplete`, the assembled response is written to cache. Cache hits for streaming clients are served as SSE chunks via `buildCacheHitSSEResponse` in `open-sse/handlers/chatCore.js`.
+- Temperature threshold for cache eligibility: `temperature > 1` (changed from `temperature !== 0` in v0.0.13 — most clients send `temperature: 1` by default, which was incorrectly bypassing cache).
 - Conversational memory:
   - Tables: `memories`, `memory_fts`
   - API: `/api/memory`, `/api/memory/[id]`, `/api/settings/memory`
+  - In-process store: `LRUCache` (500 entries, 4MB max, 300s TTL) — replaced plain Map in v0.0.13 to bound memory growth.
 
 ## API Key Limit Model
 
@@ -88,12 +94,15 @@ Primary store is SQLite:
 - File: `~/.pod/pod.sqlite` (default; overridable via `DATA_DIR` env)
 - Access via `src/lib/localDb.js` and `src/lib/sqlite/connection.js`
 - `connection.js` applies pragmas and runs schema patches/migrations on boot
+- SQLite pragmas tuned for lower memory: `mmap_size` 64MB (down from 256MB), `cache_size` 16MB (down from 64MB)
 
 Schema migrations applied at boot (in `connection.js`):
 - `combo` column on `request_log`
 - `details_id` column on `request_log`
 
-`LOG_MAX_ROWS` in `src/lib/usageDb.js` is set to **10 000**. The `/api/usage/request-logs` endpoint serves up to 10 000 rows. Both values were raised from 1 000 / 500 in v0.0.11.
+`LOG_MAX_ROWS` in `src/lib/usageDb.js` is set to **10 000**. The `/api/usage/request-logs` endpoint serves up to 10 000 rows.
+
+`usage_history` is trimmed to `USAGE_HISTORY_MAX_DAYS = 90` days, triggered every 100 inserts. `getUsageHistory()` default LIMIT is 10 000. `requestDetailsDb` write buffer is capped at `WRITE_BUFFER_MAX = 500`.
 
 `DATA_DIR` env var: if the resolved data directory is inaccessible (EACCES/EPERM), the app falls back gracefully rather than crashing on boot.
 
@@ -148,6 +157,10 @@ Custom provider nodes (`openai-compatible-*`, `anthropic-compatible-*`, `custom-
 - **Cache invalidation**: `invalidateConnectionsCache` called after commit to flush in-memory connection/rotation state.
 - **Validation**: built-in provider IDs rejected; new id must preserve the type prefix; collision with existing nodes blocked.
 - **UI**: Identifier field in Edit Compatible modal is now editable with a dedicated Rename button (prefix hint shown). Built-in providers remain read-only.
+
+## Docker Runtime
+
+`Dockerfile` runs bun with `--smol` flag (`bun --smol run start`) for more aggressive GC. Do not remove this flag.
 
 ## Upstream Engine Fixes (v0.0.6)
 

@@ -4,9 +4,9 @@ Operational notes for AI agents working on **Pod** (`~/projects/lt/pod`).
 
 ## Current Baseline
 
-- Release baseline: **v0.0.11**
+- Release baseline: **v0.0.14**
 - Package: `pod`
-- Docker: `lazuardytech/pod` (tags v0.0.1–v0.0.11, latest)
+- Docker: `lazuardytech/pod` (tags v0.0.1–v0.0.14, latest)
 - GitHub: `lazuardytech/pod`, branch `main`
 - Data dir: `~/.pod/pod.sqlite`
 
@@ -29,6 +29,7 @@ Operational notes for AI agents working on **Pod** (`~/projects/lt/pod`).
 ## Verification Before Push
 
 ```bash
+bun run check      # biome format + biome lint + eslint (all-in-one)
 bun run format     # biome format --write .
 bun x eslint .     # lint check
 bun run test:run   # vitest
