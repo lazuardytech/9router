@@ -417,10 +417,14 @@ export async function handleChatCore({
   // Some upstream proxies (e.g. omniroute) don't inject stream into the body —
   // they rely on Accept header only. Without this, upstream gets stream=undefined
   // and may return non-streaming JSON even when we expect SSE.
-  if (stream) {
-    translatedBody.stream = true;
-  } else {
-    translatedBody.stream = false;
+  // Exception: Vertex AI does not accept `stream` in the body — streaming is
+  // controlled via the URL action suffix (:streamGenerateContent) and ?alt=sse.
+  if (targetFormat !== FORMATS.VERTEX) {
+    if (stream) {
+      translatedBody.stream = true;
+    } else {
+      translatedBody.stream = false;
+    }
   }
 
   // Token savers: applied at the final body just before dispatch
