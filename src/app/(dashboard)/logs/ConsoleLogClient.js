@@ -268,6 +268,9 @@ export default function ConsoleLogClient({ autoScroll, setAutoScroll, clearRef, 
           )}
         </div>
       </div>
+      <p className="text-[10px] text-fog-grey italic">
+        Showing {filtered.length} of {logs.length} logs
+      </p>
     </div>
   );
 }
