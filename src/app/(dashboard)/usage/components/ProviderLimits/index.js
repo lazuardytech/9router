@@ -19,6 +19,9 @@ const DEPLETED_QUOTA_THRESHOLD = 5; // percent
 const AUTO_REFRESH_STORAGE_KEY = "quotaAutoRefresh";
 const QUOTA_CACHE_KEY = "providerQuotaCache";
 const QUOTA_CACHE_TTL_MS = 300000; // 5 minutes cache TTL
+const COLLAPSE_ALL_STORAGE_KEY = "quotaCollapseAll";
+const EXPIRING_FIRST_STORAGE_KEY = "quotaExpiringFirst";
+const HIDE_DISABLED_STORAGE_KEY = "quotaHideDisabled";
 
 export default function ProviderLimits() {
   const [connections, setConnections] = useState([]);
@@ -56,11 +59,22 @@ export default function ProviderLimits() {
   const [selectedConnection, setSelectedConnection] = useState(null);
   const [proxyPools, setProxyPools] = useState([]);
   const [providerFilter, setProviderFilter] = useState("all");
-  const [expiringFirst, setExpiringFirst] = useState(false);
+  const [expiringFirst, setExpiringFirst] = useState(() => {
+    if (typeof window === "undefined") return false;
+    return window.sessionStorage.getItem(EXPIRING_FIRST_STORAGE_KEY) === "true";
+  });
   const [providerMenuOpen, setProviderMenuOpen] = useState(false);
   const [bulkToggling, setBulkToggling] = useState(false);
+  const [collapseAll, setCollapseAll] = useState(() => {
+    if (typeof window === "undefined") return false;
+    return window.sessionStorage.getItem(COLLAPSE_ALL_STORAGE_KEY) === "true";
+  });
   const [expandedRows, setExpandedRows] = useState({});
   const [expandedProviders, setExpandedProviders] = useState({});
+  const [hideDisabled, setHideDisabled] = useState(() => {
+    if (typeof window === "undefined") return false;
+    return window.sessionStorage.getItem(HIDE_DISABLED_STORAGE_KEY) === "true";
+  });
   const [disabledModels, setDisabledModels] = useState({});
 
   const [confirmDialog, setConfirmDialog] = useState({
@@ -324,6 +338,22 @@ export default function ProviderLimits() {
     window.localStorage.setItem(AUTO_REFRESH_STORAGE_KEY, String(autoRefresh));
   }, [autoRefresh]);
 
+  // Persist toggle states to sessionStorage
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    window.sessionStorage.setItem(EXPIRING_FIRST_STORAGE_KEY, String(expiringFirst));
+  }, [expiringFirst]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    window.sessionStorage.setItem(COLLAPSE_ALL_STORAGE_KEY, String(collapseAll));
+  }, [collapseAll]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    window.sessionStorage.setItem(HIDE_DISABLED_STORAGE_KEY, String(hideDisabled));
+  }, [hideDisabled]);
+
   // Auto-refresh interval
   useEffect(() => {
     if (!autoRefresh) {
@@ -400,16 +430,18 @@ export default function ProviderLimits() {
 
   // Sort providers by USAGE_SUPPORTED_PROVIDERS order, then alphabetically.
   // Optionally surface accounts with quotas expiring soonest first.
-  const sortedConnections = [...providerFilteredConnections].sort((a, b) => {
-    if (expiringFirst) {
-      const expiryDiff = getEarliestResetTime(a) - getEarliestResetTime(b);
-      if (expiryDiff !== 0) return expiryDiff;
-    }
-    const orderA = USAGE_SUPPORTED_PROVIDERS.indexOf(a.provider);
-    const orderB = USAGE_SUPPORTED_PROVIDERS.indexOf(b.provider);
-    if (orderA !== orderB) return orderA - orderB;
-    return a.provider.localeCompare(b.provider);
-  });
+  const sortedConnections = [...providerFilteredConnections]
+    .filter((conn) => !hideDisabled || conn.isActive !== false)
+    .sort((a, b) => {
+      if (expiringFirst) {
+        const expiryDiff = getEarliestResetTime(a) - getEarliestResetTime(b);
+        if (expiryDiff !== 0) return expiryDiff;
+      }
+      const orderA = USAGE_SUPPORTED_PROVIDERS.indexOf(a.provider);
+      const orderB = USAGE_SUPPORTED_PROVIDERS.indexOf(b.provider);
+      if (orderA !== orderB) return orderA - orderB;
+      return a.provider.localeCompare(b.provider);
+    });
 
   // Connection is depleted when any quota entry hit the threshold
   const isConnectionDepleted = (conn) => {
@@ -606,14 +638,24 @@ export default function ProviderLimits() {
         <button
           type="button"
           onClick={() => {
-            const allProviderKeys = sortedConnections.map((c) => c.provider);
-            const allConnIds = sortedConnections.map((c) => c.id);
-            const collapseProviders = Object.fromEntries(allProviderKeys.map((k) => [k, false]));
-            const collapseRows = Object.fromEntries(allConnIds.map((id) => [id, false]));
-            setExpandedProviders(collapseProviders);
-            setExpandedRows(collapseRows);
+            const next = !collapseAll;
+            setCollapseAll(next);
+            if (next) {
+              const allProviderKeys = sortedConnections.map((c) => c.provider);
+              const allConnIds = sortedConnections.map((c) => c.id);
+              setExpandedProviders(Object.fromEntries(allProviderKeys.map((k) => [k, false])));
+              setExpandedRows(Object.fromEntries(allConnIds.map((id) => [id, false])));
+            } else {
+              setExpandedProviders({});
+              setExpandedRows({});
+            }
           }}
-          className="h-7 px-2.5 rounded-[4px] border border-charcoal-grey text-[11px] text-storm-cloud hover:text-porcelain hover:bg-deep-slate transition-colors flex items-center gap-1"
+          className={cn(
+            "h-7 px-2.5 rounded-[4px] border text-[11px] transition-colors flex items-center gap-1",
+            collapseAll
+              ? "border-aether-blue/30 bg-aether-blue/8 text-aether-blue hover:bg-aether-blue/15"
+              : "border-charcoal-grey text-storm-cloud hover:text-porcelain hover:bg-deep-slate",
+          )}
           title="Collapse all rows"
         >
           <span className="material-symbols-outlined text-[13px]">unfold_less</span>
@@ -624,15 +666,32 @@ export default function ProviderLimits() {
         <button
           type="button"
           onClick={() => setExpiringFirst((prev) => !prev)}
-          className={`h-7 px-2.5 rounded-[4px] border text-[11px] transition-colors flex items-center gap-1 ${
+          className={cn(
+            "h-7 px-2.5 rounded-[4px] border text-[11px] transition-colors flex items-center gap-1",
             expiringFirst
-              ? "border-amber-500/40 bg-amber-500/10 text-amber-400"
-              : "border-charcoal-grey text-storm-cloud hover:text-porcelain hover:bg-deep-slate"
-          }`}
+              ? "border-amber-500/40 bg-amber-500/10 text-amber-400 hover:bg-amber-500/15"
+              : "border-charcoal-grey text-storm-cloud hover:text-porcelain hover:bg-deep-slate",
+          )}
           title="Sort accounts by earliest quota reset time"
         >
           <span className="material-symbols-outlined text-[13px]">hourglass_top</span>
           <span className="hidden sm:inline">Expiring first</span>
+        </button>
+
+        {/* Hide disabled */}
+        <button
+          type="button"
+          onClick={() => setHideDisabled((prev) => !prev)}
+          className={cn(
+            "h-7 px-2.5 rounded-[4px] border text-[11px] transition-colors flex items-center gap-1",
+            hideDisabled
+              ? "border-fog-grey/40 bg-fog-grey/10 text-fog-grey hover:bg-fog-grey/15"
+              : "border-charcoal-grey text-storm-cloud hover:text-porcelain hover:bg-deep-slate",
+          )}
+          title="Hide disabled connections"
+        >
+          <span className="material-symbols-outlined text-[13px]">visibility_off</span>
+          <span className="hidden sm:inline">Hide disabled</span>
         </button>
 
         {/* Bulk: disable depleted */}

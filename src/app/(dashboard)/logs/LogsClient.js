@@ -179,17 +179,34 @@ function LogsInner() {
 
   // ProxyLogsTab lifted state
   const [proxySortBy, setProxySortBy] = useState("newest");
-  const [proxyLive, setProxyLive] = useState(true);
+  const [proxyLive, setProxyLive] = useState(() => {
+    if (typeof window === "undefined") return true;
+    const stored = window.sessionStorage.getItem("logsProxyLive");
+    return stored === null ? true : stored === "true";
+  });
   const [proxyCount, setProxyCount] = useState(0);
   const [proxyRefreshing, setProxyRefreshing] = useState(false);
   const proxyRefreshRef = useRef(null);
 
   // ConsoleLogClient lifted state
   const [autoScroll, setAutoScroll] = useState(true);
-  const [consoleLive, setConsoleLive] = useState(true);
+  const [consoleLive, setConsoleLive] = useState(() => {
+    if (typeof window === "undefined") return true;
+    const stored = window.sessionStorage.getItem("logsConsoleLive");
+    return stored === null ? true : stored === "true";
+  });
   const [consoleRefreshing, setConsoleRefreshing] = useState(false);
   const clearRef = useRef(null);
   const consoleRefreshRef = useRef(null);
+
+  // Persist live toggle states
+  useEffect(() => {
+    if (typeof window !== "undefined") window.sessionStorage.setItem("logsProxyLive", String(proxyLive));
+  }, [proxyLive]);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") window.sessionStorage.setItem("logsConsoleLive", String(consoleLive));
+  }, [consoleLive]);
 
   const handleRequestRefresh = async () => {
     setRequestRefreshing(true);
