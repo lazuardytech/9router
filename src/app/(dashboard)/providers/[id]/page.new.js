@@ -1,5 +1,14 @@
 "use client";
 
+import { DndContext, KeyboardSensor, PointerSensor, closestCenter, useSensor, useSensors } from "@dnd-kit/core";
+import {
+  SortableContext,
+  arrayMove,
+  sortableKeyboardCoordinates,
+  useSortable,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 import Image from "next/image";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
@@ -357,14 +366,10 @@ export default function ProviderDetailPage() {
   const handleSwapPriority = async (conn1, conn2) => {
     if (!conn1 || !conn2) return;
     try {
-      // If they have the same priority, we need to ensure the one moving up
-      // gets a lower value than the one moving down.
-      // We use a small offset which the backend re-indexing will fix.
       let p1 = conn2.priority;
       const p2 = conn1.priority;
 
       if (p1 === p2) {
-        // If moving conn1 "up" (index decreases)
         const isConn1MovingUp = connections.indexOf(conn1) > connections.indexOf(conn2);
         if (isConn1MovingUp) {
           p1 = conn2.priority - 0.5;
@@ -390,6 +395,37 @@ export default function ProviderDetailPage() {
       console.log("Error swapping priority:", error);
     }
   };
+
+  const handleDragEnd = async (event) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+
+    const sorted = [...connections].sort((a, b) => (a.priority || 0) - (b.priority || 0));
+    const oldIndex = sorted.findIndex((c) => c.id === active.id);
+    const newIndex = sorted.findIndex((c) => c.id === over.id);
+    const reordered = arrayMove(sorted, oldIndex, newIndex);
+    setConnections(reordered);
+
+    try {
+      await Promise.all(
+        reordered.map((conn, i) =>
+          fetch(`/api/providers/${conn.id}`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ priority: i + 1 }),
+          }),
+        ),
+      );
+    } catch (error) {
+      console.log("Error reordering connections:", error);
+      await fetchConnections();
+    }
+  };
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
+  );
 
   const renderModelsSection = () => {
     if (isCompatible) {
@@ -656,10 +692,8 @@ export default function ProviderDetailPage() {
               </Button>
             </div>
           </div>
-          {connections.length > 0 && (
-            <p className="text-sm text-text-muted">
-              Only one connection is allowed per compatible node. Add another node if you need more connections.
-            </p>
+          {connections.length > 0 && isCompatible && (
+            <p className="text-sm text-text-muted">Each connection uses the same base URL but a different API key.</p>
           )}
         </Card>
       )}
@@ -668,15 +702,13 @@ export default function ProviderDetailPage() {
       <Card>
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-lg font-semibold">Connections</h2>
-          {!isCompatible && (
-            <Button
-              size="sm"
-              icon="add"
-              onClick={() => (isOAuth ? setShowOAuthModal(true) : setShowAddApiKeyModal(true))}
-            >
-              Add
-            </Button>
-          )}
+          <Button
+            size="sm"
+            icon="add"
+            onClick={() => (isOAuth ? setShowOAuthModal(true) : setShowAddApiKeyModal(true))}
+          >
+            Add
+          </Button>
         </div>
 
         {connections.length === 0 ? (
@@ -686,41 +718,46 @@ export default function ProviderDetailPage() {
             </div>
             <p className="text-text-main font-medium mb-1">No connections yet</p>
             <p className="text-sm text-text-muted mb-4">Add your first connection to get started</p>
-            {!isCompatible && (
-              <Button icon="add" onClick={() => (isOAuth ? setShowOAuthModal(true) : setShowAddApiKeyModal(true))}>
-                Add Connection
-              </Button>
-            )}
+            <Button icon="add" onClick={() => (isOAuth ? setShowOAuthModal(true) : setShowAddApiKeyModal(true))}>
+              Add Connection
+            </Button>
           </div>
         ) : (
-          <div className="flex flex-col divide-y divide-black/[0.03] dark:divide-white/[0.03]">
-            {connections
-              .sort((a, b) => (a.priority || 0) - (b.priority || 0))
-              .map((conn, index) => (
-                <ConnectionRow
-                  key={conn.id}
-                  connection={conn}
-                  isOAuth={isOAuth}
-                  isFirst={index === 0}
-                  isLast={index === connections.length - 1}
-                  onMoveUp={() => handleSwapPriority(conn, connections[index - 1])}
-                  onMoveDown={() => handleSwapPriority(conn, connections[index + 1])}
-                  onToggleActive={(isActive) => handleUpdateConnectionStatus(conn.id, isActive)}
-                  onEdit={() => {
-                    setSelectedConnection(conn);
-                    setShowEditModal(true);
-                  }}
-                  onDelete={() =>
-                    openConfirm(
-                      "Delete Connection",
-                      "Are you sure you want to delete this connection?",
-                      () => handleDelete(conn.id),
-                      "danger",
-                    )
-                  }
-                />
-              ))}
-          </div>
+          <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+            <SortableContext
+              items={[...connections].sort((a, b) => (a.priority || 0) - (b.priority || 0)).map((c) => c.id)}
+              strategy={verticalListSortingStrategy}
+            >
+              <div className="flex flex-col divide-y divide-black/[0.03] dark:divide-white/[0.03]">
+                {[...connections]
+                  .sort((a, b) => (a.priority || 0) - (b.priority || 0))
+                  .map((conn, index, arr) => (
+                    <SortableConnectionRowSimple
+                      key={conn.id}
+                      conn={conn}
+                      index={index}
+                      connectionsLength={arr.length}
+                      isOAuth={isOAuth}
+                      onMoveUp={() => handleSwapPriority(conn, arr[index - 1])}
+                      onMoveDown={() => handleSwapPriority(conn, arr[index + 1])}
+                      onToggleActive={(isActive) => handleUpdateConnectionStatus(conn.id, isActive)}
+                      onEdit={() => {
+                        setSelectedConnection(conn);
+                        setShowEditModal(true);
+                      }}
+                      onDelete={() =>
+                        openConfirm(
+                          "Delete Connection",
+                          "Are you sure you want to delete this connection?",
+                          () => handleDelete(conn.id),
+                          "danger",
+                        )
+                      }
+                    />
+                  ))}
+              </div>
+            </SortableContext>
+          </DndContext>
         )}
       </Card>
 
@@ -1789,3 +1826,54 @@ EditCompatibleNodeModal.propTypes = {
   onClose: PropTypes.func.isRequired,
   isAnthropic: PropTypes.bool,
 };
+
+function SortableConnectionRowSimple({
+  conn,
+  index,
+  connectionsLength,
+  isOAuth,
+  onMoveUp,
+  onMoveDown,
+  onToggleActive,
+  onEdit,
+  onDelete,
+}) {
+  const { attributes, listeners, setNodeRef, setActivatorNodeRef, transform, transition, isDragging } = useSortable({
+    id: conn.id,
+  });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+    zIndex: isDragging ? 10 : undefined,
+  };
+
+  return (
+    <div ref={setNodeRef} style={style} className="flex min-w-0 items-stretch">
+      <button
+        ref={setActivatorNodeRef}
+        {...attributes}
+        {...listeners}
+        className="flex items-center px-1.5 cursor-grab active:cursor-grabbing text-text-muted/40 hover:text-text-muted transition-colors touch-none shrink-0"
+        title="Drag to reorder"
+        tabIndex={-1}
+      >
+        <span className="material-symbols-outlined text-[16px]">drag_indicator</span>
+      </button>
+      <div className="flex-1 min-w-0">
+        <ConnectionRow
+          connection={conn}
+          isOAuth={isOAuth}
+          isFirst={index === 0}
+          isLast={index === connectionsLength - 1}
+          onMoveUp={onMoveUp}
+          onMoveDown={onMoveDown}
+          onToggleActive={onToggleActive}
+          onEdit={onEdit}
+          onDelete={onDelete}
+        />
+      </div>
+    </div>
+  );
+}

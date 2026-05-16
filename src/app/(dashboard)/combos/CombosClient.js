@@ -1,5 +1,14 @@
 "use client";
 
+import { DndContext, KeyboardSensor, PointerSensor, closestCenter, useSensor, useSensors } from "@dnd-kit/core";
+import {
+  SortableContext,
+  arrayMove,
+  sortableKeyboardCoordinates,
+  useSortable,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 import { useCallback, useEffect, useState } from "react";
 import { Button, Card, CardSkeleton, Input, Modal, ModelSelectModal, Toggle } from "@/shared/components";
 import { ConfirmModal } from "@/shared/components/Modal";
@@ -108,6 +117,26 @@ export default function CombosPage() {
     }
   };
 
+  const handleDragEnd = async (event) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+
+    const oldIndex = combos.findIndex((c) => c.id === active.id);
+    const newIndex = combos.findIndex((c) => c.id === over.id);
+    const reordered = arrayMove(combos, oldIndex, newIndex);
+    setCombos(reordered);
+
+    try {
+      await fetch("/api/combos", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ order: reordered.map((c) => c.id) }),
+      });
+    } catch (error) {
+      console.log("Error saving combo order:", error);
+    }
+  };
+
   const handleTestCombo = async (combo) => {
     if (!combo.models?.length) return;
     setTestingComboId(combo.id);
@@ -191,30 +220,21 @@ export default function CombosPage() {
           </div>
         </Card>
       ) : (
-        <div className="flex flex-col gap-4">
-          {combos.map((combo) => (
-            <ComboCard
-              key={combo.id}
-              combo={combo}
-              copied={copied}
-              onCopy={copy}
-              onEdit={() => setEditingCombo(combo)}
-              onDelete={() =>
-                openConfirm(
-                  "Delete Combo",
-                  "Are you sure you want to delete this combo?",
-                  () => handleDelete(combo.id),
-                  "danger",
-                )
-              }
-              roundRobinEnabled={comboStrategies[combo.name]?.fallbackStrategy === "round-robin"}
-              onToggleRoundRobin={(enabled) => handleToggleRoundRobin(combo.name, enabled)}
-              onTest={() => handleTestCombo(combo)}
-              isTesting={testingComboId === combo.id}
-              testStatus={comboTestResults[combo.id]}
-            />
-          ))}
-        </div>
+        <SortableComboList
+          combos={combos}
+          copied={copied}
+          onCopy={copy}
+          onEdit={(combo) => setEditingCombo(combo)}
+          onDelete={(id) =>
+            openConfirm("Delete Combo", "Are you sure you want to delete this combo?", () => handleDelete(id), "danger")
+          }
+          comboStrategies={comboStrategies}
+          onToggleRoundRobin={handleToggleRoundRobin}
+          onTest={handleTestCombo}
+          testingComboId={testingComboId}
+          comboTestResults={comboTestResults}
+          onDragEnd={handleDragEnd}
+        />
       )}
 
       <ConfirmModal
@@ -253,6 +273,68 @@ export default function CombosPage() {
   );
 }
 
+function SortableComboList({
+  combos,
+  copied,
+  onCopy,
+  onEdit,
+  onDelete,
+  comboStrategies,
+  onToggleRoundRobin,
+  onTest,
+  testingComboId,
+  comboTestResults,
+  onDragEnd,
+}) {
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
+  );
+
+  return (
+    <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onDragEnd}>
+      <SortableContext items={combos.map((c) => c.id)} strategy={verticalListSortingStrategy}>
+        <div className="flex flex-col gap-4">
+          {combos.map((combo) => (
+            <SortableComboCard
+              key={combo.id}
+              combo={combo}
+              copied={copied}
+              onCopy={onCopy}
+              onEdit={() => onEdit(combo)}
+              onDelete={() => onDelete(combo.id)}
+              roundRobinEnabled={comboStrategies[combo.name]?.fallbackStrategy === "round-robin"}
+              onToggleRoundRobin={(enabled) => onToggleRoundRobin(combo.name, enabled)}
+              onTest={() => onTest(combo)}
+              isTesting={testingComboId === combo.id}
+              testStatus={comboTestResults[combo.id]}
+            />
+          ))}
+        </div>
+      </SortableContext>
+    </DndContext>
+  );
+}
+
+function SortableComboCard(props) {
+  const { attributes, listeners, setNodeRef, setActivatorNodeRef, transform, transition, isDragging } = useSortable({
+    id: props.combo.id,
+  });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+    zIndex: isDragging ? 10 : undefined,
+  };
+
+  return (
+    <div ref={setNodeRef} style={style}>
+      <ComboCard {...props} dragHandleProps={{ ref: setActivatorNodeRef, ...attributes, ...listeners }} />
+    </div>
+  );
+}
+
 function ComboCard({
   combo,
   copied,
@@ -264,11 +346,21 @@ function ComboCard({
   onTest,
   isTesting,
   testStatus,
+  dragHandleProps,
 }) {
   return (
     <Card padding="sm" className="group">
       <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex min-w-0 flex-1 items-start gap-3 sm:items-center">
+          {/* Drag handle */}
+          <button
+            {...dragHandleProps}
+            className="shrink-0 cursor-grab active:cursor-grabbing text-text-muted/40 hover:text-text-muted transition-colors touch-none"
+            title="Drag to reorder"
+            tabIndex={-1}
+          >
+            <span className="material-symbols-outlined text-[18px]">drag_indicator</span>
+          </button>
           <div className="size-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
             <span className="material-symbols-outlined text-primary text-[18px]">layers</span>
           </div>

@@ -1,5 +1,14 @@
 "use client";
 
+import { DndContext, KeyboardSensor, PointerSensor, closestCenter, useSensor, useSensors } from "@dnd-kit/core";
+import {
+  SortableContext,
+  arrayMove,
+  sortableKeyboardCoordinates,
+  useSortable,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 import Image from "next/image";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
@@ -627,19 +636,51 @@ export default function ProviderDetailPage() {
     }
   };
 
+  const handleDragEnd = async (event) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+
+    const oldIndex = connections.findIndex((c) => c.id === active.id);
+    const newIndex = connections.findIndex((c) => c.id === over.id);
+    const reordered = arrayMove(connections, oldIndex, newIndex);
+    setConnections(reordered);
+
+    try {
+      await Promise.all(
+        reordered.map((conn, i) =>
+          fetch(`/api/providers/${conn.id}`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ priority: i + 1 }),
+          }),
+        ),
+      );
+    } catch (error) {
+      console.log("Error reordering connections:", error);
+      await fetchConnections();
+    }
+  };
+
   const isSelected = (connectionId) => selectedConnectionIds.includes(connectionId);
 
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
+  );
+
   const connectionsList = (
-    <div className="flex min-w-0 flex-col divide-y divide-black/[0.03] dark:divide-white/[0.03]">
-      {connections.map((conn, index) => (
-        <div key={conn.id} className="flex min-w-0 items-stretch">
-          <div className="flex-1 min-w-0">
-            <ConnectionRow
-              connection={conn}
+    <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+      <SortableContext items={connections.map((c) => c.id)} strategy={verticalListSortingStrategy}>
+        <div className="flex min-w-0 flex-col divide-y divide-black/[0.03] dark:divide-white/[0.03]">
+          {connections.map((conn, index) => (
+            <SortableConnectionRow
+              key={conn.id}
+              conn={conn}
+              index={index}
+              connectionsLength={connections.length}
               proxyPools={proxyPools}
               isOAuth={isOAuth}
-              isFirst={index === 0}
-              isLast={index === connections.length - 1}
+              isSelected={isSelected(conn.id)}
               onMoveUp={() => handleSwapPriority(index, index - 1)}
               onMoveDown={() => handleSwapPriority(index, index + 1)}
               onToggleActive={(isActive) => handleUpdateConnectionStatus(conn.id, isActive)}
@@ -679,10 +720,10 @@ export default function ProviderDetailPage() {
                 )
               }
             />
-          </div>
+          ))}
         </div>
-      ))}
-    </div>
+      </SortableContext>
+    </DndContext>
   );
 
   const bulkProxyOptions = [
@@ -1070,10 +1111,8 @@ export default function ProviderDetailPage() {
               </Button>
             </div>
           </div>
-          {connections.length > 0 && (
-            <p className="text-sm text-text-muted">
-              Only one connection is allowed per compatible node. Add another node if you need more connections.
-            </p>
+          {connections.length > 0 && isCompatible && (
+            <p className="text-sm text-text-muted">Each connection uses the same base URL but a different API key.</p>
           )}
         </Card>
       )}
@@ -1156,37 +1195,35 @@ export default function ProviderDetailPage() {
           ) : (
             <>
               {connectionsList}
-              {!isCompatible && (
-                <div className="mt-4 grid grid-cols-1 gap-2 sm:flex">
-                  {providerId === "iflow" && (
-                    <Button
-                      size="sm"
-                      icon="cookie"
-                      variant="secondary"
-                      onClick={() => setShowIFlowCookieModal(true)}
-                      title="Add connection using browser cookie"
-                      className="w-full sm:w-auto"
-                    >
-                      Cookie
-                    </Button>
-                  )}
+              <div className="mt-4 grid grid-cols-1 gap-2 sm:flex">
+                {!isCompatible && providerId === "iflow" && (
                   <Button
                     size="sm"
-                    icon="add"
-                    onClick={() => {
-                      if (isOAuth) {
-                        setShowOAuthModal(true);
-                        return;
-                      }
-                      setAddConnectionError("");
-                      setShowAddApiKeyModal(true);
-                    }}
+                    icon="cookie"
+                    variant="secondary"
+                    onClick={() => setShowIFlowCookieModal(true)}
+                    title="Add connection using browser cookie"
                     className="w-full sm:w-auto"
                   >
-                    Add
+                    Cookie
                   </Button>
-                </div>
-              )}
+                )}
+                <Button
+                  size="sm"
+                  icon="add"
+                  onClick={() => {
+                    if (isOAuth) {
+                      setShowOAuthModal(true);
+                      return;
+                    }
+                    setAddConnectionError("");
+                    setShowAddApiKeyModal(true);
+                  }}
+                  className="w-full sm:w-auto"
+                >
+                  Add
+                </Button>
+              </div>
             </>
           )}
         </Card>
@@ -1335,6 +1372,62 @@ export default function ProviderDetailPage() {
         cancelText="Cancel"
         variant={confirmDialog.variant}
       />
+    </div>
+  );
+}
+
+function SortableConnectionRow({
+  conn,
+  index,
+  connectionsLength,
+  proxyPools,
+  isOAuth,
+  isSelected,
+  onMoveUp,
+  onMoveDown,
+  onToggleActive,
+  onUpdateProxy,
+  onEdit,
+  onDelete,
+}) {
+  const { attributes, listeners, setNodeRef, setActivatorNodeRef, transform, transition, isDragging } = useSortable({
+    id: conn.id,
+  });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+    zIndex: isDragging ? 10 : undefined,
+  };
+
+  return (
+    <div ref={setNodeRef} style={style} className="flex min-w-0 items-stretch">
+      <button
+        ref={setActivatorNodeRef}
+        {...attributes}
+        {...listeners}
+        className="flex items-center px-1.5 cursor-grab active:cursor-grabbing text-text-muted/40 hover:text-text-muted transition-colors touch-none shrink-0"
+        title="Drag to reorder"
+        tabIndex={-1}
+      >
+        <span className="material-symbols-outlined text-[16px]">drag_indicator</span>
+      </button>
+      <div className="flex-1 min-w-0">
+        <ConnectionRow
+          connection={conn}
+          proxyPools={proxyPools}
+          isOAuth={isOAuth}
+          isFirst={index === 0}
+          isLast={index === connectionsLength - 1}
+          onMoveUp={onMoveUp}
+          onMoveDown={onMoveDown}
+          onToggleActive={onToggleActive}
+          onUpdateProxy={onUpdateProxy}
+          onEdit={onEdit}
+          onDelete={onDelete}
+        />
+      </div>
     </div>
   );
 }

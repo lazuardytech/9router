@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { createCombo, getComboByName, getCombos } from "@/lib/localDb";
+import { createCombo, getComboByName, getCombos, reorderCombos, updateCombo } from "@/lib/localDb";
 
 export const dynamic = "force-dynamic";
 
@@ -14,6 +14,24 @@ export async function GET() {
   } catch (error) {
     console.log("Error fetching combos:", error);
     return NextResponse.json({ error: "Failed to fetch combos" }, { status: 500 });
+  }
+}
+
+// PATCH /api/combos - Reorder combos
+export async function PATCH(request) {
+  try {
+    const body = await request.json();
+    const { order } = body;
+
+    if (!Array.isArray(order) || order.some((id) => typeof id !== "string")) {
+      return NextResponse.json({ error: "order must be an array of string IDs" }, { status: 400 });
+    }
+
+    await reorderCombos(order);
+    return NextResponse.json({ ok: true });
+  } catch (error) {
+    console.log("Error reordering combos:", error);
+    return NextResponse.json({ error: "Failed to reorder combos" }, { status: 500 });
   }
 }
 

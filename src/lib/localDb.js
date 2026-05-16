@@ -1028,7 +1028,7 @@ export async function getCombos() {
     const d = await getCloudDb();
     return d.data.combos || [];
   }
-  const rows = db().prepare("SELECT * FROM combos").all();
+  const rows = db().prepare("SELECT * FROM combos ORDER BY COALESCE(sort_order, rowid)").all();
   return rows.map(rowToCombo);
 }
 
@@ -1109,6 +1109,23 @@ export async function deleteCombo(id) {
   }
   const r = db().prepare("DELETE FROM combos WHERE id = ?").run(id);
   return r.changes > 0;
+}
+
+export async function reorderCombos(orderedIds) {
+  if (isCloud) {
+    const d = await getCloudDb();
+    const map = new Map((d.data.combos || []).map((c) => [c.id, c]));
+    d.data.combos = orderedIds.map((id, i) => ({ ...map.get(id), sortOrder: i })).filter(Boolean);
+    return true;
+  }
+  const stmt = db().prepare("UPDATE combos SET sort_order = ? WHERE id = ?");
+  const update = db().transaction((ids) => {
+    for (let i = 0; i < ids.length; i++) {
+      stmt.run(i, ids[i]);
+    }
+  });
+  update(orderedIds);
+  return true;
 }
 
 // ===== API Keys ==========================================================

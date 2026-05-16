@@ -109,6 +109,13 @@ function ensureSchemaPatches(db) {
   if (!hasColumn(db, "request_log", "details_id")) {
     db.exec("ALTER TABLE request_log ADD COLUMN details_id TEXT");
   }
+
+  // Add sort_order column to combos if missing
+  if (!hasColumn(db, "combos", "sort_order")) {
+    db.exec("ALTER TABLE combos ADD COLUMN sort_order INTEGER");
+    // Backfill existing rows with rowid-based order
+    db.exec("UPDATE combos SET sort_order = rowid WHERE sort_order IS NULL");
+  }
 }
 
 function readMeta(db, key) {
