@@ -249,6 +249,12 @@ export async function POST(request) {
         const apiVersion = providerSpecificData?.apiVersion || "2024-10-01-preview";
         const organization = providerSpecificData?.organization;
 
+        // Validate the user-supplied Azure endpoint before fetching (SSRF prevention)
+        const azureUrlCheck = validateFetchUrl(endpoint);
+        if (!azureUrlCheck.ok) {
+          return NextResponse.json({ valid: false, error: `Invalid Azure endpoint: ${azureUrlCheck.error}` });
+        }
+
         const url = `${endpoint}/openai/deployments/${deployment}/chat/completions?api-version=${apiVersion}`;
         const headers = {
           "api-key": apiKey,

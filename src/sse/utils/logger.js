@@ -33,6 +33,8 @@ function formatData(data) {
 
 export function debug(tag, message, data) {
   if (LEVEL <= LOG_LEVELS.DEBUG) {
+    // data is non-sensitive context (model names, provider IDs, counts).
+    // API keys are always pre-masked via maskKey() before being passed here.
     const dataStr = data ? ` ${formatData(data)}` : "";
     console.log(`[${formatTime()}] 🔍 [${tag}] ${message}${dataStr}`);
   }

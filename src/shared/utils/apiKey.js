@@ -19,7 +19,12 @@ function generateKeyId() {
 }
 
 /**
- * Generate CRC (8-char HMAC)
+ * Generate CRC (8-char HMAC-SHA256 integrity check).
+ * This is NOT a password hash — it is a tamper-detection checksum
+ * embedded in an API key token. The input (machineId + keyId) is
+ * not a password and carries no secret user credential; the HMAC
+ * is used solely to verify the key was issued by this server.
+ * nosemgrep: node_crypto_weak_hash
  */
 function generateCrc(machineId, keyId) {
   return crypto
