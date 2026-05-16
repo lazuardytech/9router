@@ -77,6 +77,7 @@ export default function RequestLogger({
   const [selectedLog, setSelectedLog] = useState(null);
   const [detailData, setDetailData] = useState(null);
   const [detailLoading, setDetailLoading] = useState(false);
+  const detailAbortRef = useRef(null);
 
   const esRef = useRef(null);
   const recordingRef = useRef(recording);
@@ -155,18 +156,26 @@ export default function RequestLogger({
 
   // Open detail drawer
   const openDetail = useCallback(async (log) => {
+    // Cancel any in-flight detail fetch
+    if (detailAbortRef.current) {
+      detailAbortRef.current.abort();
+    }
+    const controller = new AbortController();
+    detailAbortRef.current = controller;
+
     setSelectedLog(log);
     setDetailData(null);
     setDetailLoading(true);
     try {
-      const res = await fetch(`/api/usage/request-logs/${log.id}`);
+      const res = await fetch(`/api/usage/request-logs/${log.id}`, { signal: controller.signal });
       if (res.ok) {
         const data = await res.json();
         setDetailData(data.detail ?? null);
       }
-    } catch {
+    } catch (e) {
+      if (e?.name === "AbortError") return; // cancelled — ignore
     } finally {
-      setDetailLoading(false);
+      if (!controller.signal.aborted) setDetailLoading(false);
     }
   }, []);
 
