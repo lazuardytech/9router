@@ -306,7 +306,7 @@ export default function RequestLogger({
 
       {/* Table */}
       <div className="rounded-[6px] border border-charcoal-grey overflow-hidden">
-        <div className="overflow-x-auto max-h-[600px] overflow-y-auto custom-scrollbar">
+        <div className="overflow-x-auto h-[70vh] overflow-y-auto custom-scrollbar">
           {loading && logs.length === 0 ? (
             <div className="flex items-center justify-center gap-2 py-12 text-[12px] text-fog-grey">
               <span className="material-symbols-outlined text-[16px] animate-spin">progress_activity</span>
