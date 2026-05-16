@@ -7,10 +7,11 @@
   <a href="https://discord.com/invite/"><img alt="Discord" src="https://img.shields.io/badge/discord-community-5865F2?style=flat-square&logo=discord&logoColor=white" /></a>
 </p> -->
 <p align="center">
-  ✦ Unified Proxy for LLM Inference.
+  ✦ Unified Proxy for LLM Inference<br/>
 </p>
-
-> Pod is heavily inspired by [9router](https://9router.com) and [OmniRoute](https://omniroute.com). All credits should to their creators too.
+<p align="center">
+  <code>🚧 under heady development on v0.0.x</code>
+</p>
 
 ---
 
@@ -31,4 +32,6 @@ bun run test         # Run tests
 
 ## License
 
-MIT
+[MIT](https://github.com/lazuardytech/pod/blob/main/LICENSE)
+
+> Pod is heavily inspired by [9router](https://9router.com) and [OmniRoute](https://omniroute.online). All credits should go to their maintainers too.
