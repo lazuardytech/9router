@@ -53,7 +53,13 @@ Two contributing factors:
 - Cache sizes in Dockerfile may be too small for production workloads. Consider tuning upward if hit rate improves (see Issue 2) and memory budget allows.
 - No profiling has been done post-`--smol` removal to confirm actual throughput numbers.
 
-### Status: ⚠️ Partially mitigated — memory leak fixed, perf tuning incomplete
+### Fix Applied (`43a67cb`, v0.0.23)
+
+1. **`PRAGMA integrity_check` cached** — `_health.js` now caches the result for 5 minutes via module-level `_integrityCache`. Was running a full O(n-pages) DB scan on every SSE poll (every 2s per open dashboard tab).
+2. **Health stream interval 2s → 10s** — `buildHealthPayload()` still runs 5 DB queries per call; 10s is sufficient for provider health and lockout status freshness.
+3. **Request-logs stream fixed 2s poll** — removed 1s fast-poll for PENDING entries. Signature diff still detects status changes; 1s urgency was unnecessary CPU cost.
+
+### Status: ✅ Primary CPU hotspots fixed in `43a67cb`
 
 ---
 
@@ -174,3 +180,6 @@ If the /health page still shows unexpected short lockouts:
 | `b292560` | v0.0.20 | #3 | Feat: configurable minimum lockout time |
 | `b64176b` | v0.0.21 | #3 | Fix: minimum lockout not applied (guard + resetsAtMs path) |
 | `3942978` | v0.0.22 | #2 | Cache: temperature/top_p normalization + approxRequestBytes fix |
+| `43a67cb` | v0.0.23 | #1 | Perf: cache integrity_check 5min, health stream 10s, logs stream fixed 2s |
+| `4a881dd` | v0.0.23 | #1 | Test: 23 tests validating SSE hotpath fixes (perf-cpu-hotpath.test.js) |
+| `ba1a53d` | v0.0.23 | #3 | Fix: recheckAndClear re-lock now applies backoff multiplier (was flat 1x) |
