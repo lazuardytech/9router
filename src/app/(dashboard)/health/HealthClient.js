@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
-import { Badge, Button } from "@/shared/components";
+import { Badge, Button, CardSkeleton } from "@/shared/components";
 import ProviderIcon from "@/shared/components/ProviderIcon";
 import TelemetryCard from "./TelemetryCard";
 
@@ -102,7 +102,25 @@ export default function HealthPage() {
   }, []);
 
   if (!data && !error) {
-    return null;
+    return (
+      <div className="p-4 lg:p-6 space-y-5 max-w-6xl mx-auto">
+        {/* Header always visible */}
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-[18px] font-[590] text-porcelain tracking-[-0.18px]">System Health</h1>
+            <p className="text-[12px] text-storm-cloud mt-0.5">
+              Live overview of system status, database, providers, and cache.
+            </p>
+          </div>
+        </div>
+        {/* Skeleton for each section */}
+        <div className="flex flex-col gap-4">
+          {[1, 2, 3, 4].map((i) => (
+            <CardSkeleton key={i} />
+          ))}
+        </div>
+      </div>
+    );
   }
 
   if (error && !data) {
