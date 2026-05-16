@@ -753,15 +753,6 @@ export default function APIPageClient({ machineId }) {
     }
   }, []);
 
-  if (loading) {
-    return (
-      <div className="flex flex-col gap-8">
-        <CardSkeleton />
-        <CardSkeleton />
-      </div>
-    );
-  }
-
   const currentEndpoint = baseUrl;
   const anthropicEndpoint = baseUrl.endsWith("/v1") ? baseUrl.slice(0, -3) : baseUrl;
 
@@ -1054,7 +1045,13 @@ export default function APIPageClient({ machineId }) {
           <Toggle checked={requireApiKey} onChange={() => handleRequireApiKey(!requireApiKey)} />
         </div>
 
-        {keys.length === 0 ? (
+        {loading ? (
+          <div className="flex flex-col gap-3">
+            {[1, 2, 3].map((i) => (
+              <CardSkeleton key={i} />
+            ))}
+          </div>
+        ) : keys.length === 0 ? (
           <div className="text-center py-12">
             <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-primary/10 text-primary mb-4">
               <span className="material-symbols-outlined text-[32px]">vpn_key</span>
