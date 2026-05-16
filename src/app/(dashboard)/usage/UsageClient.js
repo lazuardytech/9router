@@ -25,7 +25,6 @@ function UsageContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
 
-  const [tabLoading, setTabLoading] = useState(false);
   const [period, setPeriod] = useState("7d");
 
   const tabFromUrl = searchParams.get("tab");
@@ -33,11 +32,9 @@ function UsageContent() {
 
   const handleTabChange = (value) => {
     if (value === activeTab) return;
-    setTabLoading(true);
     const params = new URLSearchParams(searchParams);
     params.set("tab", value);
     router.push(`/usage?${params.toString()}`, { scroll: false });
-    setTimeout(() => setTabLoading(false), 300);
   };
 
   return (
@@ -65,20 +62,16 @@ function UsageContent() {
         )}
       </div>
 
-      {tabLoading ? (
-        <CardSkeleton />
-      ) : (
-        <>
-          {activeTab === "overview" && (
-            <Suspense fallback={<CardSkeleton />}>
-              <MetricsLineChart period={period} />
-              <UsageStats period={period} setPeriod={setPeriod} hidePeriodSelector />
-            </Suspense>
-          )}
-          {activeTab === "logs" && <RequestLogger />}
-          {activeTab === "details" && <RequestDetailsTab />}
-        </>
-      )}
+      <>
+        {activeTab === "overview" && (
+          <Suspense fallback={<CardSkeleton />}>
+            <MetricsLineChart period={period} />
+            <UsageStats period={period} setPeriod={setPeriod} hidePeriodSelector />
+          </Suspense>
+        )}
+        {activeTab === "logs" && <RequestLogger />}
+        {activeTab === "details" && <RequestDetailsTab />}
+      </>
     </div>
   );
 }
