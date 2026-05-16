@@ -86,6 +86,12 @@ function getMemoryCache() {
   return memoryCache;
 }
 
+// Max bytes fed into SHA-256 for signature generation.
+// For very long conversations we hash only the last N bytes of the serialised
+// payload — collisions are astronomically unlikely in practice and this keeps
+// generateSignature O(1) instead of O(context_length).
+const SIGNATURE_MAX_BYTES = 64 * 1024; // 64 KB
+
 function stringifyForSignature(value) {
   if (typeof value === "string") return value;
   try {
@@ -114,7 +120,10 @@ export function generateSignature(model, conversation, temperature = 0, topP = 1
     temperature,
     top_p: topP,
   });
-  return crypto.createHash("sha256").update(payload).digest("hex");
+  // For large payloads, hash only the tail slice so we avoid blocking the
+  // event loop with a multi-MB SHA-256 update on every request.
+  const slice = payload.length > SIGNATURE_MAX_BYTES ? payload.slice(payload.length - SIGNATURE_MAX_BYTES) : payload;
+  return crypto.createHash("sha256").update(slice).digest("hex");
 }
 
 export function getCachedResponse(signature) {

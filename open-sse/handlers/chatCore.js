@@ -86,9 +86,16 @@ import { buildOnStreamComplete, handleStreamingResponse } from "./chatCore/strea
 
 const MAX_SEMANTIC_CACHE_BYTES = 256 * 1024;
 const MEMORY_EXTRACTION_TEXT_LIMIT = 64 * 1024;
+// Skip cacheability check for request bodies larger than this to avoid a
+// synchronous JSON.stringify of a multi-MB payload on every request.
+const MAX_REQUEST_BYTES_FOR_CACHE_CHECK = 512 * 1024;
 
 function isSmallEnoughForSemanticCache(value) {
   try {
+    // Fast-path: estimate size from known string fields before full stringify.
+    // choices[0].message.content is the dominant field in a cached response.
+    const content = value?.choices?.[0]?.message?.content;
+    if (typeof content === "string" && content.length > MAX_SEMANTIC_CACHE_BYTES) return false;
     return JSON.stringify(value).length <= MAX_SEMANTIC_CACHE_BYTES;
   } catch {
     return false;
@@ -283,8 +290,19 @@ export async function handleChatCore({
   // Semantic cache pre-check with thundering herd protection
   let cacheSignature = null;
   let resolveInFlight = null;
-  if (semanticCacheEnabled && isCacheableForRead(body, clientRawRequest?.headers)) {
-    cacheSignature = generateSignature(model, body.messages ?? body.input, body.temperature, body.top_p);
+  // Skip cache entirely for very large request bodies — generateSignature would
+  // JSON.stringify the full messages array synchronously, blocking the event
+  // loop for hundreds of ms on 64K+ token contexts.
+  const messages = body.messages ?? body.input;
+  const approxRequestBytes = Array.isArray(messages)
+    ? messages.reduce((sum, m) => {
+        const c = m?.content;
+        return sum + (typeof c === "string" ? c.length : typeof c === "object" ? 512 : 0);
+      }, 0)
+    : 0;
+  const requestTooLargeForCache = approxRequestBytes > MAX_REQUEST_BYTES_FOR_CACHE_CHECK;
+  if (semanticCacheEnabled && !requestTooLargeForCache && isCacheableForRead(body, clientRawRequest?.headers)) {
+    cacheSignature = generateSignature(model, messages, body.temperature, body.top_p);
     const cached = getCachedResponse(cacheSignature);
     if (cached) {
       reqLogger.logConvertedResponse(cached);
@@ -398,7 +416,9 @@ export async function handleChatCore({
   const finalFormat = passthrough ? sourceFormat : targetFormat;
 
   // RTK: compress tool_result content
-  const rtkStats = compressMessages(translatedBody, rtkEnabled);
+  // Skip for very large payloads — iterating all messages + running regex
+  // autodetect on each tool_result is O(n) and blocks the event loop.
+  const rtkStats = compressMessages(translatedBody, rtkEnabled && !requestTooLargeForCache);
   const rtkLine = formatRtkLog(rtkStats);
   if (rtkLine) console.log(rtkLine);
 

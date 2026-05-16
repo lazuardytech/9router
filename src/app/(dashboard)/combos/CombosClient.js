@@ -182,15 +182,6 @@ export default function CombosPage() {
     }
   };
 
-  if (loading) {
-    return (
-      <div className="flex flex-col gap-6">
-        <CardSkeleton />
-        <CardSkeleton />
-      </div>
-    );
-  }
-
   return (
     <div className="flex min-w-0 flex-col gap-6 px-1 sm:px-0">
       {/* Header */}
@@ -205,7 +196,12 @@ export default function CombosPage() {
       </div>
 
       {/* Combos List */}
-      {combos.length === 0 ? (
+      {loading ? (
+        <div className="flex flex-col gap-4">
+          <CardSkeleton />
+          <CardSkeleton />
+        </div>
+      ) : combos.length === 0 ? (
         <Card>
           <div className="text-center py-12">
             <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-primary/10 text-primary mb-4">

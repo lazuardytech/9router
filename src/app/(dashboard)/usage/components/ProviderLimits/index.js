@@ -6,6 +6,7 @@ import { ConfirmModal } from "@/shared/components/Modal";
 import ProviderIcon from "@/shared/components/ProviderIcon";
 import Toggle from "@/shared/components/Toggle";
 import { USAGE_APIKEY_PROVIDERS, USAGE_SUPPORTED_PROVIDERS } from "@/shared/constants/providers";
+import { cn } from "@/shared/utils/cn";
 import { calculatePercentage, formatResetTime, getStatusColor, parseQuotaData } from "./utils";
 
 // Connection is eligible for the quota page when it uses OAuth or is an apikey provider whitelisted for quota
@@ -675,14 +676,16 @@ export default function ProviderLimits() {
         <button
           type="button"
           onClick={() => setAutoRefresh((prev) => !prev)}
-          className={`flex items-center justify-center size-7 rounded-[4px] border transition-colors duration-100 ${
+          className={cn(
+            "flex items-center gap-1.5 h-7 px-2.5 rounded-[4px] border text-[11px] font-[510] transition-colors duration-100",
             autoRefresh
-              ? "border-aether-blue/40 bg-aether-blue/10 text-aether-blue"
-              : "border-charcoal-grey text-storm-cloud hover:bg-deep-slate hover:text-porcelain"
-          }`}
+              ? "border-emerald/30 bg-emerald/8 text-emerald hover:bg-emerald/15"
+              : "border-charcoal-grey text-storm-cloud hover:bg-deep-slate hover:text-porcelain",
+          )}
           title={autoRefresh ? `Live — refreshes every ${countdown}s` : "Enable live auto-refresh"}
         >
-          <span className="material-symbols-outlined text-[15px]">sensors</span>
+          <span className={cn("size-1.5 rounded-full", autoRefresh ? "bg-emerald animate-pulse" : "bg-fog-grey")} />
+          {autoRefresh ? "Live" : "Paused"}
         </button>
       </div>
 

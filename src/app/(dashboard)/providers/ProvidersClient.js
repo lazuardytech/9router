@@ -249,15 +249,6 @@ export default function ProvidersPage() {
       (info.serviceKinds ?? ["llm"]).includes("llm") && matchSearch(info.name) && matchConnected(id, "apikey"),
   );
 
-  if (loading) {
-    return (
-      <div className="flex flex-col gap-8">
-        <CardSkeleton />
-        <CardSkeleton />
-      </div>
-    );
-  }
-
   const hasAnyResult =
     oauthEntries.length > 0 ||
     freeEntries.length > 0 ||
@@ -268,7 +259,7 @@ export default function ProvidersPage() {
 
   return (
     <div className="flex min-w-0 flex-col gap-6 px-1 sm:px-0">
-      {!hasAnyResult && (
+      {!loading && !hasAnyResult && (
         <div className="text-center py-8 border border-dashed border-border rounded-xl">
           <span className="material-symbols-outlined text-[32px] text-text-muted mb-2">search_off</span>
           <p className="text-text-muted text-sm">No providers match your search</p>
@@ -299,7 +290,13 @@ export default function ProvidersPage() {
             </Button>
           </div>
         </div>
-        {compatibleProviders.length === 0 && anthropicCompatibleProviders.length === 0 ? (
+        {loading ? (
+          <div className="mt-2 grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3 xl:grid-cols-4">
+            {[1, 2, 3, 4].map((i) => (
+              <CardSkeleton key={i} />
+            ))}
+          </div>
+        ) : compatibleProviders.length === 0 && anthropicCompatibleProviders.length === 0 ? (
           <div className="mt-2 flex items-center justify-center gap-2 py-2 border border-dashed border-border rounded-xl text-text-muted text-sm">
             <span className="material-symbols-outlined text-[18px]">extension</span>
             <span>No custom providers available</span>
