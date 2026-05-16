@@ -53,6 +53,7 @@ export default function HealthPage() {
   const [lastRefresh, setLastRefresh] = useState(null);
   const [refreshing, setRefreshing] = useState(false);
   const [clearingLock, setClearingLock] = useState(null);
+  const esRef = useRef(null);
 
   const fetchHealth = useCallback(async () => {
     try {
@@ -66,11 +67,38 @@ export default function HealthPage() {
     }
   }, []);
 
+  // SSE connection
   useEffect(() => {
-    fetchHealth();
-    const t = setInterval(fetchHealth, 15_000);
-    return () => clearInterval(t);
-  }, [fetchHealth]);
+    const connect = () => {
+      const es = new EventSource("/api/monitoring/health/stream");
+      esRef.current = es;
+
+      es.onmessage = (e) => {
+        try {
+          const payload = JSON.parse(e.data);
+          if (payload.error) {
+            setError(payload.error);
+            return;
+          }
+          setData(payload);
+          setError(null);
+          setLastRefresh(new Date());
+        } catch {}
+      };
+
+      es.onerror = () => {
+        es.close();
+        // Reconnect after 3s
+        setTimeout(connect, 3000);
+      };
+    };
+
+    connect();
+
+    return () => {
+      esRef.current?.close();
+    };
+  }, []);
 
   if (!data && !error) {
     return (
