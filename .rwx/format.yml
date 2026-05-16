@@ -1,5 +1,5 @@
 # RWX Run Configuration - Format & Lint Check
-# ESLint for FE
+# biome format + biome lint + eslint
 # Usage: rwx run .rwx/format.yml --wait
 
 on:
@@ -15,7 +15,7 @@ tasks:
   - key: code
     call: git/clone 2.0.7
     with:
-      repository: https://github.com/lazuardytech/9router.git
+      repository: https://github.com/lazuardytech/pod.git
       ref: ${{ init.commit-sha }}
       github-token: ${{ github.token }}
 
@@ -34,18 +34,17 @@ tasks:
       - package.json
       - bun.lock
 
-  - key: run-fe-lint
+  - key: run-check
     use: [bun-install]
     run: |
       export PATH="$HOME/.bun/bin:$PATH"
-      echo "Running ESLint..."
-      bun x eslint .
+      bun run check
     timeout: 5m
 
   - key: results
-    use: [run-fe-lint]
+    use: [run-check]
     run: |
       echo "================================================"
-      echo "  FORMAT CHECK COMPLETE"
-      echo "  ESLint: OK"
+      echo "  FORMAT + LINT CHECK COMPLETE"
+      echo "  biome format + biome lint + eslint: OK"
       echo "================================================"

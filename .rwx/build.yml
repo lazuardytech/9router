@@ -1,5 +1,5 @@
 # RWX Run Configuration - Full Build Pipeline
-# Lint + Test + Build for pod (FE-only, prebuilt Go binary shipped in repo)
+# format + lint + test + build for pod
 # Usage: rwx run .rwx/build.yml --wait
 
 on:
@@ -15,7 +15,7 @@ tasks:
   - key: code
     call: git/clone 2.0.7
     with:
-      repository: https://github.com/lazuardytech/9router.git
+      repository: https://github.com/lazuardytech/pod.git
       ref: ${{ init.commit-sha }}
       github-token: ${{ github.token }}
 
@@ -34,28 +34,19 @@ tasks:
       - package.json
       - bun.lock
 
-  - key: tests-install
-    use: [code, bun, bun-install]
+  - key: run-check
+    use: [bun-install]
     run: |
       export PATH="$HOME/.bun/bin:$PATH"
-      cd tests && bun install --frozen-lockfile
-    filter:
-      - tests/package.json
-      - tests/bun.lock
+      bun run check
+    timeout: 5m
 
-  - key: run-fe-unit-tests
-    use: [bun-install, tests-install]
+  - key: run-tests
+    use: [bun-install]
     run: |
       export PATH="$HOME/.bun/bin:$PATH"
       bun run test:run
     timeout: 10m
-
-  - key: run-fe-lint
-    use: [bun-install]
-    run: |
-      export PATH="$HOME/.bun/bin:$PATH"
-      bun x eslint .
-    timeout: 5m
 
   - key: build-fe
     use: [bun-install]
@@ -77,13 +68,13 @@ tasks:
     timeout: 1m
 
   - key: final-summary
-    use: [run-fe-unit-tests, run-fe-lint, verify-build-artifacts]
+    use: [run-check, run-tests, verify-build-artifacts]
     run: |
       echo "================================================"
       echo "  RWX BUILD PIPELINE - COMPLETE"
       echo "================================================"
-      echo "  FE Unit Tests:        PASSED"
-      echo "  FE Lint:              PASSED"
-      echo "  FE Build:             PASSED"
-      echo "  Build Artifacts:      VERIFIED"
+      echo "  Format + Lint (check): PASSED"
+      echo "  Unit Tests:            PASSED"
+      echo "  Build:                 PASSED"
+      echo "  Build Artifacts:       VERIFIED"
       echo "================================================"
