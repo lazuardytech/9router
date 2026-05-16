@@ -624,11 +624,7 @@ export default function ProfilePage() {
               </SettingRow>
             )}
 
-            <SettingRow
-              label="Minimum Lockout Time"
-              description="Minimum lockout duration per error (minutes). Doubles on each consecutive failure: 1x, 2x, 3x..."
-              border
-            >
+            <SettingRow label="Minimum Lockout Time" description="Minimum lockout duration per error (minutes)." border>
               <Input
                 type="number"
                 min="1"
