@@ -9,6 +9,7 @@ import {
   isOpenAICompatibleProvider,
 } from "@/shared/constants/providers.js";
 
+// biome-ignore lint/suspicious/noAssignInExpressions: globalThis singleton pattern for HMR survival
 const START_TIME = globalThis.__pod_start_time ?? (globalThis.__pod_start_time = Date.now());
 
 function getSystemInfo() {

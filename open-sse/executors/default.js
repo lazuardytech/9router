@@ -55,9 +55,11 @@ export class DefaultExecutor extends BaseExecutor {
 
     switch (this.provider) {
       case "gemini":
-        credentials.apiKey
-          ? (headers["x-goog-api-key"] = credentials.apiKey)
-          : (headers["Authorization"] = `Bearer ${credentials.accessToken}`);
+        if (credentials.apiKey) {
+          headers["x-goog-api-key"] = credentials.apiKey;
+        } else {
+          headers["Authorization"] = `Bearer ${credentials.accessToken}`;
+        }
         break;
       case "claude": {
         // Overlay live cached headers from real Claude Code client over static defaults.
@@ -99,9 +101,12 @@ export class DefaultExecutor extends BaseExecutor {
           }
           Object.assign(headers, cached);
         }
-        credentials.apiKey
-          ? (headers["x-api-key"] = credentials.apiKey)
-          : (headers["Authorization"] = `Bearer ${credentials.accessToken}`);
+        credentials.apiKey;
+        if (credentials.apiKey) {
+          headers["x-api-key"] = credentials.apiKey;
+        } else {
+          headers["Authorization"] = `Bearer ${credentials.accessToken}`;
+        }
         break;
       }
       case "glm":

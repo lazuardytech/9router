@@ -60,6 +60,7 @@ async function parseStream(response, log, callbacks = {}) {
     buffer += decoder.decode(value, { stream: true });
 
     let sepIdx;
+    // biome-ignore lint/suspicious/noAssignInExpressions: standard SSE buffer parsing pattern
     while ((sepIdx = buffer.indexOf("\n\n")) !== -1) {
       const block = buffer.slice(0, sepIdx);
       buffer = buffer.slice(sepIdx + 2);

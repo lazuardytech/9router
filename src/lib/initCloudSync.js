@@ -1,6 +1,7 @@
 import initializeApp from "@/shared/services/initializeApp";
 
 // Survive Next.js HMR — module-level flag resets on reload, globalThis persists
+// biome-ignore lint/suspicious/noAssignInExpressions: globalThis singleton pattern for HMR survival
 const g = (globalThis.__cloudSyncInit ??= { initialized: false, inProgress: null });
 
 export async function ensureAppInitialized() {

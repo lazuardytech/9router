@@ -359,6 +359,7 @@ export async function startDaemonWithPassword(sudoPassword) {
   const daemonCmd = `${tailscaledBin} --socket=${TAILSCALE_SOCKET} --statedir=${TAILSCALE_DIR}`;
 
   // Start via sudo in background (nohup keeps it alive)
+  // biome-ignore lint/correctness/noUndeclaredVariables: runtime-injected global
   await execWithPassword(`nohup ${daemonCmd} > /dev/null 2>&1 &`, sudoPassword || "");
 
   // Wait for daemon to be ready
@@ -560,6 +561,7 @@ export async function stopDaemon(sudoPassword) {
   // Kill with sudo password
   if (!IS_WINDOWS) {
     try {
+      // biome-ignore lint/correctness/noUndeclaredVariables: runtime-injected global
       await execWithPassword("pkill -x tailscaled", sudoPassword || "");
     } catch {
       /* ignore */

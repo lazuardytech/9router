@@ -1189,6 +1189,7 @@ function GenericExampleCard({ providerId, kind }) {
           if (done) break;
           buf += decoder.decode(value, { stream: true });
           let sep;
+          // biome-ignore lint/suspicious/noAssignInExpressions: standard SSE buffer parsing pattern
           while ((sep = buf.indexOf("\n\n")) !== -1) {
             const block = buf.slice(0, sep);
             buf = buf.slice(sep + 2);

@@ -15,6 +15,7 @@ import { enableTailscale, enableTunnel, getTailscaleService, getTunnelService } 
 process.setMaxListeners(20);
 
 // Survive Next.js hot reload
+// biome-ignore lint/suspicious/noAssignInExpressions: globalThis singleton pattern for HMR survival
 const g = (global.__appSingleton ??= {
   signalHandlersRegistered: false,
   watchdogInterval: null,
@@ -43,6 +44,7 @@ export async function initializeApp() {
     if (!g.signalHandlersRegistered) {
       const cleanup = () => {
         try {
+          // biome-ignore lint/correctness/noUndeclaredVariables: runtime-injected global
           removeAllDNSEntriesSync();
         } catch {
           /* best effort */
@@ -54,6 +56,7 @@ export async function initializeApp() {
       process.on("SIGTERM", cleanup);
       process.on("exit", () => {
         try {
+          // biome-ignore lint/correctness/noUndeclaredVariables: runtime-injected global
           removeAllDNSEntriesSync();
         } catch {
           /* ignore */

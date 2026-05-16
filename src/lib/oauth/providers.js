@@ -240,6 +240,7 @@ const PROVIDERS = {
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
+            // biome-ignore lint/correctness/noUndeclaredVariables: runtime-injected global
             metadata: getOAuthClientMetadata(),
             mode: 1,
           }),

@@ -868,7 +868,7 @@ export default function ProviderLimits() {
                       const isInactive = conn.isActive === false;
                       const rowBusy = deletingId === conn.id || togglingId === conn.id;
                       const accountExpanded = expandedRows[conn.id] ?? true;
-                      const { totalUsed, totalLimit, pct } = getAccumulatedProgress(conn);
+                      const { totalLimit, pct } = getAccumulatedProgress(conn);
                       const color = getStatusColor(pct);
                       const cc = colorClasses(color);
                       const accountLabel = isEmail(conn.email) ? conn.email : conn.name || conn.id.slice(0, 8);

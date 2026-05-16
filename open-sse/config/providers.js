@@ -1,3 +1,4 @@
+// biome-ignore lint/style/useNodejsImportProtocol: node: protocol not supported by webpack bundler
 import { arch, platform } from "os";
 
 // === OS/Arch helpers ===

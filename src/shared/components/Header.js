@@ -139,7 +139,7 @@ export default function Header({ onMenuClick, showMenuButton = true, sidebarColl
   const pathname = usePathname();
   const router = useRouter();
   const pageInfo = useMemo(() => getPageInfo(pathname), [pathname]);
-  const { title, description, icon, breadcrumbs } = pageInfo;
+  const { title, icon, breadcrumbs } = pageInfo;
 
   const handleLogout = async () => {
     try {
