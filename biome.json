@@ -10,10 +10,10 @@
       "*.json",
       "*.jsonc",
       "*.css",
-      "!node_modules/**",
-      "!.next/**",
-      "!cloud/**",
-      "!public/**"
+      "!node_modules",
+      "!.next",
+      "!cloud",
+      "!public"
     ]
   },
   "formatter": {
@@ -26,5 +26,60 @@
     "parser": {
       "tailwindDirectives": true
     }
-  }
+  },
+  "javascript": {
+    "globals": [
+      "EdgeRuntime",
+      "caches",
+      "setImmediate",
+      "clearImmediate",
+      "Bun",
+      "process",
+      "global",
+      "globalThis",
+      "Buffer",
+      "__dirname",
+      "__filename"
+    ]
+  },
+  "linter": {
+    "enabled": true,
+    "rules": {
+      "recommended": false,
+      "correctness": {
+        "noUnusedImports": "warn",
+        "noUnusedVariables": "warn",
+        "noUndeclaredVariables": "warn",
+        "noConstantCondition": "error",
+        "noEmptyPattern": "error",
+        "noInvalidUseBeforeDeclaration": "error"
+      },
+      "suspicious": {
+        "noDuplicateObjectKeys": "error",
+        "noDuplicateParameters": "error",
+        "noDoubleEquals": "warn",
+        "noAssignInExpressions": "warn",
+        "noGlobalIsNan": "warn"
+      },
+      "complexity": {
+        "noUselessTernary": "warn",
+        "noUselessSwitchCase": "warn"
+      },
+      "style": {
+        "useNodejsImportProtocol": "warn"
+      }
+    }
+  },
+  "overrides": [
+    {
+      "includes": ["open-sse/**"],
+      "linter": {
+        "rules": {
+          "suspicious": {
+            "noDuplicateObjectKeys": "warn"
+          }
+        }
+      }
+    }
+  ]
 }
