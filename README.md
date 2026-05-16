@@ -7,6 +7,8 @@ Unified proxy for LLM Inference.
 
 <code>🚧 under heady development on v0.0.x</code>
 
+<br/>
+
 ## Development
 
 ```bash
@@ -18,11 +20,15 @@ bun run test         # Run tests
 
 > **Note:** Development requires `bun run build` to be run first.
 
+<br/>
+
 ## Contributing
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for contribution guidelines and [AGENTS.md](AGENTS.md) for project-specific rules (for both humans and agents).
 
 > Pod is heavily inspired by [9router](https://9router.com) and [OmniRoute](https://omniroute.online). All credits should go to their maintainers too.
+
+<br/>
 
 ## License
 
