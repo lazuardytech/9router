@@ -10,6 +10,7 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { useEffect, useState } from "react";
+import { toast } from "sonner";
 import { Button, Card, CardSkeleton, Input, Modal, ModelSelectModal, Toggle } from "@/shared/components";
 import { ConfirmModal } from "@/shared/components/Modal";
 import { useCopyToClipboard } from "@/shared/hooks/useCopyToClipboard";
@@ -27,6 +28,7 @@ export default function CombosPage() {
   const { copied, copy } = useCopyToClipboard();
   const [testingComboId, setTestingComboId] = useState(null);
   const [comboTestResults, setComboTestResults] = useState({});
+  const [testingAll, setTestingAll] = useState(false);
 
   const [confirmDialog, setConfirmDialog] = useState({
     open: false,
@@ -136,6 +138,37 @@ export default function CombosPage() {
     }
   };
 
+  const handleTestAll = async () => {
+    if (testingAll || combos.length === 0) return;
+    setTestingAll(true);
+    setComboTestResults({});
+    let passed = 0;
+    let failed = 0;
+    for (const combo of combos) {
+      if (!combo.models?.length) continue;
+      setTestingComboId(combo.id);
+      try {
+        const res = await fetch("/api/models/test", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ model: combo.models[0] }),
+        });
+        const data = await res.json();
+        const ok = data?.ok ? "ok" : "error";
+        setComboTestResults((prev) => ({ ...prev, [combo.id]: ok }));
+        if (ok === "ok") passed++;
+        else failed++;
+      } catch {
+        setComboTestResults((prev) => ({ ...prev, [combo.id]: "error" }));
+        failed++;
+      }
+    }
+    setTestingComboId(null);
+    setTestingAll(false);
+    if (failed === 0) toast.success(`All ${passed} combos passed`);
+    else toast.warning(`${passed} passed, ${failed} failed`);
+  };
+
   const handleTestCombo = async (combo) => {
     if (!combo.models?.length) return;
     setTestingComboId(combo.id);
@@ -188,9 +221,27 @@ export default function CombosPage() {
           <h1 className="text-2xl font-semibold">Combos</h1>
           <p className="text-sm text-text-muted mt-1">Create model combos with fallback support</p>
         </div>
-        <Button icon="add" onClick={() => setShowCreateModal(true)} className="w-full sm:w-auto">
-          Create Combo
-        </Button>
+        <div className="flex w-full items-center gap-2 sm:w-auto">
+          <button
+            onClick={handleTestAll}
+            disabled={testingAll || combos.length === 0}
+            className={`flex w-full items-center justify-center gap-1.5 rounded-lg border px-3 py-2 text-xs font-medium transition-colors sm:w-auto sm:py-1.5 ${
+              testingAll
+                ? "bg-primary/20 border-primary/40 text-primary animate-pulse"
+                : "bg-bg border-border text-text-muted hover:text-text-main hover:border-primary/40 disabled:opacity-50"
+            }`}
+            title="Test all combos"
+            aria-label="Test all combos"
+          >
+            <span className={`material-symbols-outlined text-[14px]${testingAll ? " animate-spin" : ""}`}>
+              {testingAll ? "progress_activity" : "play_arrow"}
+            </span>
+            {testingAll ? "Testing..." : "Test All"}
+          </button>
+          <Button icon="add" onClick={() => setShowCreateModal(true)} className="w-full sm:w-auto">
+            Create Combo
+          </Button>
+        </div>
       </div>
 
       {/* Combos List */}

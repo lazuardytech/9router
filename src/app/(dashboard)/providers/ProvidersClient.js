@@ -8,6 +8,7 @@ import { Badge, Button, Card, CardSkeleton, Input, Modal, Select, Toggle } from 
 import ProviderIcon from "@/shared/components/ProviderIcon";
 import { APIKEY_PROVIDERS, OAUTH_PROVIDERS } from "@/shared/constants/config";
 import {
+  AI_PROVIDERS,
   ANTHROPIC_COMPATIBLE_PREFIX,
   FREE_PROVIDERS,
   FREE_TIER_PROVIDERS,
@@ -120,6 +121,9 @@ export default function ProvidersPage() {
   const matchSearch = (name) => !searchQuery.trim() || name.toLowerCase().includes(searchQuery.trim().toLowerCase());
   const matchConnected = (providerId, authType) => {
     if (!showConnectedOnly) return true;
+    // noAuth providers are always "connected" — they need no credentials
+    const providerInfo = AI_PROVIDERS[providerId];
+    if (providerInfo?.noAuth) return true;
     const stats = getProviderStats(providerId, authType);
     return stats.connected > 0 && !stats.allDisabled;
   };
