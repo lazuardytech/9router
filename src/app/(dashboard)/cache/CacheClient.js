@@ -134,15 +134,6 @@ export default function CacheClient() {
     }
   };
 
-  if (loading) {
-    return (
-      <div className="flex flex-col gap-6">
-        <CardSkeleton />
-        <CardSkeleton />
-      </div>
-    );
-  }
-
   return (
     <div className="flex min-w-0 flex-col gap-6 px-1 sm:px-0">
       <div className="flex flex-col gap-1">
@@ -195,12 +186,18 @@ export default function CacheClient() {
         }
       >
         <div className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-6">
-          <Stat label="Memory Entries" value={stats.memoryEntries} />
-          <Stat label="DB Entries" value={stats.dbEntries} />
-          <Stat label="Hits" value={stats.hits} />
-          <Stat label="Misses" value={stats.misses} />
-          <Stat label="Hit Rate" value={`${stats.hitRate}%`} />
-          <Stat label="Tokens Saved" value={stats.tokensSaved} />
+          {loading ? (
+            [1, 2, 3, 4, 5, 6].map((i) => <CardSkeleton key={i} />)
+          ) : (
+            <>
+              <Stat label="Memory Entries" value={stats.memoryEntries} />
+              <Stat label="DB Entries" value={stats.dbEntries} />
+              <Stat label="Hits" value={stats.hits} />
+              <Stat label="Misses" value={stats.misses} />
+              <Stat label="Hit Rate" value={`${stats.hitRate}%`} />
+              <Stat label="Tokens Saved" value={stats.tokensSaved} />
+            </>
+          )}
         </div>
       </Card>
 
