@@ -66,11 +66,18 @@ function getMachineId() {
 // ─── Cloudflare Tunnel ───────────────────────────────────────────────────────
 
 async function registerTunnelUrl(shortId, tunnelUrl) {
-  await fetch(`${WORKER_URL}/api/tunnel/register`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ shortId, tunnelUrl }),
-  });
+  try {
+    await fetch(`${WORKER_URL}/api/tunnel/register`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ shortId, tunnelUrl }),
+      signal: AbortSignal.timeout(5000),
+    });
+  } catch (err) {
+    // Non-fatal — tunnel works without registration (publicUrl shortlink won't resolve
+    // but the direct trycloudflare.com URL still works).
+    console.warn("[tunnel] registerTunnelUrl failed (non-fatal):", err?.message);
+  }
 }
 
 function throwIfCancelled(token, label) {

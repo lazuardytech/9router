@@ -272,46 +272,40 @@ export default function APIPageClient({ machineId }) {
 
   // u2500u2500u2500 Cloudflare Tunnel handlers
   // Ping tunnel health until reachable, also check backend status to detect process die
-  const pingTunnelHealth = async (url) => {
-    setTunnelLoading(true);
-    setTunnelProgress("Waiting for tunnel ready...");
+  // Background health probe — fire-and-forget, never blocks UI, never shows errors
+  const backgroundTunnelHealth = (url) => {
+    if (!url) return;
     const healthUrl = `${url}/api/health`;
     const start = Date.now();
-    while (Date.now() - start < TUNNEL_PING_MAX_MS) {
-      await new Promise((r) => setTimeout(r, TUNNEL_PING_INTERVAL_MS));
-      try {
-        const ping = await fetch(healthUrl, { mode: "no-cors", cache: "no-store" });
-        if (ping.ok || ping.type === "opaque") {
-          setTunnelEnabled(true);
-          setTunnelLoading(false);
-          setTunnelProgress("");
-          return true;
-        }
-      } catch {
-        /* not ready yet */
-      }
-      // Every 5 pings (~10s), check if backend process still alive
-      if ((Date.now() - start) % 10000 < TUNNEL_PING_INTERVAL_MS) {
+    const check = async () => {
+      while (Date.now() - start < TUNNEL_PING_MAX_MS) {
+        await new Promise((r) => setTimeout(r, TUNNEL_PING_INTERVAL_MS));
         try {
-          const statusRes = await fetch("/api/tunnel/status");
-          if (statusRes.ok) {
-            const status = await statusRes.json();
-            if (!status.tunnel?.enabled) {
-              setTunnelStatus({ type: "error", message: "Tunnel process stopped unexpectedly." });
-              setTunnelLoading(false);
-              setTunnelProgress("");
-              return false;
-            }
-          }
+          const ping = await fetch(healthUrl, { mode: "no-cors", cache: "no-store" });
+          if (ping.ok || ping.type === "opaque") return; // reachable — done
         } catch {
-          /* ignore */
+          /* not ready yet */
+        }
+        // Every ~10s check if backend process died
+        if ((Date.now() - start) % 10000 < TUNNEL_PING_INTERVAL_MS) {
+          try {
+            const statusRes = await fetch("/api/tunnel/status");
+            if (statusRes.ok) {
+              const status = await statusRes.json();
+              if (!status.tunnel?.settingsEnabled) {
+                setTunnelEnabled(false);
+                setTunnelStatus({ type: "error", message: "Tunnel process stopped unexpectedly." });
+                return;
+              }
+            }
+          } catch {
+            /* ignore */
+          }
         }
       }
-    }
-    setTunnelStatus({ type: "error", message: "Tunnel created but not reachable. Please try again." });
-    setTunnelLoading(false);
-    setTunnelProgress("");
-    return false;
+      // Timed out — tunnel URL may still work, just not reachable from this browser
+    };
+    check().catch(() => {});
   };
 
   const handleEnableTunnel = async () => {
@@ -320,77 +314,71 @@ export default function APIPageClient({ machineId }) {
     setTunnelStatus(null);
     setTunnelProgress("Creating tunnel...");
 
-    // Poll download progress while enable request is pending
-    let polling = true;
-    const pollProgress = async () => {
-      while (polling) {
-        try {
-          const r = await fetch("/api/tunnel/status");
-          if (r.ok) {
-            const s = await r.json();
-            if (s.download?.downloading) {
-              setTunnelProgress(`Downloading cloudflared... ${s.download.progress}%`);
-            } else if (polling) {
-              setTunnelProgress("Creating tunnel...");
-            }
-          }
-        } catch {
-          /* ignore */
-        }
-        await new Promise((r) => setTimeout(r, 1000));
-      }
-    };
-    pollProgress();
+    // Fire the enable request without awaiting — avoids Safari fetch timeout
+    // (cloudflared download + spawn can take 30-90s, exceeding browser defaults).
+    fetch("/api/tunnel/enable", { method: "POST" }).catch(() => {
+      // POST may timeout in browser — completion detected via status polling below
+    });
 
-    try {
-      const res = await fetch("/api/tunnel/enable", { method: "POST" });
-      polling = false;
-      const data = await res.json();
-      if (!res.ok) {
-        setTunnelStatus({ type: "error", message: data.error || "Failed to enable tunnel" });
-        return;
-      }
-
-      const url = data.publicUrl || data.tunnelUrl;
-      if (!url) {
-        setTunnelStatus({ type: "error", message: "No tunnel URL returned" });
-        return;
-      }
-
-      setTunnelUrl(data.tunnelUrl || "");
-      setTunnelPublicUrl(data.publicUrl || "");
-      setTunnelEnabled(true);
-      // Ping the direct cloudflare tunnel URL (more reliable than publicUrl
-      // which requires DNS propagation via 9router.com worker).
-      if (data.tunnelUrl || data.publicUrl) {
-        await pingTunnelHealth(data.tunnelUrl || data.publicUrl);
-      }
-      // Refresh full data to sync all state — non-fatal if it fails
+    // Poll /api/tunnel/status until tunnel is live or overall timeout
+    const start = Date.now();
+    const OVERALL_TIMEOUT_MS = 180000; // 3 min
+    while (Date.now() - start < OVERALL_TIMEOUT_MS) {
+      await new Promise((r) => setTimeout(r, 1000));
       try {
-        await fetchData();
+        const r = await fetch("/api/tunnel/status");
+        if (!r.ok) continue;
+        const s = await r.json();
+
+        // Show download progress
+        if (s.download?.downloading) {
+          const pct = s.download.progress;
+          setTunnelProgress(pct < 100 ? `Downloading cloudflared... ${pct}%` : "Creating tunnel...");
+        } else {
+          setTunnelProgress("Creating tunnel...");
+        }
+
+        // Tunnel is live — show URL immediately
+        if (s.tunnel?.enabled && s.tunnel?.tunnelUrl) {
+          setTunnelUrl(s.tunnel.tunnelUrl || "");
+          setTunnelPublicUrl(s.tunnel.publicUrl || "");
+          setTunnelEnabled(true);
+          setTunnelLoading(false);
+          setTunnelProgress("");
+          // Background health check — non-blocking
+          backgroundTunnelHealth(s.tunnel.tunnelUrl || s.tunnel.publicUrl);
+          // Refresh full data — non-fatal
+          fetchData().catch(() => {});
+          return;
+        }
       } catch {
-        /* non-fatal */
+        /* poll error — retry next tick */
       }
-    } catch (error) {
-      // Sanitize raw browser network error strings (e.g. Safari's
-      // "Unable to connect. Is the computer able to access the url?")
-      const raw = error?.message || "";
-      const isBrowserNetworkError =
-        raw.toLowerCase().includes("unable to connect") ||
-        raw.toLowerCase().includes("failed to fetch") ||
-        raw.toLowerCase().includes("network") ||
-        raw.toLowerCase().includes("load failed");
-      setTunnelStatus({
-        type: "error",
-        message: isBrowserNetworkError
-          ? "Failed to enable tunnel. Please check your network and try again."
-          : raw || "Failed to enable tunnel",
-      });
-    } finally {
-      polling = false;
-      setTunnelLoading(false);
-      setTunnelProgress("");
     }
+
+    // Final check before showing timeout error
+    try {
+      const r = await fetch("/api/tunnel/status");
+      if (r.ok) {
+        const s = await r.json();
+        if (s.tunnel?.enabled && s.tunnel?.tunnelUrl) {
+          setTunnelUrl(s.tunnel.tunnelUrl || "");
+          setTunnelPublicUrl(s.tunnel.publicUrl || "");
+          setTunnelEnabled(true);
+          setTunnelLoading(false);
+          setTunnelProgress("");
+          backgroundTunnelHealth(s.tunnel.tunnelUrl || s.tunnel.publicUrl);
+          fetchData().catch(() => {});
+          return;
+        }
+      }
+    } catch {
+      /* fall through */
+    }
+
+    setTunnelStatus({ type: "error", message: "Tunnel creation timed out. Please check your network and try again." });
+    setTunnelLoading(false);
+    setTunnelProgress("");
   };
 
   const handleDisableTunnel = async () => {

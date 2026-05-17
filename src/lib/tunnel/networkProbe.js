@@ -1,10 +1,5 @@
-import dns from "node:dns";
 import net from "node:net";
 import { HEALTH_CHECK, INTERNET_CHECK } from "./tunnelConfig.js";
-
-// Force public DNS to bypass OS negative cache (mDNSResponder holds NXDOMAIN)
-const resolver = new dns.promises.Resolver();
-resolver.setServers(["1.1.1.1", "1.0.0.1", "8.8.8.8"]);
 
 export function checkInternet() {
   return new Promise((resolve) => {
@@ -32,30 +27,11 @@ export function checkInternet() {
   });
 }
 
-async function resolveDns(hostname, timeoutMs) {
-  try {
-    await Promise.race([
-      resolver.resolve4(hostname),
-      new Promise((_, rej) => setTimeout(() => rej(new Error("dns timeout")), timeoutMs)),
-    ]);
-    return true;
-  } catch {
-    return false;
-  }
-}
-
-// Single health probe: DNS via 1.1.1.1 → fetch /api/health
+// Single health probe: direct fetch (no DNS pre-check — trycloudflare.com
+// subdomains are ephemeral and not in public DNS, so resolve4() always fails
+// for them even when the tunnel is perfectly functional).
 export async function probeUrlAlive(url) {
   if (!url) return false;
-  let hostname;
-  try {
-    hostname = new URL(url).hostname;
-  } catch {
-    return false;
-  }
-
-  if (!(await resolveDns(hostname, HEALTH_CHECK.dnsTimeoutMs))) return false;
-
   try {
     const res = await fetch(`${url}/api/health`, {
       signal: AbortSignal.timeout(HEALTH_CHECK.fetchTimeoutMs),
