@@ -434,7 +434,6 @@ export default function ProviderLimits() {
   // Optionally surface accounts with quotas expiring soonest first.
   // Always hide connections that are disabled (isActive === false).
   const sortedConnections = [...providerFilteredConnections]
-    .filter((conn) => conn.isActive !== false)
     .filter((conn) => !hideDisabled || conn.isActive !== false)
     .sort((a, b) => {
       if (expiringFirst) {
