@@ -360,13 +360,32 @@ export default function APIPageClient({ machineId }) {
       setTunnelUrl(data.tunnelUrl || "");
       setTunnelPublicUrl(data.publicUrl || "");
       setTunnelEnabled(true);
-      // Ping the direct cloudflare tunnel URL first (more reliable than publicUrl
+      // Ping the direct cloudflare tunnel URL (more reliable than publicUrl
       // which requires DNS propagation via 9router.com worker).
-      await pingTunnelHealth(data.tunnelUrl || data.publicUrl);
-      // Refresh full data to sync all state
-      await fetchData();
+      if (data.tunnelUrl || data.publicUrl) {
+        await pingTunnelHealth(data.tunnelUrl || data.publicUrl);
+      }
+      // Refresh full data to sync all state — non-fatal if it fails
+      try {
+        await fetchData();
+      } catch {
+        /* non-fatal */
+      }
     } catch (error) {
-      setTunnelStatus({ type: "error", message: error.message });
+      // Sanitize raw browser network error strings (e.g. Safari's
+      // "Unable to connect. Is the computer able to access the url?")
+      const raw = error?.message || "";
+      const isBrowserNetworkError =
+        raw.toLowerCase().includes("unable to connect") ||
+        raw.toLowerCase().includes("failed to fetch") ||
+        raw.toLowerCase().includes("network") ||
+        raw.toLowerCase().includes("load failed");
+      setTunnelStatus({
+        type: "error",
+        message: isBrowserNetworkError
+          ? "Failed to enable tunnel. Please check your network and try again."
+          : raw || "Failed to enable tunnel",
+      });
     } finally {
       polling = false;
       setTunnelLoading(false);
