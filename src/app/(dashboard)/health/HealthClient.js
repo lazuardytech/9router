@@ -112,11 +112,11 @@ export default function HealthPage() {
 
   if (!data && !error) {
     return (
-      <div className="p-4 lg:p-6 space-y-5 max-w-6xl mx-auto">
+      <div className="flex min-w-0 flex-col gap-6 px-1 sm:px-0">
         {/* Header always visible */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-[18px] font-[590] text-porcelain tracking-[-0.18px]">System Health</h1>
+            <h1 className="text-[18px] font-[590] text-porcelain tracking-[-0.18px]">Health</h1>
             <p className="text-[12px] text-storm-cloud mt-0.5">
               Live overview of system status, database, providers, and cache.
             </p>
@@ -134,7 +134,7 @@ export default function HealthPage() {
 
   if (error && !data) {
     return (
-      <div className="p-6">
+      <div className="flex min-w-0 flex-col gap-6 px-1 sm:px-0">
         <div className="rounded-[6px] border border-warning-red/30 bg-warning-red/8 p-5 text-center">
           <span className="material-symbols-outlined text-[28px] text-warning-red mb-2">error</span>
           <p className="text-[13px] text-warning-red">{error}</p>
@@ -149,11 +149,11 @@ export default function HealthPage() {
   const { system, database, providers, tunnel, semanticCache } = data;
 
   return (
-    <div className="p-4 lg:p-6 space-y-5 max-w-6xl mx-auto">
+    <div className="flex min-w-0 flex-col gap-6 px-1 sm:px-0">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-[18px] font-[590] text-porcelain tracking-[-0.18px]">System Health</h1>
+          <h1 className="text-[18px] font-[590] text-porcelain tracking-[-0.18px]">Health</h1>
           <p className="text-[12px] text-storm-cloud mt-0.5">
             Live overview of system status, database, providers, and cache.
           </p>

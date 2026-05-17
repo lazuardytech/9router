@@ -124,7 +124,7 @@ const getPageInfo = (pathname) => {
     return { title: "Memory", description: "Manage memory entries", icon: "memory_alt", breadcrumbs: [] };
   if (pathname.includes("/health"))
     return {
-      title: "System Health",
+      title: "Health",
       description: "Live system status, database, providers, and cache",
       icon: "monitor_heart",
       breadcrumbs: [],
