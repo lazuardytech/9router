@@ -145,3 +145,23 @@ describe("CodexExecutor image handling", () => {
     expect(imgBlock.image_url.startsWith("data:image/jpeg;base64,")).toBe(true);
   });
 });
+
+describe("CodexExecutor.buildHeaders — always SSE", () => {
+  it("sets Accept: text/event-stream even when stream=false", () => {
+    const executor = new CodexExecutor();
+    const headers = executor.buildHeaders({ accessToken: "tok" }, false);
+    expect(headers["Accept"]).toBe("text/event-stream");
+  });
+
+  it("sets Accept: text/event-stream when stream=true", () => {
+    const executor = new CodexExecutor();
+    const headers = executor.buildHeaders({ accessToken: "tok" }, true);
+    expect(headers["Accept"]).toBe("text/event-stream");
+  });
+
+  it("sets Accept: text/event-stream when stream omitted (default)", () => {
+    const executor = new CodexExecutor();
+    const headers = executor.buildHeaders({ accessToken: "tok" });
+    expect(headers["Accept"]).toBe("text/event-stream");
+  });
+});

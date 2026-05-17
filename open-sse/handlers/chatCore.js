@@ -256,17 +256,7 @@ export async function handleChatCore({
     sourceFormat === FORMATS.GEMINI_CLI;
   const providerRequiresStreaming = provider === "openai" || provider === "codex";
 
-  // WORKAROUND: Disable streaming for Codex when tools are present
-  // This prevents freeze during tool calls due to Responses API index mismatch
-  // TODO: Remove after proper fix is verified in production
-  const hasTools = body.tools && Array.isArray(body.tools) && body.tools.length > 0;
-  const disableCodexStreaming = provider === "codex" && hasTools;
-
   let stream = providerRequiresStreaming ? true : body.stream !== false;
-  if (disableCodexStreaming) {
-    stream = false;
-    log?.debug?.("CODEX_TOOL_WORKAROUND", "Disabled streaming for Codex with tools to prevent freeze");
-  }
 
   // Check client Accept header preference for non-streaming requests
   // This fixes AI SDK compatibility where clients send Accept: application/json

@@ -1,5 +1,6 @@
 import { generateDetailId, saveRequestDetail } from "@/lib/usageDb.js";
 import { HTTP_STATUS } from "../../config/runtimeConfig.js";
+import { convertResponsesStreamToJson } from "../../transformer/streamToJsonConverter.js";
 import { FORMATS } from "../../translator/formats.js";
 import { needsTranslation } from "../../translator/index.js";
 import { ollamaBodyToOpenAI } from "../../translator/response/ollama-to-openai.js";
@@ -164,7 +165,38 @@ export async function handleNonStreamingResponse({
   const contentType = providerResponse.headers.get("content-type") || "";
   let responseBody;
 
-  if (contentType.includes("text/event-stream")) {
+  // Codex never sends Content-Type on success — detect by provider name too.
+  // Codex returns Responses API SSE format, not Chat Completions SSE, so it
+  // must be parsed with convertResponsesStreamToJson, not parseSSEToOpenAIResponse.
+  const isCodexSSE = provider === "codex" || sourceFormat === FORMATS.OPENAI_RESPONSES;
+  const isSSE = contentType.includes("text/event-stream") || (contentType === "" && isCodexSSE);
+
+  if (isSSE && isCodexSSE) {
+    // Responses API SSE → convert to chat.completion JSON
+    try {
+      const jsonResponse = await convertResponsesStreamToJson(providerResponse.body);
+      const inTokens = jsonResponse.usage?.input_tokens || 0;
+      const outTokens = jsonResponse.usage?.output_tokens || 0;
+      // Extract text from output items
+      const msgItem = (jsonResponse.output || []).find((i) => i?.type === "message");
+      const textContent =
+        msgItem?.content?.find?.((c) => c.type === "output_text")?.text ||
+        msgItem?.content?.find?.((c) => typeof c.text === "string")?.text ||
+        "";
+      responseBody = {
+        id: jsonResponse.id || `chatcmpl-${Date.now()}`,
+        object: "chat.completion",
+        created: jsonResponse.created_at || Math.floor(Date.now() / 1000),
+        model,
+        choices: [{ index: 0, message: { role: "assistant", content: textContent }, finish_reason: "stop" }],
+        usage: { prompt_tokens: inTokens, completion_tokens: outTokens, total_tokens: inTokens + outTokens },
+      };
+    } catch (err) {
+      appendLog({ status: `FAILED ${HTTP_STATUS.BAD_GATEWAY}` });
+      console.error(`[ChatCore] Failed to parse Codex SSE from ${provider}:`, err.message);
+      return createErrorResult(HTTP_STATUS.BAD_GATEWAY, `Failed to parse Codex response from ${provider}`);
+    }
+  } else if (isSSE) {
     const sseText = await providerResponse.text();
     const parsed = parseSSEToOpenAIResponse(sseText, model);
     if (!parsed) {
