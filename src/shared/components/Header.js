@@ -63,7 +63,7 @@ const getPageInfo = (pathname) => {
         title: providerInfo.name,
         description: "",
         breadcrumbs: [
-          { label: "Providers", href: "/providers", icon: "dns" },
+          { label: "LLM Providers", href: "/providers", icon: "dns" },
           { label: providerInfo.name, image: `/providers/${providerInfo.id || providerId}.png` },
         ],
       };
@@ -72,7 +72,7 @@ const getPageInfo = (pathname) => {
     return {
       title: providerId,
       description: "",
-      breadcrumbs: [{ label: "Providers", href: "/providers", icon: "dns" }, { label: providerId }],
+      breadcrumbs: [{ label: "LLM Providers", href: "/providers", icon: "dns" }, { label: providerId }],
     };
   }
 
@@ -80,10 +80,10 @@ const getPageInfo = (pathname) => {
     return {
       title: "Add New Provider",
       description: "",
-      breadcrumbs: [{ label: "Providers", href: "/providers", icon: "dns" }, { label: "New" }],
+      breadcrumbs: [{ label: "LLM Providers", href: "/providers", icon: "dns" }, { label: "New" }],
     };
   if (pathname.includes("/providers") && !pathname.includes("/media-providers"))
-    return { title: "Providers", description: "Manage your AI provider connections", icon: "dns", breadcrumbs: [] };
+    return { title: "LLM Providers", description: "Manage your AI provider connections", icon: "dns", breadcrumbs: [] };
   if (pathname.includes("/combos"))
     return { title: "Combos", description: "Model combos with fallback", icon: "layers", breadcrumbs: [] };
   if (pathname.includes("/usage"))
