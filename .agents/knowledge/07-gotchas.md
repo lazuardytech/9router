@@ -299,3 +299,31 @@ Providers like Kiro and OpenCode Free have no connections (no API key required).
 `matchConnected` must return `true` for these providers regardless of connection stats.
 Filtering them out under "Connected Only" is incorrect — they are always available.
 Check for `noAuth` flag before applying connection-based filtering logic.
+
+## 52) Semantic cache SQLite TTL — always use `strftime`, never `datetime('now')`
+
+`expires_at` in `semantic_cache` is stored as ISO 8601 (`2026-05-17T12:00:00Z`).
+SQLite's `datetime('now')` returns `2026-05-17 12:00:00` (space separator, no `Z`), which fails
+string comparison against ISO 8601 values silently — every row appears unexpired.
+Always compare with:
+```sql
+strftime('%Y-%m-%dT%H:%M:%SZ', 'now')
+```
+This was the primary root cause of 0 cache hits from SQLite in v0.0.30.
+
+## 53) Cache signature includes `memoryOwnerId` — different API keys never share entries
+
+`generateSignature` takes `memoryOwnerId` (derived from the API key) as an input.
+Two requests with identical messages but different API keys produce different signatures.
+This prevents cross-user cache bleed and ensures memory injection cannot be bypassed via cache hits.
+Temperature `null` and `1` are normalized to the same value — omitting the field and sending `1` explicitly produce the same signature.
+
+## 54) `clearInFlight` must be called unconditionally after every response path
+
+`clearInFlight` must be called after all three response paths in `chatCore.js`:
+- forced-SSE-to-JSON conversion
+- non-streaming response
+- streaming response
+
+If any path skips `clearInFlight`, concurrent identical requests will stall for 60 seconds waiting
+for the in-flight entry to expire. Do not gate this call on cache miss or response type.

@@ -1,6 +1,6 @@
 # Architecture
 
-This file summarizes the current architecture for `github.com/lazuardytech/pod` (v0.0.29).
+This file summarizes the current architecture for `github.com/lazuardytech/pod` (v0.0.31).
 
 ## Package Layout
 
@@ -70,11 +70,17 @@ All use the `open-sse` stream helpers. The `/logs` page surfaces Refresh/Live to
   - Streaming requests (`stream: true`) are cached. After `onStreamComplete`, the assembled response is written to cache. Cache hits for streaming clients are served as SSE chunks via `buildCacheHitSSEResponse` in `open-sse/handlers/chatCore.js`.
   - **Critical**: `cacheSignature` is computed from original `body.messages` BEFORE `injectMemory()` mutates the body. All write paths reuse this pre-computed signature. Never recompute from `body.messages` at write time.
   - `requestTooLargeForCache` guard removed — `generateSignature` already handles large payloads via 64KB tail hash. Do not re-add size-based bypass guards.
+  - `generateSignature` includes `memoryOwnerId` (derived from the API key) — requests from different API keys never share cache entries. Temperature `null` and `1` are normalized to the same value inside `generateSignature`.
+  - `MAX_SEMANTIC_CACHE_BYTES` is 512KB (raised from 256KB in v0.0.31) — responses up to 512KB are now cached.
+  - SQLite TTL comparison uses `strftime('%Y-%m-%dT%H:%M:%SZ', 'now')` — `expires_at` is stored as ISO 8601 (`2026-05-17T...Z`). Never use `datetime('now')` for this comparison.
+  - `clearInFlight` is called unconditionally after all three response paths (forced-SSE-to-JSON, non-streaming, streaming). This prevents 60s stalls for concurrent identical requests.
 - Temperature threshold for cache eligibility: `temperature > 1` (changed from `temperature !== 0` in v0.0.13 — most clients send `temperature: 1` by default, which was incorrectly bypassing cache).
 - Conversational memory:
   - Tables: `memories`, `memory_fts`
   - API: `/api/memory`, `/api/memory/[id]`, `/api/settings/memory`
   - In-process store: `LRUCache` (500 entries, 4MB max, 300s TTL) — replaced plain Map in v0.0.13 to bound memory growth.
+  - `"recent"` retrieval strategy is an explicit alias for `"exact"` in `retrieval.js`. Both resolve to the same code path.
+  - `/api/memory` routes are included in `PROTECTED_API_PATHS` in the dashboard guard.
 
 ## API Key Limit Model
 

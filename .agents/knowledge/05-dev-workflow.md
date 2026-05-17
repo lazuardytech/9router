@@ -33,7 +33,7 @@ bun run build      # next build
 
 Always run in this order before release: `bun run check` → `bun run test:run` → `bun run build`.
 
-> Test count as of v0.0.29: **533 tests passed** (31 test files).
+> Test count as of v0.0.31: **711 tests passed** (37 test files).
 
 ## Docker (Local)
 

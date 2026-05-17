@@ -1,7 +1,7 @@
 # Open Issues
 
 Tracked problems that have been partially or fully fixed but may still have residual symptoms.
-Last updated: **2026-05-17** (baseline **v0.0.29**).
+Last updated: **2026-05-17** (baseline **v0.0.31**).
 
 ---
 
@@ -186,10 +186,10 @@ If the /health page still shows unexpected short lockouts:
 
 ---
 
-## Status as of v0.0.29
+## Status as of v0.0.31
 
-All three tracked issues are fully resolved. No known open issues as of v0.0.29.
+All three tracked issues are fully resolved. No known open issues as of v0.0.31.
 
 - Issue 1 (Performance Regression): ✅ Fixed in v0.0.23
-- Issue 2 (Semantic Cache 0% Hit Rate): ✅ Fixed in v0.0.22
+- Issue 2 (Semantic Cache 0% Hit Rate): ✅ Fixed in v0.0.22 and v0.0.31 (SQLite TTL root cause, `memoryOwnerId` in signature, `clearInFlight` unconditional)
 - Issue 3 (Model Lock Minimum Lockout): ✅ Fixed in v0.0.21
