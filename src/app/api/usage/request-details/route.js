@@ -1,6 +1,9 @@
 import { NextResponse } from "next/server";
 import { getRequestDetails } from "@/lib/usageDb";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 /**
  * GET /api/usage/request-details
  * Query parameters: page, pageSize (1-100), provider, model, connectionId, status, startDate, endDate

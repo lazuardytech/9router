@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import Button from "@/shared/components/Button";
 import Card from "@/shared/components/Card";
+import DatePicker from "@/shared/components/DatePicker";
 import Drawer from "@/shared/components/Drawer";
 import Pagination from "@/shared/components/Pagination";
 import { AI_PROVIDERS, getProviderByAlias } from "@/shared/constants/providers";
@@ -102,8 +103,8 @@ export default function RequestDetailsTab() {
   const [providerNameCache, setProviderNameCache] = useState(null);
   const [filters, setFilters] = useState({
     provider: "",
-    startDate: "",
-    endDate: "",
+    startDate: null,
+    endDate: null,
   });
 
   const fetchProviders = useCallback(async () => {
@@ -128,8 +129,8 @@ export default function RequestDetailsTab() {
         pageSize: pagination.pageSize.toString(),
       });
       if (filters.provider) params.append("provider", filters.provider);
-      if (filters.startDate) params.append("startDate", filters.startDate);
-      if (filters.endDate) params.append("endDate", filters.endDate);
+      if (filters.startDate) params.append("startDate", filters.startDate.toISOString());
+      if (filters.endDate) params.append("endDate", filters.endDate.toISOString());
 
       const res = await fetch(`/api/usage/request-details?${params}`);
       if (!res.ok) {
@@ -170,7 +171,7 @@ export default function RequestDetailsTab() {
   };
 
   const handleClearFilters = () => {
-    setFilters({ provider: "", startDate: "", endDate: "" });
+    setFilters({ provider: "", startDate: null, endDate: null });
   };
 
   return (
@@ -202,34 +203,20 @@ export default function RequestDetailsTab() {
           </div>
 
           <div className="flex min-w-0 flex-col gap-2">
-            <label htmlFor="start-date-filter" className="text-sm font-medium text-text-main">
-              Start Date
-            </label>
-            <input
-              id="start-date-filter"
-              type="datetime-local"
+            <label className="text-sm font-medium text-text-main">Start Date</label>
+            <DatePicker
               value={filters.startDate}
-              onChange={(e) => setFilters({ ...filters, startDate: e.target.value })}
-              className={cn(
-                "h-9 px-3 rounded-lg border border-black/10 dark:border-white/10 bg-surface",
-                "w-full min-w-0 text-sm text-text-main focus:outline-none focus:ring-2 focus:ring-primary/20",
-              )}
+              onChange={(date) => setFilters({ ...filters, startDate: date })}
+              placeholder="Pick start date"
             />
           </div>
 
           <div className="flex min-w-0 flex-col gap-2">
-            <label htmlFor="end-date-filter" className="text-sm font-medium text-text-main">
-              End Date
-            </label>
-            <input
-              id="end-date-filter"
-              type="datetime-local"
+            <label className="text-sm font-medium text-text-main">End Date</label>
+            <DatePicker
               value={filters.endDate}
-              onChange={(e) => setFilters({ ...filters, endDate: e.target.value })}
-              className={cn(
-                "h-9 px-3 rounded-lg border border-black/10 dark:border-white/10 bg-surface",
-                "w-full min-w-0 text-sm text-text-main focus:outline-none focus:ring-2 focus:ring-primary/20",
-              )}
+              onChange={(date) => setFilters({ ...filters, endDate: date })}
+              placeholder="Pick end date"
             />
           </div>
 

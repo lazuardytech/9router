@@ -12,7 +12,7 @@ const fmtTokens = (n) => {
   return String(n || 0);
 };
 
-const fmtCost = (n) => `$${(n || 0).toFixed(4)}`;
+const fmtCost = (n) => `$${(n || 0).toFixed(2)}`;
 
 export default function UsageChart({ period = "7d" }) {
   const [data, setData] = useState([]);

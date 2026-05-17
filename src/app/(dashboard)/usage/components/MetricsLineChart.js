@@ -8,7 +8,7 @@ const fmtNum = (n) => {
   return new Intl.NumberFormat().format(Math.round(n));
 };
 
-const fmtCost = (n) => `$${(n || 0).toFixed(4)}`;
+const fmtCost = (n) => `$${(n || 0).toFixed(2)}`;
 
 const PERIOD_UNIT = {
   "24h": "Today",
