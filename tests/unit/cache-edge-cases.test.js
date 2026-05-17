@@ -37,8 +37,9 @@ describe("invalidateStale", () => {
     const resp = { id: "s1", choices: [{ message: { role: "assistant", content: "ok" } }] };
     setCachedResponse(sig, "gpt-4o", resp, 0, 3600000);
 
-    // Invalidate entries older than 0ms (all of them)
-    const removed = invalidateStale(0);
+    // Wait 10ms so created_at is strictly in the past, then invalidate entries older than 1ms
+    await new Promise((r) => setTimeout(r, 10));
+    const removed = invalidateStale(1);
     expect(removed).toBeGreaterThanOrEqual(1);
   });
 
