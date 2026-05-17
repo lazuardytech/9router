@@ -291,10 +291,10 @@ export default function MediaProviderKindPage() {
       {allProviders.length === 0 ? (
         <div className="text-center py-12 border border-dashed border-border rounded-xl text-text-muted text-sm">
           {showConnectedOnly ? (
-            <>
-              <span className="material-symbols-outlined text-[32px] mb-2 block">wifi_off</span>
-              No connected providers available
-            </>
+            <div className="flex items-center justify-center gap-0 py-12">
+              <span className="material-symbols-outlined text-[32px]">wifi_off</span>
+              <span className="ms-2">No connected providers available</span>
+            </div>
           ) : (
             <>
               No providers support <strong>{kindConfig.label}</strong> yet.
