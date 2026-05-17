@@ -145,7 +145,9 @@ export function getCachedResponse(signature) {
   try {
     const db = getDatabase();
     const row = db
-      .prepare("SELECT response, tokens_saved FROM semantic_cache WHERE signature = ? AND expires_at > datetime('now')")
+      .prepare(
+        "SELECT response, tokens_saved FROM semantic_cache WHERE signature = ? AND expires_at > strftime('%Y-%m-%dT%H:%M:%SZ', 'now')",
+      )
       .get(signature);
 
     if (!row) {
@@ -247,7 +249,9 @@ export function getCacheStats() {
   let dbSize = 0;
   try {
     const db = getDatabase();
-    const row = db.prepare("SELECT COUNT(*) AS count FROM semantic_cache WHERE expires_at > datetime('now')").get();
+    const row = db
+      .prepare("SELECT COUNT(*) AS count FROM semantic_cache WHERE expires_at > strftime('%Y-%m-%dT%H:%M:%SZ', 'now')")
+      .get();
     dbSize = toNumber(asRecord(row).count, 0);
   } catch {
     // ignore

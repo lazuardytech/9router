@@ -878,8 +878,15 @@ export async function handleChatCore({
           resolveInFlight(assembledResponse);
           resolveInFlight = null;
         }
-        clearInFlight(cacheSignature);
+      } else {
+        // Response too large to cache — still resolve in-flight waiters so they
+        // don't stall for 60s, and clear the in-flight entry.
+        if (resolveInFlight) {
+          resolveInFlight(null);
+          resolveInFlight = null;
+        }
       }
+      clearInFlight(cacheSignature);
     }
   };
   return handleStreamingResponse({
