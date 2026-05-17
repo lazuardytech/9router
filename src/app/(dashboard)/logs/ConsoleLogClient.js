@@ -145,6 +145,12 @@ export default function ConsoleLogClient({ autoScroll, setAutoScroll, clearRef, 
       if (msg.type === "init") {
         setLogs(msg.logs.slice(-CONSOLE_LOG_CONFIG.maxLines).map(wrapLine));
         setLastUpdated(new Date());
+        // Scroll to bottom after initial load
+        requestAnimationFrame(() => {
+          if (scrollRef.current) {
+            scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+          }
+        });
       } else if (msg.type === "line") {
         if (!liveRef.current) return;
         setLogs((prev) => {
