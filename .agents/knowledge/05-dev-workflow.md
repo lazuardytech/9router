@@ -39,7 +39,7 @@ Always run in this order before release: `bun run check` → `bun run test:run` 
 docker run -d --name pod -p 20128:20128 --env-file .env -v pod-data:/app/data lazuardytech/pod:latest
 ```
 
-(`start.sh` was removed in v0.0.20.)
+(`start.sh` was removed in v0.0.20; release baseline is v0.0.28.)
 
 Dockerfile facts:
 - Multi-stage build:

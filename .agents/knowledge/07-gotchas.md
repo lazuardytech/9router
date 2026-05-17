@@ -252,3 +252,34 @@ API routes and Node.js-only modules.
 `renameProviderNode` appends the old id to `node.data.previousIds[]` on every rename.
 `ProviderDetailClient` uses this array to redirect stale bookmark URLs to the current id via `router.replace`.
 Clearing `previousIds` breaks all historical bookmarks permanently.
+
+## 44) Vertex AI request body must never contain `stream`
+
+Vertex AI controls streaming via URL action suffix (`streamGenerateContent`) and `?alt=sse` query param — not a body field.
+`chatCore.js` skips the stream-field injection step when `targetFormat === FORMATS.VERTEX`.
+`openaiToVertexRequest` also explicitly deletes `stream` from the translated body.
+Both guards are required. Injecting `stream: true` into a Vertex request body causes API errors.
+
+## 45) models.dev sync reads pricing from `model.cost`, not `model.pricing`
+
+The models.dev API response nests pricing under `model.cost`, not `model.pricing` or top-level fields.
+Field mapping:
+- `cost.input` → input price per token
+- `cost.output` → output price per token
+- `cost.cache_read` → `cached`
+- `cost.cache_write` → `cache_creation`
+- `cost.reasoning` → reasoning price per token
+
+Do not read from `model.pricing` or top-level `input`/`output` fields — they do not exist in the response.
+
+## 46) Semantic cache: `generateSignature` handles large payloads — no size bypass needed
+
+`generateSignature` already handles large payloads via a 64KB tail hash. The `requestTooLargeForCache` guard has been removed from `chatCore.js`.
+Do not add size-based bypass guards before the cache check — they cause false cache misses for large-but-valid requests.
+
+## 47) noAuth providers must always match as "connected"
+
+Providers like Kiro and OpenCode Free have no connections (no API key required).
+`matchConnected` must return `true` for these providers regardless of connection stats.
+Filtering them out under "Connected Only" is incorrect — they are always available.
+Check for `noAuth` flag before applying connection-based filtering logic.

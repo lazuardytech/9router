@@ -4,7 +4,7 @@
 
 - Repo: `github.com/lazuardytech/pod`
 - Branch: `main`
-- Current tagged release: **v0.0.20**
+- Current tagged release: **v0.0.28**
 
 ## Release History
 
@@ -26,6 +26,14 @@
 | `v0.0.18` | Fix all 23 CodeQL security alerts (SSRF, insecure randomness, XSS, stack trace, workflow permissions) |
 | `v0.0.19` | Biome `--unsafe` lint fixes, quota page disabled-model filter, `h-1.5` progress bars, health page improvements |
 | `v0.0.20` | Semantic cache 0% hit rate fix (memory injection signature mismatch), configurable minimum lockout time, quota toolbar improvements, logs `h-[70vh]`, health page lockout clear button |
+| `v0.0.21` | Minimum lockout fix: guard too aggressive (skipped longer cooldowns), `resetsAtMs` path skipped minimum; both fixed in `auth.js` |
+| `v0.0.22` | Semantic cache: temperature/top_p normalization, `approxRequestBytes` content-block fix; cache hit rate now reliable |
+| `v0.0.23` | Perf: `PRAGMA integrity_check` cached 5min, health stream 10s interval, request-logs stream fixed 2s poll; 23 new SSE hotpath tests |
+| `v0.0.24` | API key `last_access_at` tracked on every auth request, shown in /endpoint table; Est. Cost rounds up to 2 decimal places |
+| `v0.0.25` | models.dev pricing sync: `src/lib/modelsDevSync.js`, periodic sync on boot, "Sync Now" in /settings, `GET/POST /api/pricing/sync`; pricing resolution order: overrides → models.dev → static |
+| `v0.0.26` | Model lock count tracking: `modelLockCount_${model}` flat field, backoff multiplier (1x/2x/3x…); Vertex AI `stream` field removed from request body; semantic cache `requestTooLargeForCache` guard removed |
+| `v0.0.27` | Bug fixes: tunnel pings `tunnelUrl` not `publicUrl`; /providers "Connected Only" noAuth fix; /media-providers grid from `allProviders`; /quota disabled always hidden, toolbar state to localStorage; /usage Details observability toggle reads both fields |
+| `v0.0.28` | UI: /providers detail up/down arrows removed (drag handles priority); /health Model Lockout moved below Provider Health, custom icons fixed; /combos "Test All" button; /logs Proxy Logs Actions column fixed width; /quota white active style on collapse/expiring/hide buttons; Melma removed from APIKEY_PROVIDERS |
 
 ## Current Remote Setup
 
@@ -50,5 +58,5 @@ Branch is intentionally customized for Lazuardy Tech needs:
 ## Docker Hub
 
 - Image: `lazuardytech/pod`
-- Tags: `v0.0.1`–`v0.0.20`, `latest`
+- Tags: `v0.0.1`–`v0.0.28`, `latest`
 - Platform: `linux/amd64`

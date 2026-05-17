@@ -2,7 +2,7 @@
 
 Pod is Lazuardy Tech's internal AI routing proxy.
 
-Current baseline: **v0.0.14**.
+Current baseline: **v0.0.28**.
 
 ## Core Capabilities
 
@@ -14,6 +14,8 @@ Current baseline: **v0.0.14**.
 - API key auth with optional per-key rate limit (`unlimited` / `limited`)
 - Proxy pool support with Vercel relay option
 - Tailscale and Cloudflare tunnel integration
+- Model cost sync from models.dev (configurable interval, auto-start on boot)
+- API key last access tracking
 
 ## Dashboard Information Architecture
 

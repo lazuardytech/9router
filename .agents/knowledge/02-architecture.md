@@ -1,6 +1,6 @@
 # Architecture
 
-This file summarizes the current architecture for `github.com/lazuardytech/pod` (v0.0.20).
+This file summarizes the current architecture for `github.com/lazuardytech/pod` (v0.0.28).
 
 ## Package Layout
 
@@ -69,6 +69,7 @@ All use the `open-sse` stream helpers. The `/logs` page surfaces Refresh/Live to
   - API: `/api/cache`, `/api/settings/cache-config`
   - Streaming requests (`stream: true`) are cached. After `onStreamComplete`, the assembled response is written to cache. Cache hits for streaming clients are served as SSE chunks via `buildCacheHitSSEResponse` in `open-sse/handlers/chatCore.js`.
   - **Critical**: `cacheSignature` is computed from original `body.messages` BEFORE `injectMemory()` mutates the body. All write paths reuse this pre-computed signature. Never recompute from `body.messages` at write time.
+  - `requestTooLargeForCache` guard removed — `generateSignature` already handles large payloads via 64KB tail hash. Do not re-add size-based bypass guards.
 - Temperature threshold for cache eligibility: `temperature > 1` (changed from `temperature !== 0` in v0.0.13 — most clients send `temperature: 1` by default, which was incorrectly bypassing cache).
 - Conversational memory:
   - Tables: `memories`, `memory_fts`
@@ -81,7 +82,24 @@ All use the `open-sse` stream helpers. The `/logs` page surfaces Refresh/Live to
 - `limit_type` (`unlimited` or `limited`)
 - `requests_per_minute`
 - `concurrent_requests`
-- `last_access_at`
+- `last_access_at` — updated on every authenticated request via `getApiKeyByKey()`, displayed in the /endpoint table
+
+## Model Lock Count
+
+`modelLockCount_${model}` is a flat field on connection rows. It is incremented each time a model is locked and cleared on success. The value is used as a backoff multiplier for minimum lockout duration (1x on first failure, 2x on second, 3x on third, etc.).
+
+## models.dev Pricing Sync
+
+`src/lib/modelsDevSync.js` fetches pricing data from models.dev, transforms it, and saves it to SQLite (`models_dev_pricing`, `models_dev_sync_meta` tables). `startPeriodicSync()` is called from `initializeApp.js` on boot. Sync interval is controlled by `modelCostSyncIntervalHours` in settings (default 1h). A "Sync Now" button and status are exposed in /settings.
+
+Pricing resolution order:
+1. User overrides (manual pricing entries)
+2. models.dev data
+3. Static fallback
+
+API: `GET /api/pricing/sync` (status), `POST /api/pricing/sync` (trigger immediate sync).
+
+Field mapping from models.dev response: `model.cost.input`, `model.cost.output`, `model.cost.cache_read` → `cached`, `model.cost.cache_write` → `cache_creation`, `model.cost.reasoning`.
 
 ## Security (v0.0.6)
 
@@ -101,6 +119,7 @@ Schema migrations applied at boot (in `connection.js`):
 - `combo` column on `request_log`
 - `details_id` column on `request_log`
 - `sort_order` column on `combos` (backfilled from `rowid`)
+- `models_dev_pricing` and `models_dev_sync_meta` tables (added via `ensureSchemaPatches` for models.dev pricing sync)
 
 `LOG_MAX_ROWS` in `src/lib/usageDb.js` is set to **10 000**. The `/api/usage/request-logs` endpoint serves up to 10 000 rows.
 

@@ -4,9 +4,9 @@ Operational notes for AI agents working on **Pod** (`~/projects/lt/pod`).
 
 ## Current Baseline
 
-- Release baseline: **v0.0.20**
+- Release baseline: **v0.0.28**
 - Package: `pod`
-- Docker: `lazuardytech/pod` (tags v0.0.1–v0.0.20, latest)
+- Docker: `lazuardytech/pod` (tags v0.0.1–v0.0.28, latest)
 - GitHub: `lazuardytech/pod`, branch `main`
 - Data dir: `~/.pod/pod.sqlite`
 - Runtime: `bun /app/server.js` (no `--smol`; cache env vars limit heap instead)
@@ -27,6 +27,9 @@ Operational notes for AI agents working on **Pod** (`~/projects/lt/pod`).
 12. **Provider node rename is custom-only** — `renameProviderNode` and `PATCH /api/provider-nodes/[id]/rename` only work on custom nodes (`openai-compatible-*`, `anthropic-compatible-*`, `custom-embedding-*`). Built-in provider IDs are hardcoded in routing and must never be renamed.
 13. **Streaming requests are now cached** — `isCacheableForRead/Write` no longer blocks `stream: true`. Cache hits for streaming clients are served as SSE chunks via `buildCacheHitSSEResponse`. Do not re-add the `stream: true` exclusion.
 14. **No `--smol` flag** — removed from `Dockerfile` CMD. Memory is bounded via `SEMANTIC_CACHE_MAX_BYTES`, `SEMANTIC_CACHE_MAX_SIZE`, `PROMPT_CACHE_MAX_BYTES`, `PROMPT_CACHE_MAX_SIZE` env vars instead.
+15. **`modelLockCount_${model}` tracks consecutive lock count** — flat field on connection rows, incremented on each lock, cleared on success. Used as backoff multiplier for minimum lockout (1x, 2x, 3x…). Do not reset this field on non-success paths.
+16. **models.dev pricing sync runs on boot** — `startPeriodicSync()` is called from `initializeApp.js`. Config key: `modelCostSyncIntervalHours` in settings (default 1h). API: `GET /api/pricing/sync` (status) and `POST /api/pricing/sync` (trigger). Pricing resolution order: user overrides → models.dev → static fallback.
+17. **Vertex AI request body must never contain `stream`** — controlled via URL action suffix and `?alt=sse` query param. `chatCore.js` skips stream-field injection when `targetFormat === FORMATS.VERTEX`. `openaiToVertexRequest` also deletes the field. Both guards are required.
 
 ## Verification Before Push
 

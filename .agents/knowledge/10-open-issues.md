@@ -1,7 +1,7 @@
 # Open Issues
 
 Tracked problems that have been partially or fully fixed but may still have residual symptoms.
-Last updated: **2026-05-17** (baseline **v0.0.22**).
+Last updated: **2026-05-17** (baseline **v0.0.28**).
 
 ---
 
@@ -183,3 +183,13 @@ If the /health page still shows unexpected short lockouts:
 | `43a67cb` | v0.0.23 | #1 | Perf: cache integrity_check 5min, health stream 10s, logs stream fixed 2s |
 | `4a881dd` | v0.0.23 | #1 | Test: 23 tests validating SSE hotpath fixes (perf-cpu-hotpath.test.js) |
 | `ba1a53d` | v0.0.23 | #3 | Fix: recheckAndClear re-lock now applies backoff multiplier (was flat 1x) |
+
+---
+
+## Status as of v0.0.28
+
+All three tracked issues are fully resolved. No known open issues as of v0.0.28.
+
+- Issue 1 (Performance Regression): ✅ Fixed in v0.0.23
+- Issue 2 (Semantic Cache 0% Hit Rate): ✅ Fixed in v0.0.22
+- Issue 3 (Model Lock Minimum Lockout): ✅ Fixed in v0.0.21
