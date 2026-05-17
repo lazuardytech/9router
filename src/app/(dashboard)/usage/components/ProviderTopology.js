@@ -209,6 +209,22 @@ function buildLayout(providers, activeSet, lastSet, errorSet) {
   return { nodes, edges };
 }
 
+const VIEWPORT_SESSION_KEY = "providerTopologyViewport";
+
+function saveViewport(viewport) {
+  try {
+    sessionStorage.setItem(VIEWPORT_SESSION_KEY, JSON.stringify(viewport));
+  } catch {}
+}
+
+function loadViewport() {
+  try {
+    const raw = sessionStorage.getItem(VIEWPORT_SESSION_KEY);
+    if (raw) return JSON.parse(raw);
+  } catch {}
+  return null;
+}
+
 export default function ProviderTopology({
   providers = [],
   activeRequests = [],
@@ -281,25 +297,37 @@ export default function ProviderTopology({
   const rfInstance = useRef(null);
   const containerRef = useRef(null);
   const fitOpts = { padding: 0.2, duration: 200 };
+  const savedViewport = useRef(loadViewport());
+
   const onInit = useCallback((instance) => {
     rfInstance.current = instance;
-    setTimeout(() => instance.fitView(fitOpts), 50);
+    if (savedViewport.current) {
+      // Restore saved zoom + pan position
+      instance.setViewport(savedViewport.current, { duration: 0 });
+    } else {
+      setTimeout(() => instance.fitView(fitOpts), 50);
+    }
   }, []);
 
-  // Re-fit on container resize
+  const onMoveEnd = useCallback((_, viewport) => {
+    saveViewport(viewport);
+    savedViewport.current = viewport;
+  }, []);
+
+  // Re-fit on container resize — only when no saved viewport
   useEffect(() => {
     const el = containerRef.current;
     if (!el) return;
     const ro = new ResizeObserver(() => {
-      if (rfInstance.current) rfInstance.current.fitView(fitOpts);
+      if (rfInstance.current && !savedViewport.current) rfInstance.current.fitView(fitOpts);
     });
     ro.observe(el);
     return () => ro.disconnect();
   }, []);
 
-  // Re-fit when node count/layout changes
+  // Re-fit when node count/layout changes — only when no saved viewport
   useEffect(() => {
-    if (rfInstance.current) {
+    if (rfInstance.current && !savedViewport.current) {
       const id = setTimeout(() => rfInstance.current.fitView(fitOpts), 50);
       return () => clearTimeout(id);
     }
@@ -323,6 +351,7 @@ export default function ProviderTopology({
           minZoom={0.1}
           maxZoom={2}
           onInit={onInit}
+          onMoveEnd={onMoveEnd}
           proOptions={{ hideAttribution: true }}
           panOnDrag
           zoomOnScroll

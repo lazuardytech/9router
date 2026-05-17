@@ -88,7 +88,7 @@ const getPageInfo = (pathname) => {
     return { title: "Combos", description: "Model combos with fallback", icon: "layers", breadcrumbs: [] };
   if (pathname.includes("/usage"))
     return {
-      title: "Usage & Analytics",
+      title: "Usage",
       description: "Monitor API usage, token consumption, and request logs",
       icon: "bar_chart",
       breadcrumbs: [],
