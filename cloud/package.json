@@ -3,7 +3,7 @@
   "version": "0.2.13",
   "private": true,
   "type": "module",
-  "description": "9Router Cloud Worker - Self-hosted Cloudflare Worker proxy",
+  "description": "Pod Cloud Worker - Self-hosted Cloudflare Worker proxy",
   "scripts": {
     "dev": "wrangler dev",
     "deploy": "wrangler deploy"
