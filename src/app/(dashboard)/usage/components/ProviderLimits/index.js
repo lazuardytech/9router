@@ -762,9 +762,10 @@ export default function ProviderLimits() {
       {/* Grouped table */}
       <div className="rounded-[6px] border border-charcoal-grey overflow-hidden">
         {/* Table header */}
-        <div className="grid grid-cols-[1fr_200px_64px_120px] bg-pitch-black/40 border-b border-charcoal-grey px-3 py-2">
+        <div className="grid grid-cols-[1fr_200px_140px_64px_120px] bg-pitch-black/40 border-b border-charcoal-grey px-3 py-2">
           <div className="text-[10px] font-[590] uppercase tracking-[0.05em] text-fog-grey">Provider</div>
           <div className="text-[10px] font-[590] uppercase tracking-[0.05em] text-fog-grey">Quota</div>
+          <div className="text-[10px] font-[590] uppercase tracking-[0.05em] text-fog-grey">Last Request At</div>
           <div className="text-[10px] font-[590] uppercase tracking-[0.05em] text-fog-grey text-right">%</div>
           <div className="text-[10px] font-[590] uppercase tracking-[0.05em] text-fog-grey text-right">Actions</div>
         </div>
@@ -772,7 +773,7 @@ export default function ProviderLimits() {
         {connectionsLoading ? (
           <div className="divide-y divide-charcoal-grey/40">
             {[1, 2, 3].map((i) => (
-              <div key={i} className="grid grid-cols-[1fr_200px_64px_120px] items-center px-3 py-2.5 bg-graphite">
+              <div key={i} className="grid grid-cols-[1fr_200px_140px_64px_120px] items-center px-3 py-2.5 bg-graphite">
                 <div className="flex items-center gap-2.5">
                   <div className="size-4 rounded bg-charcoal-grey/40 animate-pulse" />
                   <div className="size-5 rounded-[4px] bg-charcoal-grey/40 animate-pulse" />
@@ -809,6 +810,19 @@ export default function ProviderLimits() {
                 ? (expandedProviders[provider] ?? false)
                 : (expandedProviders[provider] ?? true);
 
+              // Latest lastUsedAt across all accounts in this provider group
+              const providerLastUsed = conns.reduce((latest, c) => {
+                const t = c.lastUsedAt ? new Date(c.lastUsedAt).getTime() : 0;
+                return t > latest ? t : latest;
+              }, 0);
+              const providerLastUsedStr = providerLastUsed
+                ? new Date(providerLastUsed).toLocaleDateString("en-US", {
+                    month: "short",
+                    day: "numeric",
+                    year: "numeric",
+                  })
+                : null;
+
               // Accumulated progress across all connections in this provider group
               const providerTotalUsed = conns.reduce((s, c) => s + getAccumulatedProgress(c).totalUsed, 0);
               const providerTotalLimit = conns.reduce((s, c) => s + getAccumulatedProgress(c).totalLimit, 0);
@@ -820,8 +834,15 @@ export default function ProviderLimits() {
                 <div key={provider} className="border-b border-charcoal-grey/60 last:border-0">
                   {/* Provider group row (top level) */}
                   <div
-                    className="grid grid-cols-[1fr_200px_64px_120px] items-center px-3 py-2.5 bg-graphite hover:bg-deep-slate cursor-pointer transition-colors duration-100"
-                    onClick={() => setExpandedProviders((prev) => ({ ...prev, [provider]: !(prev[provider] ?? true) }))}
+                    className="grid grid-cols-[1fr_200px_140px_64px_120px] items-center px-3 py-2.5 bg-graphite hover:bg-deep-slate cursor-pointer transition-colors duration-100"
+                    onClick={() =>
+                      setExpandedProviders((prev) => ({
+                        ...prev,
+                        // Use render-time default (true when not collapsed) so first click
+                        // toggles correctly instead of always collapsing on first click.
+                        [provider]: !(prev[provider] ?? !collapseAll),
+                      }))
+                    }
                   >
                     {/* Provider identity */}
                     <div className="flex items-center gap-2.5 min-w-0">
@@ -856,6 +877,15 @@ export default function ProviderLimits() {
                         </div>
                       ) : (
                         <div className="h-1.5 rounded-full bg-charcoal-grey/40" />
+                      )}
+                    </div>
+
+                    {/* Last Request At */}
+                    <div onClick={(e) => e.stopPropagation()}>
+                      {providerLastUsedStr ? (
+                        <span className="text-[11px] text-storm-cloud tabular-nums">{providerLastUsedStr}</span>
+                      ) : (
+                        <span className="text-[11px] text-storm-cloud/40">—</span>
                       )}
                     </div>
 
@@ -895,9 +925,12 @@ export default function ProviderLimits() {
                         >
                           {/* Account row */}
                           <div
-                            className="grid grid-cols-[1fr_200px_64px_120px] items-center px-3 py-2.5 bg-pitch-black/30 hover:bg-deep-slate/60 cursor-pointer transition-colors duration-100"
+                            className="grid grid-cols-[1fr_200px_140px_64px_120px] items-center px-3 py-2.5 bg-pitch-black/30 hover:bg-deep-slate/60 cursor-pointer transition-colors duration-100"
                             onClick={() =>
-                              setExpandedRows((prev) => ({ ...prev, [conn.id]: !(prev[conn.id] ?? true) }))
+                              setExpandedRows((prev) => ({
+                                ...prev,
+                                [conn.id]: !(prev[conn.id] ?? !collapseAll),
+                              }))
                             }
                           >
                             {/* Account identity */}
@@ -924,6 +957,21 @@ export default function ProviderLimits() {
                                 </div>
                               ) : (
                                 <div className="h-1.5 rounded-full bg-charcoal-grey/40" />
+                              )}
+                            </div>
+
+                            {/* Last Request At */}
+                            <div onClick={(e) => e.stopPropagation()}>
+                              {conn.lastUsedAt ? (
+                                <span className="text-[11px] text-storm-cloud tabular-nums">
+                                  {new Date(conn.lastUsedAt).toLocaleDateString("en-US", {
+                                    month: "short",
+                                    day: "numeric",
+                                    year: "numeric",
+                                  })}
+                                </span>
+                              ) : (
+                                <span className="text-[11px] text-storm-cloud/40">—</span>
                               )}
                             </div>
 
@@ -1027,7 +1075,7 @@ export default function ProviderLimits() {
                                   return (
                                     <div
                                       key={idx}
-                                      className="grid grid-cols-[1fr_200px_64px_120px] items-center px-3 py-2 bg-pitch-black/20 hover:bg-deep-slate/50 border-b border-charcoal-grey/30 last:border-0 transition-colors duration-100"
+                                      className="grid grid-cols-[1fr_200px_140px_64px_120px] items-center px-3 py-2 bg-pitch-black/20 hover:bg-deep-slate/50 border-b border-charcoal-grey/30 last:border-0 transition-colors duration-100"
                                     >
                                       {/* Model name — indented */}
                                       <div className="flex items-center gap-2 pl-14 min-w-0">
@@ -1049,6 +1097,9 @@ export default function ProviderLimits() {
                                           </span>
                                         </div>
                                       </div>
+
+                                      {/* Last Request At — empty for model rows */}
+                                      <div />
 
                                       {/* Remaining % */}
                                       <div className="text-right">
