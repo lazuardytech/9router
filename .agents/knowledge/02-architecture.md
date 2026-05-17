@@ -1,6 +1,6 @@
 # Architecture
 
-This file summarizes the current architecture for `github.com/lazuardytech/pod` (v0.0.28).
+This file summarizes the current architecture for `github.com/lazuardytech/pod` (v0.0.29).
 
 ## Package Layout
 
@@ -178,6 +178,14 @@ Custom provider nodes (`openai-compatible-*`, `anthropic-compatible-*`, `custom-
 - **Cache invalidation**: `invalidateConnectionsCache` called after commit to flush in-memory connection/rotation state.
 - **Validation**: built-in provider IDs rejected; new id must preserve the type prefix; collision with existing nodes blocked.
 - **UI**: Identifier field in Edit Compatible modal is now editable with a dedicated Rename button (prefix hint shown). Built-in providers remain read-only.
+
+## Cloud Worker
+
+`cloud/src/index.js` statically imports `./handlers/testClaude.js`. This file must exist and return a 410 deprecated response — it is a required stub, not optional. Missing it causes the worker to fail to deploy. Cloud branding is "Pod" (not "9Router").
+
+## Tunnel Enable
+
+`POST /api/tunnel/enable` spawns cloudflared and returns immediately — there is no `DNS_WARMUP_DELAY_MS` delay. After `pingTunnelHealth()` succeeds, `fetchData()` is called to refresh UI state. This call is wrapped in its own try/catch so a network error does not surface as a confusing user-visible message. Browser network error strings (e.g. Safari "Unable to connect...") are sanitized in the outer catch before being shown.
 
 ## Docker Runtime
 

@@ -4,9 +4,9 @@ Operational notes for AI agents working on **Pod** (`~/projects/lt/pod`).
 
 ## Current Baseline
 
-- Release baseline: **v0.0.28**
+- Release baseline: **v0.0.29**
 - Package: `pod`
-- Docker: `lazuardytech/pod` (tags v0.0.1–v0.0.28, latest)
+- Docker: `lazuardytech/pod` (tags v0.0.1–v0.0.29, latest)
 - GitHub: `lazuardytech/pod`, branch `main`
 - Data dir: `~/.pod/pod.sqlite`
 - Runtime: `bun /app/server.js` (no `--smol`; cache env vars limit heap instead)
@@ -30,6 +30,8 @@ Operational notes for AI agents working on **Pod** (`~/projects/lt/pod`).
 15. **`modelLockCount_${model}` tracks consecutive lock count** — flat field on connection rows, incremented on each lock, cleared on success. Used as backoff multiplier for minimum lockout (1x, 2x, 3x…). Do not reset this field on non-success paths.
 16. **models.dev pricing sync runs on boot** — `startPeriodicSync()` is called from `initializeApp.js`. Config key: `modelCostSyncIntervalHours` in settings (default 1h). API: `GET /api/pricing/sync` (status) and `POST /api/pricing/sync` (trigger). Pricing resolution order: user overrides → models.dev → static fallback.
 17. **Vertex AI request body must never contain `stream`** — controlled via URL action suffix and `?alt=sse` query param. `chatCore.js` skips stream-field injection when `targetFormat === FORMATS.VERTEX`. `openaiToVertexRequest` also deletes the field. Both guards are required.
+18. **Tunnel enable `fetchData()` is non-fatal** — after `pingTunnelHealth()` succeeds, the `fetchData()` call must be wrapped in its own try/catch. Never surface raw browser network error strings (e.g. Safari "Unable to connect...") to the user — sanitize them in the outer catch before displaying.
+19. **Cloud worker `testClaude.js` stub must exist** — `cloud/src/index.js` statically imports `./handlers/testClaude.js`. This file must be present and return a 410 deprecated response. Missing it causes the worker to fail to deploy.
 
 ## Verification Before Push
 

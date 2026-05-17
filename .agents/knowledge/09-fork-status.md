@@ -4,7 +4,7 @@
 
 - Repo: `github.com/lazuardytech/pod`
 - Branch: `main`
-- Current tagged release: **v0.0.28**
+- Current tagged release: **v0.0.29**
 
 ## Release History
 
@@ -34,6 +34,7 @@
 | `v0.0.26` | Model lock count tracking: `modelLockCount_${model}` flat field, backoff multiplier (1x/2x/3x…); Vertex AI `stream` field removed from request body; semantic cache `requestTooLargeForCache` guard removed |
 | `v0.0.27` | Bug fixes: tunnel pings `tunnelUrl` not `publicUrl`; /providers "Connected Only" noAuth fix; /media-providers grid from `allProviders`; /quota disabled always hidden, toolbar state to localStorage; /usage Details observability toggle reads both fields |
 | `v0.0.28` | UI: /providers detail up/down arrows removed (drag handles priority); /health Model Lockout moved below Provider Health, custom icons fixed; /combos "Test All" button; /logs Proxy Logs Actions column fixed width; /quota white active style on collapse/expiring/hide buttons; Melma removed from APIKEY_PROVIDERS |
+| `v0.0.29` | Tunnel enable error sanitization + non-fatal `fetchData()`; cloud worker `testClaude.js` stub (410 deprecated); Vertex AI stream guard tests (26); console logs scroll-to-bottom on `init`; quota hide-disabled toggle fix; README env vars (`INITIAL_PASSWORD`, `BASE_URL`, `CLOUD_URL`); 533 total tests (31 files) |
 
 ## Current Remote Setup
 
@@ -58,5 +59,5 @@ Branch is intentionally customized for Lazuardy Tech needs:
 ## Docker Hub
 
 - Image: `lazuardytech/pod`
-- Tags: `v0.0.1`–`v0.0.28`, `latest`
+- Tags: `v0.0.1`–`v0.0.29`, `latest`
 - Platform: `linux/amd64`

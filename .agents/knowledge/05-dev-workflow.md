@@ -33,13 +33,15 @@ bun run build      # next build
 
 Always run in this order before release: `bun run check` → `bun run test:run` → `bun run build`.
 
+> Test count as of v0.0.29: **533 tests passed** (31 test files).
+
 ## Docker (Local)
 
 ```bash
 docker run -d --name pod -p 20128:20128 --env-file .env -v pod-data:/app/data lazuardytech/pod:latest
 ```
 
-(`start.sh` was removed in v0.0.20; release baseline is v0.0.28.)
+(`start.sh` was removed in v0.0.20; release baseline is v0.0.29.)
 
 Dockerfile facts:
 - Multi-stage build:

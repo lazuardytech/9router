@@ -67,6 +67,23 @@ Important groups under `src/app/api/`:
 - Tunnel/network ops: `tunnel/*`, `proxy-pools/*`
 - Translator/debug: `translator/*`, `console-log`
 
+## Pricing Sync API
+
+| Endpoint | Description |
+|---|---|
+| `GET /api/pricing/sync` | Returns models.dev sync status (last sync time, model count, interval) |
+| `POST /api/pricing/sync` | Triggers an immediate models.dev pricing sync |
+
+Sync runs automatically on boot via `startPeriodicSync()` in `initializeApp.js`. Interval controlled by `modelCostSyncIntervalHours` in settings (default 1h).
+
+## Tunnel API
+
+| Endpoint | Description |
+|---|---|
+| `POST /api/tunnel/enable` | Spawns cloudflared and returns immediately. No DNS warmup delay. `fetchData()` refresh is non-fatal. |
+| `POST /api/tunnel/disable` | Stops cloudflared tunnel |
+| `GET /api/tunnel/status` | Returns current tunnel status |
+
 ## SSE Streaming Endpoints
 
 Three live-stream endpoints use Server-Sent Events:

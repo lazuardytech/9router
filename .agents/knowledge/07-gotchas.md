@@ -279,6 +279,22 @@ Do not add size-based bypass guards before the cache check — they cause false 
 
 ## 47) noAuth providers must always match as "connected"
 
+## 48) Tunnel enable: `fetchData()` after `pingTunnelHealth()` must be non-fatal
+
+After `pingTunnelHealth()` succeeds, `fetchData()` is called to refresh UI state. This call can throw browser network errors (e.g. Safari "Unable to connect to the server"). Wrap it in its own try/catch so the error does not propagate to the outer catch and surface as a confusing user-visible message. Sanitize raw browser error strings before displaying them.
+
+## 49) Cloud worker: `cloud/src/handlers/testClaude.js` must exist
+
+`cloud/src/index.js` statically imports `./handlers/testClaude.js`. If this file is missing, the worker fails to deploy entirely. The stub must return a 410 deprecated response. Do not delete or omit it.
+
+## 50) Console Logs: scroll to bottom on SSE `init` message
+
+When the SSE connection sends the `init` event (initial log dump), scroll the log container to the bottom using `requestAnimationFrame` to ensure the DOM has rendered the new entries before measuring scroll height. Scrolling synchronously before the render cycle completes will land at the wrong position.
+
+## 51) `/quota` hide-disabled is toggle-controlled, not permanent
+
+Disabled connections on `/quota` are only hidden when the "Hide disabled" toggle is active. There is no permanent `isActive !== false` filter. Do not add a static filter that always excludes disabled connections — it was removed intentionally so users can see disabled quota entries when the toggle is off.
+
 Providers like Kiro and OpenCode Free have no connections (no API key required).
 `matchConnected` must return `true` for these providers regardless of connection stats.
 Filtering them out under "Connected Only" is incorrect — they are always available.
