@@ -113,7 +113,7 @@ function normalizeConversation(conversation) {
   }));
 }
 
-export function generateSignature(model, conversation, temperature, topP) {
+export function generateSignature(model, conversation, temperature, topP, memoryOwnerId = null) {
   // Normalize temperature and top_p: treat undefined/null as their semantic
   // defaults so requests with explicit defaults hash identically to those
   // that omit the field entirely (very common across different clients).
@@ -124,6 +124,9 @@ export function generateSignature(model, conversation, temperature, topP) {
     messages: normalizeConversation(conversation),
     temperature: normalizedTemp,
     top_p: normalizedTopP,
+    // Include memoryOwnerId so different users with different memories never
+    // share a cache entry — prevents cross-user memory bleed.
+    ...(memoryOwnerId ? { memory_owner: memoryOwnerId } : {}),
   });
   // For large payloads, hash only the tail slice so we avoid blocking the
   // event loop with a multi-MB SHA-256 update on every request.
@@ -268,9 +271,11 @@ export function getCacheStats() {
 export function isCacheableForRead(body, headers) {
   if ((getHeaderValue(headers, "x-pod-no-cache") || "").toLowerCase() === "true") return false;
   if ((getHeaderValue(headers, "x-omniroute-no-cache") || "").toLowerCase() === "true") return false;
-  // Cache requests with temperature <= 1 (includes default temperature=1 from most clients).
-  // Requests with temperature > 1 are intentionally non-deterministic and should not be cached.
-  const temp = body?.temperature ?? 0;
+  // Use same default as generateSignature (null → 1) so a request with no
+  // temperature field and one with temperature=1 produce the same signature
+  // AND both pass this check — previously the default was 0 here vs 1 in
+  // generateSignature, causing a signature mismatch for omitted temperature.
+  const temp = body?.temperature ?? 1;
   if (temp > 1) return false;
   return true;
 }
@@ -278,7 +283,7 @@ export function isCacheableForRead(body, headers) {
 export function isCacheableForWrite(body, headers) {
   if ((getHeaderValue(headers, "x-pod-no-cache") || "").toLowerCase() === "true") return false;
   if ((getHeaderValue(headers, "x-omniroute-no-cache") || "").toLowerCase() === "true") return false;
-  const temp = body?.temperature ?? 0;
+  const temp = body?.temperature ?? 1;
   if (temp > 1) return false;
   return true;
 }

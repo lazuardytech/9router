@@ -84,7 +84,7 @@ import { reserveReasoningTokenBudget } from "../utils/tokenBudget.js";
 import { handleNonStreamingResponse } from "./chatCore/nonStreamingHandler.js";
 import { buildOnStreamComplete, handleStreamingResponse } from "./chatCore/streamingHandler.js";
 
-const MAX_SEMANTIC_CACHE_BYTES = 256 * 1024;
+const MAX_SEMANTIC_CACHE_BYTES = 512 * 1024;
 const MEMORY_EXTRACTION_TEXT_LIMIT = 64 * 1024;
 // Skip cacheability check for request bodies larger than this to avoid a
 // synchronous JSON.stringify of a multi-MB payload on every request.
@@ -295,7 +295,7 @@ export async function handleChatCore({
   // 64KB tail (SIGNATURE_MAX_BYTES), so no need to skip cache for large bodies.
   const requestTooLargeForCache = false;
   if (semanticCacheEnabled && !requestTooLargeForCache && isCacheableForRead(body, clientRawRequest?.headers)) {
-    cacheSignature = generateSignature(model, messages, body.temperature, body.top_p);
+    cacheSignature = generateSignature(model, messages, body.temperature, body.top_p, memoryOwnerId || null);
     const cached = getCachedResponse(cacheSignature);
     if (cached) {
       reqLogger.logConvertedResponse(cached);
