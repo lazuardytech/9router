@@ -4,7 +4,7 @@ description: Fast codebase exploration agent (read-only)
 tools: read,bash,grep,find,ls
 extensions: true
 skills: true
-model: pod/pro
+model: pod/general
 prompt_mode: replace
 enabled: true
 ---
