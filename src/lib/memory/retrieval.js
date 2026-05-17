@@ -72,7 +72,8 @@ export async function retrieveMemories(apiKeyId, config = {}) {
 
   const db = getDatabase();
   const maxTokens = Math.min(Math.max(Number(config.maxTokens || 2000), 1), 8000);
-  const strategy = config.retrievalStrategy || "exact";
+  const resolvedStrategy = config.retrievalStrategy === "recent" ? "exact" : config.retrievalStrategy || "exact";
+  const strategy = resolvedStrategy;
   const retentionDays = Number.isFinite(config.retentionDays) ? config.retentionDays : 30;
   const queryText = typeof config.query === "string" ? config.query.trim() : "";
 

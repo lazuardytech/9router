@@ -687,8 +687,9 @@ export async function handleChatCore({
             resolveInFlight(finalResponse);
             resolveInFlight = null;
           }
-          if (cacheSignature) clearInFlight(cacheSignature);
         }
+        // Always clear in-flight regardless of write-cacheability
+        if (cacheSignature) clearInFlight(cacheSignature);
         if (memoryOwnerId && memorySettings.enabled && memorySettings.maxTokens > 0) {
           const requestMemoryText = extractMemoryTextFromRequestBody(body);
           if (requestMemoryText) extractFacts(requestMemoryText, memoryOwnerId, pipelineSessionId);
@@ -726,8 +727,9 @@ export async function handleChatCore({
             resolveInFlight(translatedResponse);
             resolveInFlight = null;
           }
-          if (cacheSignature) clearInFlight(cacheSignature);
         }
+        // Always clear in-flight regardless of write-cacheability
+        if (cacheSignature) clearInFlight(cacheSignature);
         if (memoryOwnerId && memorySettings.enabled && memorySettings.maxTokens > 0) {
           const requestMemoryText = extractMemoryTextFromRequestBody(body);
           if (requestMemoryText) extractFacts(requestMemoryText, memoryOwnerId, pipelineSessionId);
@@ -879,15 +881,21 @@ export async function handleChatCore({
           resolveInFlight = null;
         }
       } else {
-        // Response too large to cache — still resolve in-flight waiters so they
-        // don't stall for 60s, and clear the in-flight entry.
+        // Response too large to cache — still resolve in-flight waiters
         if (resolveInFlight) {
           resolveInFlight(null);
           resolveInFlight = null;
         }
       }
-      clearInFlight(cacheSignature);
+    } else if (cacheSignature) {
+      // No content or not cacheable — resolve in-flight waiters so they don't stall
+      if (resolveInFlight) {
+        resolveInFlight(null);
+        resolveInFlight = null;
+      }
     }
+    // Always clear in-flight entry
+    if (cacheSignature) clearInFlight(cacheSignature);
   };
   return handleStreamingResponse({
     ...sharedCtx,

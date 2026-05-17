@@ -24,7 +24,13 @@ async function hasValidCliToken(request) {
 const ALWAYS_PROTECTED = ["/api/shutdown", "/api/settings/database", "/api/settings/migrate-sqlite"];
 
 // Require auth, but allow through if requireLogin is disabled
-const PROTECTED_API_PATHS = ["/api/settings", "/api/keys", "/api/providers/client", "/api/provider-nodes/validate"];
+const PROTECTED_API_PATHS = [
+  "/api/settings",
+  "/api/keys",
+  "/api/providers/client",
+  "/api/provider-nodes/validate",
+  "/api/memory",
+];
 
 async function hasValidToken(request) {
   const token = request.cookies.get("auth_token")?.value;
@@ -167,5 +173,7 @@ export const config = {
     "/basic-chat",
     "/media-providers/:path*",
     "/media-providers",
+    "/api/memory",
+    "/api/memory/:path*",
   ],
 };
