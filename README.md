@@ -65,6 +65,9 @@ bun run dev        # starts on http://localhost:20128
 |---|---|---|
 | `PORT` | `20128` | HTTP port |
 | `DATA_DIR` | `/app/data` | SQLite data directory |
+| `INITIAL_PASSWORD` | `123456` | Initial dashboard login password. Change after first login. |
+| `BASE_URL` | `http://localhost:20128` | Internal base URL used for self-referencing API calls (e.g. model availability checks). Set this when running behind a reverse proxy. |
+| `CLOUD_URL` | _(none)_ | URL of your self-hosted Cloudflare Worker (cloud deployment). Overrides the value stored in settings. |
 | `NEXT_TELEMETRY_DISABLED` | `1` | Disable Next.js telemetry |
 | `SEMANTIC_CACHE_MAX_BYTES` | `4194304` | Semantic cache max size in bytes |
 | `SEMANTIC_CACHE_MAX_SIZE` | `100` | Semantic cache max entries |
