@@ -64,19 +64,13 @@ export default function ProviderLimits() {
   const [selectedConnection, setSelectedConnection] = useState(null);
   const [proxyPools, setProxyPools] = useState([]);
   const [providerFilter, setProviderFilter] = useState("all");
-  const [expiringFirst, setExpiringFirst] = useState(() => readLocalBool(EXPIRING_FIRST_STORAGE_KEY));
+  const [expiringFirst, setExpiringFirst] = useState(false);
   const [providerMenuOpen, setProviderMenuOpen] = useState(false);
   const [bulkToggling, setBulkToggling] = useState(false);
-  const [collapseAll, setCollapseAll] = useState(() => readLocalBool(COLLAPSE_ALL_STORAGE_KEY));
-  const [expandedRows, setExpandedRows] = useState(() => {
-    if (!readLocalBool(COLLAPSE_ALL_STORAGE_KEY)) return {};
-    return { __collapsed: true };
-  });
-  const [expandedProviders, setExpandedProviders] = useState(() => {
-    if (!readLocalBool(COLLAPSE_ALL_STORAGE_KEY)) return {};
-    return { __collapsed: true };
-  });
-  const [hideDisabled, setHideDisabled] = useState(() => readLocalBool(HIDE_DISABLED_STORAGE_KEY));
+  const [collapseAll, setCollapseAll] = useState(false);
+  const [expandedRows, setExpandedRows] = useState({});
+  const [expandedProviders, setExpandedProviders] = useState({});
+  const [hideDisabled, setHideDisabled] = useState(false);
   const [disabledModels, setDisabledModels] = useState({});
 
   const [confirmDialog, setConfirmDialog] = useState({
@@ -92,6 +86,20 @@ export default function ProviderLimits() {
 
   const intervalRef = useRef(null);
   const countdownRef = useRef(null);
+
+  // Hydrate toggle states from localStorage after mount (avoids SSR/hydration mismatch)
+  useEffect(() => {
+    const collapse = readLocalBool(COLLAPSE_ALL_STORAGE_KEY);
+    const expiring = readLocalBool(EXPIRING_FIRST_STORAGE_KEY);
+    const hide = readLocalBool(HIDE_DISABLED_STORAGE_KEY);
+    if (collapse) {
+      setCollapseAll(true);
+      setExpandedRows({ __collapsed: true });
+      setExpandedProviders({ __collapsed: true });
+    }
+    if (expiring) setExpiringFirst(true);
+    if (hide) setHideDisabled(true);
+  }, []);
 
   // Sync cache
   useEffect(() => {
