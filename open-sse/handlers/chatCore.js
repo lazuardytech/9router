@@ -88,7 +88,7 @@ const MAX_SEMANTIC_CACHE_BYTES = 256 * 1024;
 const MEMORY_EXTRACTION_TEXT_LIMIT = 64 * 1024;
 // Skip cacheability check for request bodies larger than this to avoid a
 // synchronous JSON.stringify of a multi-MB payload on every request.
-const MAX_REQUEST_BYTES_FOR_CACHE_CHECK = 512 * 1024;
+const _MAX_REQUEST_BYTES_FOR_CACHE_CHECK = 512 * 1024;
 
 function isSmallEnoughForSemanticCache(value) {
   try {
@@ -290,29 +290,10 @@ export async function handleChatCore({
   // Semantic cache pre-check with thundering herd protection
   let cacheSignature = null;
   let resolveInFlight = null;
-  // Skip cache entirely for very large request bodies — generateSignature would
-  // JSON.stringify the full messages array synchronously, blocking the event
-  // loop for hundreds of ms on 64K+ token contexts.
   const messages = body.messages ?? body.input;
-  const approxRequestBytes = Array.isArray(messages)
-    ? messages.reduce((sum, m) => {
-        const c = m?.content;
-        if (typeof c === "string") return sum + c.length;
-        if (Array.isArray(c)) {
-          // content blocks array — sum text parts, count non-text as 256 bytes each
-          return (
-            sum +
-            c.reduce((s, part) => {
-              if (typeof part?.text === "string") return s + part.text.length;
-              if (typeof part?.content === "string") return s + part.content.length;
-              return s + 256;
-            }, 0)
-          );
-        }
-        return sum + 256;
-      }, 0)
-    : 0;
-  const requestTooLargeForCache = approxRequestBytes > MAX_REQUEST_BYTES_FOR_CACHE_CHECK;
+  // generateSignature already handles large payloads by hashing only the last
+  // 64KB tail (SIGNATURE_MAX_BYTES), so no need to skip cache for large bodies.
+  const requestTooLargeForCache = false;
   if (semanticCacheEnabled && !requestTooLargeForCache && isCacheableForRead(body, clientRawRequest?.headers)) {
     cacheSignature = generateSignature(model, messages, body.temperature, body.top_p);
     const cached = getCachedResponse(cacheSignature);
