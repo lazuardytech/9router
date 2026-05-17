@@ -128,11 +128,14 @@ function prepareRecord(item, maxSize) {
 async function flushToDatabase() {
   if (isCloud || isFlushing || writeBuffer.length === 0) return;
   isFlushing = true;
+  // Resolve config + db BEFORE draining the buffer so items are not lost
+  // if either call throws (previously the buffer was drained first).
+  let items;
   try {
-    const items = writeBuffer;
-    writeBuffer = [];
     const config = await getObservabilityConfig();
     const db = getDatabase();
+    items = writeBuffer;
+    writeBuffer = [];
 
     const insert = db.prepare(`
       INSERT OR REPLACE INTO request_details

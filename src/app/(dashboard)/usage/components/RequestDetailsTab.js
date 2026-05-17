@@ -88,6 +88,7 @@ function getInputTokens(tokens) {
 
 export default function RequestDetailsTab() {
   const [details, setDetails] = useState([]);
+  const [fetchError, setFetchError] = useState(null);
   const [pagination, setPagination] = useState({
     page: 1,
     pageSize: 20,
@@ -120,6 +121,7 @@ export default function RequestDetailsTab() {
 
   const fetchDetails = useCallback(async () => {
     setLoading(true);
+    setFetchError(null);
     try {
       const params = new URLSearchParams({
         page: pagination.page.toString(),
@@ -130,12 +132,17 @@ export default function RequestDetailsTab() {
       if (filters.endDate) params.append("endDate", filters.endDate);
 
       const res = await fetch(`/api/usage/request-details?${params}`);
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error || `HTTP ${res.status}`);
+      }
       const data = await res.json();
 
       setDetails(data.details || []);
       setPagination((prev) => ({ ...prev, ...data.pagination }));
     } catch (error) {
       console.error("Failed to fetch request details:", error);
+      setFetchError(error.message || "Failed to fetch request details");
     } finally {
       setLoading(false);
     }
@@ -263,6 +270,15 @@ export default function RequestDetailsTab() {
                     <div className="flex items-center justify-center gap-2">
                       <span className="material-symbols-outlined animate-spin text-[20px]">progress_activity</span>
                       Loading...
+                    </div>
+                  </td>
+                </tr>
+              ) : fetchError ? (
+                <tr>
+                  <td colSpan="7" className="p-8 text-center text-text-muted">
+                    <div className="flex items-center justify-center gap-2">
+                      <span className="material-symbols-outlined text-[20px] text-warning-red">error</span>
+                      Failed to load request details: {fetchError}
                     </div>
                   </td>
                 </tr>
