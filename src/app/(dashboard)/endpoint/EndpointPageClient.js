@@ -360,7 +360,9 @@ export default function APIPageClient({ machineId }) {
       setTunnelUrl(data.tunnelUrl || "");
       setTunnelPublicUrl(data.publicUrl || "");
       setTunnelEnabled(true);
-      await pingTunnelHealth(url);
+      // Ping the direct cloudflare tunnel URL first (more reliable than publicUrl
+      // which requires DNS propagation via 9router.com worker).
+      await pingTunnelHealth(data.tunnelUrl || data.publicUrl);
       // Refresh full data to sync all state
       await fetchData();
     } catch (error) {
