@@ -69,7 +69,7 @@ Current baseline: **v0.0.31**.
 - Full bun runtime: builder `oven/bun:1.3.14-alpine` + runner bun
 - `bun:sqlite` in production, `better-sqlite3` devDependency only
 - Tailscale fix: `getCachedPassword` removed
-- Codex OAuth: `redirect_uri` uses `NEXT_PUBLIC_CLOUD_URL` or `window.location.origin`
+- Codex OAuth: `redirect_uri` hardcoded to `http://localhost:1455/auth/callback` (OpenAI only accepts this URI; proxy on port 1455 handles callback server-side)
 - Tab title separator changed from `•` to `✦`
 - Logs columns fixed widths, select widths standardized
 

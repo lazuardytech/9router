@@ -179,9 +179,9 @@ export default function OAuthModal({ isOpen, provider, providerInfo, onSuccess, 
       const appPort = window.location.port || (window.location.protocol === "https:" ? "443" : "80");
       let redirectUri;
       if (provider === "codex") {
-        // Use CLOUD_URL if set, otherwise fall back to current origin
-        const cloudBase = process.env.NEXT_PUBLIC_CLOUD_URL || window.location.origin;
-        redirectUri = `${cloudBase}/auth/callback`;
+        // Codex CLI OAuth only accepts http://localhost:1455/auth/callback as redirect URI.
+        // The local proxy on port 1455 handles the callback and relays it back via poll-status.
+        redirectUri = "http://localhost:1455/auth/callback";
       } else {
         redirectUri = `http://localhost:${appPort}/callback`;
       }
